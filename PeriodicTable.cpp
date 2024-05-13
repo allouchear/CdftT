@@ -14,7 +14,7 @@ PeriodicTable::PeriodicTable()
 
 PeriodicTable::~PeriodicTable(){}
 
-Element PeriodicTable::element(int i)
+Element PeriodicTable::element(const int& i)
 {
 	if(i<0 || i>_periodic_table.size())
 		return Element();
@@ -22,7 +22,7 @@ Element PeriodicTable::element(int i)
 		return _periodic_table[i-1];
 }
 
-Element PeriodicTable::element(string n)
+Element PeriodicTable::element(const string& n)
 {
 	if(n.size()==1 || n.size()==2)
 	{
@@ -46,7 +46,7 @@ Element PeriodicTable::element(string n)
 	return Element();
 }
 
-void PeriodicTable::_add_element(Element ELE){_periodic_table.push_back(ELE);}
+void PeriodicTable::_add_element(const Element& ELE){_periodic_table.push_back(ELE);}
 
 void PeriodicTable::_add_isotope(Isotope ISO)
 {
