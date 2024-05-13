@@ -5,18 +5,6 @@
 
 using namespace std;
 
-Element::Element(string Name, string Symbol, int AtomicNumber, double CovalentRadii, double BondOrderRadii, 
-	double VanDerWaalsRadii, double Radii, int MaximumBondValence, double Mass, 
-	double Electronegativity) : _name(Name), _symbol(Symbol), _atomic_number(AtomicNumber), _covalent_radii(CovalentRadii), 
-	_bond_order_radii(BondOrderRadii), 
-	_van_der_waals_radii(VanDerWaalsRadii), _radii(Radii), _maximum_bond_valence(MaximumBondValence), _mass(Mass), _electronegativity(Electronegativity) {_isotope.resize(0);}
-
-Element::~Element(){}
-
-Isotope::Isotope(string Symbol, int IntMass, double RealMass, double Abundance) : _symbol(Symbol), _int_mass(IntMass), _real_mass(RealMass), _abundance(Abundance) {}
-
-Isotope::~Isotope(){}
-
 PeriodicTable::PeriodicTable()
 {
 	_periodic_table.resize(0);
@@ -26,26 +14,39 @@ PeriodicTable::PeriodicTable()
 
 PeriodicTable::~PeriodicTable(){}
 
-Element PeriodicTable::element(int i)
+Element PeriodicTable::element(const int& i)
 {
-	return _periodic_table[i-1];
+	if(i<0 || i>_periodic_table.size())
+		return Element();
+	else
+		return _periodic_table[i-1];
 }
 
-Element PeriodicTable::element(string n)
+Element PeriodicTable::element(const string& n)
 {
-	
-	for(int i; i<_periodic_table.size(); i++)
+	if(n.size()==1 || n.size()==2)
 	{
-		if(n.size()==1 || n.size()==2)
+		for(int i=0; i<_periodic_table.size(); i++)
+		{
 			if(n==_periodic_table[i].symbol())
 				return _periodic_table[i];
-		else
+		}
+	}
+				
+	else if(n.size()>2)
+	{
+		for(int i=0; i<_periodic_table.size(); i++)
+		{
 			if(n==_periodic_table[i].name())
 				return _periodic_table[i];
+		}
 	}
+	
+		
+	return Element();
 }
 
-void PeriodicTable::_add_element(Element ELE){_periodic_table.push_back(ELE);}
+void PeriodicTable::_add_element(const Element& ELE){_periodic_table.push_back(ELE);}
 
 void PeriodicTable::_add_isotope(Isotope ISO)
 {

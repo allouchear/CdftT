@@ -1,0 +1,127 @@
+\hypertarget{classIsotope}{}\doxysection{Isotope Class Reference}
+\label{classIsotope}\index{Isotope@{Isotope}}
+
+
+An isotope class.  
+
+
+
+
+{\ttfamily \#include $<$Element.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIsotope_a70dfd751765bfd2c9ef1f3ac72a5bd9c}{Isotope}} ()
+\begin{DoxyCompactList}\small\item\em A default constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIsotope_a2f7d6b7d9a9d9e0cefa339d03a710e81}{Isotope}} (const string \&, const int \&, const double \&, const double \&)
+\begin{DoxyCompactList}\small\item\em A real constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIsotope_a7b22935e0ade348ee513733eeda1fa23}{$\sim$\+Isotope}} ()
+\begin{DoxyCompactList}\small\item\em A default desctructor. \end{DoxyCompactList}\item 
+string \mbox{\hyperlink{classIsotope_a0512c5345539c64dcef55a1e7ffa8404}{symbol}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning a string value. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classIsotope_a4520569cce64a89ef0ca8ef00c6c0aed}{int\+\_\+mass}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning an integer value. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIsotope_aafef264f0e8d5f5040caea67fcb9d753}{real\+\_\+mass}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning an double value. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIsotope_a6d44cde1092db9d3d0296bb5f60201f4}{abundance}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning a double value. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+An isotope class. 
+
+This class will be used in the \mbox{\hyperlink{classElement}{Element}} class to complete the data on a element. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIsotope_a70dfd751765bfd2c9ef1f3ac72a5bd9c}\label{classIsotope_a70dfd751765bfd2c9ef1f3ac72a5bd9c}} 
+\index{Isotope@{Isotope}!Isotope@{Isotope}}
+\index{Isotope@{Isotope}!Isotope@{Isotope}}
+\doxysubsubsection{\texorpdfstring{Isotope()}{Isotope()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily Isotope\+::\+Isotope (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+A default constructor. 
+
+In the case of a problem, this constructor create an isotope with all value on 0 and all string on \char`\"{}\+None\char`\"{}. \mbox{\Hypertarget{classIsotope_a2f7d6b7d9a9d9e0cefa339d03a710e81}\label{classIsotope_a2f7d6b7d9a9d9e0cefa339d03a710e81}} 
+\index{Isotope@{Isotope}!Isotope@{Isotope}}
+\index{Isotope@{Isotope}!Isotope@{Isotope}}
+\doxysubsubsection{\texorpdfstring{Isotope()}{Isotope()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily Isotope\+::\+Isotope (\begin{DoxyParamCaption}\item[{const string \&}]{Symbol,  }\item[{const int \&}]{Int\+Mass,  }\item[{const double \&}]{Real\+Mass,  }\item[{const double \&}]{Abundance }\end{DoxyParamCaption})}
+
+
+
+A real constructor. 
+
+This constructor is used to add all of the data of one isotope. \mbox{\Hypertarget{classIsotope_a7b22935e0ade348ee513733eeda1fa23}\label{classIsotope_a7b22935e0ade348ee513733eeda1fa23}} 
+\index{Isotope@{Isotope}!````~Isotope@{$\sim$Isotope}}
+\index{````~Isotope@{$\sim$Isotope}!Isotope@{Isotope}}
+\doxysubsubsection{\texorpdfstring{$\sim$Isotope()}{~Isotope()}}
+{\footnotesize\ttfamily Isotope\+::$\sim$\+Isotope (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+A default desctructor. 
+
+We don\textquotesingle{}t use it. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIsotope_a6d44cde1092db9d3d0296bb5f60201f4}\label{classIsotope_a6d44cde1092db9d3d0296bb5f60201f4}} 
+\index{Isotope@{Isotope}!abundance@{abundance}}
+\index{abundance@{abundance}!Isotope@{Isotope}}
+\doxysubsubsection{\texorpdfstring{abundance()}{abundance()}}
+{\footnotesize\ttfamily double Isotope\+::abundance (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning a double value. 
+
+\begin{DoxyReturn}{Returns}
+The abundace in percent of an isotope. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIsotope_a4520569cce64a89ef0ca8ef00c6c0aed}\label{classIsotope_a4520569cce64a89ef0ca8ef00c6c0aed}} 
+\index{Isotope@{Isotope}!int\_mass@{int\_mass}}
+\index{int\_mass@{int\_mass}!Isotope@{Isotope}}
+\doxysubsubsection{\texorpdfstring{int\_mass()}{int\_mass()}}
+{\footnotesize\ttfamily int Isotope\+::int\+\_\+mass (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning an integer value. 
+
+\begin{DoxyReturn}{Returns}
+The approximate mass of an isotope. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIsotope_aafef264f0e8d5f5040caea67fcb9d753}\label{classIsotope_aafef264f0e8d5f5040caea67fcb9d753}} 
+\index{Isotope@{Isotope}!real\_mass@{real\_mass}}
+\index{real\_mass@{real\_mass}!Isotope@{Isotope}}
+\doxysubsubsection{\texorpdfstring{real\_mass()}{real\_mass()}}
+{\footnotesize\ttfamily double Isotope\+::real\+\_\+mass (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning an double value. 
+
+\begin{DoxyReturn}{Returns}
+The real mass of an isotope. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIsotope_a0512c5345539c64dcef55a1e7ffa8404}\label{classIsotope_a0512c5345539c64dcef55a1e7ffa8404}} 
+\index{Isotope@{Isotope}!symbol@{symbol}}
+\index{symbol@{symbol}!Isotope@{Isotope}}
+\doxysubsubsection{\texorpdfstring{symbol()}{symbol()}}
+{\footnotesize\ttfamily string Isotope\+::symbol (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning a string value. 
+
+\begin{DoxyReturn}{Returns}
+The isotope\textquotesingle{}s symbol. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+Element.\+h\item 
+Element.\+cpp\end{DoxyCompactItemize}

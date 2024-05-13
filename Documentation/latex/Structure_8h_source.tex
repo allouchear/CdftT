@@ -1,0 +1,45 @@
+\hypertarget{Structure_8h_source}{}\doxysection{Structure.\+h}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef CDFTT\_STRUCTURE\_H\_INCLUDED}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define CDFTT\_STRUCTURE\_H\_INLCUDED}}
+\DoxyCodeLine{3 }
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include<iostream>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include<vector>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include"{}Atom.h"{}}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{keyword}{using namespace }std;}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{11 }
+\DoxyCodeLine{13 \textcolor{keyword}{class }\mbox{\hyperlink{classStructure}{Structure}}}
+\DoxyCodeLine{14 \{}
+\DoxyCodeLine{15     \textcolor{keyword}{private}:}
+\DoxyCodeLine{16         vector<Atom> \_atoms;}
+\DoxyCodeLine{17     \textcolor{keyword}{public}:}
+\DoxyCodeLine{18 }
+\DoxyCodeLine{20 }
+\DoxyCodeLine{22         \mbox{\hyperlink{classStructure_ac6c101b28efea5a150cce3bb8948f8d1}{Structure}}(\textcolor{keyword}{const} vector<Atom>\&);}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{25 }
+\DoxyCodeLine{27         \mbox{\hyperlink{classStructure_ac6c101b28efea5a150cce3bb8948f8d1}{Structure}}();}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{30 }
+\DoxyCodeLine{32         \mbox{\hyperlink{classStructure_a2d27a247175436df0976f24a83a47b5e}{\string~Structure}}()\{\};}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{35 }
+\DoxyCodeLine{37         \textcolor{keywordtype}{int} \mbox{\hyperlink{classStructure_a4c93efb80fcc32c5d5b2dd2ecc8e0259}{number\_of\_atoms}}()}
+\DoxyCodeLine{38         \{}
+\DoxyCodeLine{39             \textcolor{keywordflow}{return} \_atoms.size();}
+\DoxyCodeLine{40         \}}
+\DoxyCodeLine{41 }
+\DoxyCodeLine{43 }
+\DoxyCodeLine{45         \textcolor{keyword}{const} \mbox{\hyperlink{classAtom}{Atom}}\& \mbox{\hyperlink{classStructure_acf61ed86472b6a7b7576b8d2089e550f}{atoms}}(\textcolor{keyword}{const} \textcolor{keywordtype}{int}\& i)}
+\DoxyCodeLine{46         \{}
+\DoxyCodeLine{47             \textcolor{keywordflow}{return} \_atoms[i-\/1];}
+\DoxyCodeLine{48         \}}
+\DoxyCodeLine{49 \};}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

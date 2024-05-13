@@ -1,0 +1,222 @@
+\hypertarget{classAtom}{}\doxysection{Atom Class Reference}
+\label{classAtom}\index{Atom@{Atom}}
+
+
+An \mbox{\hyperlink{classAtom}{Atom}} class.  
+
+
+
+
+{\ttfamily \#include $<$Atom.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classAtom_aa0147d7e49ab90f559b66e38d3d12863}{Atom}} ()
+\begin{DoxyCompactList}\small\item\em Default constructor\+: \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classAtom_af4a9f8780c5d00a1d2518e9cff35ae84}{Atom}} (\mbox{\hyperlink{classPeriodicTable}{Periodic\+Table}} \&Table, const string \&\mbox{\hyperlink{classAtom_a15d2acd08315786dc061e6f06dc3d46f}{name}})
+\begin{DoxyCompactList}\small\item\em Constructor\+: \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classAtom_a31de6163acbdbc04f42001f0d33d4c91}{Atom}} (\mbox{\hyperlink{classPeriodicTable}{Periodic\+Table}} \&Table, const int \&n)
+\begin{DoxyCompactList}\small\item\em Constructor\+: \end{DoxyCompactList}\item 
+double $\ast$ \mbox{\hyperlink{classAtom_a90e3bf4e2d4d7b9b493074805f077587}{coordinates}} ()
+\begin{DoxyCompactList}\small\item\em get() function \end{DoxyCompactList}\item 
+double $\ast$ \mbox{\hyperlink{classAtom_adfbff464ba7a3653a09d376af6a19481}{gradient}} ()
+\begin{DoxyCompactList}\small\item\em Get() function. \end{DoxyCompactList}\item 
+double $\ast$ \mbox{\hyperlink{classAtom_aa41cdaadddf41ea979c47c175468f57e}{velocity}} ()
+\begin{DoxyCompactList}\small\item\em Get() function. \end{DoxyCompactList}\item 
+string \mbox{\hyperlink{classAtom_a15d2acd08315786dc061e6f06dc3d46f}{name}} ()
+\begin{DoxyCompactList}\small\item\em Get() function. \end{DoxyCompactList}\item 
+string \mbox{\hyperlink{classAtom_aeb39d86c8efe49753c96e7b5e2dcd804}{symbol}} ()
+\begin{DoxyCompactList}\small\item\em Get() function. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classAtom_a99d3c6ead3b3194bb387a9a7ad0cb45f}{atomic\+\_\+number}} ()
+\begin{DoxyCompactList}\small\item\em Get() function. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classAtom_a2e59ddcbb347ed657f4aac28ea12d7ee}{charge}} ()
+\begin{DoxyCompactList}\small\item\em Get() function. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classAtom_a103ce7987dae3450af31082b58fbd62e}{charge\+\_\+0}} ()
+\begin{DoxyCompactList}\small\item\em Get() function. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classAtom_a81cdce791519de028521e3cbf2da53f4}{hardness}} ()
+\begin{DoxyCompactList}\small\item\em Get() function. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classAtom_ad5e0fa0b30770fe7d681f87415de0d6e}{width}} ()
+\begin{DoxyCompactList}\small\item\em Get() function. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classElement}{Element}} \mbox{\hyperlink{classAtom_afd1a59933c3197edf2ca5e2bb13bb50a}{element}} ()
+\begin{DoxyCompactList}\small\item\em Get() function. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classAtom_a6926cfb6d5e61ca21c71476b66547a5e}\label{classAtom_a6926cfb6d5e61ca21c71476b66547a5e}} 
+{\bfseries $\sim$\+Atom} ()
+\begin{DoxyCompactList}\small\item\em Destructeur. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classAtom_a1d1ea34fa77e13b3dbc1ead655f3c10e}\label{classAtom_a1d1ea34fa77e13b3dbc1ead655f3c10e}} 
+double {\bfseries get\+\_\+distance} (\mbox{\hyperlink{classAtom}{Atom}} \&a2)
+\begin{DoxyCompactList}\small\item\em Renvoi la distance entre l\textquotesingle{}atom et un autre (a2) \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classAtom_a159528dd43951f79bd0877803e0ed81b}\label{classAtom_a159528dd43951f79bd0877803e0ed81b}} 
+double {\bfseries get\+\_\+angle} (\mbox{\hyperlink{classAtom}{Atom}} \&a2, \mbox{\hyperlink{classAtom}{Atom}} \&a3)
+\begin{DoxyCompactList}\small\item\em Renvoi l\textquotesingle{}angle formée par l\textquotesingle{}atome et 2 autres(a2,a3) \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classAtom_ad58e770f3efe88328220c0fbb71c1467}\label{classAtom_ad58e770f3efe88328220c0fbb71c1467}} 
+double {\bfseries get\+\_\+torsion} (\mbox{\hyperlink{classAtom}{Atom}} \&a2, \mbox{\hyperlink{classAtom}{Atom}} \&a3, \mbox{\hyperlink{classAtom}{Atom}} \&a4)
+\begin{DoxyCompactList}\small\item\em Return. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+An \mbox{\hyperlink{classAtom}{Atom}} class. 
+
+This class will be used in the \mbox{\hyperlink{classStructure}{Structure}} class to create Structures and Molecules. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classAtom_aa0147d7e49ab90f559b66e38d3d12863}\label{classAtom_aa0147d7e49ab90f559b66e38d3d12863}} 
+\index{Atom@{Atom}!Atom@{Atom}}
+\index{Atom@{Atom}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{Atom()}{Atom()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily Atom\+::\+Atom (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Default constructor\+: 
+
+sets all attributes to 0 or \char`\"{}none\char`\"{} \mbox{\Hypertarget{classAtom_af4a9f8780c5d00a1d2518e9cff35ae84}\label{classAtom_af4a9f8780c5d00a1d2518e9cff35ae84}} 
+\index{Atom@{Atom}!Atom@{Atom}}
+\index{Atom@{Atom}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{Atom()}{Atom()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily Atom\+::\+Atom (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPeriodicTable}{Periodic\+Table}} \&}]{Table,  }\item[{const string \&}]{name }\end{DoxyParamCaption})}
+
+
+
+Constructor\+: 
+
+creates an atom from the name of an \mbox{\hyperlink{classElement}{Element}} and searching for it in \mbox{\hyperlink{classPeriodicTable}{Periodic\+Table}} \mbox{\Hypertarget{classAtom_a31de6163acbdbc04f42001f0d33d4c91}\label{classAtom_a31de6163acbdbc04f42001f0d33d4c91}} 
+\index{Atom@{Atom}!Atom@{Atom}}
+\index{Atom@{Atom}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{Atom()}{Atom()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily Atom\+::\+Atom (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPeriodicTable}{Periodic\+Table}} \&}]{Table,  }\item[{const int \&}]{n }\end{DoxyParamCaption})}
+
+
+
+Constructor\+: 
+
+creates an atom from the atomic number of an \mbox{\hyperlink{classElement}{Element}} and searching for it in \mbox{\hyperlink{classPeriodicTable}{Periodic\+Table}} 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classAtom_a99d3c6ead3b3194bb387a9a7ad0cb45f}\label{classAtom_a99d3c6ead3b3194bb387a9a7ad0cb45f}} 
+\index{Atom@{Atom}!atomic\_number@{atomic\_number}}
+\index{atomic\_number@{atomic\_number}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{atomic\_number()}{atomic\_number()}}
+{\footnotesize\ttfamily int Atom\+::atomic\+\_\+number (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get() function. 
+
+Returns the atomic number of the atom \mbox{\Hypertarget{classAtom_a2e59ddcbb347ed657f4aac28ea12d7ee}\label{classAtom_a2e59ddcbb347ed657f4aac28ea12d7ee}} 
+\index{Atom@{Atom}!charge@{charge}}
+\index{charge@{charge}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{charge()}{charge()}}
+{\footnotesize\ttfamily double Atom\+::charge (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get() function. 
+
+Returns the partial charge of the atom \mbox{\Hypertarget{classAtom_a103ce7987dae3450af31082b58fbd62e}\label{classAtom_a103ce7987dae3450af31082b58fbd62e}} 
+\index{Atom@{Atom}!charge\_0@{charge\_0}}
+\index{charge\_0@{charge\_0}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{charge\_0()}{charge\_0()}}
+{\footnotesize\ttfamily double Atom\+::charge\+\_\+0 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get() function. 
+
+Returns the oxidation of the atom \mbox{\Hypertarget{classAtom_a90e3bf4e2d4d7b9b493074805f077587}\label{classAtom_a90e3bf4e2d4d7b9b493074805f077587}} 
+\index{Atom@{Atom}!coordinates@{coordinates}}
+\index{coordinates@{coordinates}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{coordinates()}{coordinates()}}
+{\footnotesize\ttfamily double $\ast$ Atom\+::coordinates (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+get() function 
+
+Returns the coordinates of the atom \mbox{\Hypertarget{classAtom_afd1a59933c3197edf2ca5e2bb13bb50a}\label{classAtom_afd1a59933c3197edf2ca5e2bb13bb50a}} 
+\index{Atom@{Atom}!element@{element}}
+\index{element@{element}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{element()}{element()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classElement}{Element}} Atom\+::element (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get() function. 
+
+Returns the element associated with the atom The attributes of \mbox{\hyperlink{classElement}{Element}} are properties of the atom ~\newline
+ Name ~\newline
+ Symbol ~\newline
+ Atomic Number ~\newline
+ Covalent Radius ~\newline
+ Bond order radii ~\newline
+ Van der Waals Radius ~\newline
+ Radius ~\newline
+ Maximum bond valence ~\newline
+ Mass ~\newline
+ electronegativity ~\newline
+ \mbox{\Hypertarget{classAtom_adfbff464ba7a3653a09d376af6a19481}\label{classAtom_adfbff464ba7a3653a09d376af6a19481}} 
+\index{Atom@{Atom}!gradient@{gradient}}
+\index{gradient@{gradient}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{gradient()}{gradient()}}
+{\footnotesize\ttfamily double $\ast$ Atom\+::gradient (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get() function. 
+
+Returns the gradient of the atom \mbox{\Hypertarget{classAtom_a81cdce791519de028521e3cbf2da53f4}\label{classAtom_a81cdce791519de028521e3cbf2da53f4}} 
+\index{Atom@{Atom}!hardness@{hardness}}
+\index{hardness@{hardness}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{hardness()}{hardness()}}
+{\footnotesize\ttfamily double Atom\+::hardness (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get() function. 
+
+Returns the hardness of the atom \mbox{\Hypertarget{classAtom_a15d2acd08315786dc061e6f06dc3d46f}\label{classAtom_a15d2acd08315786dc061e6f06dc3d46f}} 
+\index{Atom@{Atom}!name@{name}}
+\index{name@{name}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{name()}{name()}}
+{\footnotesize\ttfamily string Atom\+::name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get() function. 
+
+Returns the name of the atom \mbox{\Hypertarget{classAtom_aeb39d86c8efe49753c96e7b5e2dcd804}\label{classAtom_aeb39d86c8efe49753c96e7b5e2dcd804}} 
+\index{Atom@{Atom}!symbol@{symbol}}
+\index{symbol@{symbol}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{symbol()}{symbol()}}
+{\footnotesize\ttfamily string Atom\+::symbol (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get() function. 
+
+Returns the symbol of the atom \mbox{\Hypertarget{classAtom_aa41cdaadddf41ea979c47c175468f57e}\label{classAtom_aa41cdaadddf41ea979c47c175468f57e}} 
+\index{Atom@{Atom}!velocity@{velocity}}
+\index{velocity@{velocity}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{velocity()}{velocity()}}
+{\footnotesize\ttfamily double $\ast$ Atom\+::velocity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get() function. 
+
+Returns the velocity of the atom \mbox{\Hypertarget{classAtom_ad5e0fa0b30770fe7d681f87415de0d6e}\label{classAtom_ad5e0fa0b30770fe7d681f87415de0d6e}} 
+\index{Atom@{Atom}!width@{width}}
+\index{width@{width}!Atom@{Atom}}
+\doxysubsubsection{\texorpdfstring{width()}{width()}}
+{\footnotesize\ttfamily double Atom\+::width (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get() function. 
+
+Returns the width of the atom 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+Atom.\+h\item 
+Atom.\+cpp\end{DoxyCompactItemize}

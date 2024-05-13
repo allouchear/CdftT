@@ -5,7 +5,7 @@ using namespace std;
 #include "Constants.h"
 //il faut inclure le constructeur qui initiliaze a partir des classes periodidctable, element de Dim
 
-/*constructeur par défaut: initialize les attributs cinématique de l'atome à 0*/
+/*constructeur par défaut: initialise les attributs cinématique de l'atome à 0*/
 Atom::Atom()
 {
 	for(int i=0; i<3;i++)
@@ -14,9 +14,18 @@ Atom::Atom()
 		_gradient[i]=0;
 		_velocity[i]=0;
 	}
+	_name = "none";
+	_symbol = "none";
+	_atomic_number = 0;
+	_charge = 0;
+	_charge_0 = 0;
+	_hardness = 0;
+	_width = 0;
+	_e=Element();
 }
 
-Atom::Atom(const PeriodicTable& table, const string& name)
+//initialize par le nom/symbole de l'élément
+Atom::Atom(PeriodicTable& Table, const string& name)
 {	
 	for(int i=0; i<3;i++)
 	{
@@ -24,11 +33,14 @@ Atom::Atom(const PeriodicTable& table, const string& name)
 		_gradient[i]=0;
 		_velocity[i]=0;
 	}
-	Element e=PeriodicTable.element(name);
-	
+	_e=Table.element(name);
+	_name = _e.name();
+	_symbol = _e.symbol();
+	_atomic_number = _e.atomic_number();
 }
 
-Atom::Atom(const PeriodicTable& table, const int& n)
+//intialise par le numéro atomique
+Atom::Atom(PeriodicTable& Table, const int& n)
 {	
 	for(int i=0; i<3;i++)
 	{
@@ -36,12 +48,71 @@ Atom::Atom(const PeriodicTable& table, const int& n)
 		_gradient[i]=0;
 		_velocity[i]=0;
 	}
-	Element e=PeriodicTable.element(name);
-	
+	_e=Table.element(n);
+	_name = _e.name();
+	_symbol = _e.symbol();
+	_atomic_number = _e.atomic_number();
 }
+
 Atom::~Atom(){}
 
-double Atom::_get_distance(Atom& a2)
+double* Atom::coordinates()
+{
+	return _coordinates;
+}
+
+double* Atom::gradient()
+{
+	return _gradient;
+}
+
+double* Atom::velocity()
+{
+	return _velocity;
+}
+
+string Atom::name()
+{
+	return _name;
+}
+
+string Atom::symbol()
+{
+	return _symbol;
+}
+
+int Atom::atomic_number()
+{
+	return _atomic_number;
+}
+
+double Atom::charge()
+{
+	return _charge;
+}
+
+double Atom::charge_0()
+{
+	return _charge_0;
+}
+
+double Atom::hardness()
+{
+	return _hardness;
+}
+
+double Atom::width()
+{
+	return _width;
+}
+
+Element Atom::element()
+{
+	return _e;
+}
+
+//renvoi la distance entre l'atome et un autre(a2)
+double Atom::get_distance(Atom& a2)
 {
 	double C1[3];
 	double C2[3];
@@ -59,7 +130,8 @@ double Atom::_get_distance(Atom& a2)
 	return sqrt( x * x + y * y + z * z );
 }
 
-double Atom::_get_angle(Atom& a2, Atom& a3)
+//renvoi langle formée par l'atome et 2 autres(a2,a3)
+double Atom::get_angle(Atom& a2, Atom& a3)
 {
 	double C1[3];
 	double C2[3];
@@ -98,7 +170,7 @@ double Atom::_get_angle(Atom& a2, Atom& a3)
 }
 
 
-double Atom::_get_torsion(Atom& a2, Atom& a3, Atom& a4)
+double Atom::get_torsion(Atom& a2, Atom& a3, Atom& a4)
 {
 	double C1[3];
 	double C2[3];

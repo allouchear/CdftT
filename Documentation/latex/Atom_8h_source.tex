@@ -1,0 +1,73 @@
+\hypertarget{Atom_8h_source}{}\doxysection{Atom.\+h}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef \_CDFTT\_ATOM\_H\_INCLUDED}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define \_CDFTT\_ATOM\_H\_INCLUDED}}
+\DoxyCodeLine{3 \textcolor{keyword}{using namespace }std;}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include "{}PeriodicTable.h"{}}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include "{}Element.h"{}}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{9 }
+\DoxyCodeLine{11 \textcolor{keyword}{class }\mbox{\hyperlink{classAtom}{Atom}}}
+\DoxyCodeLine{12 \{}
+\DoxyCodeLine{13     \textcolor{keywordtype}{double} \_coordinates[3];}
+\DoxyCodeLine{14     \textcolor{keywordtype}{double} \_gradient[3];}
+\DoxyCodeLine{15     \textcolor{keywordtype}{double} \_velocity[3];}
+\DoxyCodeLine{16     \textcolor{keywordtype}{string} \_name;}
+\DoxyCodeLine{17     \textcolor{keywordtype}{string} \_symbol;}
+\DoxyCodeLine{18     \textcolor{keywordtype}{int} \_atomic\_number;}
+\DoxyCodeLine{19     \textcolor{keywordtype}{double} \_charge; \textcolor{comment}{// partial charge}}
+\DoxyCodeLine{20     \textcolor{keywordtype}{double} \_charge\_0; \textcolor{comment}{// oxidation}}
+\DoxyCodeLine{21     \textcolor{keywordtype}{double} \_hardness; \textcolor{comment}{// eta}}
+\DoxyCodeLine{22     \textcolor{keywordtype}{double} \_width; \textcolor{comment}{// eta}}
+\DoxyCodeLine{23     \mbox{\hyperlink{classElement}{Element}} \_e;}
+\DoxyCodeLine{24     }
+\DoxyCodeLine{25     \textcolor{keywordtype}{string} \_mm\_Type;}
+\DoxyCodeLine{26     \textcolor{keywordtype}{string} \_pdb\_Type;}
+\DoxyCodeLine{27     \textcolor{keywordtype}{string} \_residue\_name;}
+\DoxyCodeLine{28     \textcolor{keywordtype}{int} \_residue\_number;}
+\DoxyCodeLine{29     \textcolor{keywordtype}{int} \_N;}
+\DoxyCodeLine{30     }
+\DoxyCodeLine{31     \textcolor{keyword}{public}:}
+\DoxyCodeLine{32 }
+\DoxyCodeLine{33     \mbox{\hyperlink{classAtom_aa0147d7e49ab90f559b66e38d3d12863}{Atom}}();}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{38     \mbox{\hyperlink{classAtom_aa0147d7e49ab90f559b66e38d3d12863}{Atom}}(\mbox{\hyperlink{classPeriodicTable}{PeriodicTable}}\& Table,\textcolor{keyword}{const} \textcolor{keywordtype}{string}\& \mbox{\hyperlink{classAtom_a15d2acd08315786dc061e6f06dc3d46f}{name}});}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{43     \mbox{\hyperlink{classAtom_aa0147d7e49ab90f559b66e38d3d12863}{Atom}}(\mbox{\hyperlink{classPeriodicTable}{PeriodicTable}}\& Table, \textcolor{keyword}{const} \textcolor{keywordtype}{int}\& n);}
+\DoxyCodeLine{45 }
+\DoxyCodeLine{48     \textcolor{keywordtype}{double}* \mbox{\hyperlink{classAtom_a90e3bf4e2d4d7b9b493074805f077587}{coordinates}}();}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{53     \textcolor{keywordtype}{double}* \mbox{\hyperlink{classAtom_adfbff464ba7a3653a09d376af6a19481}{gradient}}();}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{57     \textcolor{keywordtype}{double}* \mbox{\hyperlink{classAtom_aa41cdaadddf41ea979c47c175468f57e}{velocity}}();}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{62     \textcolor{keywordtype}{string} \mbox{\hyperlink{classAtom_a15d2acd08315786dc061e6f06dc3d46f}{name}}();}
+\DoxyCodeLine{64 }
+\DoxyCodeLine{67     \textcolor{keywordtype}{string} \mbox{\hyperlink{classAtom_aeb39d86c8efe49753c96e7b5e2dcd804}{symbol}}();}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{72     \textcolor{keywordtype}{int} \mbox{\hyperlink{classAtom_a99d3c6ead3b3194bb387a9a7ad0cb45f}{atomic\_number}}();}
+\DoxyCodeLine{74 }
+\DoxyCodeLine{77     \textcolor{keywordtype}{double} \mbox{\hyperlink{classAtom_a2e59ddcbb347ed657f4aac28ea12d7ee}{charge}}();}
+\DoxyCodeLine{79 }
+\DoxyCodeLine{82     \textcolor{keywordtype}{double} \mbox{\hyperlink{classAtom_a103ce7987dae3450af31082b58fbd62e}{charge\_0}}();}
+\DoxyCodeLine{84 }
+\DoxyCodeLine{87     \textcolor{keywordtype}{double} \mbox{\hyperlink{classAtom_a81cdce791519de028521e3cbf2da53f4}{hardness}}();}
+\DoxyCodeLine{89 }
+\DoxyCodeLine{92     \textcolor{keywordtype}{double} \mbox{\hyperlink{classAtom_ad5e0fa0b30770fe7d681f87415de0d6e}{width}}();}
+\DoxyCodeLine{94 }
+\DoxyCodeLine{97     \mbox{\hyperlink{classElement}{Element}} \mbox{\hyperlink{classAtom_afd1a59933c3197edf2ca5e2bb13bb50a}{element}}();}
+\DoxyCodeLine{99 }
+\DoxyCodeLine{112     \mbox{\hyperlink{classAtom_a6926cfb6d5e61ca21c71476b66547a5e}{\string~Atom}}();}
+\DoxyCodeLine{114         }
+\DoxyCodeLine{115     \textcolor{keywordtype}{double} \mbox{\hyperlink{classAtom_a1d1ea34fa77e13b3dbc1ead655f3c10e}{get\_distance}}(\mbox{\hyperlink{classAtom}{Atom}}\& a2);}
+\DoxyCodeLine{117         }
+\DoxyCodeLine{118     \textcolor{keywordtype}{double} \mbox{\hyperlink{classAtom_a159528dd43951f79bd0877803e0ed81b}{get\_angle}}(\mbox{\hyperlink{classAtom}{Atom}}\& a2, \mbox{\hyperlink{classAtom}{Atom}}\& a3);}
+\DoxyCodeLine{120         }
+\DoxyCodeLine{121     \textcolor{keywordtype}{double} \mbox{\hyperlink{classAtom_ad58e770f3efe88328220c0fbb71c1467}{get\_torsion}}(\mbox{\hyperlink{classAtom}{Atom}}\& a2, \mbox{\hyperlink{classAtom}{Atom}}\& a3, \mbox{\hyperlink{classAtom}{Atom}}\& a4);}
+\DoxyCodeLine{123 \};}
+\DoxyCodeLine{124 }
+\DoxyCodeLine{125 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//\_CDFTT\_ATOM\_H\_INCLUDED}}
+
+\end{DoxyCode}

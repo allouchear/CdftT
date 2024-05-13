@@ -1,0 +1,247 @@
+\hypertarget{classElement}{}\doxysection{Element Class Reference}
+\label{classElement}\index{Element@{Element}}
+
+
+An element class.  
+
+
+
+
+{\ttfamily \#include $<$Element.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classElement_ab0d0e20be9a36ae676202db753faeec9}{Element}} ()
+\begin{DoxyCompactList}\small\item\em A default constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classElement_a05aa8d714d22be1c1434c2d8c7d6ed64}{Element}} (const string \&, const string \&, const int \&, const double \&, const double \&, const double \&, const double \&, const int \&, const double \&, const double \&)
+\begin{DoxyCompactList}\small\item\em A real constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classElement_a13d54ba9c08b6bec651402f1c2bb002c}{$\sim$\+Element}} ()
+\begin{DoxyCompactList}\small\item\em A default destructor. \end{DoxyCompactList}\item 
+string \mbox{\hyperlink{classElement_a2e3f93f78eaaab2f6c69296ea29704be}{name}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning a string value. \end{DoxyCompactList}\item 
+string \mbox{\hyperlink{classElement_a19d5cc552a8b4694cbda575912ddaeeb}{symbol}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning a string value. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classElement_ac086b86019115ac5953e432f1a2fe07c}{atomic\+\_\+number}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning a integer value. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classElement_ab4df906c00a3e09c0f68bdcc09fc5778}{covalent\+\_\+radii}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning a double value. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classElement_a0e7a00ec1d348abfa938ad19749fa419}{bond\+\_\+order\+\_\+radii}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning a double value. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classElement_a84e72b32428dd5fe708e423e8645800d}{van\+\_\+der\+\_\+waals\+\_\+radii}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning a double value. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classElement_a564d967bd166fdb1f90bfcf45a5d51ff}{radii}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning a double value. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classElement_a5b00b1e979867f6d1a367f71a5030e0b}{maximum\+\_\+bond\+\_\+valence}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning a double value. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classElement_aa49475e90b16dc75b10a272cb866ac46}{mass}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning a double value. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classElement_a95d54069c62f530721215996f05bac4b}{electronegativity}} ()
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning a double value. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIsotope}{Isotope}} \mbox{\hyperlink{classElement_ace92d92276a9ad2a29e6ce7a9cfc3032}{isotope}} (const int \&i)
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments and returning an isotope value. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classElement_a58a8f990bfba1f603c0deadfe897080c}{push\+\_\+isotope}} (const \mbox{\hyperlink{classIsotope}{Isotope}} \&ISO)
+\begin{DoxyCompactList}\small\item\em A normal member taking no arguments. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+An element class. 
+
+This class will be use as a dictionnary about all the properties of an element. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classElement_ab0d0e20be9a36ae676202db753faeec9}\label{classElement_ab0d0e20be9a36ae676202db753faeec9}} 
+\index{Element@{Element}!Element@{Element}}
+\index{Element@{Element}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{Element()}{Element()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily Element\+::\+Element (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+A default constructor. 
+
+In the case of a problem, this constructor create an element with all value on 0 and all string on \char`\"{}\+None\char`\"{}. \mbox{\Hypertarget{classElement_a05aa8d714d22be1c1434c2d8c7d6ed64}\label{classElement_a05aa8d714d22be1c1434c2d8c7d6ed64}} 
+\index{Element@{Element}!Element@{Element}}
+\index{Element@{Element}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{Element()}{Element()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily Element\+::\+Element (\begin{DoxyParamCaption}\item[{const string \&}]{Name,  }\item[{const string \&}]{Symbol,  }\item[{const int \&}]{Atomic\+Number,  }\item[{const double \&}]{Covalent\+Radii,  }\item[{const double \&}]{Bond\+Order\+Radii,  }\item[{const double \&}]{Van\+Der\+Waals\+Radii,  }\item[{const double \&}]{Radii,  }\item[{const int \&}]{Maximum\+Bond\+Valence,  }\item[{const double \&}]{Mass,  }\item[{const double \&}]{Electronegativity }\end{DoxyParamCaption})}
+
+
+
+A real constructor. 
+
+This constructor is used to add all of the data of one element. \mbox{\Hypertarget{classElement_a13d54ba9c08b6bec651402f1c2bb002c}\label{classElement_a13d54ba9c08b6bec651402f1c2bb002c}} 
+\index{Element@{Element}!````~Element@{$\sim$Element}}
+\index{````~Element@{$\sim$Element}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{$\sim$Element()}{~Element()}}
+{\footnotesize\ttfamily Element\+::$\sim$\+Element (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+A default destructor. 
+
+We don\textquotesingle{}t use it. 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classElement_ac086b86019115ac5953e432f1a2fe07c}\label{classElement_ac086b86019115ac5953e432f1a2fe07c}} 
+\index{Element@{Element}!atomic\_number@{atomic\_number}}
+\index{atomic\_number@{atomic\_number}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{atomic\_number()}{atomic\_number()}}
+{\footnotesize\ttfamily int Element\+::atomic\+\_\+number (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning a integer value. 
+
+\begin{DoxyReturn}{Returns}
+The atomic number of an element. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classElement_a0e7a00ec1d348abfa938ad19749fa419}\label{classElement_a0e7a00ec1d348abfa938ad19749fa419}} 
+\index{Element@{Element}!bond\_order\_radii@{bond\_order\_radii}}
+\index{bond\_order\_radii@{bond\_order\_radii}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{bond\_order\_radii()}{bond\_order\_radii()}}
+{\footnotesize\ttfamily double Element\+::bond\+\_\+order\+\_\+radii (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning a double value. 
+
+\begin{DoxyReturn}{Returns}
+The bond order radius of an element. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classElement_ab4df906c00a3e09c0f68bdcc09fc5778}\label{classElement_ab4df906c00a3e09c0f68bdcc09fc5778}} 
+\index{Element@{Element}!covalent\_radii@{covalent\_radii}}
+\index{covalent\_radii@{covalent\_radii}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{covalent\_radii()}{covalent\_radii()}}
+{\footnotesize\ttfamily double Element\+::covalent\+\_\+radii (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning a double value. 
+
+\begin{DoxyReturn}{Returns}
+The covalent radius of an element. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classElement_a95d54069c62f530721215996f05bac4b}\label{classElement_a95d54069c62f530721215996f05bac4b}} 
+\index{Element@{Element}!electronegativity@{electronegativity}}
+\index{electronegativity@{electronegativity}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{electronegativity()}{electronegativity()}}
+{\footnotesize\ttfamily double Element\+::electronegativity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning a double value. 
+
+\begin{DoxyReturn}{Returns}
+The electronegativity of an element. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classElement_ace92d92276a9ad2a29e6ce7a9cfc3032}\label{classElement_ace92d92276a9ad2a29e6ce7a9cfc3032}} 
+\index{Element@{Element}!isotope@{isotope}}
+\index{isotope@{isotope}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{isotope()}{isotope()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIsotope}{Isotope}} Element\+::isotope (\begin{DoxyParamCaption}\item[{const int \&}]{i }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning an isotope value. 
+
+\begin{DoxyReturn}{Returns}
+The isotope i of an element. 
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See also}
+\mbox{\hyperlink{classIsotope}{Isotope}} class. 
+\end{DoxySeeAlso}
+\mbox{\Hypertarget{classElement_aa49475e90b16dc75b10a272cb866ac46}\label{classElement_aa49475e90b16dc75b10a272cb866ac46}} 
+\index{Element@{Element}!mass@{mass}}
+\index{mass@{mass}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{mass()}{mass()}}
+{\footnotesize\ttfamily double Element\+::mass (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning a double value. 
+
+\begin{DoxyReturn}{Returns}
+The mass of an element. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classElement_a5b00b1e979867f6d1a367f71a5030e0b}\label{classElement_a5b00b1e979867f6d1a367f71a5030e0b}} 
+\index{Element@{Element}!maximum\_bond\_valence@{maximum\_bond\_valence}}
+\index{maximum\_bond\_valence@{maximum\_bond\_valence}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{maximum\_bond\_valence()}{maximum\_bond\_valence()}}
+{\footnotesize\ttfamily int Element\+::maximum\+\_\+bond\+\_\+valence (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning a double value. 
+
+\begin{DoxyReturn}{Returns}
+The maximum bond valence of an element. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classElement_a2e3f93f78eaaab2f6c69296ea29704be}\label{classElement_a2e3f93f78eaaab2f6c69296ea29704be}} 
+\index{Element@{Element}!name@{name}}
+\index{name@{name}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{name()}{name()}}
+{\footnotesize\ttfamily string Element\+::name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning a string value. 
+
+\begin{DoxyReturn}{Returns}
+The element\textquotesingle{}s name. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classElement_a58a8f990bfba1f603c0deadfe897080c}\label{classElement_a58a8f990bfba1f603c0deadfe897080c}} 
+\index{Element@{Element}!push\_isotope@{push\_isotope}}
+\index{push\_isotope@{push\_isotope}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{push\_isotope()}{push\_isotope()}}
+{\footnotesize\ttfamily void Element\+::push\+\_\+isotope (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIsotope}{Isotope}} \&}]{ISO }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments. 
+
+This add an isotope in the vector \+\_\+isotope. \mbox{\Hypertarget{classElement_a564d967bd166fdb1f90bfcf45a5d51ff}\label{classElement_a564d967bd166fdb1f90bfcf45a5d51ff}} 
+\index{Element@{Element}!radii@{radii}}
+\index{radii@{radii}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{radii()}{radii()}}
+{\footnotesize\ttfamily double Element\+::radii (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning a double value. 
+
+\begin{DoxyReturn}{Returns}
+The radius of an element. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classElement_a19d5cc552a8b4694cbda575912ddaeeb}\label{classElement_a19d5cc552a8b4694cbda575912ddaeeb}} 
+\index{Element@{Element}!symbol@{symbol}}
+\index{symbol@{symbol}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{symbol()}{symbol()}}
+{\footnotesize\ttfamily string Element\+::symbol (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning a string value. 
+
+\begin{DoxyReturn}{Returns}
+The element\textquotesingle{}s symbol. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classElement_a84e72b32428dd5fe708e423e8645800d}\label{classElement_a84e72b32428dd5fe708e423e8645800d}} 
+\index{Element@{Element}!van\_der\_waals\_radii@{van\_der\_waals\_radii}}
+\index{van\_der\_waals\_radii@{van\_der\_waals\_radii}!Element@{Element}}
+\doxysubsubsection{\texorpdfstring{van\_der\_waals\_radii()}{van\_der\_waals\_radii()}}
+{\footnotesize\ttfamily double Element\+::van\+\_\+der\+\_\+waals\+\_\+radii (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+A normal member taking no arguments and returning a double value. 
+
+\begin{DoxyReturn}{Returns}
+The Van Der Waals radius of an element. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+Element.\+h\item 
+Element.\+cpp\end{DoxyCompactItemize}

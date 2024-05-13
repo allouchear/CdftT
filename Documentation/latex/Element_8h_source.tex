@@ -1,0 +1,158 @@
+\hypertarget{Element_8h_source}{}\doxysection{Element.\+h}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef CDFTT\_ELEMENT\_H\_INCLUDED}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define CDFTT\_ELEMENT\_H\_INCLUDED}}
+\DoxyCodeLine{3 \textcolor{preprocessor}{\#include<iostream>}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include<string>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include<vector>}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{keyword}{using namespace }std;}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{10 }
+\DoxyCodeLine{12 \textcolor{keyword}{class }\mbox{\hyperlink{classIsotope}{Isotope}}}
+\DoxyCodeLine{13 \{}
+\DoxyCodeLine{14     \textcolor{keyword}{private}:}
+\DoxyCodeLine{15         \textcolor{keywordtype}{string} \_symbol;}
+\DoxyCodeLine{16         \textcolor{keywordtype}{int} \_int\_mass;}
+\DoxyCodeLine{17         \textcolor{keywordtype}{double} \_real\_mass;}
+\DoxyCodeLine{18         \textcolor{keywordtype}{double} \_abundance;}
+\DoxyCodeLine{19     \textcolor{keyword}{public}:}
+\DoxyCodeLine{20 }
+\DoxyCodeLine{22 }
+\DoxyCodeLine{24         \mbox{\hyperlink{classIsotope_a70dfd751765bfd2c9ef1f3ac72a5bd9c}{Isotope}}();}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{27 }
+\DoxyCodeLine{29         \mbox{\hyperlink{classIsotope_a70dfd751765bfd2c9ef1f3ac72a5bd9c}{Isotope}}(\textcolor{keyword}{const} \textcolor{keywordtype}{string}\&, \textcolor{keyword}{const} \textcolor{keywordtype}{int}\&, \textcolor{keyword}{const} \textcolor{keywordtype}{double}\&, \textcolor{keyword}{const} \textcolor{keywordtype}{double}\&);}
+\DoxyCodeLine{30 }
+\DoxyCodeLine{32 }
+\DoxyCodeLine{34         \mbox{\hyperlink{classIsotope_a7b22935e0ade348ee513733eeda1fa23}{\string~Isotope}}();}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{37 }
+\DoxyCodeLine{39         \textcolor{keywordtype}{string} \mbox{\hyperlink{classIsotope_a0512c5345539c64dcef55a1e7ffa8404}{symbol}}()}
+\DoxyCodeLine{40         \{}
+\DoxyCodeLine{41             \textcolor{keywordflow}{return} \_symbol;}
+\DoxyCodeLine{42         \}}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{45 }
+\DoxyCodeLine{47         \textcolor{keywordtype}{int} \mbox{\hyperlink{classIsotope_a4520569cce64a89ef0ca8ef00c6c0aed}{int\_mass}}()}
+\DoxyCodeLine{48         \{}
+\DoxyCodeLine{49             \textcolor{keywordflow}{return} \_int\_mass;}
+\DoxyCodeLine{50         \}}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{53 }
+\DoxyCodeLine{55         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIsotope_aafef264f0e8d5f5040caea67fcb9d753}{real\_mass}}()}
+\DoxyCodeLine{56         \{}
+\DoxyCodeLine{57             \textcolor{keywordflow}{return} \_real\_mass;}
+\DoxyCodeLine{58         \}}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{61 }
+\DoxyCodeLine{63         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIsotope_a6d44cde1092db9d3d0296bb5f60201f4}{abundance}}()}
+\DoxyCodeLine{64         \{}
+\DoxyCodeLine{65             \textcolor{keywordflow}{return} \_abundance;}
+\DoxyCodeLine{66         \}}
+\DoxyCodeLine{67 \};}
+\DoxyCodeLine{68 }
+\DoxyCodeLine{70 }
+\DoxyCodeLine{72 \textcolor{keyword}{class }\mbox{\hyperlink{classElement}{Element}}}
+\DoxyCodeLine{73 \{}
+\DoxyCodeLine{74     \textcolor{keyword}{private}:}
+\DoxyCodeLine{75         \textcolor{keywordtype}{string} \_name;}
+\DoxyCodeLine{76         \textcolor{keywordtype}{string} \_symbol;}
+\DoxyCodeLine{77         \textcolor{keywordtype}{int} \_atomic\_number;}
+\DoxyCodeLine{78         \textcolor{keywordtype}{double} \_covalent\_radii;}
+\DoxyCodeLine{79         \textcolor{keywordtype}{double} \_bond\_order\_radii;}
+\DoxyCodeLine{80         \textcolor{keywordtype}{double} \_van\_der\_waals\_radii;}
+\DoxyCodeLine{81         \textcolor{keywordtype}{double} \_radii;}
+\DoxyCodeLine{82         \textcolor{keywordtype}{int} \_maximum\_bond\_valence;}
+\DoxyCodeLine{83         \textcolor{keywordtype}{double} \_mass;}
+\DoxyCodeLine{84         \textcolor{keywordtype}{double} \_electronegativity;}
+\DoxyCodeLine{85         vector<Isotope> \_isotope;}
+\DoxyCodeLine{86     \textcolor{keyword}{public}:}
+\DoxyCodeLine{87 }
+\DoxyCodeLine{89 }
+\DoxyCodeLine{91         \mbox{\hyperlink{classElement_ab0d0e20be9a36ae676202db753faeec9}{Element}}();}
+\DoxyCodeLine{92 }
+\DoxyCodeLine{94 }
+\DoxyCodeLine{96         \mbox{\hyperlink{classElement_ab0d0e20be9a36ae676202db753faeec9}{Element}}(\textcolor{keyword}{const} \textcolor{keywordtype}{string}\&, \textcolor{keyword}{const} \textcolor{keywordtype}{string}\&, \textcolor{keyword}{const} \textcolor{keywordtype}{int}\&, \textcolor{keyword}{const} \textcolor{keywordtype}{double}\&, \textcolor{keyword}{const} \textcolor{keywordtype}{double}\&, \textcolor{keyword}{const} \textcolor{keywordtype}{double}\&, \textcolor{keyword}{const} \textcolor{keywordtype}{double}\&, \textcolor{keyword}{const} \textcolor{keywordtype}{int}\&, \textcolor{keyword}{const} \textcolor{keywordtype}{double}\&, \textcolor{keyword}{const} \textcolor{keywordtype}{double}\&);}
+\DoxyCodeLine{97 }
+\DoxyCodeLine{99 }
+\DoxyCodeLine{101         \mbox{\hyperlink{classElement_a13d54ba9c08b6bec651402f1c2bb002c}{\string~Element}}();}
+\DoxyCodeLine{102 }
+\DoxyCodeLine{104 }
+\DoxyCodeLine{106         \textcolor{keywordtype}{string} \mbox{\hyperlink{classElement_a2e3f93f78eaaab2f6c69296ea29704be}{name}}()}
+\DoxyCodeLine{107         \{}
+\DoxyCodeLine{108             \textcolor{keywordflow}{return} \_name;}
+\DoxyCodeLine{109         \}}
+\DoxyCodeLine{110 }
+\DoxyCodeLine{112 }
+\DoxyCodeLine{114         \textcolor{keywordtype}{string} \mbox{\hyperlink{classElement_a19d5cc552a8b4694cbda575912ddaeeb}{symbol}}()}
+\DoxyCodeLine{115         \{}
+\DoxyCodeLine{116             \textcolor{keywordflow}{return} \_symbol;}
+\DoxyCodeLine{117         \}}
+\DoxyCodeLine{118 }
+\DoxyCodeLine{120 }
+\DoxyCodeLine{122         \textcolor{keywordtype}{int} \mbox{\hyperlink{classElement_ac086b86019115ac5953e432f1a2fe07c}{atomic\_number}}()}
+\DoxyCodeLine{123         \{}
+\DoxyCodeLine{124             \textcolor{keywordflow}{return} \_atomic\_number;}
+\DoxyCodeLine{125         \}}
+\DoxyCodeLine{126 }
+\DoxyCodeLine{128 }
+\DoxyCodeLine{130         \textcolor{keywordtype}{double} \mbox{\hyperlink{classElement_ab4df906c00a3e09c0f68bdcc09fc5778}{covalent\_radii}}()}
+\DoxyCodeLine{131         \{}
+\DoxyCodeLine{132             \textcolor{keywordflow}{return} \_covalent\_radii;}
+\DoxyCodeLine{133         \}}
+\DoxyCodeLine{134 }
+\DoxyCodeLine{136 }
+\DoxyCodeLine{138         \textcolor{keywordtype}{double} \mbox{\hyperlink{classElement_a0e7a00ec1d348abfa938ad19749fa419}{bond\_order\_radii}}()}
+\DoxyCodeLine{139         \{}
+\DoxyCodeLine{140             \textcolor{keywordflow}{return} \_bond\_order\_radii;}
+\DoxyCodeLine{141         \}}
+\DoxyCodeLine{142 }
+\DoxyCodeLine{144 }
+\DoxyCodeLine{146         \textcolor{keywordtype}{double} \mbox{\hyperlink{classElement_a84e72b32428dd5fe708e423e8645800d}{van\_der\_waals\_radii}}()}
+\DoxyCodeLine{147         \{}
+\DoxyCodeLine{148             \textcolor{keywordflow}{return} \_van\_der\_waals\_radii;}
+\DoxyCodeLine{149         \}}
+\DoxyCodeLine{150 }
+\DoxyCodeLine{152 }
+\DoxyCodeLine{154         \textcolor{keywordtype}{double} \mbox{\hyperlink{classElement_a564d967bd166fdb1f90bfcf45a5d51ff}{radii}}()}
+\DoxyCodeLine{155         \{}
+\DoxyCodeLine{156             \textcolor{keywordflow}{return} \_radii;}
+\DoxyCodeLine{157         \}}
+\DoxyCodeLine{158 }
+\DoxyCodeLine{160 }
+\DoxyCodeLine{162         \textcolor{keywordtype}{int} \mbox{\hyperlink{classElement_a5b00b1e979867f6d1a367f71a5030e0b}{maximum\_bond\_valence}}()}
+\DoxyCodeLine{163         \{}
+\DoxyCodeLine{164             \textcolor{keywordflow}{return} \_maximum\_bond\_valence;}
+\DoxyCodeLine{165         \}}
+\DoxyCodeLine{166 }
+\DoxyCodeLine{168 }
+\DoxyCodeLine{170         \textcolor{keywordtype}{double} \mbox{\hyperlink{classElement_aa49475e90b16dc75b10a272cb866ac46}{mass}}()}
+\DoxyCodeLine{171         \{}
+\DoxyCodeLine{172             \textcolor{keywordflow}{return} \_mass;}
+\DoxyCodeLine{173         \}}
+\DoxyCodeLine{174 }
+\DoxyCodeLine{176 }
+\DoxyCodeLine{178         \textcolor{keywordtype}{double} \mbox{\hyperlink{classElement_a95d54069c62f530721215996f05bac4b}{electronegativity}}()}
+\DoxyCodeLine{179         \{}
+\DoxyCodeLine{180             \textcolor{keywordflow}{return} \_electronegativity;}
+\DoxyCodeLine{181         \}}
+\DoxyCodeLine{182 }
+\DoxyCodeLine{184 }
+\DoxyCodeLine{188         \mbox{\hyperlink{classIsotope}{Isotope}} \mbox{\hyperlink{classElement_ace92d92276a9ad2a29e6ce7a9cfc3032}{isotope}}(\textcolor{keyword}{const} \textcolor{keywordtype}{int}\& i)}
+\DoxyCodeLine{189         \{}
+\DoxyCodeLine{190             \textcolor{keywordflow}{return} \_isotope[i-\/1];}
+\DoxyCodeLine{191         \}}
+\DoxyCodeLine{192 }
+\DoxyCodeLine{194 }
+\DoxyCodeLine{196         \textcolor{keywordtype}{void} \mbox{\hyperlink{classElement_a58a8f990bfba1f603c0deadfe897080c}{push\_isotope}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIsotope}{Isotope}}\& ISO)}
+\DoxyCodeLine{197         \{}
+\DoxyCodeLine{198             \_isotope.push\_back(ISO);}
+\DoxyCodeLine{199         \}}
+\DoxyCodeLine{200 \};}
+\DoxyCodeLine{201 }
+\DoxyCodeLine{202 }
+\DoxyCodeLine{203 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}
