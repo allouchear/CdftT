@@ -41,5 +41,10 @@ void GTF::normaliseGTF(Factorial FTable)
 
 GTF GTF::overlapGTF(GTF left, GTF right)
 {
-	return //Voir avec le prof et vérifier la classe avec lui
+	return //Recopier et remplacer -> par des . (changer aussi les noms des valeurs pointés par les miennes)
+	// Rajouter ma propre fonction power dans MathFunction (copier celle du prof)
+	// Revoir GTF*GTF (faire pareil que pour overlap)
+	// Rajouter des fonctions (boucle) pour plusieurs star/overlap (si possible)
+	// Puis faire ERIGTF, ionicPotentialGTF, kineticGTF et GTFxyzGTF
+
 }
