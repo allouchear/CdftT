@@ -5,6 +5,9 @@ using namespace std;
 #include "Element.h"
 #include <string>
 
+	//! An Atom class.
+	/*! This class will be used in the Structure class to create Structures and Molecules. */
+
 class Atom
 {
 	double _coordinates[3];
@@ -43,11 +46,16 @@ class Atom
 		creates an atom from the atomic number of an Element and searching for it in PeriodicTable
 		*/
 	double* coordinates();
+<<<<<<< HEAD
 		//!< 
+=======
+		//!< get() function
+>>>>>>> origin/tmaamaatua
 		/*!<
 			Returns the coordinates of the atom
 		*/
 	double* gradient();
+<<<<<<< HEAD
 		//!< Returns the gradient of the atom
 		
 	double* velocity();
@@ -89,6 +97,65 @@ class Atom
 			Mass
 			electronegativity
 		*/
+=======
+		//!< Get() function
+		/*!<Returns the gradient of the atom
+		*/
+	double* velocity();
+		//!< Get() function
+		/*!< 
+			Returns the velocity of the atom
+		*/
+	string name();
+		//!< Get() function
+		/*!<
+			Returns the name of the atom
+		*/
+	string symbol();
+		//!< Get() function 
+		/*!<
+			Returns the symbol of the atom
+		*/
+	int atomic_number();
+		//!< Get() function
+		/*!<
+			Returns the atomic number of the atom
+		*/
+	double charge();
+		//!< Get() function 
+		/*!<
+			Returns the partial charge of the atom
+		*/
+	double charge_0();
+		//!< Get() function
+		/*!<	
+			Returns the oxidation of the atom
+		*/
+	double hardness();
+		//!<Get() function
+		/*!< 
+			Returns the hardness of the atom
+		*/
+	double width();
+		//!< Get() function
+		/*!<
+			Returns the width of the atom
+		*/
+	Element element();
+		//!< Get() function
+		/*!<	Returns the element associated with the atom */
+		/*!<	The attributes of Element are properties of the atom	*/
+		/*!<	Name			*/
+		/*!<	Symbol			*/
+		/*!<	Atomic Number		*/
+		/*!<	Covalent Radius		*/
+		/*!<	Bond order radii	*/
+		/*!<	Van der Waals Radius	*/
+		/*!<	Radius	*/
+		/*!<	Maximum bond valence	*/
+		/*!<	Mass	*/
+		/*!<	electronegativity	*/
+>>>>>>> origin/tmaamaatua
 		
 	~Atom();
 		//!< Destructeur

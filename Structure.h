@@ -8,7 +8,7 @@
 using namespace std;
 
 	//! A structure class.
-	/*! This class will be used to have molecules or periodic structure. */
+	/*! This class will be used to have molecules or periodic structures. */
 
 class Structure
 {
@@ -48,5 +48,5 @@ class Structure
 		}
 };
 
-
+#endif
 #endif
