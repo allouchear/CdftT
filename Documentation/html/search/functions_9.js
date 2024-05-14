@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['name_0',['name',['../classAtom.html#a15d2acd08315786dc061e6f06dc3d46f',1,'Atom::name()'],['../classElement.html#a2e3f93f78eaaab2f6c69296ea29704be',1,'Element::name()']]],
-  ['number_5fof_5fatoms_1',['number_of_atoms',['../classStructure.html#a4c93efb80fcc32c5d5b2dd2ecc8e0259',1,'Structure']]]
+  ['int_5fmass_97',['int_mass',['../classIsotope.html#a4520569cce64a89ef0ca8ef00c6c0aed',1,'Isotope']]],
+  ['isotope_98',['isotope',['../classElement.html#ace92d92276a9ad2a29e6ce7a9cfc3032',1,'Element']]],
+  ['isotope_99',['Isotope',['../classIsotope.html#a70dfd751765bfd2c9ef1f3ac72a5bd9c',1,'Isotope::Isotope()'],['../classIsotope.html#a2f7d6b7d9a9d9e0cefa339d03a710e81',1,'Isotope::Isotope(const string &amp;, const int &amp;, const double &amp;, const double &amp;)']]]
 ];

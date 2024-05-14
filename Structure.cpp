@@ -5,7 +5,7 @@ using namespace std;
 
 Structure::Structure(const vector<Atom>& A)
 {
-	_atoms.resize(0);
+	_atoms.resize(A.size());
 	 _atoms=A;
 }
 

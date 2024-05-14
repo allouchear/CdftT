@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['width_0',['width',['../classAtom.html#ad5e0fa0b30770fe7d681f87415de0d6e',1,'Atom']]]
+  ['periodictable_45',['PeriodicTable',['../classPeriodicTable.html',1,'PeriodicTable'],['../classPeriodicTable.html#aaa43631fae258176bf47032dce28053d',1,'PeriodicTable::PeriodicTable()']]],
+  ['push_5fisotope_46',['push_isotope',['../classElement.html#a58a8f990bfba1f603c0deadfe897080c',1,'Element']]]
 ];

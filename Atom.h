@@ -3,6 +3,7 @@
 using namespace std;
 #include "PeriodicTable.h"
 #include "Element.h"
+#include "GTF.h"
 #include <string>
 
 class Atom
@@ -24,6 +25,16 @@ class Atom
 	string _residue_name;
 	int _residue_number;
 	int _N;
+
+	vector<GTF> _gtf;
+
+	///**********************************///
+	///******** Partie Dim GTF **********///
+	///**********************************///
+
+	
+
+
 	
 	public:
 

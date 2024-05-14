@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['periodictable_0',['PeriodicTable',['../classPeriodicTable.html',1,'']]]
+  ['factorial_64',['Factorial',['../classFactorial.html',1,'']]]
 ];

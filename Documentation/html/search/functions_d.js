@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['van_5fder_5fwaals_5fradii_0',['van_der_waals_radii',['../classElement.html#a84e72b32428dd5fe708e423e8645800d',1,'Element']]],
-  ['velocity_1',['velocity',['../classAtom.html#aa41cdaadddf41ea979c47c175468f57e',1,'Atom']]]
+  ['operator_2b_108',['operator+',['../classGTF.html#a12ec0880846f0a14cc8fca3ddaf4fba0',1,'GTF']]],
+  ['overlapgtf_109',['overlapGTF',['../classGTF.html#afb58f2ffa7d82a2444d847d192bc288a',1,'GTF']]]
 ];

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['structure_0',['Structure',['../classStructure.html',1,'']]]
+  ['gtf_65',['GTF',['../classGTF.html',1,'']]]
 ];
