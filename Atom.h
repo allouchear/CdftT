@@ -46,16 +46,11 @@ class Atom
 		creates an atom from the atomic number of an Element and searching for it in PeriodicTable
 		*/
 	double* coordinates();
-<<<<<<< HEAD
-		//!< 
-=======
 		//!< get() function
->>>>>>> origin/tmaamaatua
 		/*!<
 			Returns the coordinates of the atom
 		*/
 	double* gradient();
-<<<<<<< HEAD
 		//!< Returns the gradient of the atom
 		
 	double* velocity();
