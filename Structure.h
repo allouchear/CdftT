@@ -26,9 +26,12 @@ class Structure
 
 		Structure();
 
+			//! .cub file reader
+			/*! Reads .cub files to set values of _atoms' coordinates, velocity, ...*/
+		void cube(ifstream& nameFile);
+			
 			//! A default desctructor.
 			/*! We don't use it. */
-
 		~Structure(){};
 
 			//! A normal member taking no arguments and returning an integer value.
@@ -46,7 +49,8 @@ class Structure
 		{
 			return _atoms[i-1];
 		}
+		
 };
 
 
-#endif
+#endif //CDFTT_STRUCTURE_H_INCLUDED
