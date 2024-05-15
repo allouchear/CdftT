@@ -3,6 +3,7 @@
 
 #include<iostream>
 #include<vector>
+#include<cmath>
 
 using namespace std;
 
@@ -35,5 +36,28 @@ class Factorial
 
 		double double_factorial(int);
 };
+
+class Binomial
+{
+	private:
+		vector<vector<double>> _tab;
+	public:
+		Binomial(int, int, Factorial&);
+		~Binomial(){}
+		double binomial(int, int, Factorial&);
+		vector<vector<double>> tab()
+		{
+			return _tab;
+		}
+};
+
+double power(double, double);
+double f(int, int, int, double, double, const Binomial&);
+double Theta(int, int, int, int, double, double, double, const Factorial&);
+int m1p(int);
+double A(int, int, int, int, int, double, double, double, double, const Factorial&);
+double B(int,int,int , int , int , double , double , double , double , const Factorial&);
+
+
 
 #endif

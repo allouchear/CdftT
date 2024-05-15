@@ -2,7 +2,6 @@
 #define CDFTT_GTF_H_INCLUDED
 
 #include<iostream>
-#include<cmath>
 #include"MathFunction.h"
 
 using namespace std;
@@ -17,6 +16,7 @@ class GTF
 		double _coefficient;
 		vector<double> _coord;
 		vector<double> _l;
+		Factorial _fact;
 	public:
 
 			//! A constructor.
@@ -64,32 +64,46 @@ class GTF
 			//! A normal member taking one argument and returning a double value.
 			/*! \return norme value. */
 
-		double normeGTF(const Factorial&);
+		double normeGTF();
+
+			//! A normal member taking one argument and returning a double value.
+			/*! \return norme value. */
+
+		double normeGTF(GTF& q);
 
 			//! A normal member taking one argument.
 			/*! This member normalise the radial's composant of the GTF. */
 
-		void normalise_radialGTF(const Factorial&);
+		void normalise_radialGTF();
 
 			//! A normal member taking one argument.
 			/*! This member normalise the GTF. */
 
-		void normaliseGTF(const Factorial&);
+		void normaliseGTF();
 
 			//! A normal member taking two arguments and returning a GTF value.
 			/*! \return The GTF overlap. */
 
 		GTF overlapGTF(const GTF&, const GTF&);
 
-			//! An operator member taking two arguments and returning a vector<double>.
-			/*! \return The sum of two vector. */
+			//! A normal member taking three arguments and returning a GTF value.
+			/*! \return The GTF overlap. */
 
-		operator+(const vector<double>&, const vector<double>&)
+		GTF overlap3GTF(const GTF&, const GTF&, const GTF&);
+
+			//! A normal member taking four arguments and returning a GTF value.
+			/*! \return The GTF overlap. */
+
+		GTF overlap4GTF(const GTF&, const GTF&, const GTF&, const GTF&);
 
 			//! An operator member taking two arguments and returning a GTF value.
 			/*! \return The product of two GTF. */
 
 		operator*(const GTF&, const GTF&);
+
+		double kineticGTF(const GTF&, const GTF&);
+		double ionicPotentialGTF(const GTF&, const GTF&, vector<double>, double);
+		double ERIGTF(const GTF&, const GTF&, const GTF&, const GTF&);
 };
 
 #endif
