@@ -15,9 +15,8 @@ int main()
 	Atom A(Table, 64);
 	Atom B;
 	cout<<"atom créé"<<endl;
-	cout<<d.Natoms()<<endl;
 	Domain d(f);
-	
+	cout<<d.Natoms()<<endl;
 	Structure S(f, d.Natoms(), Table);
 	cout<<"Structure créé"<<endl;
 	Grid g(f, Table);

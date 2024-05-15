@@ -26,7 +26,7 @@ class Grid
 	Grid(ifstream& nameFile, const PeriodicTable& Table);
 	
 		/*! 
-			Initializes Grid using Domain::Domain(ifstream& nameFile) and read_From_Cube(ifstream& nameFile, int Natoms, const 			PeriodicTable& Table) and assigns the data from .cube to V
+			Initializes Grid using Domain::Domain(ifstream& nameFile) and read_From_Cube(ifstream& nameFile, int Natoms, const PeriodicTable& Table) and assigns the data from .cube to V
 		*/
 	void read_From_Cube(ifstream& nameFile, const PeriodicTable& Table);
 	

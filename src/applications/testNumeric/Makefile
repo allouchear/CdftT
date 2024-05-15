@@ -13,7 +13,7 @@ COMMONSOBJ  = $(COMMON)/*.o
 OBJECTS = main.o \
 	$(ANALYTICOBJ) $(NUMERICOBJ) $(COMMONSOBJ)
 
-all: compiling  
+all: compiling  cdftt
 
 %.o : %.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
@@ -26,7 +26,7 @@ clean:
 #make dependance
 SRCS = $(OBJECTS:%.o=%.c)
 dep :
-	gcc  $(CFLAGS) -MM $(SRCS) > Dep.mk
+	$(CC)  $(CFLAGS) -MM $(SRCS) > Dep.mk
 
 cdftt: 
 	$(CC) $(LDFLAGS) $(OBJECTS) -o cdftt $(OMPLIB) -g -lm -lgomp 

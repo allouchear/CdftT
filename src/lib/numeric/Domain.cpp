@@ -1,6 +1,6 @@
 using namespace std;
-#include <Domain.h>
-#include <Constants.h>
+#include <numeric/Domain.h>
+#include <common/Constants.h>
 #include <string>
 #include <vector>
 #include <fstream>

@@ -1,4 +1,4 @@
-OBJECTS = test.o
+OBJECTS = Domain.o Grid.o
 
 
 include ../../../CONFIG
@@ -6,7 +6,7 @@ CFLAGS =  $(COMMONCFLAGS)
 
 all: compiling 
 
-%.o : %.c
+%.o : %.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
 compiling: $(OBJECTS)
