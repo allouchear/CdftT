@@ -36,7 +36,7 @@ class Isotope
 			//! A normal member taking no arguments and returning a string value.
 			/*! \return The isotope's symbol. */
 
-		string symbol()
+		string symbol() const
 		{
 			return _symbol;
 		}
@@ -44,7 +44,7 @@ class Isotope
 			//! A normal member taking no arguments and returning an integer value.
 			/*! \return The approximate mass of an isotope. */
 
-		int int_mass()
+		int int_mass() const
 		{
 			return _int_mass;
 		}
@@ -52,7 +52,7 @@ class Isotope
 			//! A normal member taking no arguments and returning an double value.
 			/*! \return The real mass of an isotope. */
 
-		double real_mass()
+		double real_mass() const
 		{
 			return _real_mass;
 		}
@@ -60,7 +60,7 @@ class Isotope
 			//! A normal member taking no arguments and returning a double value.
 			/*! \return The abundace in percent of an isotope. */
 
-		double abundance()
+		double abundance() const
 		{
 			return _abundance;
 		}
@@ -103,7 +103,7 @@ class Element
 			//! A normal member taking no arguments and returning a string value.
 			/*! \return The element's name. */
 
-		string name()
+		string name() const
 		{
 			return _name;
 		}
@@ -111,7 +111,7 @@ class Element
 			//! A normal member taking no arguments and returning a string value.
 			/*! \return The element's symbol. */
 
-		string symbol()
+		string symbol() const
 		{
 			return _symbol;
 		}
@@ -119,7 +119,7 @@ class Element
 			//! A normal member taking no arguments and returning a integer value.
 			/*! \return The atomic number of an element. */
 
-		int atomic_number()
+		int atomic_number() const
 		{
 			return _atomic_number;
 		}
@@ -127,7 +127,7 @@ class Element
 			//! A normal member taking no arguments and returning a double value.
 			/*! \return The covalent radius of an element. */
 
-		double covalent_radii()
+		double covalent_radii() const
 		{
 			return _covalent_radii;
 		}
@@ -135,7 +135,7 @@ class Element
 			//! A normal member taking no arguments and returning a double value.
 			/*! \return The bond order radius of an element. */
 
-		double bond_order_radii()
+		double bond_order_radii() const
 		{
 			return _bond_order_radii;
 		}
@@ -143,7 +143,7 @@ class Element
 			//! A normal member taking no arguments and returning a double value.
 			/*! \return The Van Der Waals radius of an element. */
 
-		double van_der_waals_radii()
+		double van_der_waals_radii() const
 		{
 			return _van_der_waals_radii;
 		}
@@ -151,7 +151,7 @@ class Element
 			//! A normal member taking no arguments and returning a double value.
 			/*! \return The radius of an element. */
 
-		double radii()
+		double radii() const
 		{
 			return _radii;
 		}
@@ -159,7 +159,7 @@ class Element
 			//! A normal member taking no arguments and returning a double value.
 			/*! \return The maximum bond valence of an element. */
 
-		int maximum_bond_valence()
+		int maximum_bond_valence() const
 		{
 			return _maximum_bond_valence;
 		}
@@ -167,7 +167,7 @@ class Element
 			//! A normal member taking no arguments and returning a double value.
 			/*! \return The mass of an element. */
 
-		double mass()
+		double mass() const
 		{
 			return _mass;
 		}
@@ -175,7 +175,7 @@ class Element
 			//! A normal member taking no arguments and returning a double value.
 			/*! \return The electronegativity of an element. */
 
-		double electronegativity()
+		double electronegativity() const
 		{
 			return _electronegativity;
 		}
@@ -185,7 +185,7 @@ class Element
 				\sa Isotope class.
 			*/
 
-		Isotope isotope(const int& i)
+		Isotope isotope(const int& i) const
 		{
 			return _isotope[i-1];
 		}

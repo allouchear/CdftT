@@ -2,7 +2,9 @@
 *.log
 # ignore ALL files in ANY directory named temp
 bin/
+Documentation/
 # ignore ALL .o files
 *.o
+*.exe
 # p
 p

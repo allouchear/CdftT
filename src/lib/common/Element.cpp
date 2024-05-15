@@ -12,7 +12,7 @@ Element::Element(const string& Name, const string& Symbol, const int& AtomicNumb
 Element::Element() : _name("None"), _symbol("None"), _atomic_number(0), _covalent_radii(0), _bond_order_radii(0),
 	_van_der_waals_radii(0), _radii(0), _maximum_bond_valence(0), _mass(0), _electronegativity(0) 
 {
-	_isotope.resize(0);
+	_isotope.resize(1);
 	_isotope[0]=Isotope();
 }
 

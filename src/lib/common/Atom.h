@@ -35,12 +35,12 @@ class Atom
 		/*!<
 		sets all attributes to 0 or "none"
 		*/
-	Atom(PeriodicTable& Table,const string& name);
+	Atom(const PeriodicTable& Table,const string& name);
 		//!<Constructor: 
 		/*!<
 		creates an atom from the name of an Element and searching for it in PeriodicTable
 		*/
-	Atom(PeriodicTable& Table, const int& n);
+	Atom(const PeriodicTable& Table, const int& n);
 		//!<Constructor:
 		/*!<
 		creates an atom from the atomic number of an Element and searching for it in PeriodicTable
@@ -50,51 +50,11 @@ class Atom
 		/*!<
 			Returns the coordinates of the atom
 		*/
-	double* gradient();
-		//!< Returns the gradient of the atom
 		
-	double* velocity();
-		//!< Returns the velocity of the atom
-	
-	string name();
-		//!< Returns the name of the atom
-	
-	string symbol();
-		//!< Returns the symbol of the atom
-	
-	int atomic_number();
-		//!< Returns the atomic number of the atom
-	
-	double charge();
-		//!< Returns the partial charge of the atom
-	
-	double charge_0();
-		//!< Returns the oxidation of the atom
-	
-	double hardness();
-		//!< Returns the hardness of the atom
-	
-	double width();
-		//!< Returns the width of the atom
-	
-	Element element();
-		//!< Returns the element associated with the atom
-		/*!<
-			The attributes of class::Element are properties of the atom
-			Name
-			Symbol
-			Atomic Number
-			Covalent Radius
-			Bond order radii
-			Van der Waals Radius
-			Radius
-			Maximum bond valence
-			Mass
-			electronegativity
-		*/
-=======
+	double* gradient();
 		//!< Get() function
-		/*!<Returns the gradient of the atom
+		/*!<
+			Returns the gradient of the atom
 		*/
 	double* velocity();
 		//!< Get() function
@@ -150,8 +110,28 @@ class Atom
 		/*!<	Maximum bond valence	*/
 		/*!<	Mass	*/
 		/*!<	electronegativity	*/
->>>>>>> origin/tmaamaatua
 		
+	void Set_coordinates(const int& i, const double& d);
+		//!< Set() function
+		/*!<
+			Sets the ith coordinate to d
+		*/
+		
+	void Set_gradient(const int& i, const double& d);
+		//!< Set() function
+		/*!<
+			Sets the ith gradient component to d
+		*/
+	void Set_velocity(const int& i, const double& d);
+		//!< Set() function
+		/*!<
+			Sets the ith velocity component to d
+		*/
+	void Set_charge(const double& c);
+		//!< Set() function
+		/*!<
+			Sets the charge to c
+		*/
 	~Atom();
 		//!< Destructeur
 		

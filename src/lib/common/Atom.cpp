@@ -3,7 +3,6 @@ using namespace std;
 #include <iostream>
 #include "Atom.h"
 #include "Constants.h"
-//il faut inclure le constructeur qui initiliaze a partir des classes periodidctable, element de Dim
 
 /*constructeur par défaut: initialise les attributs cinématique de l'atome à 0*/
 Atom::Atom()
@@ -25,7 +24,7 @@ Atom::Atom()
 }
 
 //initialize par le nom/symbole de l'élément
-Atom::Atom(PeriodicTable& Table, const string& name)
+Atom::Atom(const PeriodicTable& Table, const string& name)
 {	
 	for(int i=0; i<3;i++)
 	{
@@ -40,7 +39,7 @@ Atom::Atom(PeriodicTable& Table, const string& name)
 }
 
 //intialise par le numéro atomique
-Atom::Atom(PeriodicTable& Table, const int& n)
+Atom::Atom(const PeriodicTable& Table, const int& n)
 {	
 	for(int i=0; i<3;i++)
 	{
@@ -110,6 +109,28 @@ Element Atom::element()
 {
 	return _e;
 }
+
+void Atom::Set_coordinates(const int& i, const double& d )
+{
+	_coordinates[i]=d;
+}
+
+void Atom::Set_gradient(const int& i, const double& d )
+{
+	_gradient[i]=d;
+}
+
+void Atom::Set_velocity(const int& i, const double& d )
+{
+	_velocity[i]=d;
+}
+
+void Atom::Set_charge(const double& c )
+{
+	_charge=c;
+}
+
+
 
 //renvoi la distance entre l'atome et un autre(a2)
 double Atom::get_distance(Atom& a2)

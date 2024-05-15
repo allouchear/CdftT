@@ -14,7 +14,7 @@ PeriodicTable::PeriodicTable()
 
 PeriodicTable::~PeriodicTable(){}
 
-Element PeriodicTable::element(const int& i)
+Element PeriodicTable::element(const int& i) const
 {
 	if(i<0 || i>_periodic_table.size())
 		return Element();
@@ -22,7 +22,7 @@ Element PeriodicTable::element(const int& i)
 		return _periodic_table[i-1];
 }
 
-Element PeriodicTable::element(const string& n)
+Element PeriodicTable::element(const string& n) const
 {
 	if(n.size()==1 || n.size()==2)
 	{

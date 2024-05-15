@@ -21,14 +21,25 @@ class Structure
 
 		Structure(const vector<Atom>&);
 
-			//! An default constructor.
+			//! Default constructor.
 			/*! In the case of a problem, this constructor create an element with all value on 0 and all string on "None". */
 
 		Structure();
 
+			//! .cube file reader
+			/*! Reads .cube files to initialize the atoms in the structure and the structure itself.*/
+			/*! note: uses Atom::Atom(const PeriodicTable& Table, const int& i), Table needs to be declared beforehand */
+			/*! note 2: c++ sequential read requires that Domain::Domain(ifstream& nameFile) be called first */
+		void read_From_Cube(ifstream& nameFile, int Natoms, const PeriodicTable& Table);
+		
+			//*Constructor
+			/*!
+				Calls read_From_Cube() to initialize the atoms of the structure
+			*/
+		Structure(ifstream& nameFile, const int Natoms, const PeriodicTable& Table);
+			
 			//! A default desctructor.
 			/*! We don't use it. */
-
 		~Structure(){};
 
 			//! A normal member taking no arguments and returning an integer value.
@@ -46,7 +57,7 @@ class Structure
 		{
 			return _atoms[i-1];
 		}
+		
 };
 
-#endif
-#endif
+#endif //CDFTT_STRUCTURE_H_INCLUDED
