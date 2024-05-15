@@ -1,4 +1,4 @@
-include CONFIG
+include ../../CONFIG
 
 
 ANALYTIC = analytic
@@ -27,7 +27,7 @@ $(SUBDIRS):
 all: cchemilib
 
 cchemilib: $(SUBDIRS)
-	$(CC) -fPIC -shared $(LDFLAGS) $(OBJECTS) -o ../../lib/libcdftt.so  $(WIN32LIB)  $(OMPLIB) $(CLLIB) -g -lm
+	$(CC) -shared $(LDFLAGS) $(OBJECTS) -o ../../lib/libcdftt.so  $(WIN32LIB)  $(OMPLIB) $(CLLIB) -g -lm
  
 clean:
 	@$(RM) p

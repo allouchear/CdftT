@@ -1,7 +1,7 @@
 OBJECTS = test.o
 
 
-include ../CONFIG
+include ../../../CONFIG
 CFLAGS =  $(COMMONCFLAGS) 
 
 all: compiling 

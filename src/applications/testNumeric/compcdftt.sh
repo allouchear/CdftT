@@ -1,5 +1,5 @@
 #!/bin/bash
-cd ..
+cd ../..
 source env.sh
 cd -
 make

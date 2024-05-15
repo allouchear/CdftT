@@ -1,7 +1,7 @@
 OBJECTS = Atom.o Element.o PeriodicTable.o Structure.o
 
 
-include ../CONFIG
+include ../../../CONFIG
 CFLAGS =  $(COMMONCFLAGS) 
 
 all: compiling 
