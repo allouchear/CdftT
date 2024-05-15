@@ -30,14 +30,14 @@ class PeriodicTable
 				\param i an integer argument (the atomic number).
 			 	\return The element corresponding to the atomic number. */
 
-		Element element(const int&);
+		Element element(const int&) const;
 
 			//! A normal member taking one argument and returning an element value.
 			/*! 
 				\param s a string argument (the symbol or the name).
 			 	\return The element corresponding to the symbol or the name. */
 
-		Element element(const string&);
+		Element element(const string&) const;
 
 			//! A normal member taking one argument.
 			/*! Add an element.

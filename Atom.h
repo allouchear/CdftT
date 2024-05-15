@@ -35,12 +35,12 @@ class Atom
 		/*!<
 		sets all attributes to 0 or "none"
 		*/
-	Atom(PeriodicTable& Table,const string& name);
+	Atom(const PeriodicTable& Table,const string& name);
 		//!<Constructor: 
 		/*!<
 		creates an atom from the name of an Element and searching for it in PeriodicTable
 		*/
-	Atom(PeriodicTable& Table, const int& n);
+	Atom(const PeriodicTable& Table, const int& n);
 		//!<Constructor:
 		/*!<
 		creates an atom from the atomic number of an Element and searching for it in PeriodicTable
@@ -52,7 +52,8 @@ class Atom
 		*/
 	double* gradient();
 		//!< Get() function
-		/*!<Returns the gradient of the atom
+		/*!<
+			Returns the gradient of the atom
 		*/
 	double* velocity();
 		//!< Get() function
@@ -109,6 +110,27 @@ class Atom
 		/*!<	Mass	*/
 		/*!<	electronegativity	*/
 		
+	void Set_coordinates(const int& i, const double& d);
+		//!< Set() function
+		/*!<
+			Sets the ith coordinate to d
+		*/
+		
+	void Set_gradient(const int& i, const double& d);
+		//!< Set() function
+		/*!<
+			Sets the ith gradient component to d
+		*/
+	void Set_velocity(const int& i, const double& d);
+		//!< Set() function
+		/*!<
+			Sets the ith velocity component to d
+		*/
+	void Set_charge(const double& c);
+		//!< Set() function
+		/*!<
+			Sets the charge to c
+		*/
 	~Atom();
 		//!< Destructeur
 		
