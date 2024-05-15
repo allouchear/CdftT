@@ -4,7 +4,7 @@ MAKE = make
 WIN32LIB   = 
 X11LIB   = -lX11
 #CC = gcc -pg
-LIBCDFTTDIR = /home/allouche/MySoftwares/CdftT/CdftT
+LIBCDFTTDIR = /home/dbuffat/CdftT
 CC = g++ -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
 
 enable_omp = 0
