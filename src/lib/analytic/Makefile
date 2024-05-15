@@ -1,4 +1,4 @@
-OBJECTS = test.o
+OBJECTS = CGTF.o GTF.o MathFunction.o test.o WFX.o
 
 
 include ../../../CONFIG
@@ -6,7 +6,7 @@ CFLAGS =  $(COMMONCFLAGS)
 
 all: compiling 
 
-%.o : %.c
+%.o : %.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
 compiling: $(OBJECTS)
