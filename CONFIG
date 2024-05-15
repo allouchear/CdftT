@@ -1,0 +1,33 @@
+LIBPTHREAD    = -lpthread
+RM = rm -f
+MAKE = make
+WIN32LIB   = 
+X11LIB   = -lX11
+#CC = gcc -pg
+LIBCDFTTDIR = /home/allouche/MySoftwares/CdftT/CdftT
+CC = g++ -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
+
+enable_omp = 0
+ifeq ($(enable_omp),1)
+OMPLIB=-L/usr/lib -lgomp
+OMPCFLAGS=-DENABLE_OMP -fopenmp
+endif
+
+enable_python = 1
+ifeq ($(enable_python),1)
+PYTHONLIB=`python3-config --ldflags`
+PYTHONI=`python3-config --includes`
+PYTHONCFLAGS=-DENABLE_PYTHON -I `python3-config --includes`
+endif
+
+enable_mpi = 0
+ifeq ($(enable_mpi),1)
+CC = mpicc
+MPICFLAGS=-DENABLE_MPI 
+endif
+
+#DEBUGFLAG=-DDEBUG
+#DEBUGFLAG=
+
+COMMONCFLAGS = -Wall -O2 $(OMPCFLAGS) $(CLCFLAGS) $(MPICFLAGS) $(DEBUGFLAG) $(PYTHONCFLAGS) 
+
