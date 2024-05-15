@@ -1,5 +1,5 @@
 #include<iostream>
-#include"CGTF.h"
+#include <analytic/CGTF.h>
 
 using namesapce std;
 

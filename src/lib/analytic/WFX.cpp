@@ -1,5 +1,5 @@
 #include<iostream>
-#include"WFX.h"
+#include <analytic/WFX.h>
 
 using namespace std;
 

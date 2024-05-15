@@ -1,9 +1,9 @@
 #ifndef _CDFTT_ATOM_H_INCLUDED
 #define _CDFTT_ATOM_H_INCLUDED
 using namespace std;
-#include "PeriodicTable.h"
-#include "Element.h"
-#include "GTF.h"
+#include <common/PeriodicTable.h>
+#include <common/Element.h>
+#include <analytic/GTF.h>
 #include <string>
 
 class Atom

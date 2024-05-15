@@ -1,6 +1,6 @@
 #include<iostream>
 #include<vector>
-#include"MathFunction.h"
+#include <analytic/MathFunction.h>
 
 using namespace std;
 

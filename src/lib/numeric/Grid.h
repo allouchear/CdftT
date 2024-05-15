@@ -2,8 +2,8 @@
 #define _CDFTT_GRID_H_INCLUDED
 
 using namespace std;
-#include "Domain.h"
-#include "Structure.h"
+#include <numeric/Domain.h>
+#include <common/Structure.h>
 
 
 class Grid

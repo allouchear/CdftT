@@ -1,6 +1,6 @@
 using namespace std;
-#include "Grid.h"
-#include "Constants.h"
+#include <Grid.h>
+#include <Constants.h>
 
 Grid::Grid()
 {

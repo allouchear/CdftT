@@ -2,7 +2,7 @@
 #define CDFTT_CGTF_H_INCLUDED
 
 #include<iostream>
-#include"GTF.h"
+#include <analytic/GTF.h>
 
 using namespace std;
 
