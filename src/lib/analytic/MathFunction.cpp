@@ -4,6 +4,11 @@
 
 using namespace std;
 
+Factorial::Factorial()
+{
+	_tab.resize(0);
+}
+
 Factorial::Factorial(int n)
 {
 	_tab.resize(n);
@@ -25,6 +30,12 @@ double Factorial::factorial(int n)
 double Factorial::double_factorial(int n)
 {
 	return factorial(factorial(n));
+}
+
+Binomial::Binomial()
+{
+	_fact=Factorial();
+	_tab.resize(0, vector<double>(0));
 }
 
 Binomial::Binomial(int i, int j, Factorial& F) : _fact(F)

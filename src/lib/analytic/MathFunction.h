@@ -15,6 +15,7 @@ class Factorial
 	private:
 		vector<double> _tab;	
 	public:
+		Factorial();
 
 			//! A real constructor.
 			/*! This constructor is used to create a table from 0 to n factorial. */
@@ -44,6 +45,7 @@ class Binomial
 		Factorial _fact;
 	public:
 		Binomial(int, int, Factorial&);
+		Binomial();
 		~Binomial(){}
 		double binomial(int, int);
 		vector<vector<double>>& tab()

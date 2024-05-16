@@ -18,6 +18,7 @@ class GTF
 		vector<int> _l;
 		Binomial _bino;
 	public:
+		GTF();
 
 			//! A constructor.
 			/*! This constructor is used to add all of the parameters for one GTF. */
@@ -89,28 +90,29 @@ class GTF
 			//! A normal member taking two arguments and returning a GTF value.
 			/*! \return The GTF overlap. */
 
-		double overlapGTF(GTF&, GTF&);
+		double overlapGTF(GTF&);
 
 			//! A normal member taking three arguments and returning a GTF value.
 			/*! \return The GTF overlap. */
 
-		double overlap3GTF(GTF&, GTF&, GTF&);
+		double overlap3GTF(GTF&, GTF&);
 
 			//! A normal member taking four arguments and returning a GTF value.
 			/*! \return The GTF overlap. */
 
-		double overlap4GTF(GTF&, GTF&, GTF&, GTF&);
+		double overlap4GTF(GTF&, GTF&, GTF&);
 
 			//! An operator member taking two arguments and returning a GTF value.
 			/*! \return The product of two GTF. */
 
-		double GTFstarGTF(GTF&, GTF&);
-		double GTFstarGTFstarGTF(GTF&, GTF&, GTF&);
-		double GTFstarGTFstarGTFstarGTF(GTF&, GTF&, GTF&, GTF&);
-		double GTFxyzGTF(GTF&, GTF&, int, int, int);
-		double kineticGTF(GTF&, GTF&);
-		double ionicPotentialGTF(GTF&, GTF&, vector<double>, double);
-		double ERIGTF(GTF&, GTF&, GTF&, GTF&);
+		double GTFstarGTF(GTF&);
+		double GTFstarGTFstarGTF(GTF&, GTF&);
+		double GTFstarGTFstarGTFstarGTF(GTF&, GTF&, GTF&);
+		double GTFxyzGTF(GTF&, int, int, int);
+		double kineticGTF(GTF&);
+		double ionicPotentialGTF(GTF&, vector<double>, double);
+		double ERIGTF(GTF&, GTF&, GTF&);
+		void ChangeCoef(double);
 };
 
 #endif
