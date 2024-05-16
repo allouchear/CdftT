@@ -6,10 +6,4 @@
 
 using namespace std;
 
-class CGTF
-{
-	private:
-		vector<GTF>;
-};
-
 #endif

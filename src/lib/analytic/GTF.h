@@ -15,14 +15,14 @@ class GTF
 		double _exposant;
 		double _coefficient;
 		vector<double> _coord;
-		vector<double> _l;
-		Factorial _fact;
+		vector<int> _l;
+		Binomial _bino;
 	public:
 
 			//! A constructor.
 			/*! This constructor is used to add all of the parameters for one GTF. */
 
-		GTF(const double&, const double&, const vector<double>&, const vector<double>&);
+		GTF(const double&, const double&, const vector<double>&, const vector<int>&, Binomial&);
 
 			//! A default desctructor.
 			/*! We don't use it. */
@@ -53,12 +53,17 @@ class GTF
 			return _coord;
 		}
 
-			//! A normal member taking no arguments and returning a vector<double> value.
+			//! A normal member taking no arguments and returning a vector<int> value.
 			/*! \return The quantic number of the atom's GTF. */
 
-		vector<double> l()
+		vector<int> l()
 		{
 			return _l;
+		}
+
+		Binomial& bino()
+		{
+			return _bino;
 		}
 
 			//! A normal member taking one argument and returning a double value.
@@ -84,26 +89,28 @@ class GTF
 			//! A normal member taking two arguments and returning a GTF value.
 			/*! \return The GTF overlap. */
 
-		GTF overlapGTF(const GTF&, const GTF&);
+		double overlapGTF(GTF&, GTF&);
 
 			//! A normal member taking three arguments and returning a GTF value.
 			/*! \return The GTF overlap. */
 
-		GTF overlap3GTF(const GTF&, const GTF&, const GTF&);
+		double overlap3GTF(GTF&, GTF&, GTF&);
 
 			//! A normal member taking four arguments and returning a GTF value.
 			/*! \return The GTF overlap. */
 
-		GTF overlap4GTF(const GTF&, const GTF&, const GTF&, const GTF&);
+		double overlap4GTF(GTF&, GTF&, GTF&, GTF&);
 
 			//! An operator member taking two arguments and returning a GTF value.
 			/*! \return The product of two GTF. */
 
-		operator*(const GTF&, const GTF&);
-
-		double kineticGTF(const GTF&, const GTF&);
-		double ionicPotentialGTF(const GTF&, const GTF&, vector<double>, double);
-		double ERIGTF(const GTF&, const GTF&, const GTF&, const GTF&);
+		double GTFstarGTF(GTF&, GTF&);
+		double GTFstarGTFstarGTF(GTF&, GTF&, GTF&);
+		double GTFstarGTFstarGTFstarGTF(GTF&, GTF&, GTF&, GTF&);
+		double GTFxyzGTF(GTF&, GTF&, int, int, int);
+		double kineticGTF(GTF&, GTF&);
+		double ionicPotentialGTF(GTF&, GTF&, vector<double>, double);
+		double ERIGTF(GTF&, GTF&, GTF&, GTF&);
 };
 
 #endif

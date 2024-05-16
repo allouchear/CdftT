@@ -1,4 +1,4 @@
-OBJECTS = CGTF.o GTF.o MathFunction.o test.o WFX.o
+OBJECTS = CGTF.o GTF.o MathFunction.o WFX.o
 
 
 include ../../../CONFIG

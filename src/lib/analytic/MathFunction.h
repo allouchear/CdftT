@@ -41,23 +41,29 @@ class Binomial
 {
 	private:
 		vector<vector<double>> _tab;
+		Factorial _fact;
 	public:
 		Binomial(int, int, Factorial&);
 		~Binomial(){}
-		double binomial(int, int, Factorial&);
-		vector<vector<double>> tab()
+		double binomial(int, int);
+		vector<vector<double>>& tab()
 		{
 			return _tab;
+		}
+		Factorial& fact()
+		{
+			return _fact;
 		}
 };
 
 double power(double, double);
-double f(int, int, int, double, double, const Binomial&);
-double Theta(int, int, int, int, double, double, double, const Factorial&);
+double f(int, int, int, double, double, Binomial&);
+double Theta(int, int, int, int, double, double, double, Binomial&);
 int m1p(int);
-double A(int, int, int, int, int, double, double, double, double, const Factorial&);
-double B(int,int,int , int , int , double , double , double , double , const Factorial&);
-
-
+double A(int, int, int, int, int, double, double, double, double, Binomial&);
+double B(int,int,int , int , int , double , double , double , double , Binomial&);
+double myGamma(int, Factorial&);
+double F(int,double, Factorial&);
+vector<double> getFTable(int, double);
 
 #endif
