@@ -6,6 +6,37 @@
 
 using namespace std;
 
+
+
+
+
+
+
+
+/*
+string mystrcasestr(const string haystack, const string needle)
+{
+	string i, startn = 0, j = 0;
+	for (i = (string)haystack; *i; i++)
+	{
+		if(j)
+		{
+			if (toupper(*i) == toupper(*j))
+			{
+				if (!*++j)
+				return startn;
+			}
+			else j = 0;
+		}
+		else if (toupper(*i) == toupper(*needle))
+		{
+			j = (string)needle + 1;
+			startn = i;
+		}
+	}
+	return 0;
+}
+
 string get_one_block_from_wfx_file(istream& file, string blockName, int n)
 {
 	int nElements = 0;
@@ -75,7 +106,7 @@ vector<int> get_one_block_int_from_wfx_file(istream& file, string blockName,  in
 			}
 		}
 	if(!ok)
-		return NULL;
+		return vector<int> (elements.size(), NULL);
 	nLines = 0;
 		while(!file.eof())
 		{
@@ -92,9 +123,10 @@ vector<int> get_one_block_int_from_wfx_file(istream& file, string blockName,  in
                 allstrs = "";
 		}
 	if(nLines<1)
-		return NULL;
+		return vector<int> (elements.size(), NULL);
+
 	if(nElements<1)
-		return NULL;
+		return vector<int> (elements.size(), NULL);
 	file.seekg(geomposok, file.beg);
 	nElements = 0;
 	for(i=0;i<nLines;i++)
@@ -213,7 +245,7 @@ bool get_one_int_from_wfx_file(istream& file, string blockName, int n)
 double get_one_orbital_from_wfx_file(istream& file, int n, int numOrb)
 {
 	int nElements = 0;
-	double elements = "";
+	double elements = NULL;
 	vector<string> t(BBSIZE);
 	long int geomposok = 0;
 	bool ok = false;
@@ -281,7 +313,7 @@ double get_one_orbital_from_wfx_file(istream& file, int n, int numOrb)
 	return elements;
 }
 
-/* read all chars from file */
+// read all chars from file //
 string readFile(string filename)
 {
     string fcontent = "";
@@ -299,3 +331,5 @@ string readFile(string filename)
     }
     return fcontent;
 }
+
+*/

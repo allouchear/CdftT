@@ -27,6 +27,10 @@ class CGTF
 		{
 			return _gtf;
 		}
+		Binomial bino()
+		{
+			return _bino;
+		}
 		double ERICGTF(CGTF&, CGTF&, CGTF&);
 		void normaliseCGTF();
 		double overlapCGTF(CGTF&);
@@ -38,5 +42,7 @@ class CGTF
 		double CGTFstarCGTF(CGTF&);
 		bool CGTFEqCGTF(CGTF&);
 };
+
+bool operator==(CGTF, CGTF);
 
 #endif

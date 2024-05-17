@@ -112,7 +112,10 @@ class GTF
 		double kineticGTF(GTF&);
 		double ionicPotentialGTF(GTF&, vector<double>, double);
 		double ERIGTF(GTF&, GTF&, GTF&);
-		void ChangeCoef(double);
+		void operator*=(double);
+		void operator/=(double);
 };
+
+bool operator==(GTF, GTF);
 
 #endif

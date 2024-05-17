@@ -427,7 +427,26 @@ double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)
 	return sum;
 }
 
-void GTF::ChangeCoef(double c)
+void GTF::operator/=(double c)
 {
 	_coefficient /= c;
+}
+
+void GTF::operator*=(double c)
+{
+	_coefficient *= c;
+}
+
+bool operator==(GTF a, GTF b)
+{
+	int i;
+	bool n=true;
+	if(abs(a.exposant()-b.exposant())>10e-10)
+		n=false;
+	if(abs(a.coefficient()-b.coefficient())>10e-10)
+		n=false;
+	for(i=0; i<3; i++)
+		if(abs(a.l()[i]-b.l()[i])>10e10-10 || abs(a.coord()[i]-b.coord()[i])>10e-10)
+			n=false;
+	return n;
 }

@@ -51,7 +51,7 @@ void CGTF::normaliseCGTF()
 	{
 		sum = sqrt(sum);
 		for(n=0 ; n<_numberOfFunctions ; n++)
-			_gtf[n].ChangeCoef(sum);
+			_gtf[n]/=sum;
 	}
 	else
 	{
@@ -115,7 +115,7 @@ double CGTF::CGTFxyzCGTF(CGTF& right, int ix, int iy, int iz)
 	GTF m(0.0, 1.0, C, l, _bino);
 
 	for(n=0;n<_numberOfFunctions;n++)
-	for(ns=0;ns<right.numberOfFunctions();ns++)
+		for(ns=0;ns<right.numberOfFunctions();ns++)
 			sum += _gtf[n].overlap3GTF(m,right.gtf()[ns]);
 
 	return sum;
@@ -160,7 +160,7 @@ double CGTF::CGTFstarCGTF(CGTF& right)
 
 	return sum;
 }
-
+/*
 bool CGTF::CGTFEqCGTF(CGTF& t2)
 {
 	int i;
@@ -176,4 +176,20 @@ bool CGTF::CGTFEqCGTF(CGTF& t2)
 			if(fabs(_gtf[i].coord()[c]-t2.gtf()[i].coord()[c])>1e-10) return false;
 	}
 	return true;
+}
+*/
+bool operator==(CGTF a, CGTF b)
+{
+	int i,j;
+	int c=0;
+	if(a.gtf().size()!=b.gtf().size())
+		return false;
+	for(i=0; i<a.gtf().size(); i++)
+		for(j=0; j<a.gtf().size(); j++)
+			if(a.gtf()[i]==b.gtf()[j])
+				c++;
+	if(c==a.gtf().size())
+		return true;
+	else
+		return false;
 }
