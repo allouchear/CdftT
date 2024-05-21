@@ -13,7 +13,7 @@ OMPLIB=-L/usr/lib -lgomp
 OMPCFLAGS=-DENABLE_OMP -fopenmp
 endif
 
-enable_python = 1
+enable_python = 0
 ifeq ($(enable_python),1)
 PYTHONLIB=`python3-config --ldflags`
 PYTHONI=`python3-config --includes`

@@ -306,7 +306,7 @@ double GTF::ionicPotentialGTF(GTF& right, vector<double> C, double Z)
 		R2+=(_coord[j]-right.coord()[j])*(_coord[j]-right.coord()[j]);
 		PC2+=PC[j]*PC[j];
 	}
-	FTable=getFTable(_l[0]+right.l()[0]+_l[1]+right.l()[1]+_l[2]+right.l()[2], gama*PC2);
+	FTable=getFTable(_l[0]+right.l()[0]+_l[1]+right.l()[1]+_l[2]+right.l()[2], gama*PC2, _bino.fact());
 
 	sum=0.0;
 	for(i=0; i<=_l[0]+right.l()[0]; i++)
@@ -387,7 +387,7 @@ double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)
 					Te[1][0]=Theta(Ip,Rp,r.l()[0],s.l()[0],QC[0],QD[0],g2,_bino);
 					for(U=0; U<=(I+2*Ip)/2-R-Rp; U++)
 					{
-						Sx=B(I,Ip,R,Rp,U,PQ[0],d,Te[0][0],Te[1][0],_bino);
+						Sx=B(I,Ip,R,Rp,U,PQ[0],d,Te[0][0],Te[1][0],_bino.fact());
 						for(J=0; J<=_l[1]+q.l()[1]; J++)
 							for(S=0; S<=J/2; S++)
 							{
@@ -398,7 +398,7 @@ double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)
 										Te[1][1]=Theta(Jp,Sp,r.l()[1],s.l()[1],QC[1],QD[1],g2,_bino);
 										for(N=0; N<=(J+Jp)/2-S-Sp; N++)
 										{
-											Sy=B(J,Jp,S,Sp,N,PQ[1],d,Te[0][1],Te[1][1],_bino);
+											Sy=B(J,Jp,S,Sp,N,PQ[1],d,Te[0][1],Te[1][1],_bino.fact());
 											for(K=0; K<=_l[2]+q.l()[2]; K++)
 												for(T=0; T<=K/2; T++)
 												{
@@ -409,7 +409,7 @@ double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)
 															Te[1][2]=Theta(Kp,Tp,r.l()[2],s.l()[2],QC[2],QD[2],g2,_bino);
 															for(W=0; W<=(K+Kp)/2-T-Tp; W++)
 															{
-																Sz=B(K,Kp,T,Tp,W,PQ[2],d,Te[0][2],Te[1][2],_bino);
+																Sz=B(K,Kp,T,Tp,W,PQ[2],d,Te[0][2],Te[1][2],_bino.fact());
 																sum +=Sx*Sy*Sz*F(I+Ip+J+Jp+K+Kp-2*(R+Rp+S+Sp+T+Tp)-U-N-W,RPQ2/4/d,_bino.fact());
 															}
 														}
@@ -439,7 +439,7 @@ void GTF::operator*=(double c)
 
 bool operator==(GTF a, GTF b)
 {
-	int i;
+	size_t i;
 	bool n=true;
 	if(abs(a.exposant()-b.exposant())>10e-10)
 		n=false;

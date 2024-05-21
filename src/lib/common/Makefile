@@ -6,7 +6,7 @@ CFLAGS =  $(COMMONCFLAGS)
 
 all: compiling 
 
-%.o : %.c
+%.o : %.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
 compiling: $(OBJECTS)
@@ -17,7 +17,7 @@ clean:
 #make dependance
 SRCS = $(OBJECTS:%.o=%.c)
 dep :
-	gcc  $(CFLAGS) -MM $(SRCS) > Dep.mk
+	$(CC)  $(CFLAGS) -MM $(SRCS) > Dep.mk
 
 -include Dep.mk
 

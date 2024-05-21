@@ -1,6 +1,5 @@
 #include<iostream>
 #include<analytic/CGTF.h>
-#include<analytic/GTF.h>
 
 using namespace std;
 
@@ -180,8 +179,8 @@ bool CGTF::CGTFEqCGTF(CGTF& t2)
 */
 bool operator==(CGTF a, CGTF b)
 {
-	int i,j;
-	int c=0;
+	size_t i,j;
+	size_t c=0;
 	if(a.gtf().size()!=b.gtf().size())
 		return false;
 	for(i=0; i<a.gtf().size(); i++)

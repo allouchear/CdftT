@@ -2,7 +2,8 @@
 #define CDFTT_GTF_H_INCLUDED
 
 #include<iostream>
-#include <analytic/MathFunction.h>
+#include<vector>
+#include<analytic/MathFunction.h>
 
 using namespace std;
 

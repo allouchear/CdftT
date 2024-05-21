@@ -21,15 +21,16 @@ all: compiling  cdftt
 compiling: $(OBJECTS)
 
 clean:
-	@$(RM) *o *.out *.log *.inp *~ 
+	@$(RM) cdftt *o *.out *.log *.inp *~ 
+
+cdftt: 
+	$(CC) $(LDFLAGS) $(OBJECTS) -o cdftt $(OMPLIB) -g -lm -lgomp 
 
 #make dependance
 SRCS = $(OBJECTS:%.o=%.cpp)
 dep :
 	$(CC)  $(CFLAGS) -MM $(SRCS) > Dep.mk
 
-cdftt: 
-	$(CC) $(LDFLAGS) $(OBJECTS) -o cdftt $(OMPLIB) -g -lm -lgomp 
 
 
 -include Dep.mk

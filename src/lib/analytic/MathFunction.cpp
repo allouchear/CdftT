@@ -19,7 +19,7 @@ Factorial::Factorial(int n)
 
 double Factorial::factorial(int n)
 {
-	if(n>_tab.size())
+	if(n>int(_tab.size()))
 	{
 		for(int i=_tab.size(); i<=n; i++)
 			_tab.push_back(_tab[i-1]*i);
@@ -41,7 +41,7 @@ Binomial::Binomial()
 Binomial::Binomial(int i, int j, Factorial& F) : _fact(F)
 {
 	_tab.resize(i, vector<double>(j));
-	for(i=0; i<_tab.size(); i++)
+	for(i=0; i<int(_tab.size()); i++)
 		for(j=0; j<=i; j++)
 			_tab[i][j] = _fact.factorial(i)/_fact.factorial(j)/_fact.factorial(i-j);
 }

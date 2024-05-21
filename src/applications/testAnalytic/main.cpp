@@ -1,11 +1,13 @@
 #include<iostream>
 #include<vector>
-#include <analytic/MathFunction.h>
+#include<analytic/MathFunction.h>
+#include<analytic/WFX.h>
 
 using namespace std;
 
 int main()
 {
+	/*
 	Factorial Table(100);
 	cout<<"test pre-initialisation"<<endl;
 	Binomial Bin(100, 50, Table);
@@ -16,6 +18,17 @@ int main()
 	cout<<endl;
 	cout<<Bin.binomial(20,18, Table)<<endl;
 	cout<<Table.factorial(20)/Table.factorial(18)/Table.factorial(2);
+	*/
+	ifstream f;
+	f.open("h2o.wfx");
+	WFX test (f);
+	cout<<"Test 1"<<endl;
+	cout<<test.Electronic_Spin_Multiplicity()<<endl;
+	cout<<"Test 2"<<endl;
+	cout<<test.Nuclear_Charges()[1]<<endl;
+	//cout<<"Test 3"<<endl;
+	//cout<<test.Molecular_Orbital_Primitive_Coefficients()[3].Coefficients()[15]<<endl;
+	//cout<<"Test 4"<<endl;
 
 	return 0;
 }

@@ -63,9 +63,9 @@ double f(int, int, int, double, double, Binomial&);
 double Theta(int, int, int, int, double, double, double, Binomial&);
 int m1p(int);
 double A(int, int, int, int, int, double, double, double, double, Binomial&);
-double B(int,int,int , int , int , double , double , double , double , Binomial&);
+double B(int,int,int , int , int , double , double , double , double , Factorial&);
 double myGamma(int, Factorial&);
 double F(int,double, Factorial&);
-vector<double> getFTable(int, double);
+vector<double> getFTable(int, double, Factorial&);
 
 #endif
