@@ -31,7 +31,7 @@ class NCEG
 		NCEG();
 		~NCEG(){}
 		string symbol() {return _symbol;}
-		vector<double> gradients() {return _gradient;}
+		vector<double> gradient() {return _gradient;}
 		void push_back(string, vector<double>);
 };
 
@@ -122,19 +122,32 @@ class WFX
 		int Number_of_Core_Electrons() {return _Number_of_Core_Electrons;}
 		AEDF Additionnal_Electron_Density_Function() {return _Additionnal_Electron_Density_Function;} //(EDF)
 
-		vector<int> read_one_block_int(ifstream&, string);
-		vector<double> read_one_block_real(ifstream&, string);
-		vector<string> read_one_block_string(ifstream&, string);
-		int read_int(ifstream&, string);
-		double read_real(ifstream&, string);
-		string read_string(ifstream&, string);
-		vector<MOPC> read_MOPC_block(ifstream&, string);
-		vector<NCEG> read_NCEG_block(ifstream&, string);
-		AEDF read_AEDF_block(ifstream&, string);
+		vector<int> read_one_block_int(ifstream&, string, bool, int);
+		vector<double> read_one_block_real(ifstream&, string, bool);
+		vector<double> read_one_block_real(ifstream&, string, bool, int);
+		vector<string> read_one_block_string(ifstream&, string, bool);
+		int read_int(ifstream&, string, bool);
+		double read_real(ifstream&, string, bool);
+		string read_string(ifstream&, string, bool);
+		vector<MOPC> read_MOPC_block(ifstream&, string, bool);
+		vector<NCEG> read_NCEG_block(ifstream&, string, bool);
+		AEDF read_AEDF_block(ifstream&, string, bool);
 		void read_file_wfx(ifstream&);
+
+		void write_one_block_int(ofstream&, vector<int>, string, bool, int);
+		void write_one_block_real(ofstream&, vector<double>, string, bool);
+		void write_one_block_real(ofstream&, vector<double>, string, bool, int);
+		void write_one_block_string(ofstream&, vector<string>, string, bool);
+		void write_int(ofstream&, int, string, bool);
+		void write_real(ofstream&, double, string, bool);
+		void write_string(ofstream&, string ,string, bool);
+		void write_MOPC_block(ofstream&, vector<MOPC>, bool);
+		void write_NCEG_block(ofstream&, vector<NCEG>, bool);
+		void write_AEDF_block(ofstream&, AEDF, bool);
+		void write_file_wfx(ofstream&);
 };
 
 long int LocaliseBlock(ifstream&, int& n, string);
-long int LocaliseBlocks_MO(ifstream&, int&, int&, string);
+long int LocaliseMO(ifstream&, int&, int&, string);
 
 #endif
