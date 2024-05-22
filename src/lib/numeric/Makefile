@@ -1,4 +1,4 @@
-OBJECTS = Domain.o Grid.o
+OBJECTS = Domain.o Grid.o functions.o
 
 
 include ../../../CONFIG
@@ -17,7 +17,7 @@ clean:
 #make dependance
 SRCS = $(OBJECTS:%.o=%.c)
 dep :
-	gcc  $(CFLAGS) -MM $(SRCS) > Dep.mk
+	$(CC)  $(CFLAGS) -MM $(SRCS) > Dep.mk
 
 -include Dep.mk
 

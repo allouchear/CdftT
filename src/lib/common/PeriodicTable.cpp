@@ -16,7 +16,7 @@ PeriodicTable::~PeriodicTable(){}
 
 Element PeriodicTable::element(const int& i) const
 {
-	if(i<0 || i>_periodic_table.size())
+	if(i<0 || i>int(_periodic_table.size()))
 		return Element();
 	else
 		return _periodic_table[i-1];
@@ -26,7 +26,7 @@ Element PeriodicTable::element(const string& n) const
 {
 	if(n.size()==1 || n.size()==2)
 	{
-		for(int i=0; i<_periodic_table.size(); i++)
+		for(size_t i=0; i<_periodic_table.size(); i++)
 		{
 			if(n==_periodic_table[i].symbol())
 				return _periodic_table[i];
@@ -35,7 +35,7 @@ Element PeriodicTable::element(const string& n) const
 				
 	else if(n.size()>2)
 	{
-		for(int i=0; i<_periodic_table.size(); i++)
+		for(size_t i=0; i<_periodic_table.size(); i++)
 		{
 			if(n==_periodic_table[i].name())
 				return _periodic_table[i];
@@ -50,7 +50,7 @@ void PeriodicTable::_add_element(const Element& ELE){_periodic_table.push_back(E
 
 void PeriodicTable::_add_isotope(Isotope ISO)
 {
-	for(int i=0; i<_periodic_table.size(); i++)
+	for(size_t i=0; i<_periodic_table.size(); i++)
 	{
 		if(_periodic_table[i].symbol()==ISO.symbol())
 			_periodic_table[i].push_isotope(ISO);

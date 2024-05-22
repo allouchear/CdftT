@@ -9,12 +9,11 @@ using namespace std;
 /*! This class is used to define the domain in 3D space containing a structure, molecule,...*/
 class Domain
 {	
-	int _Natoms;
 	int _Nval;
 	int _N1;
 	int _N2;
 	int _N3;
-	vector<double> _O;
+	double _O[3];
 	vector<vector<double>> _T;
 
 	public:
@@ -35,11 +34,6 @@ class Domain
 			Reads from a .cube file and initializes the number of atoms, the geometry, etc...
 		*/
 	void read_From_Cube(ifstream& nameFile);
-		//! get() function
-		/*!
-			Returns the number of atoms in the domain
-		*/
-	int Natoms() const;
 	
 		//! get() function
 		/*!
@@ -69,7 +63,7 @@ class Domain
 		/*!
 			Returns the coordinates of the origin
 		*/
-	vector<double> O() const;
+	double* O();
 	
 		//! get() function
 		/*!
@@ -77,6 +71,17 @@ class Domain
 		*/
 	vector<vector<double>> T() const;
 	
+		//!Operator ==
+		/*! 
+			Overload of operator ==
+		*/
+	bool operator==(const Domain& D) const;
+	
+		//!Operator ==
+		/*! 
+			Overload of operator ==
+		*/
+	bool operator!=(const Domain& D) const; 
 };
 
 #endif //_CDFTT_DOMAIN_H_INCLUDED

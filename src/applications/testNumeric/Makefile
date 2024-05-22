@@ -21,7 +21,7 @@ all: compiling  cdftt
 compiling: $(OBJECTS)
 
 clean:
-	@$(RM) *o *.out *.log *.inp *~ 
+	@$(RM) *o *.out *.log *.inp *~ cdftt
 
 #make dependance
 SRCS = $(OBJECTS:%.o=%.c)

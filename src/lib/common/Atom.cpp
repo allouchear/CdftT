@@ -60,52 +60,52 @@ double* Atom::coordinates()
 	return _coordinates;
 }
 
-double* Atom::gradient()
+double* Atom::gradient() 
 {
 	return _gradient;
 }
 
-double* Atom::velocity()
+double* Atom::velocity() 
 {
 	return _velocity;
 }
 
-string Atom::name()
+string Atom::name() const
 {
 	return _name;
 }
 
-string Atom::symbol()
+string Atom::symbol() const
 {
 	return _symbol;
 }
 
-int Atom::atomic_number()
+int Atom::atomic_number() const
 {
 	return _atomic_number;
 }
 
-double Atom::charge()
+double Atom::charge() const
 {
 	return _charge;
 }
 
-double Atom::charge_0()
+double Atom::charge_0() const
 {
 	return _charge_0;
 }
 
-double Atom::hardness()
+double Atom::hardness() const
 {
 	return _hardness;
 }
 
-double Atom::width()
+double Atom::width() const
 {
 	return _width;
 }
 
-Element Atom::element()
+Element Atom::element() const
 {
 	return _e;
 }
@@ -133,7 +133,7 @@ void Atom::Set_charge(const double& c )
 
 
 //renvoi la distance entre l'atome et un autre(a2)
-double Atom::get_distance(Atom& a2)
+double Atom::get_distance(const Atom& a2) const
 {
 	double C1[3];
 	double C2[3];
@@ -152,7 +152,7 @@ double Atom::get_distance(Atom& a2)
 }
 
 //renvoi langle formée par l'atome et 2 autres(a2,a3)
-double Atom::get_angle(Atom& a2, Atom& a3)
+double Atom::get_angle(const Atom& a2,const Atom& a3) const
 {
 	double C1[3];
 	double C2[3];
@@ -191,7 +191,7 @@ double Atom::get_angle(Atom& a2, Atom& a3)
 }
 
 
-double Atom::get_torsion(Atom& a2, Atom& a3, Atom& a4)
+double Atom::get_torsion(const Atom& a2, const Atom& a3, const Atom& a4) const
 {
 	double C1[3];
 	double C2[3];

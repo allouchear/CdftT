@@ -45,7 +45,7 @@ class Structure
 			//! A normal member taking no arguments and returning an integer value.
 			/*! \return The number of atoms in our structure. */
 
-		int number_of_atoms()
+		int number_of_atoms() const
 		{
 			return _atoms.size();
 		}
@@ -53,11 +53,25 @@ class Structure
 			//! A normal member taking one arguments and returning an atom value.
 			/*! \return The atom i of our structure. */
 
-		const Atom& atoms(const int& i)
+		Atom atom(const int& i) const
 		{
 			return _atoms[i-1];
 		}
+			//! Get() function
+			/*! returns _atoms as a vector of atoms */
+		vector<Atom> atoms() const
+		{
+			return _atoms;
+		}
 		
+			//! Operator +
+			/*! Overload of + returns the structure with the biggest number of atoms */
+		Structure operator+(const Structure& S) const;
+		
+			//! Operator -
+			/*! Overload of - returns the structure with the biggest number of atoms */
+		Structure add(const Structure& S);
+
 };
 
 #endif //CDFTT_STRUCTURE_H_INCLUDED

@@ -4,6 +4,7 @@
 using namespace std;
 #include <numeric/Domain.h>
 #include <common/Structure.h>
+#include <functional>
 
 
 class Grid
@@ -32,7 +33,7 @@ class Grid
 	
 		//! get() function
 		/*!
-			Returns the data contained in a vector<..<vector
+			Returns the data contained in a vector<..<vector. We recommend avoiding this method as much as possible as it is very slow.
 		*/
 	vector<vector<vector<vector<double>>>> V() const;
 	
@@ -48,6 +49,58 @@ class Grid
 		*/
 	Structure str() const;
 	
+		//! Set function
+		/*! Sets _dom*/
+	void set_dom(const Domain& d);
+	
+		//! Set function
+		/*! Sets _str*/
+	void set_str(const Structure& S);
+	
+		//! Set function
+		/*! Sets _V*/
+	void set_V(const vector<vector<vector<vector<double>>>>& U);
+	
+		//! operator +
+		/*!
+			Operator + overload using Structure::operator+(g)
+		*/
+	Grid operator+(const Grid& g);
+	
+		//! addition
+		/*! adds grid g to this using Structure::add(..)*/
+	Grid add(const Grid& g);
+	
+	
+		//! operator *
+		/*!
+			returns the product _V and g._V point by point. Structure result is that of the LHS.
+		*/
+	Grid operator*(const Grid& g);
+	
+		//! operator -
+		/*!
+			returns the difference of _V and g._V point by point. Struccture result is that of the LHS.
+		*/
+	Grid operator-(const Grid& g);
+		
+		//! Sum
+		/*! sums the values of _V over the domain*/
+	double sum();
+	
+		//!Constructor
+		/*! Creates a Grid with the default structure, the domain of g, and _V=f(x,y,z). fpar contains information on the type of function used: if fpar[1]==1 then type is gradient or laplacian. In this case the method resizes the grid as required by finite diff*/
+	void set_V_Func(vector<double> fpar, function<double(vector<double>, double, double, double, const Grid& g )> f, const Grid& g);
+	
+		//! Integration
+		/*! Interates _V over the domain sum()*dV*/
+	double integrate_over_dom();
+	
+		//! resize domain
+		/*! removes a number of outer */
+	//Grid resize(int, int, int);
+	
+	Grid resize_zeros(int, int, int);
 };
 
 #endif //_CDFTT_GRID_H_INCLUDED

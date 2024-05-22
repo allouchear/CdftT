@@ -61,42 +61,42 @@ class Atom
 		/*!< 
 			Returns the velocity of the atom
 		*/
-	string name();
+	string name() const;
 		//!< Get() function
 		/*!<
 			Returns the name of the atom
 		*/
-	string symbol();
+	string symbol() const;
 		//!< Get() function 
 		/*!<
 			Returns the symbol of the atom
 		*/
-	int atomic_number();
+	int atomic_number() const;
 		//!< Get() function
 		/*!<
 			Returns the atomic number of the atom
 		*/
-	double charge();
+	double charge() const;
 		//!< Get() function 
 		/*!<
 			Returns the partial charge of the atom
 		*/
-	double charge_0();
+	double charge_0() const;
 		//!< Get() function
 		/*!<	
 			Returns the oxidation of the atom
 		*/
-	double hardness();
+	double hardness() const;
 		//!<Get() function
 		/*!< 
 			Returns the hardness of the atom
 		*/
-	double width();
+	double width() const;
 		//!< Get() function
 		/*!<
 			Returns the width of the atom
 		*/
-	Element element();
+	Element element() const;
 		//!< Get() function
 		/*!<	Returns the element associated with the atom */
 		/*!<	The attributes of Element are properties of the atom	*/
@@ -135,13 +135,13 @@ class Atom
 	~Atom();
 		//!< Destructeur
 		
-	double get_distance(Atom& a2);
+	double get_distance(const Atom& a2) const;
 		//!< Renvoi la distance entre l'atom et un autre (a2)
 		
-	double get_angle(Atom& a2, Atom& a3);
+	double get_angle(const Atom& a2,const Atom& a3) const;
 		//!< Renvoi l'angle formée par l'atome et 2 autres(a2,a3)
 		
-	double get_torsion(Atom& a2, Atom& a3, Atom& a4);
+	double get_torsion(const Atom& a2,const Atom& a3,const Atom& a4) const;
 		//!<Return
 };
 

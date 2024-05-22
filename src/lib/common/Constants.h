@@ -45,6 +45,6 @@ static gdouble kb =1.3806505e-23; //1.380 6505(24) x 10^-23 J K-1  from NIST
 #define NAvogadro (6.02214129e23)
 #define hPlank (6.6260693e-34)
 #define epsilon0 (8.854187817e-12)
-
+#define PRECISION 1e-10
 
 #endif /* __CDFTT_CONSTANTS_H__ */
