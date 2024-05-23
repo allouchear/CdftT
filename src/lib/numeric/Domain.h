@@ -33,6 +33,12 @@ class Domain
 			Calls read_From_Cube to construct new Domain
 		*/
 	Domain(ifstream& nameFile);
+		
+		//! COnstructor
+		/*!
+			Calls set_N..() to set attributes and sets T to 0*/
+	Domain(int i, int n, int m, int l);
+	
 		//! read .cube file
 		/*!
 			Reads from a .cube file and initializes the number of atoms, the geometry, etc...
@@ -44,6 +50,10 @@ class Domain
 			Returns the number of of values per point Nval
 		*/
 	int Nval() const;
+		
+		//! set() function
+		/*! sets the number of values per point to N*/
+	void set_Nval(int N);
 	
 		//! get() function
 		/*!
@@ -51,17 +61,29 @@ class Domain
 		*/
 	int N1() const;
 	
+		//! set() function
+		/*! sets the number of points in the x direction to N*/
+	void set_N1(int N);
+	
 		//! get() function
 		/*!
 			Returns the number of points in the X2 direction
 		*/
 	int N2() const;
 	
+		//! set() function
+		/*! sets the number of points in the y direction to N*/
+	void set_N2(int N);
+	
 		//! get() function
 		/*!
 			Returns the number of points in the X3 direction
 		*/
 	int N3() const;
+	
+		//! set() function
+		/*! sets the number of points in the z direction to N*/
+	void set_N3(int N);
 	
 		//! get() function
 		/*!

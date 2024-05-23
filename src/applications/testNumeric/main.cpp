@@ -9,8 +9,8 @@ using namespace std;
 int main()
 {
 	//ifstream f("/home/tmaamaatuai/tmp/test.cube");
-	//ifstream f("/home/tmaamaatuai/tmp/test256.cube");
-	ifstream f("/home/tmaamaatuai/tmp/test500.cube");
+	ifstream f("/home/tmaamaatuai/tmp/test256.cube");
+	//ifstream f("/home/tmaamaatuai/tmp/test500.cube");
 	if(f.is_open()==true) cout<<"fichier créé"<<endl;
 	PeriodicTable Table;
 	cout<<"tp créé"<< endl;
@@ -19,13 +19,20 @@ int main()
 	Atom B;
 	*/
 	Grid g(f, Table);
-	/*for(int i=0;i<10;i++)
+	/*
+	for(int i=0;i<10;i++)
 	{
 		cout<<"i="<<i<<endl;
-		Grid lap = g.laplacian(4);
-		cout<<"Sum laplacian"<<lap.sum()<<endl;
+		Grid lap = g.gradient(4);
+		cout<<"Sum laplacian= "<<lap.sum()<<endl;
+	}*/
+	for(int i=0;i<10;i++)
+	{
+		cout<<"i="<<i<<endl;
+		Grid lap = g.gradient(4);
+		cout<<"Sum gradient= "<<lap.sum()<<endl;
 	}
-	*/
+	
 	
 	Grid h = g.coulomb_Grid(12, {0,0,0});
 	cout<<"grid done"<<endl;

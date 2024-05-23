@@ -112,6 +112,16 @@ class Grid
 		/*! returns a grid g where g._V are the laplacian of _V.*/
 		//* Note: the outer layers of thickness nBound of the grid will be zeroes as required by finite diff*/
 	Grid laplacian(int nBound);
+	
+		//! Laplacian coefficients
+		/*! Gets the coefficients of the laplcian operator in finite difference*/
+	void coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc);
+
+		//! Gradient grid
+		/*! returns a grid g where g._V are the gradient of _V.*/
+		/*! Note: the outer layers of thickness nBound of the grid will be zeroes as required by finite diff*/
+		/*! Note 2: number of values per point will change to 4*/
+	Grid gradient(int nBound);
 };
 
 #endif //_CDFTT_GRID_H_INCLUDED

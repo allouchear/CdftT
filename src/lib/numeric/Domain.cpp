@@ -95,9 +95,35 @@ Domain::Domain(ifstream& nameFile)
 	read_From_Cube(nameFile);	
 }
 
+Domain::Domain(int i, int n, int m, int l)
+{
+	set_Nval(i);
+	set_N1(n);
+	set_N2(m);
+	set_N3(l);
+	_T.resize(3, vector<double>(3));
+	for(int i=0;i<3;i++)
+	{
+		_O[i]=0;
+		for(int j=0; j<3;j++)
+		{
+			_T[i][j]=0;
+		}
+	}
+	_dx=0;
+	_dy=0;
+	_dz=0;
+	_dv=0;
+}
+
 int Domain::Nval() const
 {
 	return _Nval;
+}
+
+void Domain::set_Nval(int N)
+{
+	_Nval=N;
 }
 
 int Domain::N1() const
@@ -105,14 +131,29 @@ int Domain::N1() const
 	return _N1;
 }
 
+void Domain::set_N1(int N)
+{
+	_N1=N;
+}
+
 int Domain::N2() const
 {
 	return _N2;
 }
 
+void Domain::set_N2(int N)
+{
+	_N2=N;
+}
+
 int Domain::N3() const
 {
 	return _N3;
+}
+
+void Domain::set_N3(int N)
+{
+	_N3=N;
 }
 
 double* Domain::O()
