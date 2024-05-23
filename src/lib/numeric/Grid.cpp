@@ -2,7 +2,23 @@ using namespace std;
 #include <numeric/Grid.h>
 #include <common/Constants.h>
 #include <cmath>
+#ifdef ENABLE_OMP
+#include <omp.h>
+#endif
 
+
+void Grid::reset()
+{
+	if (_dom.Nval()<1 || _dom.N1()<1 || _dom.N2()<1 || _dom.N3()<1 )
+		_V = vector<vector<vector<vector<double>>>>();
+	else 
+	{
+		vector<double> V(_dom.Nval(),0);
+		vector<vector<double>> M(_dom.N3(), V);
+		vector<vector<vector<double>>> A(_dom.N2(), M);
+		_V = vector<vector<vector<vector<double>>>>(_dom.N1(), A);
+	}
+}
 
 Grid::Grid()
 {
@@ -10,8 +26,16 @@ Grid::Grid()
 	_dom=d;
 	Structure S;
 	_str=S;
-	_V.resize(_dom.N1(),vector<vector<vector<double>>>(_dom.N2(),vector<vector<double>>(_dom.N3(), vector<double>(_dom.Nval(), 0))));
+	reset();
 }
+Grid::Grid(const Domain& d)
+{
+	_dom=d;
+	Structure S;
+	_str=S;
+	reset();
+}
+
 
 void Grid::read_From_Cube(ifstream& nameFile, const PeriodicTable& Table)
 {
@@ -24,16 +48,15 @@ void Grid::read_From_Cube(ifstream& nameFile, const PeriodicTable& Table)
 	_dom=d;
 	Structure S(nameFile, Natoms, Table);
 	_str=S;
-	_V.resize(_dom.N1());
+	cout<<"done struct"<<endl;
+	reset();
+	cout<<"done reset"<<endl;
 	for(int i=0; i<_dom.N1();i++)
-	{	
-		_V[i].resize(_dom.N2());
+	{
 		for(int j=0; j<_dom.N2();j++)
 		{
-			_V[i][j].resize(_dom.N3());
 			for(int k=0; k<_dom.N3();k++)
 			{
-				_V[i][j][k].resize(_dom.Nval());
 				for(int l=0; l<_dom.Nval();l++)
 				{
 				nameFile>>_V[i][j][k][l];
@@ -41,6 +64,7 @@ void Grid::read_From_Cube(ifstream& nameFile, const PeriodicTable& Table)
 			}
 		}
 	}
+	cout<<"done read"<<endl;
 }
 
 Grid::Grid(ifstream& nameFile, const PeriodicTable& Table)
@@ -66,6 +90,8 @@ Structure Grid::str() const
 void Grid::set_dom(const Domain& d)
 {
 	_dom=d;
+	reset();
+	
 }
 
 void Grid::set_str(const Structure& S)
@@ -84,19 +110,17 @@ Grid Grid::operator+(const Grid& g)
 	{
 		if(g._dom==_dom)
 		{
-			Grid sum;			
-			sum.set_dom(_dom);
+			Grid sum(_dom);
 			sum.set_str(_str+g._str);
-			sum._V.resize(g._dom.N1());
+#ifdef ENABLE_OMP
+#pragma omp parallel for
+#endif
 			for(int i=0; i<g._dom.N1();i++)
-			{	
-				sum._V[i].resize(g._dom.N2());
+			{
 				for(int j=0; j<g._dom.N2();j++)
 				{
-					sum._V[i][j].resize(g._dom.N3());
 					for(int k=0; k<g._dom.N3();k++)
 					{
-						sum._V[i][j][k].resize(g._dom.Nval());
 						for(int l=0; l<g._dom.Nval();l++)
 						{
 						sum._V[i][j][k][l]=_V[i][j][k][l]+g._V[i][j][k][l];
@@ -143,6 +167,9 @@ Grid Grid::add(const Grid& g)
 			set_dom(_dom);
 			_str.add(g._str);
 			_V.resize(g._dom.N1());
+#ifdef ENABLE_OMP
+#pragma omp parallel for
+#endif
 			for(int i=0; i<g._dom.N1();i++)
 			{	
 				_V[i].resize(g._dom.N2());
@@ -195,19 +222,17 @@ Grid Grid::operator*(const Grid& g)
 	{
 		if(g._dom==_dom)
 		{
-			Grid prod;
-			prod.set_dom(_dom);
+			Grid prod(_dom);
 			prod.set_str(_str);
-			prod._V.resize(g._dom.N1());
+#ifdef ENABLE_OMP
+#pragma omp parallel for
+#endif
 			for(int i=0; i<g._dom.N1();i++)
-			{	
-				prod._V[i].resize(g._dom.N2());
+			{
 				for(int j=0; j<g._dom.N2();j++)
 				{
-					prod._V[i][j].resize(g._dom.N3());
 					for(int k=0; k<g._dom.N3();k++)
 					{
-						prod._V[i][j][k].resize(g._dom.Nval());
 						for(int l=0; l<g._dom.Nval();l++)
 						{
 						prod._V[i][j][k][l]=_V[i][j][k][l]*g._V[i][j][k][l];
@@ -251,19 +276,17 @@ Grid Grid::operator-(const Grid& g)
 	{
 		if(g._dom==_dom)
 		{
-			Grid diff;
-			diff.set_dom(_dom);
+			Grid diff(_dom);
 			diff.set_str(_str);
-			diff._V.resize(g._dom.N1());
+#ifdef ENABLE_OMP
+#pragma omp parallel for
+#endif
 			for(int i=0; i<g._dom.N1();i++)
-			{	
-				diff._V[i].resize(g._dom.N2());
+			{
 				for(int j=0; j<g._dom.N2();j++)
 				{
-					diff._V[i][j].resize(g._dom.N3());
 					for(int k=0; k<g._dom.N3();k++)
 					{
-						diff._V[i][j][k].resize(g._dom.Nval());
 						for(int l=0; l<g._dom.Nval();l++)
 						{
 						diff._V[i][j][k][l]=_V[i][j][k][l]-g._V[i][j][k][l];
@@ -304,6 +327,9 @@ Grid Grid::operator-(const Grid& g)
 double Grid::sum()
 {
 	double sum=0;
+#ifdef ENABLE_OMP
+#pragma omp parallel for reduction (+:sum)
+#endif
 	for(int i=0; i<_dom.N1();i++)
 	{	
 		for(int j=0; j<_dom.N2();j++)
@@ -320,93 +346,312 @@ double Grid::sum()
 	return sum;	
 }
 
-double Grid::integrate_over_dom()
+double Grid::integrate_Over_Dom()
 {
-	double I=0;
-	double dx=0;
-	double dy=0;
-	double dz=0;
-	for(int i=0; i<3;i++)
-	{
-		dx += _dom.T()[0][i]*_dom.T()[0][i];
-		dy += _dom.T()[1][i]*_dom.T()[1][i];
-		dz += _dom.T()[2][i]*_dom.T()[2][i];
-	}
-	I = sum()*sqrt(dx*dy*dz);
-	return I;
-}
-/*
-Grid Grid::resize(int n, int m, int p)
-{
-	_V.erase(_dom.N1()-n, _dom.N1());
-	for(int i=0; i<_dom.N1();i++)
-	{	
-		_V[i].erase(_dom.N2()-m, _dom.N2());
-		for(int j=0; j<_dom.N2();j++)
-		{	
-			_V[i][j].erase(_dom.N3()-p, _dom.N3());
-		}
-	}
-	return *this;
-}
-*/
-Grid Grid::resize_zeros(int n, int m, int p)
-{
-	for(int i=_dom.N1()-n; i<_dom.N1();i++)
-	{	
-		for(int j=_dom.N2()-m; j<_dom.N2();j++)
-		{	
-			for(int k=_dom.N3()-p; k<_dom.N3();k++)
-			{
-				for(int l=0; l<_dom.Nval();l++)
-				{
-					_V[i][j][k][l]= 0;
-				}
-			}
-		}
-	}
-	return *this;
+	return sum()*_dom.dv();
 }
 
-void Grid::set_V_Func(vector<double> fpar, function<double(vector<double>,double, double, double, const Grid& g )> f, const Grid& g)
+Grid Grid::coulomb_Grid(double q, vector<double> R)
 {
-	set_dom(g.dom());
-	int N=_dom.N1();
-	int M=_dom.N2();
-	int P=_dom.N3();
-	if(int(fpar[1])==1)
-	{
-		N= N-fpar[0];
-		M= M-fpar[0];
-		P= P-fpar[0];
-	}
-	double x = _dom.O()[ 0 ];
-	double y = _dom.O()[ 1 ];
-	double z = _dom.O()[ 2 ];
-	_V.resize(g._dom.N1());
-	for(int i=0; i<N;i++)
+	Grid V(_dom);
+	double x = 0;
+	double y = 0;
+	double z = 0;
+	double v = 0;
+#ifdef ENABLE_OMP
+#pragma omp parallel for
+#endif
+	for(int i=0; i<_dom.N1();i++)
 	{	
-		_V[i].resize(g._dom.N2());
-		for(int j=0; j<M;j++)
-		{	
-			_V[i][j].resize(g._dom.N3());
-			for(int k=0; k<P;k++)
-			{
-				_V[i][j][k].resize(g._dom.Nval());
+		for(int j=0; j<_dom.N2();j++)
+		{		
+			for(int k=0; k<_dom.N3();k++)
+			{	
 				for(int l=0; l<_dom.Nval();l++)
 				{
 					x = _dom.O()[ 0 ] + i*_dom.T()[0][0] + j*_dom.T()[0][1] +  k*_dom.T()[0][2]; 
 					y = _dom.O()[ 1 ] + i*_dom.T()[1][0] + j*_dom.T()[1][1] +  k*_dom.T()[1][2]; 
 					z = _dom.O()[ 2 ] + i*_dom.T()[2][0] + j*_dom.T()[2][1] +  k*_dom.T()[2][2];
-					
-					_V[i][j][k][l]= f(fpar,x,y,z, g);
+					v = q/sqrt( (x-R[0])*(x-R[0])+(y-R[1])*(y-R[1])+(z-R[2])*(z-R[2]));
+					if(v<1e-10)
+					{
+						v=0;
+					}
+					V._V[i][j][k][l]= v;
 				}
 			}
 		}
 	}
-	if(int(fpar[1])==1)
-	{	
-		resize_zeros(int(fpar[0]),int(fpar[0]),int(fpar[0]));
-	}	
+	return V;	
 }
+
+void Grid::coefs_Laplacian(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc)
+{
+	vector<double> coefs(nBound+1);	
+		if(nBound==1)
+		{
+			vector<double> c = {-2.0, 1.0};
+			for(int i=0;i<=nBound;i++)
+					coefs[i] = c[i];
+		}
+		else if(nBound==2)
+		{
+			double denom = 12.0;
+			vector<double> c = {-30.0, 16.0, -1.0};
+			for(int i=0;i<=2;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==3)
+		{
+			double denom = 180.0;
+			vector<double> c = {-490.0, 270.0,-27.0, 2.0};
+			for(int i=0;i<=3;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==4)
+		{
+			double denom = 5040.0;
+			vector<double> c = {-14350.0, 8064.0, -1008.0, 128.0, -9.0};
+			for(int i=0;i<=4;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==5)
+		{
+			double denom = 25200.0;
+			vector<double> c = {-73766.0, 42000.0, -6000.0, 1000.0, -125.0, 8.0};
+			for(int i=0;i<=5;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==6)
+		{
+			double denom = 831600.0;
+			vector<double> c = {-2480478.0,1425600.0,-222750.0,44000.0,-7425.0,864.0,-50.0};
+			for(int i=0;i<=6;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==7)
+		{
+			double denom = 75675600.0;
+			vector<double> c = {-228812298.0,132432300.0,-22072050.0,4904900.0,-1003275.0, 160524.0,-17150.0,900.0};
+			for(int i=0;i<=7;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==8)
+		{
+			double denom = 302702400.0;
+			vector<double> c = {-924708642.0,538137600.0,-94174080.0,22830080.0,-5350800.0,1053696.0,-156800.0,15360.0,-735.0};
+			for(int i=0;i<=8;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==9)
+		{
+			double denom = 15437822400.0;
+			vector<double> c = {-47541321542.0,+27788080320.0, -5052378240.0,+1309875840.0,-340063920.0,+77728896.0,-14394240.0,+1982880.0,-178605.0,+7840.0};
+			for(int i=0;i<=9;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==10)
+		{
+			double denom = 293318625600.0;
+			vector<double> c = {-909151481810.0,+533306592000.0, -99994986000.0,+27349056000.0,-7691922000.0,+1969132032.0,-427329000.0,+73872000.0,-9426375.0,+784000.0,-31752.0};
+			for(int i=0;i<=10;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==11)
+		{
+			double denom = 3226504881600.0;
+			vector<double> c = {-10053996959110.0,+5915258949600.0,-1137549798000.0,+325014228000.0,-97504268400.0,+27301195152.0,-6691469400.0,+1365606000.0,-220114125.0,+26087600.0,-2012472.0,+75600.0};
+			for(int i=0;i<=11;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==12)
+		{
+			double denom = 74209612276800.0;
+			vector<double> c = {-232272619118930.0,+137002361126400.0,-26911178078400.0,+7973682393600.0,-2522922944850.0,+759845028096.0,-205205061600.0,+47609337600.0,-9112724775.0,+1371462400.0,-151484256.0,+10886400.0,-381150.0};
+			for(int i=0;i<=12;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else
+		{
+			exit(1);
+		}
+		cc = 1/(_dom.dx()*_dom.dx()) + 1/(_dom.dy()*_dom.dy()) + 1/(_dom.dz()*_dom.dz());
+		cc *= coefs[0];
+
+		for(int i=0;i<=nBound;i++)
+		{
+			fcx[i] =  coefs[i]/(_dom.dx()*_dom.dx());
+			fcy[i] =  coefs[i]/(_dom.dy()*_dom.dy());
+			fcz[i] =  coefs[i]/(_dom.dz()*_dom.dz());
+		}
+}
+
+Grid Grid::laplacian(int nBound)
+{
+	try
+	{
+		if(nBound<1 or nBound>12)
+		{
+			throw string("nBound oustide bounds");
+		}
+		else
+		{
+			vector<double> fcx(nBound);
+			vector<double> fcy(nBound); 
+			vector<double> fcz(nBound);
+			double cc=0;
+			Grid g(_dom);
+			cout<<"end create grid"<<endl;
+			coefs_Laplacian(nBound, fcx, fcy, fcz, cc);
+			cout<<"coefs done"<<endl;
+#ifdef ENABLE_OMP
+#pragma omp parallel for
+#endif
+			for(int i=nBound;i<g._dom.N1()-nBound;i++)
+			{
+				for(int j=nBound;j<g._dom.N2()-nBound;j++)
+				{	
+					for(int k=nBound;k<g._dom.N3()-nBound;k++)
+					{
+						for(int l=0; l<g._dom.Nval();l++)
+						{
+							double v = cc*_V[i][j][k][l];
+							for(int n=1;n<=nBound;n++)
+							{
+								v += fcx[n] *(_V[i-n][j][k][l]+_V[i+n][j][k][l]);
+								v += fcy[n] *(_V[i][j-n][k][l]+_V[i][j+n][k][l]);
+								v += fcz[n] *(_V[i][j][k-n][l]+_V[i][j][k+n][l]);
+							}
+							g._V[i][j][k][l]=v;
+						}
+					}
+				}
+			}
+			return g;
+		}
+	}
+	catch(string error)
+	{
+		cout<<error<<endl;
+		exit(1);
+	}				
+}
+
+/*
+void Grid::coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc)
+{
+	vector<double> coefs(nBound+1);	
+		if(nBound==1)
+		{
+			vector<double> c = {-2.0, 1.0};
+			for(int i=0;i<=nBound;i++)
+					coefs[i] = c[i];
+		}
+		else if(nBound==2)
+		{
+			double denom = 12.0;
+			vector<double> c = {-30.0, 16.0, -1.0};
+			for(int i=0;i<=2;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==3)
+		{
+			double denom = 180.0;
+			vector<double> c = {-490.0, 270.0,-27.0, 2.0};
+			for(int i=0;i<=3;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==4)
+		{
+			double denom = 5040.0;
+			vector<double> c = {-14350.0, 8064.0, -1008.0, 128.0, -9.0};
+			for(int i=0;i<=4;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==5)
+		{
+			double denom = 25200.0;
+			vector<double> c = {-73766.0, 42000.0, -6000.0, 1000.0, -125.0, 8.0};
+			for(int i=0;i<=5;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==6)
+		{
+			double denom = 831600.0;
+			vector<double> c = {-2480478.0,1425600.0,-222750.0,44000.0,-7425.0,864.0,-50.0};
+			for(int i=0;i<=6;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==7)
+		{
+			double denom = 75675600.0;
+			vector<double> c = {-228812298.0,132432300.0,-22072050.0,4904900.0,-1003275.0, 160524.0,-17150.0,900.0};
+			for(int i=0;i<=7;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==8)
+		{
+			double denom = 302702400.0;
+			vector<double> c = {-924708642.0,538137600.0,-94174080.0,22830080.0,-5350800.0,1053696.0,-156800.0,15360.0,-735.0};
+			for(int i=0;i<=8;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==9)
+		{
+			double denom = 15437822400.0;
+			vector<double> c = {-47541321542.0,+27788080320.0, -5052378240.0,+1309875840.0,-340063920.0,+77728896.0,-14394240.0,+1982880.0,-178605.0,+7840.0};
+			for(int i=0;i<=9;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==10)
+		{
+			double denom = 293318625600.0;
+			vector<double> c = {-909151481810.0,+533306592000.0, -99994986000.0,+27349056000.0,-7691922000.0,+1969132032.0,-427329000.0,+73872000.0,-9426375.0,+784000.0,-31752.0};
+			for(int i=0;i<=10;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==11)
+		{
+			double denom = 3226504881600.0;
+			vector<double> c = {-10053996959110.0,+5915258949600.0,-1137549798000.0,+325014228000.0,-97504268400.0,+27301195152.0,-6691469400.0,+1365606000.0,-220114125.0,+26087600.0,-2012472.0,+75600.0};
+			for(int i=0;i<=11;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else if (nBound==12)
+		{
+			double denom = 74209612276800.0;
+			vector<double> c = {-232272619118930.0,+137002361126400.0,-26911178078400.0,+7973682393600.0,-2522922944850.0,+759845028096.0,-205205061600.0,+47609337600.0,-9112724775.0,+1371462400.0,-151484256.0,+10886400.0,-381150.0};
+			for(int i=0;i<=12;i++)
+				coefs[i] = c[i]/denom;
+		}
+		else
+		{
+			exit(1);
+		}
+		cc = 1/(_dom.dx()*_dom.dx()) + 1/(_dom.dy()*_dom.dy()) + 1/(_dom.dz()*_dom.dz());
+		cc *= coefs[0];
+
+		for(int i=0;i<=nBound;i++)
+		{
+			fcx[i] =  coefs[i]/_dom.dx();
+			fcy[i] =  coefs[i]/_dom.dy()*_dom.dy();
+			fcz[i] =  coefs[i]/_dom.dz()*_dom.dz();
+		}
+}
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
 

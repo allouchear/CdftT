@@ -15,6 +15,10 @@ class Domain
 	int _N3;
 	double _O[3];
 	vector<vector<double>> _T;
+	double _dx;
+	double _dy;
+	double _dz;
+	double _dv;
 
 	public:
 		
@@ -70,6 +74,30 @@ class Domain
 			Returns the "translation matrix??"
 		*/
 	vector<vector<double>> T() const;
+	
+		//! get() function
+		/*!
+			Returns the element distance in the x direction
+		*/
+	double dx() const;
+	
+		//! get() function
+		/*!
+			Returns the element distance in the y direction
+		*/
+	double dy() const;
+	
+		//! get() function
+		/*!
+			Returns the element distance in the z direction
+		*/
+	double dz() const;
+		
+		//! get() function
+		/*!
+			Returns the element volume
+		*/
+	double dv() const;
 	
 		//!Operator ==
 		/*! 

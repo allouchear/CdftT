@@ -8,7 +8,4 @@ using namespace std;
 
 double coulomb(vector<double>, double, double, double, const Grid& );
 
-double laplacian(vector<double>, double, double, double, const Grid&);
-
-double grad(vector<double>, double, double, double, const Grid&);
 #endif

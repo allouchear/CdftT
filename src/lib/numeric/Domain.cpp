@@ -24,6 +24,10 @@ Domain::Domain()
 			_T[i][j]=0;
 		}
 	}
+	_dx=0;
+	_dy=0;
+	_dz=0;
+	_dv=0;
 }
 
 void Domain::read_From_Cube(ifstream& nameFile)
@@ -74,6 +78,16 @@ void Domain::read_From_Cube(ifstream& nameFile)
 			_T[2][i]=_T[2][i]*ANGTOBOHR;
 		}
 	}
+	for(int i=0; i<3;i++)
+	{
+		_dx += _T[0][i]*_T[0][i];
+		_dy += _T[1][i]*_T[1][i];
+		_dz += _T[2][i]*_T[2][i];
+	}
+	_dx = sqrt(_dx);
+	_dy = sqrt(_dy);
+	_dz = sqrt(_dz);
+	_dv = _dx*_dy*_dz;
 }
 
 Domain::Domain(ifstream& nameFile)
@@ -111,6 +125,25 @@ vector<vector<double>> Domain::T() const
 	return _T;
 }
 
+double Domain::dx() const
+{
+	return _dx;
+}
+
+double Domain::dy() const
+{
+	return _dy;
+}
+
+double Domain::dz() const
+{
+	return _dz;
+}
+
+double Domain::dv() const
+{
+	return _dv;
+}
 bool Domain::operator==(const Domain& D) const
 {
 	if(D._Nval==_Nval and D._N1==_N1 and D._N2==_N2 and D._N3==_N3 and D._T==_T)

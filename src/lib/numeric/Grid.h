@@ -14,11 +14,19 @@ class Grid
 	vector<vector<vector<vector<double>>>> _V;
 	
 	public:
+		//! reset
+		/*! resets all values _V to zero and resizes to _dom size*/
+	void reset();
+	
 		//! Default Constructor
 		/*! 
 			Sets all attributes to 0. _Nval=1 by default so V will be 1 value of 0 /point 
 		*/
 	Grid();
+	
+		//! constructor from domain d
+		/*! builds a grid with same domain as d*/
+	Grid(const Domain& d);
 	
 		//! Constructor
 		/*! 
@@ -89,18 +97,21 @@ class Grid
 	double sum();
 	
 		//!Constructor
-		/*! Creates a Grid with the default structure, the domain of g, and _V=f(x,y,z). fpar contains information on the type of function used: if fpar[1]==1 then type is gradient or laplacian. In this case the method resizes the grid as required by finite diff*/
-	void set_V_Func(vector<double> fpar, function<double(vector<double>, double, double, double, const Grid& g )> f, const Grid& g);
+		/*! Creates a Grid with the default structure, the domain of g, and _V=f(x,y,z). fpar contains information on the type of function used*/
+	Grid coulomb_Grid(double q, vector<double> R);
 	
 		//! Integration
 		/*! Interates _V over the domain sum()*dV*/
-	double integrate_over_dom();
+	double integrate_Over_Dom();
 	
-		//! resize domain
-		/*! removes a number of outer */
-	//Grid resize(int, int, int);
-	
-	Grid resize_zeros(int, int, int);
+		//! Laplacian coefficients
+		/*! Gets the coefficients of the laplcian operator in finite difference*/
+	void coefs_Laplacian(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc);
+
+		//! Laplacian grid
+		/*! returns a grid g where g._V are the laplacian of _V.*/
+		//* Note: the outer layers of thickness nBound of the grid will be zeroes as required by finite diff*/
+	Grid laplacian(int nBound);
 };
 
 #endif //_CDFTT_GRID_H_INCLUDED
