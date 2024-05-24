@@ -8,13 +8,17 @@
 using namespace std;
 
 	//! A factorial class.
-	/*! This class will be used in the GTF class to for the normalisation. */
+	/*! This class will be used in the GTF class for the normalisation. */
 
 class Factorial
 {
 	private:
 		vector<double> _tab;	
 	public:
+
+			//! A default constructor.
+			/*! This constructor create a table without a size (0). */
+
 		Factorial();
 
 			//! A real constructor.
@@ -38,26 +42,54 @@ class Factorial
 		double double_factorial(int);
 };
 
+	//! A binomial class.
+	/*! This class will be used in the GTF class for some calculus. */
+
 class Binomial
 {
 	private:
 		vector<vector<double>> _tab;
 		Factorial _fact;
 	public:
-		Binomial(int, int, Factorial&);
+
+		//! A real constructor.
+		/*! This constructor is used to create a table from 0 to n binomial. */
+
+		Binomial(int, Factorial&);
+
+		//! A default constructor.
+		/*! This constructor create a table without a size (0). */
+
 		Binomial();
+
+		//! A default desctructor.
+		/*! We don't use it. */
+
 		~Binomial(){}
+
+		//! A normal member taking two arguments and returning a double value.
+		/*! \return The i,j binomial value. */
+
 		double binomial(int, int);
+
+		//! A normal member taking no arguments and returning a vector<vector<double>> value.
+		/*! \return The binomial table. */
+
 		vector<vector<double>>& tab()
 		{
 			return _tab;
 		}
+
+		//! A normal member taking no arguments and returning a Factorial value.
+		/*! \return The factorial table. */
+
 		Factorial& fact()
 		{
 			return _fact;
 		}
 };
 
+//Ne pas oublier de commenter
 double power(double, double);
 double f(int, int, int, double, double, Binomial&);
 double Theta(int, int, int, int, double, double, double, Binomial&);

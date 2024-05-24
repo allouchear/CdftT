@@ -437,6 +437,15 @@ void GTF::operator*=(double c)
 	_coefficient *= c;
 }
 
+void GTF::push_back(const double& a, const double& c, const vector<double>& coord, const vector<int>& l, Binomial& B)
+{
+	_exposant=a;
+	_coefficient=c;
+	_coord=coord;
+	_l=l;
+	_bino=B;
+}
+
 bool operator==(GTF a, GTF b)
 {
 	size_t i;

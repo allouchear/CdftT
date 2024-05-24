@@ -60,7 +60,6 @@ void AEDF::push_back(int a, vector<int> b, vector<int> c, vector<double> d, vect
 	_EDF_Primitives_Coefficients=e;
 }
 
-
 //****************************************//
 //*********** WFX class ******************//
 //****************************************//
@@ -84,7 +83,8 @@ WFX::WFX()
 	_Electronic_Spin_Multiplicity=0;
 	_Model="None";							
 	_Primitive_Centers.resize(0);										
-	_Primitive_Types.resize(0);											
+	_Primitive_Types.resize(0);
+	_Lxyz.resize(0, vector<int>(0));										
 	_Primitive_Exponents.resize(0);									
 	_Molecular_Orbital_Occupation_Numbers.resize(0);				
 	_Molecular_Orbital_Energies.resize(0);
@@ -102,6 +102,10 @@ WFX::WFX()
 WFX::WFX(ifstream& file)
 {
 	read_file_wfx(file);
+	_Lxyz.resize(_Number_of_Primitives);
+	int i;
+	for(i=0; i<_Number_of_Primitives; i++)
+		_Lxyz[i]=setLxyz(_Primitive_Types[i]);
 }
 
 vector<int> WFX::read_one_block_int(ifstream& f, string b, bool r, int nint)
@@ -667,8 +671,8 @@ void WFX::write_AEDF_block(ofstream& f, AEDF a, bool r)
 
 void WFX::write_file_wfx(ofstream& file)
 {
-	cout<<std::scientific;
-	cout<<std::setprecision(15);
+	file<<std::scientific;
+	file<<std::setprecision(15);
 	//cout<<std::left<<std::setw(20);
 
 
@@ -730,4 +734,176 @@ void WFX::write_file_wfx(ofstream& file)
 	write_real(file, _Full_Virial_Ratio, z, false);
 	write_int(file, _Number_of_Core_Electrons, aa, false);
 	write_AEDF_block(file, _Additionnal_Electron_Density_Function, false);
+}
+
+vector<int> setLxyz(int iType)
+{
+	vector<int> l (3);
+	l[0]=l[1]=l[2]=0;
+	if(iType==1) 
+		return l; // 1S
+	else if(iType==2) 
+		l[0]=1; // 2 PX
+	else if(iType==3) 
+		l[1]=1;// 2 PY
+	else if(iType==4) 
+		l[2]=1;// 4 PZ
+	else if(iType==5)
+		l[0]=2; // 5 DXX
+	else if(iType==6)
+		l[1]=2; // 6 DYY
+	else if(iType==7) 
+		l[2]=2; // 7 DZZ
+	else if(iType==8)
+	{
+		l[0]=1;  
+		l[1]=1;
+	} // 8 DXY
+	else if(iType==9)
+	{
+		l[0]=1; 
+		l[2]=1;
+	} // 9 DXZ
+	else if(iType==10)
+	{
+		l[1]=1;
+		l[2]=1;
+	} // 10 DYZ
+	else if(iType==11)
+		l[0]=3; // 11 FXXX
+	else if(iType==12)
+		l[1]=3; // 12 FYYY
+	else if(iType==13)
+		l[2]=3; // 13 FZZZ
+	else if(iType==14)
+	{
+		l[0]=2; 
+		l[1]=1; // 14 FXXY
+	}
+	else if(iType==15)
+	{
+		l[0]=2;
+		l[2]=1;
+	} // 15 FXXZ
+	else if(iType==16)
+	{
+		l[1]=2;
+		l[2]=1;
+	} // 16 FYYZ
+	else if(iType==17)
+	{
+		l[0]=1;
+		l[1]=2;
+	} // 17 FXYY
+	else if(iType==18)
+	{
+		l[0]=1;
+		l[2]=2;
+	} // 18 FXZZ
+	else if(iType==19)
+	{
+		l[1]=1;
+		l[2]=2;
+	} // 19 FYZZ
+	else if(iType==20)
+	{
+		l[0]=1;
+		l[1]=1;
+		l[2]=1;
+	} // 20 FXYZ
+	else if(iType==21)
+		l[0]=4; // 21 GXXXX
+	else if(iType==22)
+		l[1]=4; // 22 GYYYY
+	else if(iType==23)
+		l[2]=4; // 23 GZZZZ
+	else if(iType==24)
+	{
+		l[0]=3;
+		l[1]=1;
+		l[2]=0;
+	} // 24 GXXXY
+	else if(iType==25)
+	{
+		l[0]=3;
+		l[1]=0;
+		l[2]=1;
+	} // 25 GXXXZ
+	else if(iType==26)
+	{
+		l[0]=1;
+		l[1]=3;
+		l[2]=0;
+	} // 26 GXYYY
+	else if(iType==27)
+	{
+		l[0]=0;
+		l[1]=3;
+		l[2]=1;
+	} // 27 GYYYZ
+	else if(iType==28)
+	{
+		l[0]=1;
+		l[1]=0;
+		l[2]=3;
+	} // 28 GXZZZ
+	else if(iType==29)
+	{
+		l[0]=0;
+		l[1]=1;
+		l[2]=3;
+	} // 29 GYZZZ
+	else if(iType==30) 
+	{ 
+		l[0]=2;
+		l[1]=2;
+		l[2]=0;
+	} // 30 GXXYY
+	else if(iType==31)
+	{
+		l[0]=2;
+		l[1]=0;
+		l[2]=2;
+	} // 31 GXXZZ
+	else if(iType==32)
+	{
+		l[0]=0;
+		l[1]=2;
+		l[2]=2;
+	} // 32 GYYZZ
+	else if(iType==33)
+	{
+		l[0]=2;
+		l[1]=1;
+		l[2]=1;
+	} // 33 GXXYZ
+	else if(iType==34)
+	{
+		l[0]=1;
+		l[1]=2;
+		l[2]=1;
+	} // 34 GXYYZ
+	else if(iType==35)
+	{
+		l[0]=1;
+		l[1]=1;
+		l[2]=2;
+	} // 35 GXYZZ
+	else
+	{
+		int it=35;
+		int L, ix,iy;
+		for(L=5;L<=30;L++)
+			for(ix=0;ix<L;ix++)
+				for(iy=0;iy<=L-ix;iy++)
+				{
+					it++;
+					if(it==iType)
+					{
+						l[0] =ix; l[1]=iy; l[2]=L-ix-iy;
+						return l;;
+					}
+				}
+	}
+	return l;
 }

@@ -10,7 +10,7 @@ LCAO::LCAO()
 	_bino=Binomial();
 }
 
-LCAO::LCAO(vector<CGTF> A) : _cgtf(A)
+LCAO::LCAO(vector<CGTF> A, vector<double> C) : _cgtf(A), _coefficient(C)
 {
 	_numberOfFunctions=_cgtf.size();
 	_bino=A[0].bino();
@@ -181,6 +181,13 @@ bool LCAO::LCAOEqLCAO(LCAO& t2)
 	return true;
 }
 */
+
+void LCAO::push_back(CGTF& cgtf, double coef)
+{
+	_cgtf.push_back(cgtf);
+	_coefficient.push_back(coef);
+	_numberOfFunctions++;
+}
 bool operator==(LCAO a, LCAO b)
 {
 	size_t i,j;

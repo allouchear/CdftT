@@ -177,6 +177,13 @@ bool CGTF::CGTFEqCGTF(CGTF& t2)
 	return true;
 }
 */
+
+void CGTF::push_back(GTF& gtf)
+{
+	_gtf.push_back(gtf);
+	_numberOfFunctions++;
+}
+
 bool operator==(CGTF a, CGTF b)
 {
 	size_t i,j;

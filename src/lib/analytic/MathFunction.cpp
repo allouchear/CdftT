@@ -6,49 +6,66 @@ using namespace std;
 
 Factorial::Factorial()
 {
-	_tab.resize(0);
+	_tab = vector<double>();
 }
 
 Factorial::Factorial(int n)
 {
-	_tab.resize(n);
-	_tab[0]=1;
-	for(int i=1; i<=n; i++)
-		_tab[i]=_tab[i-1]*i;
+	_tab = vector<double>(n,1);
+	for(int i=2; i<n; i++)
+		for(int k=0; k<=i/2-1; k++)
+			_tab[i]*= i-2*k;
 }
 
 double Factorial::factorial(int n)
 {
-	if(n>int(_tab.size()))
-	{
-		for(int i=_tab.size(); i<=n; i++)
-			_tab.push_back(_tab[i-1]*i);
-	}
-	return _tab[n];
+	if(n==0)
+		return 1;
+
+	return double_factorial(n)*double_factorial(n-1);
 }
 
 double Factorial::double_factorial(int n)
 {
-	return factorial(factorial(n));
+	if(size_t(n)>=_tab.size())
+	{
+	double r;
+		for(size_t i=_tab.size(); i<size_t(n); i++)
+		{	
+			r=1;
+			for(size_t k=0; k<=i/2-1; k++)
+				r*= i-2*k;	
+			_tab.push_back(r);
+		}
+	}
+
+	if(n==-1)
+		return 1;
+
+	return _tab[n];
 }
 
 Binomial::Binomial()
 {
 	_fact=Factorial();
-	_tab.resize(0, vector<double>(0));
+	_tab=vector<vector<double>>();
 }
 
-Binomial::Binomial(int i, int j, Factorial& F) : _fact(F)
+Binomial::Binomial(int i, Factorial& F) : _fact(F)
 {
-	_tab.resize(i, vector<double>(j));
-	for(i=0; i<int(_tab.size()); i++)
-		for(j=0; j<=i; j++)
-			_tab[i][j] = _fact.factorial(i)/_fact.factorial(j)/_fact.factorial(i-j);
+	vector<double>V(0);
+	_tab=vector< vector<double> >(i,V);
+	for(size_t k=0; k<_tab.size(); k++)
+	{
+		_tab[k].resize(k+1);
+		for(size_t l=0; l<=k; l++)
+			_tab[k][l] = _fact.factorial(k)/_fact.factorial(l)/_fact.factorial(k-l);
+	}
 }
 
 double Binomial::binomial(int i, int j)
 {
-/*													A debbug
+/*													A debug
 	if(i>_tab.size() || j>_tab[0].size())
 	{
 		cout<<"Test 1"<<endl;

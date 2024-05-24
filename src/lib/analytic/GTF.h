@@ -19,9 +19,13 @@ class GTF
 		vector<int> _l;
 		Binomial _bino;
 	public:
+
+			//! A default constructor.
+			/*! This constructor is used to set all of the parameters for one GTF on 0 or "None" value. */
+
 		GTF();
 
-			//! A constructor.
+			//! A real constructor.
 			/*! This constructor is used to add all of the parameters for one GTF. */
 
 		GTF(const double&, const double&, const vector<double>&, const vector<int>&, Binomial&);
@@ -63,6 +67,9 @@ class GTF
 			return _l;
 		}
 
+			//! A normal member taking no arguments and returning a binomial value.
+			/*! \return The binomial object using for calculus. */
+
 		Binomial& bino()
 		{
 			return _bino;
@@ -88,34 +95,68 @@ class GTF
 
 		void normaliseGTF();
 
-			//! A normal member taking two arguments and returning a GTF value.
+			//! A normal member taking one argument and returning a double value.
 			/*! \return The GTF overlap. */
 
 		double overlapGTF(GTF&);
 
-			//! A normal member taking three arguments and returning a GTF value.
+			//! A normal member taking two arguments and returning a double value.
 			/*! \return The GTF overlap. */
 
 		double overlap3GTF(GTF&, GTF&);
 
-			//! A normal member taking four arguments and returning a GTF value.
+			//! A normal member taking three arguments and returning a double value.
 			/*! \return The GTF overlap. */
 
 		double overlap4GTF(GTF&, GTF&, GTF&);
 
-			//! An operator member taking two arguments and returning a GTF value.
-			/*! \return The product of two GTF. */
+			//! A normal member taking one argument and returning a double value.
+			/*! \return The result of an integral with two GTF. */
 
 		double GTFstarGTF(GTF&);
+		
+			//! A normal member taking two arguments and returning a GTF value.
+			/*! \return The result of an integral with three GTF. */
+			
 		double GTFstarGTFstarGTF(GTF&, GTF&);
+		
+			//! A normal member taking three arguments and returning a GTF value.
+			/*! \return The result of an integral with four GTF. */
+			
 		double GTFstarGTFstarGTFstarGTF(GTF&, GTF&, GTF&);
+		
+			//! A normal member taking four arguments and returning a double value.
+			/*! \return The result of an integral with three ???. */
+			
 		double GTFxyzGTF(GTF&, int, int, int);
+		
+			//! A normal member taking one argument and returning a double value.
+			/*! \return The kinetic ???. */
+			
 		double kineticGTF(GTF&);
+		
+			//! A normal member taking three arguments and returning a double value.
+			/*! \return The ionic potential ???. */
+			
 		double ionicPotentialGTF(GTF&, vector<double>, double);
+		
+			//! A normal member taking three arguments and returning a double value.
+			/*! \return The eri ???. */
+			
 		double ERIGTF(GTF&, GTF&, GTF&);
+			
+			//! An operator member taking one argument and returning a void value.
+			
 		void operator*=(double);
+		
+			//! An operator member taking one argument and returning a void value.
+			
 		void operator/=(double);
+
+		void push_back(const double&, const double&, const vector<double>&, const vector<int>&, Binomial&);
 };
+
+	//! An operator member taking two arguments and returning a bool value.
 
 bool operator==(GTF, GTF);
 
