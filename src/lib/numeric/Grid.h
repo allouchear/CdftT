@@ -25,7 +25,7 @@ class Grid
 	Grid();
 	
 		//! constructor from domain d
-		/*! builds a grid with same domain as d*/
+		/*! builds a grid with domain d*/
 	Grid(const Domain& d);
 	
 		//! Constructor
@@ -122,6 +122,14 @@ class Grid
 		/*! Note: the outer layers of thickness nBound of the grid will be zeroes as required by finite diff*/
 		/*! Note 2: number of values per point will change to 4*/
 	Grid gradient(int nBound);
+	
+		//! fine grid
+		/*! returns the same structure with a finer grid. Intermediate values calculated by cubic interpol*/
+	Grid finer_Grid();
+	
+		//!coarse grid
+		/*! returns the same structure with a coarser grid. values are meaned across the grid.*/
+	Grid coarser_grid();
 };
 
 #endif //_CDFTT_GRID_H_INCLUDED

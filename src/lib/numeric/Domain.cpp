@@ -95,25 +95,48 @@ Domain::Domain(ifstream& nameFile)
 	read_From_Cube(nameFile);	
 }
 
-Domain::Domain(int i, int n, int m, int l)
+Domain::Domain(int i, int n, int m, int l, double* O)
 {
+	
+	{
 	set_Nval(i);
 	set_N1(n);
 	set_N2(m);
 	set_N3(l);
 	_T.resize(3, vector<double>(3));
-	for(int i=0;i<3;i++)
+	if(O==NULL)
 	{
-		_O[i]=0;
-		for(int j=0; j<3;j++)
+		for(int i=0;i<3;i++)
 		{
-			_T[i][j]=0;
+			_O[i]=0;
+			for(int j=0; j<3;j++)
+			{
+				_T[i][j]=0;
+			}
 		}
 	}
-	_dx=0;
-	_dy=0;
-	_dz=0;
-	_dv=0;
+	else
+	{
+		for(int i=0;i<3;i++)
+		{
+			_O[i]=O[i];
+			for(int j=0; j<3;j++)
+			{
+				_T[i][j]=0;
+			}
+		}
+	}
+	for(int i=0; i<3;i++)
+	{
+		_dx += _T[0][i]*_T[0][i];
+		_dy += _T[1][i]*_T[1][i];
+		_dz += _T[2][i]*_T[2][i];
+	}
+	_dx = sqrt(_dx);
+	_dy = sqrt(_dy);
+	_dz = sqrt(_dz);
+	_dv = _dx*_dy*_dz;
+	}
 }
 
 int Domain::Nval() const
@@ -164,6 +187,16 @@ double* Domain::O()
 vector<vector<double>> Domain::T() const
 {
 	return _T;
+}
+
+double Domain::Tij(int i , int j) const
+{
+	return _T[i][j];
+}
+
+void Domain::set_T(double v, int i, int j)
+{
+	_T[i][j]=v;
 }
 
 double Domain::dx() const

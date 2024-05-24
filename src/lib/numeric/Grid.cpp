@@ -681,16 +681,252 @@ Grid Grid::gradient(int nBound)
 	}				
 }
 
-Grid finer_Grid(int n, int m, int l)
+
+
+/*
+void bicub_Coef(vector<double> z, vector<double> dzdx, vector<double> dzdy, vector<double> d2zdxdy, double dx, double dy, vector<vector<double>> c)
 {
-	Grid g;
-	g._dom = Domain(_dom.Nval() ,n*_dom.N1(),m*_dom.N2(),l*_dom.N3());
-	//adjust _T
-	//interpolate values for _T
+	vector<vector<int>> Ainv[16][16]={
+		{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0},{-3,0,0,3,0,0,0,0,-2,0,0,-1,0,0,0,0}{2,0,0,-2,0,0,0,0,1,0,0,1,0,0,0,0},{0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0},{0,0,0,0,-3,0,0,3,0,0,0,0,-2,0,0,-1},{0,0,0,0,2,0,0,-2,0,0,0,0,1,0,0,1},{-3,3,0,0,-2,-1,0,0,0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0,-3,3,0,0,-2,-1,0,0},{9,-9,9,-9,6,3,-3,-6,6,-6,-3,3,4,2,1,2},{-6,6,-6,6,-4,-2,2,4,-3,3,3,-3,-2,-1,-1,-2},{2,-2,0,0,1,1,0,0,0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0,2,-2,0,0,1,1,0,0},{-6,6,-6,6,-3,-3,3,3,-4,4,2,-2,-2,-2,-1,-1},{4,-4,4,-4,2,2,-2,-2,2,-2,-2,2,1,1,1,1}};
+	int i,j,k,l;
+	double s, dxdy;
+	vector<double> c1D(16),x(16);
+	dxdy= dx*dy;
+	for (i=0;i<4;i++)
+	{
+		x[i]=z[i];
+		x[i+4]=dzdx[i]*dx;
+		x[i+8]=dzdy[i]*dy;
+		x[i+12]=d2zdxdy[i]*dxdy;
+	}
+	for (i=0;i<16;i++)
+	{
+		s=0.0;
+		for (k=0;k<16;k++) 
+		{
+			s += Ainv[i][k]*x[k];
+		}
+		c1D[i]=s;
+	}
+	l=0;
+	for (i=0;i<4;i++)
+	{
+		for (j=0;j<4;j++)
+		{
+		c[i][j]=c1D[l++];
+		}
+	}
+}
+*/
+
+
+
+Grid Grid::finer_Grid()
+{
+	Grid g(Domain(_dom.Nval() ,2*_dom.N1()-1,2*_dom.N2()-1,2*_dom.N3()-1, _dom.O()));
+	g._str=_str;
+	for(int i=0;i<3;i++)
+	{
+		for(int j=0;j<3;j++)
+		{
+			g._dom.set_T(_dom.Tij(i,j)/2, i, j);
+		}
+	}
+	//coarse grid points to fine grid
+
+#ifdef ENABLE_OMP
+#pragma omp parallel for 
+#endif
+	for(int i=0;i<_dom.N1();i++)
+	{	
+		for(int j=0;j<_dom.N2();j++)
+		{	
+			for(int k=0;k<_dom.N3();k++)
+			{
+				g._V[2*i][2*j][2*k]=_V[i][j][k];
+			}	
+		}
+	}
+		
+	//center cube points
+#ifdef ENABLE_OMP
+#pragma omp parallel for 
+#endif
+	for(int i=1;i<g._dom.N1()-1;i+=2)
+	{	
+		for(int j=1;j<g._dom.N2()-1;j+=2)
+		{	
+			for(int k=1;k<g._dom.N3()-1;k+=2)
+			{
+				for(int l=0; l<g._dom.Nval();l++)
+				{	
+					g._V[i][j][k][l] = 0.125*g._V[i-1][j-1][k-1][l] + 0.125*g._V[i-1][j-1][k+1][l] + 0.125*g._V[i-1][j+1][k-1][l] + 0.125*g._V[i-1][j+1][k+1][l] + 0.125*g._V[i+1][j-1][k-1][l] + 0.125*g._V[i+1][j-1][k+1][l] + 0.125*g._V[i+1][j+1][k-1][l] + 0.125*g._V[i+1][j+1][k+1][l];
+				}	
+			}
+		}
+	}
 	
+				
+	//cubes face points
+#ifdef ENABLE_OMP
+#pragma omp parallel for 
+#endif
+	for(int i=0;i<g._dom.N1()-1;i+=2)
+	{	
+		for(int j=0;j<g._dom.N2()-1;j+=2)
+		{	
+			for(int k=1;k<g._dom.N3()-1;k+=2)
+			{
+				for(int l=0; l<g._dom.Nval();l++)
+				{
+					g._V[i][j][k][l]= 0.5*g._V[i][j][k-1][l]+0.5*g._V[i][j][k+1][l];
+				}
+			}	
+		}
+	}
+
+#ifdef ENABLE_OMP
+#pragma omp parallel for 
+#endif
+	for(int i=0;i<g._dom.N1()-1;i+=2)
+	{	
+		for(int j=1;j<_dom.N2()-1;j+=2)
+		{	
+			for(int k=0;k<_dom.N3()-1;k+=2)
+			{
+				for(int l=0; l<g._dom.Nval();l++)
+				{
+					g._V[i][j][k][l] = 0.5*g._V[i][j-1][k][l]+0.5*g._V[i][j+1][k][l];
+				}
+			}	
+		}
+	}
+
+#ifdef ENABLE_OMP
+#pragma omp parallel for 
+#endif
+	for(int i=1;i<g._dom.N1()-1;i+=2)
+	{	
+		for(int j=0;j<g._dom.N2()-1;j+=2)
+		{	
+			for(int k=0;k<g._dom.N3()-1;k+=2)
+			{
+				for(int l=0; l<g._dom.Nval();l++)
+				{
+					g._V[i][j][k][l] = 0.5*g._V[i-1][j][k][l]+0.5*g._V[i+1][j][k][l];
+				}
+			}	
+		}
+	}
+
+#ifdef ENABLE_OMP
+#pragma omp parallel for 
+#endif
+	for(int i=0;i<g._dom.N1()-1;i+=2)
+	{	
+		for(int j=1;j<g._dom.N2()-1;j+=2)
+		{	
+			for(int k=1;k<g._dom.N3()-1;k+=2)
+			{
+				for(int l=0; l<g._dom.Nval()-1;l++)
+				{
+					g._V[i][j][k][l] = 0.25*g._V[i][j-1][k-1][l] + 0.25*g._V[i+1][j-1][k+1][l] + 0.25*g._V[i][j+1][k-1][l] + 0.25*g._V[i][j+1][k+1][l];
+				}
+			}	
+		}
+	}
+	
+#ifdef ENABLE_OMP
+#pragma omp parallel for 
+#endif
+	for(int i=1;i<g._dom.N1()-1;i+=2)
+	{	
+		for(int j=0;j<g._dom.N2()-1;j+=2)
+		{	
+			for(int k=1;k<g._dom.N3()-1;k+=2)
+			{
+				for(int l=0; l<g._dom.Nval();l++)
+				{
+					g._V[i][j][k][l] = 0.25*g._V[i-1][j][k-1][l] + 0.25*g._V[i-1][j][k+1][l] + 0.25*g._V[i+1][j][k-1][l] + 0.25*g._V[i+1][j][k+1][l];
+				}
+			}	
+		}
+	}
+
+#ifdef ENABLE_OMP
+#pragma omp parallel for 
+#endif
+	for(int i=1;i<g._dom.N1()-1;i+=2)
+	{	
+		for(int j=1;j<g._dom.N2()-1;j+=2)
+		{	
+			for(int k=0;k<g._dom.N3()-1;k+=2)
+			{
+				for(int l=0; l<g._dom.Nval();l++)
+				{
+					g._V[i][j][k][l] = 0.25*g._V[i-1][j-1][k][l] + 0.25*g._V[i+1][j-1][k][l] + 0.25*g._V[i-1][j+1][k][l] + 0.25*g._V[i+1][j+1][k][l];
+				}
+			}	
+		}
+	}
+	return g;
 }
 
+Grid Grid::coarser_grid()
+{
+	Grid g(Domain(_dom.Nval() ,(_dom.N1()+1)/2-1,(_dom.N2()+1)/2-1,(_dom.N3()+1)/2-1, _dom.O()));
+	double scale = 1.0 / 64.0;
 
+	/*printf("Begin restriction\n");*/
+
+	int iXBegin = 0;
+	int iXEnd = _dom.N1();
+	int iYBegin = 0;
+	int iYEnd = _dom.N2();
+	int iZBegin = 0;
+	int iZEnd = _dom.N3();
+
+#ifdef ENABLE_OMP
+#pragma omp parallel for
+#endif
+	for(int i = iXBegin ; i <= iXEnd ; i++)
+	{
+		int x0, xp, xm;
+		x0 = 2 * i;
+		xp = x0 + 1;
+		xm = x0 - 1;
+		for(int j = iYBegin ; j <= iYEnd ; j++)
+		{
+			int y0, yp, ym;
+			y0 = 2 * j;
+			yp = y0 + 1;
+			ym = y0 - 1;
+			for(int k= iZBegin ; k <= iZEnd ; k++)
+			{
+				for(int l=0;l<_dom.Nval(); l++)
+				{ 
+					int z0, zp, zm;
+					z0 = 2 * k;
+					zp = z0 + 1;
+					zm = z0 - 1;
+					double face, corner, edge;
+					face =
+						_V [xm][y0][z0][l] +_V [xp][y0][z0][l] +_V [x0][ym][z0][l] +_V [x0][yp][z0][l] +				_V [x0][y0][zm][l] +_V [x0][y0][zp][l];
+	
+					corner =  
+						_V [xm] [ym] [zm][l] +_V [xm] [ym] [zp][l] +_V [xm] [yp] [zm][l] +_V [xm] [yp] [zp][l] +						_V [xp] [ym] [zm][l] +_V [xp] [ym] [zp][l] +_V [xp] [yp] [zm][l] +_V [xp] [yp] [zp][l];
+	       	
+					edge =
+						_V [xm] [y0] [zm][l] +_V [xm] [ym] [z0][l] +_V [xm] [yp] [z0][l] +_V [xm] [y0] [zp][l] +						_V [x0] [ym] [zm][l] +_V [x0] [yp] [zm][l] +_V [x0] [ym] [zp][l] +_V [x0] [yp] [zp][l] +						_V [xp] [y0] [zm][l] +_V [xp] [ym] [z0][l] +_V [xp] [yp] [z0][l] +_V [xp] [y0] [zp][l];
+	
+	
+					g._V [i][j][k][l]=scale * (8.0 * _V [x0][y0][z0][l] +4.0 * face +2.0 * edge +corner);
+          			}
+			}
+		}
+	}
+	return g;
+}
 
 
 

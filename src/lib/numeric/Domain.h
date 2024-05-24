@@ -33,11 +33,11 @@ class Domain
 			Calls read_From_Cube to construct new Domain
 		*/
 	Domain(ifstream& nameFile);
-		
-		//! COnstructor
+	
+		//! Constructor
 		/*!
-			Calls set_N..() to set attributes and sets T to 0*/
-	Domain(int i, int n, int m, int l);
+			Calls set_N..() to set attributes and sets T and O to 0*/
+	Domain(int i, int n, int m, int l, double* O);
 	
 		//! read .cube file
 		/*!
@@ -93,9 +93,19 @@ class Domain
 	
 		//! get() function
 		/*!
-			Returns the "translation matrix??"
+			Returns the "translation matrix"
 		*/
 	vector<vector<double>> T() const;
+	
+		//! get() function
+		/*!
+			Returns Tij
+		*/
+	double Tij(int i , int j) const;
+		
+		//! set() function
+		/*! sets the i j component of the translation vector to v*/	
+	void set_T(double v, int i, int j);
 	
 		//! get() function
 		/*!
