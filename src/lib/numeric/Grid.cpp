@@ -872,53 +872,64 @@ Grid Grid::finer_Grid()
 	return g;
 }
 
-Grid Grid::coarser_grid()
+Grid Grid::coarser_Grid()
 {
-	Grid g(Domain(_dom.Nval() ,(_dom.N1()+1)/2-1,(_dom.N2()+1)/2-1,(_dom.N3()+1)/2-1, _dom.O()));
+	int N[3]={_dom.N1(),_dom.N2(), _dom.N3()};
+	for(int i=0; i<3; i++)
+	{
+		if(N[i]%2==1)
+		{
+			N[i]=N[i]-1;
+		}
+		N[i] =N[i]/2;
+	}
+	Grid g(Domain(_dom.Nval(), N[0], N[1], N[2], _dom.O()));
 	double scale = 1.0 / 64.0;
+	
 
 	/*printf("Begin restriction\n");*/
 
-	int iXBegin = 0;
-	int iXEnd = _dom.N1();
-	int iYBegin = 0;
-	int iYEnd = _dom.N2();
-	int iZBegin = 0;
-	int iZEnd = _dom.N3();
+	int iXBegin = 1;
+	int iXEnd = g._dom.N1();
+	int iYBegin = 1;
+	int iYEnd = g._dom.N2();
+	int iZBegin = 1;
+	int iZEnd = g._dom.N3();
 
 #ifdef ENABLE_OMP
 #pragma omp parallel for
 #endif
-	for(int i = iXBegin ; i <= iXEnd ; i++)
+	for(int i = iXBegin ; i <= iXEnd-1 ; i++)
 	{
+		cout<<"i "<<i<<endl;
 		int x0, xp, xm;
 		x0 = 2 * i;
 		xp = x0 + 1;
 		xm = x0 - 1;
-		for(int j = iYBegin ; j <= iYEnd ; j++)
+		for(int j = iYBegin ; j <= iYEnd-1 ; j++)
 		{
+			cout<<"j "<<j<<endl;
 			int y0, yp, ym;
 			y0 = 2 * j;
 			yp = y0 + 1;
 			ym = y0 - 1;
-			for(int k= iZBegin ; k <= iZEnd ; k++)
+			for(int k= iZBegin ; k <= iZEnd-1 ; k++)
 			{
+				cout<<"k "<<k<<endl;
+				int z0, zp, zm;
+				z0 = 2 * k;
+				zp = z0 + 1;
+				zm = z0 - 1;
 				for(int l=0;l<_dom.Nval(); l++)
-				{ 
-					int z0, zp, zm;
-					z0 = 2 * k;
-					zp = z0 + 1;
-					zm = z0 - 1;
+				{ 	
+					cout<<"l "<<l<<endl;
 					double face, corner, edge;
-					face =
-						_V [xm][y0][z0][l] +_V [xp][y0][z0][l] +_V [x0][ym][z0][l] +_V [x0][yp][z0][l] +				_V [x0][y0][zm][l] +_V [x0][y0][zp][l];
-	
-					corner =  
-						_V [xm] [ym] [zm][l] +_V [xm] [ym] [zp][l] +_V [xm] [yp] [zm][l] +_V [xm] [yp] [zp][l] +						_V [xp] [ym] [zm][l] +_V [xp] [ym] [zp][l] +_V [xp] [yp] [zm][l] +_V [xp] [yp] [zp][l];
-	       	
-					edge =
-						_V [xm] [y0] [zm][l] +_V [xm] [ym] [z0][l] +_V [xm] [yp] [z0][l] +_V [xm] [y0] [zp][l] +						_V [x0] [ym] [zm][l] +_V [x0] [yp] [zm][l] +_V [x0] [ym] [zp][l] +_V [x0] [yp] [zp][l] +						_V [xp] [y0] [zm][l] +_V [xp] [ym] [z0][l] +_V [xp] [yp] [z0][l] +_V [xp] [y0] [zp][l];
-	
+					
+					face = _V [xm][y0][z0][l] +_V [xp][y0][z0][l] +_V [x0][ym][z0][l] +_V [x0][yp][z0][l] + _V [x0][y0][zm][l] +_V [x0][y0][zp][l];
+
+					corner =  _V [xm] [ym] [zm][l] +_V [xm] [ym] [zp][l] +_V [xm] [yp] [zm][l] +_V [xm] [yp] [zp][l]+_V [xp] [ym] [zm][l] +_V [xp] [ym] [zp][l] +_V [xp] [yp] [zm][l] +_V [xp] [yp] [zp][l];
+					
+					edge = _V [xm] [y0] [zm][l] +_V [xm] [ym] [z0][l] +_V [xm] [yp] [z0][l] +_V [xm] [y0] [zp][l] +						_V [x0] [ym] [zm][l] +_V [x0] [yp] [zm][l] +_V [x0] [ym] [zp][l] +_V [x0] [yp] [zp][l] +_V [xp] [y0] [zm][l] +_V [xp] [ym] [z0][l] +_V [xp] [yp] [z0][l] +_V [xp] [y0] [zp][l];
 	
 					g._V [i][j][k][l]=scale * (8.0 * _V [x0][y0][z0][l] +4.0 * face +2.0 * edge +corner);
           			}
@@ -926,6 +937,58 @@ Grid Grid::coarser_grid()
 		}
 	}
 	return g;
+}
+
+void Grid::save(ofstream& nameFile)
+{
+	nameFile<<_str.number_of_atoms();
+	for(int i=0;i<3;i++)
+	{
+		nameFile<<_dom.O()[i];
+	}
+	nameFile<<_dom.Nval();
+	nameFile<<endl<<_dom.N1();
+	for(int i=0;i<3;i++)
+	{
+		nameFile<<_dom.Tij(1,i);
+	}
+	nameFile<<endl;
+	nameFile<<_dom.N2();
+	for(int i=0;i<3;i++)
+	{
+		nameFile<<_dom.Tij(2,i);
+	}
+	nameFile<<endl<<_dom.N3();
+	for(int i=0;i<3;i++)
+	{
+		nameFile<<_dom.Tij(3,i);
+	}
+	nameFile<<endl;
+	for(int i=0;i<_str.number_of_atoms();i++)
+	{
+		nameFile<<_str.atom(i).atomic_number();
+		nameFile<<_str.atom(i).charge();
+		for(int j=0; j<3;j++)
+		{
+			nameFile<<_str.atom(i).coordinates()[j];
+		}
+		nameFile<<endl;
+	}
+	for(int i=0; i<_dom.N1();i++)
+	{	
+		for(int j=0; j<_dom.N2();j++)
+		{	
+			for(int k=0; k<_dom.N3();k++)
+			{
+				for(int l=0; l<_dom.Nval();l++)
+				{
+					nameFile<<_V[i][j][k][l];
+				}
+			}
+		}
+	}
+	
+	
 }
 
 

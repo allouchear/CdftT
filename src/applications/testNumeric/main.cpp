@@ -38,9 +38,15 @@ int main()
 		cout<<"Sum gradient= "<<lap.sum()<<endl;
 	}
 	*/
+	/*
 	timer.init();
 	cout<<"Begin finer grid function"<<endl;
 	Grid G=g.finer_Grid();
+	cout<<"Time in ms "<<timer.get()<<endl;
+	*/
+	timer.init();
+	cout<<"Begin coarser grid function"<<endl;
+	Grid G=g.coarser_Grid();
 	cout<<"Time in ms "<<timer.get()<<endl;
 
 	timer.init();

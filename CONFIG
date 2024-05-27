@@ -7,7 +7,7 @@ X11LIB   = -lX11
 LIBCDFTTDIR = /home/tmaamaatuai/CdftT
 CC = g++ -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
 
-enable_omp = 1
+enable_omp = 0
 ifeq ($(enable_omp),1)
 OMPLIB=-L/usr/lib -lgomp
 OMPCFLAGS=-DENABLE_OMP -fopenmp

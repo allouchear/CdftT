@@ -129,7 +129,11 @@ class Grid
 	
 		//!coarse grid
 		/*! returns the same structure with a coarser grid. values are meaned across the grid.*/
-	Grid coarser_grid();
+	Grid coarser_Grid();
+	
+		//!save
+		/*!save grid onto .cube file*/
+	void save(ofstream& name);
 };
 
 #endif //_CDFTT_GRID_H_INCLUDED
