@@ -2,6 +2,7 @@
 #define CDFTT_GTF_H_INCLUDED
 
 #include<iostream>
+#include<iomanip>
 #include<vector>
 #include<analytic/MathFunction.h>
 
@@ -154,10 +155,12 @@ class GTF
 		void operator/=(double);
 
 		void push_back(const double&, const double&, const vector<double>&, const vector<int>&, Binomial&);
+
 };
 
 	//! An operator member taking two arguments and returning a bool value.
 
 bool operator==(GTF, GTF);
+ostream& operator<<(ostream&, GTF&);
 
 #endif

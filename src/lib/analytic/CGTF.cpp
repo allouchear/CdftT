@@ -62,12 +62,14 @@ void CGTF::normaliseCGTF()
 double CGTF::overlapCGTF(CGTF& right)
 {
 	double sum=0.0;
-	int n;
-	int np;
 
-	for(n=0;n<_numberOfFunctions;n++)
-		for(np=0;np<_numberOfFunctions;np++)
-			sum += _gtf[n].overlapGTF(right.gtf()[np]);
+	//cout<<"Number of Function GTF in CGTF = "<<_numberOfFunctions<<endl;
+
+	for(int n=0;n<_numberOfFunctions;n++)
+		for(int np=0;np<_numberOfFunctions;np++)
+			sum += _gtf[n].overlapGTF(right._gtf[np]);
+
+	//cout<<"Test Overlap in CGTF "<<endl;
 
 	return sum;
 }
@@ -154,7 +156,7 @@ double CGTF::CGTFstarCGTF(CGTF& right)
 	double sum=0.0;
 
 	for(n=0;n<_numberOfFunctions;n++)
-		for(np=0;np<right.numberOfFunctions();np++)
+		for(np=0;np<right._numberOfFunctions;np++)
 			sum += _gtf[n].GTFstarGTF(right.gtf()[np]);
 
 	return sum;
@@ -198,4 +200,15 @@ bool operator==(CGTF a, CGTF b)
 		return true;
 	else
 		return false;
+}
+
+ostream& operator<<(ostream& flux, CGTF& cgtf)
+{
+	for(int i=0; i<cgtf.numberOfFunctions(); i++)
+	{
+		if(i>0)
+			flux<<setw(20)<<" ";
+		flux<<cgtf.gtf()[i]<<endl;
+	}
+	return flux;
 }

@@ -27,6 +27,9 @@ double Factorial::factorial(int n)
 
 double Factorial::double_factorial(int n)
 {
+	if(n<0)
+		return 1;
+	
 	if(size_t(n)>=_tab.size())
 	{
 	double r;
@@ -38,9 +41,6 @@ double Factorial::double_factorial(int n)
 			_tab.push_back(r);
 		}
 	}
-
-	if(n==-1)
-		return 1;
 
 	return _tab[n];
 }
@@ -76,7 +76,7 @@ double Binomial::binomial(int i, int j)
 	return _tab[i][j];
 }
 
-double power(double e, double n)
+double power(double e, int n)
 {
 	double p=1.0;
 	int k;
@@ -87,8 +87,9 @@ double power(double e, double n)
 		else
 			return 0.0;
 	}
-	for(k=1; k<n; k++)
+	for(k=1; k<=n; k++)
 		p*=e;
+
 	return p;
 }
 
@@ -105,6 +106,7 @@ double f(int i, int l, int m, double A, double B, Binomial& Bi)
 		jmax=l;
 	for(j=jmin; j<=jmax; j++)
 		sum+=Bi.binomial(l,j)*Bi.binomial(m, i-j)*power(-A, l-j)*power(-B, m-i+j);
+
 	return sum;
 }
 

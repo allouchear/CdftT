@@ -22,26 +22,30 @@ double GTF::GTFstarGTF (GTF& right)
 	double t;
 	vector<double> PA(3);
 	vector<double> PB(3);
-	double gama=_exposant+right.exposant();
+	double gama=_exposant+right._exposant;
 	double R2=0.0;
 	double c=0;
 
 	for(j=0; j<3; j++)
 	{
-		t=(_exposant*_coord[j] + right.exposant()*right.coord()[j])/gama;
+		t=(_exposant*_coord[j] + right._exposant*right._coord[j])/gama;
 		PA[j]=_coord[j]-t;
-		PB[j]=right.coord()[j]-t;
-		R2+=(_coord[j]-right.coord()[j])*(_coord[j]-right.coord()[j]);
+		PB[j]=right._coord[j]-t;
+		R2+=(_coord[j]-right._coord[j])*(_coord[j]-right._coord[j]);
 	}
 
-	c = (M_PI/gama)*sqrt(M_PI/gama)*exp(-_exposant*right.exposant()/gama*R2);
+	c = (M_PI/gama)*sqrt(M_PI/gama)*exp(-_exposant*right._exposant/gama*R2);
 
 	for(j=0; j<3; j++)
 	{
 		sum[j]=0.0;
-		for(i=0; i<=(_l[j]+right.l()[j]/2); i++)
-			sum[j]+=f(2*i, _l[j], right.l()[j], PA[j], PB[j], _bino)*_bino.fact().double_factorial(2*i+1)/(power(gama,i));
+		for(i=0; i<=(_l[j]+right._l[j])/2; i++)
+		{
+			sum[j]+=f(2*i, _l[j], right._l[j], PA[j], PB[j], _bino)*_bino.fact().double_factorial(2*i-1)
+		/(power(2.0,i)*power(gama,i));
+		}
 	}
+
 	return c*sum[0]*sum[1]*sum[2];
 }
 
@@ -201,7 +205,8 @@ void GTF::normaliseGTF()
 
 double GTF::overlapGTF(GTF& right)
 {
-	return _coefficient*right.coefficient()*GTFstarGTF(right);
+	//cout<<"Test Overlap in GTF"<<endl;
+	return _coefficient*right._coefficient*GTFstarGTF(right);
 }
 
 double GTF::overlap3GTF(GTF& mid, GTF& right)
@@ -458,4 +463,11 @@ bool operator==(GTF a, GTF b)
 		if(abs(a.l()[i]-b.l()[i])>10e10-10 || abs(a.coord()[i]-b.coord()[i])>10e-10)
 			n=false;
 	return n;
+}
+
+ostream& operator<<(ostream& flux, GTF& gtf)
+{
+	flux<<left<<setw(20)<<gtf.exposant()<<setw(20)<<gtf.coefficient()<<setw(5)<<gtf.l()[0]<<setw(5)<<gtf.l()[1]
+	<<setw(5)<<gtf.l()[2]<<setw(20)<<gtf.coord()[0]<<setw(20)<<gtf.coord()[1]<<setw(20)<<gtf.coord()[2];
+	return flux;
 }

@@ -13,7 +13,7 @@ COMMONSOBJ  = $(COMMON)/*.o
 OBJECTS = main.o \
 	$(ANALYTICOBJ) $(NUMERICOBJ) $(COMMONSOBJ)
 
-all: compiling  cdftt
+all: compiling cdftt
 
 %.o : %.cpp
 	$(CC) -c $(CFLAGS) $< -o $@

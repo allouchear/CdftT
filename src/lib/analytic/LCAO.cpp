@@ -1,11 +1,13 @@
 #include<iostream>
+#include<iomanip>
 #include<analytic/LCAO.h>
 
 using namespace std;
 
 LCAO::LCAO()
 {
-	_cgtf.resize(0);
+	_cgtf =vector<CGTF> (0);
+	_coefficient=vector<double> (0);
 	_numberOfFunctions=0;
 	_bino=Binomial();
 }
@@ -57,6 +59,7 @@ void LCAO::normaliseLCAO()
 		cout<<"A Contacted Gaussian Type function is nul"<<endl;
 		exit(1);
 	}
+	cout<<"Norme LCAO = "<<sum<<endl;
 }
 
 double LCAO::overlapLCAO(LCAO& right)
@@ -65,9 +68,13 @@ double LCAO::overlapLCAO(LCAO& right)
 	int n;
 	int np;
 
+	//cout<<"Number of Function CGTF in LCAO = "<<_numberOfFunctions<<endl;
+
 	for(n=0;n<_numberOfFunctions;n++)
 		for(np=0;np<_numberOfFunctions;np++)
-			sum += _cgtf[n].overlapCGTF(right.cgtf()[np]);
+			sum += _coefficient[n]*right._coefficient[np]*_cgtf[n].overlapCGTF(right._cgtf[np]);
+
+	//cout<<"Test Overlap in LCAO "<<endl;
 
 	return sum;
 }
@@ -82,7 +89,7 @@ double LCAO::overlap3LCAO(LCAO& midle, LCAO& right)
 	for(n=0;n<_numberOfFunctions;n++)
 	for(np=0;np<midle.numberOfFunctions();np++)
 	for(ns=0;ns<right.numberOfFunctions();ns++)
-			sum += _cgtf[n].overlap3CGTF(midle.cgtf()[np],right.cgtf()[ns]);
+			sum += _coefficient[n]*midle._coefficient[np]*right._coefficient[ns]*_cgtf[n].overlap3CGTF(midle.cgtf()[np],right.cgtf()[ns]);
 
 	return sum;
 }
@@ -99,7 +106,7 @@ double LCAO::overlap4LCAO(LCAO& B, LCAO& C, LCAO& D)
 	for(nq=0;nq<B.numberOfFunctions();nq++)
 	for(nr=0;nr<C.numberOfFunctions();nr++)
 	for(ns=0;ns<D.numberOfFunctions();ns++)
-			sum += _cgtf[np].overlap4CGTF(B.cgtf()[nq],C.cgtf()[nr],D.cgtf()[ns]);
+			sum += _coefficient[np]*B._coefficient[nq]*C._coefficient[nr]*D._coefficient[ns]*_cgtf[np].overlap4CGTF(B.cgtf()[nq],C.cgtf()[nr],D.cgtf()[ns]);
 
 	return sum;
 }
@@ -202,4 +209,17 @@ bool operator==(LCAO a, LCAO b)
 		return true;
 	else
 		return false;
+}
+
+ostream& operator<<(ostream& flux, LCAO& lcao)
+{
+	flux<<std::scientific;
+	flux<<std::setprecision(10);
+	flux<<std::setw(20);
+	flux<<left<<setw(20)<<"CoefLCAO"<<setw(20)<<"Exp"<<setw(20)<<"Coef"<<setw(5)<<"Lx"<<setw(5)<<"Ly"<<setw(5)
+	<<"Lz"<<setw(20)<<"x"<<setw(20)<<"y"<<setw(20)<<"z"<<endl;
+	for(int i=0; i<lcao.numberOfFunctions(); i++)
+		flux<<left<<setw(20)<<lcao.coefficient()[i]<<lcao.cgtf()[i]<<endl;
+
+	return flux;
 }

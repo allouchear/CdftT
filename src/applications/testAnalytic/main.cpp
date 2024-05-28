@@ -5,12 +5,15 @@
 #include<analytic/CGTF.h>
 #include<analytic/LCAO.h>
 #include<analytic/WFX.h>
+#include"Timer.h"
+#include<ctime>
 
 using namespace std;
 
 int main()
 {
-	
+	Timer time;
+
 	Factorial Table(100);
 	cout<<"Test pre-initialisation"<<endl;
 	Binomial Bin(100, Table);
@@ -22,45 +25,52 @@ int main()
 	cout<<Bin.binomial(20,18)<<endl;
 	cout<<Table.factorial(20)/Table.factorial(18)/Table.factorial(2)<<endl;
 	cout<<endl;
-	cout<<Table.double_factorial(10)<<endl;
+	cout<<Table.double_factorial(10)<<endl<<endl;
 	
-	/*
+	
 	ifstream f;
 	f.open("h2o.wfx");
-	WFX test (f);
+	WFX wfx_test (f);
 	f.close();
 
 	ofstream g;
 	g.open("test.wfx");
-	test.write_file_wfx(g);
+	wfx_test.write_file_wfx(g);
 	g.close();
 	
-	Factorial Fact(100);
-	Binomial Bino(20,15,Fact);
+	int i,j;
 
-	int i;
-	size_t it;
-	vector<GTF> gtf (test.Number_of_Nuclei());
+	GTF gtf_test;
+	vector<vector<CGTF>> vcgtf_test(wfx_test.Number_of_Occupied_Molecular_Orbital(), vector<CGTF> (wfx_test.Number_of_Primitives()));
+	vector<LCAO> vlcao_test(wfx_test.Number_of_Occupied_Molecular_Orbital());
 
-	for(i=0; i<test.Number_of_Nuclei(); i++)
+	vector<vector<double>> Coord_test(wfx_test.Number_of_Nuclei(), vector<double> (0));
+	for(i=0; i<wfx_test.Number_of_Nuclei(); i++)
+		for(j=i*3; j<3*(1+i); j++)
+			Coord_test[i].push_back(wfx_test.Nuclear_Cartesian_Coordinates()[j]);
+
+	for(i=0; i<wfx_test.Number_of_Occupied_Molecular_Orbital(); i++)
 	{
-		gtf[i].push_back(test.Primitive_Exponents()[i], 1, test.Nuclear_Cartesian_Coordinates(), test.Lxyz()[i], Bino);
+		gtf_test=GTF();
+
+		for(j=0; j<wfx_test.Number_of_Primitives(); j++)
+		{			
+			gtf_test.push_back(wfx_test.Primitive_Exponents()[j], 1.0, Coord_test[wfx_test.Primitive_Centers()[j]-1], setLxyz(wfx_test.Primitive_Types()[j]), Bin);
+			vcgtf_test[i][j].push_back(gtf_test);		
+			vlcao_test[i].push_back(vcgtf_test[i][j], wfx_test.Molecular_Orbital_Primitive_Coefficients()[i].Coefficients()[j]);
+		}
 	}
 
-	vector<CGTF> cgtf (test.Number_of_Nuclei());
+	//for(i=0; i<wfx_test.Number_of_Occupied_Molecular_Orbital(); i++)
+	//	cout<<vlcao_test[i]<<endl;
 
-	for(i=0; i<test.Number_of_Nuclei(); i++)
-	{
-		cgtf[i].push_back(gtf[i]);
-	}
-	
-	LCAO lcao;
+	cout<<"Test Post Overlap ok"<<endl;
 
-	for(it=0; it<test.Molecular_Orbital_Primitive_Coefficients().size(); it++)
-	{
-		lcao.push_back(cgtf[i], test.Molecular_Orbital_Primitive_Coefficients()[i].Coefficients()[i]);
-	}
-	*/
+	for(i=0; i<wfx_test.Number_of_Occupied_Molecular_Orbital(); i++)
+		for(j=0; j<wfx_test.Number_of_Occupied_Molecular_Orbital(); j++)
+			cout<<"OverlapLCAO <"<<i<<"|"<<j<<"> = "<<vlcao_test[i].overlapLCAO(vlcao_test[j])<<endl;
+
+	cout<<"Test Overlap ok"<<endl;
 	/*
 	ifstream h;
 	h.open("format.wfx");
@@ -80,6 +90,8 @@ int main()
 	cout<<"Test 3"<<endl;
 	cout<<test.Molecular_Orbital_Primitive_Coefficients()[3].Coefficients()[15]<<endl;
 	cout<<"Test 4"<<endl;*/
+
+	cout<<"Temps d'execution : "<<time.get()<<" ms"<<endl;
 
 	return 0;
 }

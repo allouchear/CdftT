@@ -12,9 +12,9 @@ using namespace std;
 class LCAO
 {
 	private:
+		vector<CGTF> _cgtf;
 		int _numberOfFunctions;
 		vector<double> _coefficient;
-		vector<CGTF> _cgtf;
 		Binomial _bino;
 	public:
 
@@ -111,5 +111,6 @@ class LCAO
 /*! \return The bool value of an equality between two LCAO. */
 
 bool operator==(LCAO, LCAO);
+ostream& operator<<(ostream&, LCAO&);
 
 #endif

@@ -90,7 +90,7 @@ class Binomial
 };
 
 //Ne pas oublier de commenter
-double power(double, double);
+double power(double, int);
 double f(int, int, int, double, double, Binomial&);
 double Theta(int, int, int, int, double, double, double, Binomial&);
 int m1p(int);

@@ -84,7 +84,7 @@ WFX::WFX()
 	_Model="None";							
 	_Primitive_Centers.resize(0);										
 	_Primitive_Types.resize(0);
-	_Lxyz.resize(0, vector<int>(0));										
+	_Lxyz =vector<vector<int>>();										
 	_Primitive_Exponents.resize(0);									
 	_Molecular_Orbital_Occupation_Numbers.resize(0);				
 	_Molecular_Orbital_Energies.resize(0);
@@ -102,10 +102,12 @@ WFX::WFX()
 WFX::WFX(ifstream& file)
 {
 	read_file_wfx(file);
-	_Lxyz.resize(_Number_of_Primitives);
+	vector<int> l(3);
+	_Lxyz.resize(_Number_of_Primitives, l);
 	int i;
 	for(i=0; i<_Number_of_Primitives; i++)
 		_Lxyz[i]=setLxyz(_Primitive_Types[i]);
+
 }
 
 vector<int> WFX::read_one_block_int(ifstream& f, string b, bool r, int nint)

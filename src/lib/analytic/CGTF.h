@@ -113,5 +113,6 @@ class CGTF
 /*! \return The bool value of an equality between two CGTF. */
 
 bool operator==(CGTF, CGTF);
+ostream& operator<<(ostream&, CGTF&);
 
 #endif

@@ -275,7 +275,7 @@ class WFX
 		vector<int> Primitive_Centers() {return _Primitive_Centers;}
 
 			//! A normal member taking no arguments and returning a vector<int> value.
-			/*! \return The table of primitives centers. */
+			/*! \return The table of primitives types. */
 
 		vector<int> Primitive_Types() {return _Primitive_Types;}
 
@@ -284,10 +284,10 @@ class WFX
 
 		vector<vector<int>> Lxyz() {return _Lxyz;}	
 
-			//! A normal member taking no arguments and returning a vector<int> value.
+			//! A normal member taking one argument and returning a vector<int> value.
 			/*! \return The table of Lx, Ly, and Lz values for one primitive. */
 
-		vector<int> Lxyz(int i) {return _Lxyz[i-1];}
+		vector<int> Lxyz(int i) {return _Lxyz[i];}
 
 			//! A normal member taking no arguments and returning a vector<double> value.
 			/*! \return The table of primitive exponents. */
