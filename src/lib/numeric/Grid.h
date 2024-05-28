@@ -134,6 +134,10 @@ class Grid
 		//!save
 		/*!save grid onto .cube file*/
 	void save(ofstream& name);
+		
+		//include reference Tang
+	
+	//Grid aim_On_Grid(int nBound);
 };
 
 #endif //_CDFTT_GRID_H_INCLUDED

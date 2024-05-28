@@ -48,9 +48,7 @@ void Grid::read_From_Cube(ifstream& nameFile, const PeriodicTable& Table)
 	_dom=d;
 	Structure S(nameFile, Natoms, Table);
 	_str=S;
-	cout<<"done struct"<<endl;
 	reset();
-	cout<<"done reset"<<endl;
 	for(int i=0; i<_dom.N1();i++)
 	{
 		for(int j=0; j<_dom.N2();j++)
@@ -64,7 +62,6 @@ void Grid::read_From_Cube(ifstream& nameFile, const PeriodicTable& Table)
 			}
 		}
 	}
-	cout<<"done read"<<endl;
 }
 
 Grid::Grid(ifstream& nameFile, const PeriodicTable& Table)
@@ -501,6 +498,7 @@ Grid Grid::laplacian(int nBound)
 			vector<double> fcz(nBound);
 			double cc=0;
 			Grid g(_dom);
+			g.set_str(_str);
 			cout<<"end create grid"<<endl;
 			coefs_Laplacian(nBound, fcx, fcy, fcz, cc);
 			cout<<"coefs done"<<endl;
@@ -630,6 +628,7 @@ Grid Grid::gradient(int nBound)
 			double cc=0;
 			_dom.set_Nval(4);
 			Grid g(_dom);
+			g._str=_str;
 			cout<<"end create grid"<<endl;
 			coefs_Gradient(nBound, fcx, fcy, fcz, cc);
 			cout<<"coefs done"<<endl;
@@ -884,6 +883,7 @@ Grid Grid::coarser_Grid()
 		N[i] =N[i]/2;
 	}
 	Grid g(Domain(_dom.Nval(), N[0], N[1], N[2], _dom.O()));
+	g._str=_str;
 	double scale = 1.0 / 64.0;
 	
 
@@ -929,7 +929,7 @@ Grid Grid::coarser_Grid()
 
 					corner =  _V [xm] [ym] [zm][l] +_V [xm] [ym] [zp][l] +_V [xm] [yp] [zm][l] +_V [xm] [yp] [zp][l]+_V [xp] [ym] [zm][l] +_V [xp] [ym] [zp][l] +_V [xp] [yp] [zm][l] +_V [xp] [yp] [zp][l];
 					
-					edge = _V [xm] [y0] [zm][l] +_V [xm] [ym] [z0][l] +_V [xm] [yp] [z0][l] +_V [xm] [y0] [zp][l] +						_V [x0] [ym] [zm][l] +_V [x0] [yp] [zm][l] +_V [x0] [ym] [zp][l] +_V [x0] [yp] [zp][l] +_V [xp] [y0] [zm][l] +_V [xp] [ym] [z0][l] +_V [xp] [yp] [z0][l] +_V [xp] [y0] [zp][l];
+					edge = _V [xm] [y0] [zm][l] +_V [xm] [ym] [z0][l] +_V [xm] [yp] [z0][l] +_V [xm] [y0] [zp][l] +_V [x0] [ym] [zm][l] +_V [x0] [yp] [zm][l] +_V [x0] [ym] [zp][l] +_V [x0] [yp] [zp][l] +_V [xp] [y0] [zm][l] +_V [xp] [ym] [z0][l] +_V [xp] [yp] [z0][l] +_V [xp] [y0] [zp][l];
 	
 					g._V [i][j][k][l]=scale * (8.0 * _V [x0][y0][z0][l] +4.0 * face +2.0 * edge +corner);
           			}
@@ -941,56 +941,138 @@ Grid Grid::coarser_Grid()
 
 void Grid::save(ofstream& nameFile)
 {
-	nameFile<<_str.number_of_atoms();
+	nameFile.precision(14);
+	nameFile<<scientific;
+	nameFile<<_str.number_of_atoms()<<" ";
 	for(int i=0;i<3;i++)
 	{
-		nameFile<<_dom.O()[i];
+		nameFile<<_dom.O()[i]<<" ";
 	}
-	nameFile<<_dom.Nval();
-	nameFile<<endl<<_dom.N1();
-	for(int i=0;i<3;i++)
+	nameFile<<_dom.Nval()<<" ";
+	nameFile<<endl<<_dom.N1()<<" ";
+	if(_dom.N1()<0)
 	{
-		nameFile<<_dom.Tij(1,i);
-	}
-	nameFile<<endl;
-	nameFile<<_dom.N2();
-	for(int i=0;i<3;i++)
-	{
-		nameFile<<_dom.Tij(2,i);
-	}
-	nameFile<<endl<<_dom.N3();
-	for(int i=0;i<3;i++)
-	{
-		nameFile<<_dom.Tij(3,i);
-	}
-	nameFile<<endl;
-	for(int i=0;i<_str.number_of_atoms();i++)
-	{
-		nameFile<<_str.atom(i).atomic_number();
-		nameFile<<_str.atom(i).charge();
-		for(int j=0; j<3;j++)
+		for(int i=0;i<3;i++)
 		{
-			nameFile<<_str.atom(i).coordinates()[j];
+			nameFile<<_dom.Tij(0,i)<<" ";
+		}
+		nameFile<<endl;
+		nameFile<<_dom.N2()<<" ";
+		for(int i=0;i<3;i++)
+		{
+			nameFile<<_dom.Tij(1,i)<<" ";
+		}
+		nameFile<<endl<<_dom.N3()<<" ";
+		for(int i=0;i<3;i++)
+		{
+			nameFile<<_dom.Tij(2,i)<<" ";
+		}
+	}
+	else
+	{
+		for(int i=0;i<3;i++)
+		{
+			nameFile<<_dom.Tij(0,i)*BOHRTOANG<<" ";
+		}
+		nameFile<<endl;
+		nameFile<<_dom.N2()<<" ";
+		for(int i=0;i<3;i++)
+		{
+			nameFile<<_dom.Tij(1,i)*BOHRTOANG<<" ";
+		}
+		nameFile<<endl<<_dom.N3()<<" ";
+		for(int i=0;i<3;i++)
+		{
+			nameFile<<_dom.Tij(2,i)*BOHRTOANG<<" ";
+		}
+	}
+	nameFile<<endl;
+	for(int i=1;i<=_str.number_of_atoms();i++)
+	{
+		nameFile<<_str.atom(i).atomic_number()<<" ";
+		nameFile<<_str.atom(i).charge()<<" ";
+		for(int j=1; j<=3;j++)
+		{
+			nameFile<<_str.atom(i).coordinates()[j]<<" ";
 		}
 		nameFile<<endl;
 	}
 	for(int i=0; i<_dom.N1();i++)
 	{	
+		
 		for(int j=0; j<_dom.N2();j++)
 		{	
+			int R=0;
 			for(int k=0; k<_dom.N3();k++)
 			{
 				for(int l=0; l<_dom.Nval();l++)
 				{
-					nameFile<<_V[i][j][k][l];
+					nameFile<<_V[i][j][k][l]<<" ";
+					R++;
+					if(R%6==0)
+					{
+						nameFile<<endl;
+					}
 				}
+			}
+			if(R%6!=0)
+			{
+				nameFile<<endl;
 			}
 		}
 	}
-	
-	
 }
 
+
+/*
+Grid Grid::aim_On_Grid(int& nBound)
+{
+	try
+	{
+		if(_dom.Nval()==4)
+		{
+			Grid g(Domain(5,_dom.N1(), _dom.N2(), _dom.N3(), _dom.O())); 
+			vector<double> ds={_dom.dx(),_dom.dy(), _dom.dz()};
+			double v=0;
+			
+			for(int i=nBound;i<_dom.N1()-nBound;i++)
+			{
+				int xp, xm;
+				xp = i + 1;
+				xm = i - 1;
+				for(int j=nBound;j<_dom.N2()-nBound;j++)
+				{
+					int yp,ym;
+					yp = j + 1;
+					ym = j - 1;
+					for(int k=nBound;k<_dom.N3()-nBound;k++)
+					{
+						int zp,zm;
+						zp = k + 1;
+						zm = k - 1;
+						for(int l=1;l<_dom.Nval()-1;l++)
+						{
+							v =_V[i][j][k][l];
+							if(
+							
+						}
+					}
+				}
+			}
+		
+		}
+		else
+		{
+			throw string error("Gradient grid must be used for AIM");
+		}
+	}
+	catch(error)
+	{
+		cout<<error<<endl;
+		exit(1);
+	}
+}
+*/
 
 
 

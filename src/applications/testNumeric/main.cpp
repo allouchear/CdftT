@@ -12,8 +12,8 @@ int main()
 {
 	Timer timer;
 
-	//ifstream f("/home/tmaamaatuai/tmp/test.cube");
-	ifstream f("/home/tmaamaatuai/tmp/test256.cube");
+	ifstream f("/home/tmaamaatuai/tmp/test.cube");
+	//ifstream f("/home/tmaamaatuai/tmp/test256.cube");
 	//ifstream f("/home/tmaamaatuai/tmp/test500.cube");
 	if(f.is_open()==true) cout<<"fichier créé"<<endl;
 	PeriodicTable Table;
@@ -23,6 +23,14 @@ int main()
 	Atom B;
 	*/
 	Grid g(f, Table);
+	
+	
+	ofstream out("/home/tmaamaatuai/tmp/out.cube");
+	cout<<"Begin write"<<endl;
+	timer.init();
+	g.save(out);
+	cout<<"Time in ms "<<timer.get()<<endl;
+	
 	/*
 	for(int i=0;i<10;i++)
 	{
