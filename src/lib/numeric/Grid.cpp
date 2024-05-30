@@ -110,7 +110,10 @@ Grid Grid::operator+(const Grid& g)
 			Grid sum(_dom);
 			sum.set_str(_str+g._str);
 #ifdef ENABLE_OMP
-#pragma omp parallel for
+#pragma omp parallel for shared(sum,g,_V)
+#endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
 #endif
 			for(int i=0; i<g._dom.N1();i++)
 			{
@@ -166,6 +169,9 @@ Grid Grid::add(const Grid& g)
 			_V.resize(g._dom.N1());
 #ifdef ENABLE_OMP
 #pragma omp parallel for
+#endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
 #endif
 			for(int i=0; i<g._dom.N1();i++)
 			{	
@@ -224,6 +230,9 @@ Grid Grid::operator*(const Grid& g)
 #ifdef ENABLE_OMP
 #pragma omp parallel for
 #endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
+#endif
 			for(int i=0; i<g._dom.N1();i++)
 			{
 				for(int j=0; j<g._dom.N2();j++)
@@ -278,6 +287,9 @@ Grid Grid::operator-(const Grid& g)
 #ifdef ENABLE_OMP
 #pragma omp parallel for
 #endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
+#endif
 			for(int i=0; i<g._dom.N1();i++)
 			{
 				for(int j=0; j<g._dom.N2();j++)
@@ -327,6 +339,9 @@ double Grid::sum()
 #ifdef ENABLE_OMP
 #pragma omp parallel for reduction (+:sum)
 #endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop reduction(+:sum)
+#endif
 	for(int i=0; i<_dom.N1();i++)
 	{	
 		for(int j=0; j<_dom.N2();j++)
@@ -357,6 +372,9 @@ Grid Grid::coulomb_Grid(double q, vector<double> R)
 	double v = 0;
 #ifdef ENABLE_OMP
 #pragma omp parallel for
+#endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
 #endif
 	for(int i=0; i<_dom.N1();i++)
 	{	
@@ -504,10 +522,15 @@ Grid Grid::laplacian(int nBound)
 			cout<<"coefs done"<<endl;
 #ifdef ENABLE_OMP
 //cout<<"Number of cores = "<<omp_get_num_procs()<<endl;
-#pragma omp parallel for
+#pragma omp parallel for shared(g,_V,fcx,fcy,fcz,cc,nBound)
 #endif
-			for(int i=nBound;i<g._dom.N1()-nBound;i++)
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
+#endif
+			//for(int i=nBound;i<g._dom.N1()-nBound;i++) // DEBUG
+			for(int ii=0;ii<g._dom.N1()-2*nBound;ii++)
 			{
+				int i=ii+nBound;
 				for(int j=nBound;j<g._dom.N2()-nBound;j++)
 				{	
 					for(int k=nBound;k<g._dom.N3()-nBound;k++)
@@ -616,7 +639,7 @@ Grid Grid::gradient(int nBound)
 {
 	try
 	{
-		if(nBound<1 or nBound>12)
+		if(nBound<1 or nBound>8)
 		{
 			throw string("nBound oustide bounds");
 		}
@@ -629,14 +652,17 @@ Grid Grid::gradient(int nBound)
 			_dom.set_Nval(4);
 			Grid g(_dom);
 			g._str=_str;
-			cout<<"end create grid"<<endl;
 			coefs_Gradient(nBound, fcx, fcy, fcz, cc);
-			cout<<"coefs done"<<endl;
 #ifdef ENABLE_OMP
 #pragma omp parallel for
 #endif
-			for(int i=nBound;i<g._dom.N1()-nBound;i++)
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
+#endif
+			for(int i=nBound;i<g._dom.N1()-nBound;i++) // DEBUG
+			//for(int ii=0;ii<g._dom.N1()-2*nBound;ii++)
 			{
+				//int i=ii+nBound;
 				for(int j=nBound;j<g._dom.N2()-nBound;j++)
 				{	
 					for(int k=nBound;k<g._dom.N3()-nBound;k++)
@@ -649,8 +675,6 @@ Grid Grid::gradient(int nBound)
 								if(l==0)
 								{
 									v= v/cc;
-									break;
-									
 								}
 								if(l==1)
 								{
@@ -736,6 +760,9 @@ Grid Grid::finer_Grid()
 #ifdef ENABLE_OMP
 #pragma omp parallel for 
 #endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
+#endif
 	for(int i=0;i<_dom.N1();i++)
 	{	
 		for(int j=0;j<_dom.N2();j++)
@@ -750,6 +777,9 @@ Grid Grid::finer_Grid()
 	//center cube points
 #ifdef ENABLE_OMP
 #pragma omp parallel for 
+#endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
 #endif
 	for(int i=1;i<g._dom.N1()-1;i+=2)
 	{	
@@ -770,6 +800,9 @@ Grid Grid::finer_Grid()
 #ifdef ENABLE_OMP
 #pragma omp parallel for 
 #endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
+#endif
 	for(int i=0;i<g._dom.N1()-1;i+=2)
 	{	
 		for(int j=0;j<g._dom.N2()-1;j+=2)
@@ -786,6 +819,9 @@ Grid Grid::finer_Grid()
 
 #ifdef ENABLE_OMP
 #pragma omp parallel for 
+#endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
 #endif
 	for(int i=0;i<g._dom.N1()-1;i+=2)
 	{	
@@ -804,6 +840,9 @@ Grid Grid::finer_Grid()
 #ifdef ENABLE_OMP
 #pragma omp parallel for 
 #endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
+#endif
 	for(int i=1;i<g._dom.N1()-1;i+=2)
 	{	
 		for(int j=0;j<g._dom.N2()-1;j+=2)
@@ -820,6 +859,9 @@ Grid Grid::finer_Grid()
 
 #ifdef ENABLE_OMP
 #pragma omp parallel for 
+#endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
 #endif
 	for(int i=0;i<g._dom.N1()-1;i+=2)
 	{	
@@ -838,6 +880,9 @@ Grid Grid::finer_Grid()
 #ifdef ENABLE_OMP
 #pragma omp parallel for 
 #endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
+#endif
 	for(int i=1;i<g._dom.N1()-1;i+=2)
 	{	
 		for(int j=0;j<g._dom.N2()-1;j+=2)
@@ -854,6 +899,9 @@ Grid Grid::finer_Grid()
 
 #ifdef ENABLE_OMP
 #pragma omp parallel for 
+#endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
 #endif
 	for(int i=1;i<g._dom.N1()-1;i+=2)
 	{	
@@ -899,30 +947,29 @@ Grid Grid::coarser_Grid()
 #ifdef ENABLE_OMP
 #pragma omp parallel for
 #endif
+#ifdef ENABLE_ACC
+#pragma acc kernels loop
+#endif
 	for(int i = iXBegin ; i <= iXEnd-1 ; i++)
 	{
-		cout<<"i "<<i<<endl;
 		int x0, xp, xm;
 		x0 = 2 * i;
 		xp = x0 + 1;
 		xm = x0 - 1;
 		for(int j = iYBegin ; j <= iYEnd-1 ; j++)
 		{
-			cout<<"j "<<j<<endl;
 			int y0, yp, ym;
 			y0 = 2 * j;
 			yp = y0 + 1;
 			ym = y0 - 1;
 			for(int k= iZBegin ; k <= iZEnd-1 ; k++)
 			{
-				cout<<"k "<<k<<endl;
 				int z0, zp, zm;
 				z0 = 2 * k;
 				zp = z0 + 1;
 				zm = z0 - 1;
 				for(int l=0;l<_dom.Nval(); l++)
 				{ 	
-					cout<<"l "<<l<<endl;
 					double face, corner, edge;
 					
 					face = _V [xm][y0][z0][l] +_V [xp][y0][z0][l] +_V [x0][ym][z0][l] +_V [x0][yp][z0][l] + _V [x0][y0][zm][l] +_V [x0][y0][zp][l];
@@ -1022,57 +1069,406 @@ void Grid::save(ofstream& nameFile)
 		}
 	}
 }
-
-
+vector<double> Grid::find_max_neighbour(int i, int j, int k,int xm,int xp, int ym,int yp, int zm, int zp, double Current, vector<vector<double>>& traj, const Grid& g, int& repeat,vector<double>& v)
+{	
+	repeat++;
+	cout<<"xm "<<xm<<endl;
+	cout<<"xp "<<xp<<endl;
+	cout<<"ym "<<ym<<endl;
+	cout<<"yp "<<yp<<endl;
+	cout<<"zm "<<zm<<endl;
+	cout<<"zp "<<zp<<endl;
+	cout<<Current<<endl;
+	if(-_V [xm][j][k][1]>Current)
+	{
+		cout<<"yo are here"<<endl;
+		Current= -_V [xm][j][k][1];
+		v[0]=xm;
+		v[1]=j;
+		v[2]=k;
+		cout<<"1"<<endl;
+	}
+	if(_V [xp][j][k][1]>Current)
+	{
+		Current=_V [xp][j][k][1];
+		v[0]=xp;
+		v[1]=j;
+		v[2]=k;
+		cout<<"2"<<endl;
+	}
+	if(-_V [i][ym][k][2]>Current)
+	{
+		Current= -_V [i][ym][k][2];
+		v[0]=i;
+		v[1]=ym;
+		v[2]=k;
+		cout<<"3"<<endl;
+	}
+	if(_V [i][yp][k][2] >Current)
+	{
+		Current=_V [i][yp][k][2];
+		v[0]=i;
+		v[1]=yp;
+		v[2]=k;
+		cout<<"4"<<endl;
+	}
+	if(-_V [i][j][zm][3]>Current)
+	{
+		Current= -_V [i][j][zm][3];
+		v[0]=i;
+		v[1]=j;
+		v[2]=zm;
+		cout<<"5"<<endl;
+	}
+	if(_V [i][j][zp][3]>Current)
+	{
+		Current=_V [i][j][zp][3];
+		v[0]=i;
+		v[1]=j;
+		v[2]=zp;
+		cout<<"6"<<endl;
+	}
+	if((-_V [xm] [ym] [zm][1]-_V [xm] [ym] [zm][2]-_V [xm] [ym] [zm][3])>Current)
+	{
+		Current= -_V [xm] [ym] [zm][1]-_V [xm] [ym] [zm][2]-_V [xm] [ym] [zm][3];
+		v[0]=xm;
+		v[1]=ym;
+		v[2]=zm;
+		cout<<"7"<<endl;
+	}
+	if((-_V [xm] [ym] [zp][1]-_V [xm] [ym] [zp][2]+_V [xm] [ym] [zp][3])>Current)
+	{
+		Current= -_V [xm] [ym] [zp][1]-_V [xm] [ym] [zp][2]+_V [xm] [ym] [zp][3];
+		v[0]=xm;
+		v[1]=ym;
+		v[2]=zp;
+		cout<<"8"<<endl;
+	}
+	if((-_V [xm] [yp] [zm][1]+_V [xm] [yp] [zm][2]-_V [xm] [yp] [zm][3])>Current)
+	{
+		Current= -_V [xm] [yp] [zm][1]+_V [xm] [yp] [zm][2]-_V [xm] [yp] [zm][3];
+		v[0]=xm;
+		v[1]=yp;
+		v[2]=zm;
+		cout<<"9"<<endl;
+	}
+	if((-_V [xm] [yp] [zp][1]+_V [xm] [yp] [zp][2]+_V [xm] [yp] [zp][3])>Current)
+	{
+		Current= -_V [xm] [yp] [zp][1]+_V [xm] [yp] [zp][2]+_V [xm] [yp] [zp][3];
+		v[0]=xm;
+		v[1]=yp;
+		v[2]=zp;
+		cout<<"10"<<endl;
+	}
+	if((_V [xp] [ym] [zm][1]-_V [xp] [ym] [zm][2]-_V [xp] [ym] [zm][3])>Current)
+	{
+		Current=_V [xp] [ym] [zm][1]-_V [xp] [ym] [zm][2]-_V [xp] [ym] [zm][3];
+		v[0]=xp;
+		v[1]=ym;
+		v[2]=zm;
+		cout<<"11"<<endl;
+	}
+	if((_V [xp] [ym] [zp][1]-_V [xp] [ym] [zp][2]+_V [xp] [ym] [zp][3])>Current)
+	{
+		Current=_V [xp] [ym] [zp][1]-_V [xp] [ym] [zp][2]+_V [xp] [ym] [zp][3];
+		v[0]=xp;
+		v[1]=ym;
+		v[2]=zp;
+		cout<<"12"<<endl;
+	}
+	if((_V [xp] [yp] [zm][1]+_V [xp] [yp] [zm][2]-_V [xp] [yp] [zm][3])>Current)
+	{
+		Current=_V [xp] [yp] [zm][1]+_V [xp] [yp] [zm][2]-_V [xp] [yp] [zm][3];
+		v[0]=xp;
+		v[1]=yp;
+		v[2]=zm;
+		cout<<"13"<<endl;
+	}
+	if((_V [xp] [yp] [zp][1]+_V [xp] [yp] [zp][2]+_V [xp] [yp] [zp][3])>Current)
+	{
+		Current=_V [xp] [yp] [zp][1]+_V [xp] [yp] [zp][2]+_V [xp] [yp] [zp][3];
+		v[0]=xp;
+		v[1]=yp;
+		v[2]=zp;
+		cout<<"14"<<endl;
+	}
+	if((-_V [xm] [j] [zm][1]-_V [xm] [j] [zm][3])>Current)
+	{
+		Current= -_V [xm] [j] [zm][1]-_V [xm] [j] [zm][3];
+		v[0]=xm;
+		v[1]=j;
+		v[2]=zm;
+		cout<<"15"<<endl;
+	}
+	if((-_V [xm] [ym] [k][1]-_V [xm] [ym] [k][2])>Current)
+	{
+		Current= -_V [xm] [ym] [k][1]-_V [xm] [ym] [k][2];
+		v[0]=xm;
+		v[1]=ym;
+		v[2]=k;
+		cout<<"16"<<endl;
+	}
+	if((-_V [xm] [yp] [k][1]+_V [xm] [yp] [k][2])>Current)
+	{
+		Current= -_V [xm] [yp] [k][1]+_V [xm] [yp] [k][2];
+		v[0]=xm;
+		v[1]=yp;
+		v[2]=k;
+		cout<<"17"<<endl;
+	}
+	if((-_V [xm] [j] [zp][1]+_V [xm] [j] [zp][3])>Current)
+	{
+		Current= -_V [xm] [j] [zp][1]+_V [xm] [j] [zp][3];
+		v[0]=xm;
+		v[1]=j;
+		v[2]=zp;
+		cout<<"18"<<endl;
+	}
+	if((-_V [i] [ym] [zm][2]-_V [i] [ym] [zm][3])>Current)
+	{
+		Current= -_V [i] [ym] [zm][2]-_V [i] [ym] [zm][3];
+		v[0]=i;
+		v[1]=ym;
+		v[2]=zm;
+		cout<<"19"<<endl;
+	}
+	if((_V [i] [yp] [zm][2]-_V [i] [yp] [zm][3])>Current)
+	{
+		Current=_V [i] [yp] [zm][2]-_V [i] [yp] [zm][3];
+		v[0]=i;
+		v[1]=yp;
+		v[2]=zm;
+		cout<<"20"<<endl;
+	}
+	if((-_V [i] [ym] [zp][2]+_V [i] [ym] [zp][3])>Current)
+	{
+		Current=-_V [i] [ym] [zp][2]+_V [i] [ym] [zp][3];
+		v[0]=i;
+		v[1]=ym;
+		v[2]=zp;
+		cout<<"21"<<endl;
+	}
+	if((_V [i] [yp] [zp][2]+_V [i] [yp] [zp][3])>Current)
+	{
+		Current=_V [i] [yp] [zp][2]+_V [i] [yp] [zp][3];
+		v[0]=i;
+		v[1]=yp;
+		v[2]=zp;
+		cout<<"22"<<endl;
+	}
+	if((_V [xp] [j] [zm][1]-_V [xp] [j] [zm][3])>Current)
+	{
+		Current=_V [xp] [j] [zm][1]-_V [xp] [j] [zm][3];
+		v[0]=xp;
+		v[1]=j;
+		v[2]=zm;
+		cout<<"23"<<endl;
+	}
+	if((_V [xp] [ym] [k][1]-_V [xp] [ym] [k][2])>Current)
+	{
+		Current=_V [xp] [ym] [k][1]-_V [xp] [ym] [k][2];
+		v[0]=xp;
+		v[1]=ym;
+		v[2]=k;
+		cout<<"24"<<endl;
+	}
+	if((_V [xp] [yp] [k][1]+_V [xp] [yp] [k][2])>Current)
+	{
+		Current=_V[xp] [yp] [k][1]+_V [xp] [yp] [k][2];
+		v[0]=xp;
+		v[1]=yp;
+		v[2]=k;
+		cout<<"25"<<endl;
+	}
+	
+	if((_V [xp] [j] [zp][1]+_V [xp] [j] [zp][3])>Current)
+	{
+		Current=_V [xp] [j] [zp][1]+_V [xp] [j] [zp][3];
+		v[0]=xp;
+		v[1]=j;
+		v[2]=zp;
+		cout<<"26"<<endl;
+	}
+	
+	//test if point is a max
+	bool HiMax=true;
+	if(v[0]!=i)
+	{
+		HiMax=false;
+	}
+	if(v[1]!=j)
+	{
+		HiMax=false;
+	}
+	if(v[2]!=k)
+	{
+		HiMax=false;
+	}
+	
+	v[3]=Current;
+	
+	//if point is max: exit function
+	if(HiMax)
+	{
+		cout<<"end recion"<<endl;
+		return v;
+	}
+	else
+	{
+		//test if new point is indexed
+		if(g._V[v[0]][v[1]][v[2]][0]!=0)
+		{
+			return v;
+		}
+		//repeat function for new point
+		else
+		{
+			cout<<"are we doing it?"<<endl;
+			traj.push_back(v);
+			cout<<"weve done it"<<endl;
+			for(int i=0;i<int(v.size());i++)
+			{
+				cout<<v[i]<<endl;
+			}
+			find_max_neighbour(v[0],v[1],v[2],v[0]-1,v[0]+1,v[1]-1,v[1]+1,v[2]-1,v[2]+1,v[3],traj,g,repeat,v);
+		}
+	}
+	
+	//have to index points
+	//if its been indexed have to break loop
+}
 /*
-Grid Grid::aim_On_Grid(int& nBound)
+double Grid::atom_attract_diff(int j,const vector<double>& attract)
+{
+	double v;
+	for(int i=0;i<3;i++)
+	{
+		v+= (_str.atom()[j+1].coords()[i]-attract[i])*(_str.atom()[j+1].coords()[i]-attract[i]);
+	}
+	v=sqrt(v);
+	return v;
+}
+*/
+Grid Grid::aim_On_Grid(int nBound)
 {
 	try
 	{
 		if(_dom.Nval()==4)
 		{
-			Grid g(Domain(5,_dom.N1(), _dom.N2(), _dom.N3(), _dom.O())); 
-			vector<double> ds={_dom.dx(),_dom.dy(), _dom.dz()};
-			double v=0;
+			cout<<"begin aim"<<endl;
+			Grid g(Domain(1,_dom.N1(), _dom.N2(), _dom.N3(), _dom.O()));
+			for(int i=0;i<3;i++)
+			{
+				for(int j=0;j<3;j++)
+				{
+					g._dom.set_T(_dom.Tij(i,j)/2, i, j);
+				}
+			}
+			g._str=_str;
+			vector<vector<double>> attractors;
+			/*vector<int> attractIndex(_str.number_of_atoms);
+			for(int i=0; i<_str.number_of_atoms;i++)
+			{
+				attractIndex[i]=i+1;
+			}*/
 			
 			for(int i=nBound;i<_dom.N1()-nBound;i++)
 			{
+				cout<<"i "<<i<<endl;
 				int xp, xm;
 				xp = i + 1;
 				xm = i - 1;
 				for(int j=nBound;j<_dom.N2()-nBound;j++)
 				{
+					cout<<"j "<<j<<endl;
 					int yp,ym;
 					yp = j + 1;
 					ym = j - 1;
 					for(int k=nBound;k<_dom.N3()-nBound;k++)
 					{
+						cout<<"k "<<k<<endl;
 						int zp,zm;
 						zp = k + 1;
 						zm = k - 1;
-						for(int l=1;l<_dom.Nval()-1;l++)
-						{
-							v =_V[i][j][k][l];
-							if(
 							
+						if(g._V[i][j][k][0]!=0)
+						{
+							break;
 						}
+						else
+						{	
+							double w=_V[i][j][k][1]*_V[i][j][k][1]+_V[i][j][k][2]*_V[i][j][k][2]+_V[i][j][k][3]*_V[i][j][k][3];
+							w=sqrt(w);
+							vector<vector<double>> trajectory={{double(i),double(j),double(k),w}};
+							cout<<"Begin recursion"<<endl;
+							int repeat=0;
+							vector<double> v=trajectory[0];
+							while(uplus-u>1e-10)
+							{
+								u=uplus;
+								uplus = find_max_neighbour(i,j,k,xm,xp,ym,yp,zm,zp,w,trajectory,g,repeat,v)[3];
+							}
+							cout<<"end recu"<<endl;
+							//if point has been already indexed exit loop: new point
+							if(g._V[int(u[0])][int(u[1])][int(u[2])][0]!=0)
+							{
+								break;
+							}
+							
+							//Do we know max?
+							bool WhoIsMax=true;
+							//compare max to list
+							cout<<"done"<<endl;
+							for(int m=0;m<int(attractors.size());m++)
+							{
+								if(attractors[m]==u)
+								{
+									int I=0;
+									WhoIsMax=false;
+									I++;
+									for(int p=0;p<int(trajectory.size());p++)
+									{
+										g._V[int(trajectory[p][0])][int(trajectory[p][1])][int(trajectory[p][2])][0]=double(I);
+									}
+								}
+							}
+							cout<<"done"<<endl;
+							//dont know max
+							if(WhoIsMax)
+							{
+								//add to known attractors
+								attractors.push_back(u);
+								//index all points from trajectory
+								for(int p=0;p<int(trajectory.size());p++)
+								{
+									g._V[int(trajectory[p][0])][int(trajectory[p][1])][int(trajectory[p][2])][0]=double(trajectory.size());
+								}
+							}
+						}					
 					}
 				}
 			}
-		
+			/*for(int m=0; m<int(attractors.size());m++)
+			{
+				for(int a=0;a<4;a++)
+				{
+					cout<<attractors[m][a]<<endl;
+				}
+			}*/
+			return g;
 		}
 		else
 		{
-			throw string error("Gradient grid must be used for AIM");
+			throw string("Gradient grid must be used for AIM");
 		}
 	}
-	catch(error)
+	
+	catch(string error)
 	{
 		cout<<error<<endl;
 		exit(1);
 	}
 }
-*/
 
 
 

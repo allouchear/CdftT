@@ -22,14 +22,24 @@ int main()
 	Atom A(Table, 64);
 	Atom B;
 	*/
+	
 	Grid g(f, Table);
+	cout<<"Begin gradient"<<endl;
+	timer.init();
+	Grid lap = g.gradient(8);
+	cout<<"Time in ms "<<timer.get()<<endl;
 	
-	
+	cout<<"Begin AIM"<<endl;
+	timer.init();
+	Grid AIM=lap.aim_On_Grid(8);
+	cout<<"Time in ms "<<timer.get()<<endl;
+	/*
 	ofstream out("/home/tmaamaatuai/tmp/out.cube");
 	cout<<"Begin write"<<endl;
 	timer.init();
-	g.save(out);
+	AIM.save(out);
 	cout<<"Time in ms "<<timer.get()<<endl;
+	*/
 	
 	/*
 	for(int i=0;i<10;i++)
@@ -52,6 +62,8 @@ int main()
 	Grid G=g.finer_Grid();
 	cout<<"Time in ms "<<timer.get()<<endl;
 	*/
+
+/*
 	timer.init();
 	cout<<"Begin coarser grid function"<<endl;
 	Grid G=g.coarser_Grid();
@@ -73,6 +85,6 @@ int main()
 	cout<<"product done"<<endl;
 	double I=prod.integrate_Over_Dom();
 	cout<<"sum done"<<endl;
-	cout<<I<<endl;
+	cout<<I<<endl;*/
 	return 0;
 }

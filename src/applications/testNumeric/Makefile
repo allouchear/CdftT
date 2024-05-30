@@ -29,7 +29,7 @@ dep :
 	$(CC)  $(CFLAGS) -MM $(SRCS) > Dep.mk
 
 cdftt: 
-	$(CC) $(LDFLAGS) $(OBJECTS) -o cdftt $(OMPLIB) -g -lm -lgomp 
+	$(CC) $(LDFLAGS) $(OBJECTS) -o cdftt $(OMPLIB) -g -lm $(ACCLIB)  
 
 
 -include Dep.mk

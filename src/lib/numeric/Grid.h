@@ -135,9 +135,11 @@ class Grid
 		/*!save grid onto .cube file*/
 	void save(ofstream& name);
 		
+		
+	vector<double> find_max_neighbour(int i, int j, int k,int xm,int xp, int ym,int yp, int zm, int zp, double Current, vector<vector<double>>& traj, const Grid& g,int& repeat,vector<double>& v);
 		//include reference Tang
 	
-	//Grid aim_On_Grid(int nBound);
+	Grid aim_On_Grid(int nBound);
 };
 
 #endif //_CDFTT_GRID_H_INCLUDED
