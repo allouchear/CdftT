@@ -9,26 +9,28 @@ LCAO::LCAO()
 	_cgtf =vector<CGTF> (0);
 	_coefficient=vector<double> (0);
 	_numberOfFunctions=0;
+	_numberOfCoefficient=0;
 	_bino=Binomial();
 }
 
 LCAO::LCAO(vector<CGTF> A, vector<double> C) : _cgtf(A), _coefficient(C)
 {
 	_numberOfFunctions=_cgtf.size();
+	_numberOfCoefficient=_coefficient.size();
 	_bino=A[0].bino();
 }
 
-double LCAO::ERICLCAO(LCAO& q, LCAO& r, LCAO& s)
+double LCAO::ERILCAO(LCAO& q, LCAO& r, LCAO& s)
 {
 	int np,nq;
 	int nr,ns;
 	double sum = 0.0;
 
 	for(np=0;np<_numberOfFunctions;np++)
-	for(nq=0;nq<q.numberOfFunctions();nq++)
-	for(nr=0;nr<r.numberOfFunctions();nr++)
-	for(ns=0;ns<s.numberOfFunctions();ns++)
-		sum += _cgtf[np].ERICGTF(q.cgtf()[nq],r.cgtf()[nr],s.cgtf()[ns]); 
+		for(nq=0;nq<q.numberOfFunctions();nq++)
+			for(nr=0;nr<r.numberOfFunctions();nr++)
+				for(ns=0;ns<s.numberOfFunctions();ns++)
+					sum += _cgtf[np].ERICGTF(q.cgtf()[nq],r.cgtf()[nr],s.cgtf()[ns]); 
 
 	return sum;
 }
@@ -70,6 +72,9 @@ double LCAO::overlapLCAO(LCAO& right)
 
 	//cout<<"Number of Function CGTF in LCAO = "<<_numberOfFunctions<<endl;
 
+#ifdef ENABLE_OMP
+#pragma omp parallel for private(n,np) reduction(+:sum)
+#endif
 	for(n=0;n<_numberOfFunctions;n++)
 		for(np=0;np<_numberOfFunctions;np++)
 			sum += _coefficient[n]*right._coefficient[np]*_cgtf[n].overlapCGTF(right._cgtf[np]);
@@ -87,9 +92,9 @@ double LCAO::overlap3LCAO(LCAO& midle, LCAO& right)
 	int ns;
 
 	for(n=0;n<_numberOfFunctions;n++)
-	for(np=0;np<midle.numberOfFunctions();np++)
-	for(ns=0;ns<right.numberOfFunctions();ns++)
-			sum += _coefficient[n]*midle._coefficient[np]*right._coefficient[ns]*_cgtf[n].overlap3CGTF(midle.cgtf()[np],right.cgtf()[ns]);
+		for(np=0;np<midle.numberOfFunctions();np++)
+			for(ns=0;ns<right.numberOfFunctions();ns++)
+				sum += _coefficient[n]*midle._coefficient[np]*right._coefficient[ns]*_cgtf[n].overlap3CGTF(midle.cgtf()[np],right.cgtf()[ns]);
 
 	return sum;
 }
@@ -103,10 +108,10 @@ double LCAO::overlap4LCAO(LCAO& B, LCAO& C, LCAO& D)
 	int ns;
 
 	for(np=0;np<_numberOfFunctions;np++)
-	for(nq=0;nq<B.numberOfFunctions();nq++)
-	for(nr=0;nr<C.numberOfFunctions();nr++)
-	for(ns=0;ns<D.numberOfFunctions();ns++)
-			sum += _coefficient[np]*B._coefficient[nq]*C._coefficient[nr]*D._coefficient[ns]*_cgtf[np].overlap4CGTF(B.cgtf()[nq],C.cgtf()[nr],D.cgtf()[ns]);
+		for(nq=0;nq<B.numberOfFunctions();nq++)
+			for(nr=0;nr<C.numberOfFunctions();nr++)
+				for(ns=0;ns<D.numberOfFunctions();ns++)
+					sum += _coefficient[np]*B._coefficient[nq]*C._coefficient[nr]*D._coefficient[ns]*_cgtf[np].overlap4CGTF(B.cgtf()[nq],C.cgtf()[nr],D.cgtf()[ns]);
 
 	return sum;
 }
@@ -194,6 +199,7 @@ void LCAO::push_back(CGTF& cgtf, double coef)
 	_cgtf.push_back(cgtf);
 	_coefficient.push_back(coef);
 	_numberOfFunctions++;
+	_numberOfCoefficient++;
 }
 bool operator==(LCAO a, LCAO b)
 {
@@ -211,7 +217,7 @@ bool operator==(LCAO a, LCAO b)
 		return false;
 }
 
-ostream& operator<<(ostream& flux, LCAO& lcao)
+ostream& operator<<(ostream& flux, const LCAO& lcao)
 {
 	flux<<std::scientific;
 	flux<<std::setprecision(10);

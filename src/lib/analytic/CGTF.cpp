@@ -27,10 +27,10 @@ double CGTF::ERICGTF(CGTF& q, CGTF& r, CGTF& s)
 	double sum = 0.0;
 
 	for(np=0;np<_numberOfFunctions;np++)
-	for(nq=0;nq<q.numberOfFunctions();nq++)
-	for(nr=0;nr<r.numberOfFunctions();nr++)
-	for(ns=0;ns<s.numberOfFunctions();ns++)
-		sum += _gtf[np].ERIGTF(q.gtf()[nq],r.gtf()[nr],s.gtf()[ns]); 
+		for(nq=0;nq<q.numberOfFunctions();nq++)
+			for(nr=0;nr<r.numberOfFunctions();nr++)
+				for(ns=0;ns<s.numberOfFunctions();ns++)
+					sum += _gtf[np].ERIGTF(q.gtf()[nq],r.gtf()[nr],s.gtf()[ns]); 
 
 	return sum;
 }
@@ -82,9 +82,9 @@ double CGTF::overlap3CGTF(CGTF& midle, CGTF& right)
 	int ns;
 
 	for(n=0;n<_numberOfFunctions;n++)
-	for(np=0;np<midle.numberOfFunctions();np++)
-	for(ns=0;ns<right.numberOfFunctions();ns++)
-			sum += _gtf[n].overlap3GTF(midle.gtf()[np],right.gtf()[ns]);
+		for(np=0;np<midle.numberOfFunctions();np++)
+			for(ns=0;ns<right.numberOfFunctions();ns++)
+				sum += _gtf[n].overlap3GTF(midle.gtf()[np],right.gtf()[ns]);
 
 	return sum;
 }
@@ -98,10 +98,10 @@ double CGTF::overlap4CGTF(CGTF& B, CGTF& C, CGTF& D)
 	int ns;
 
 	for(np=0;np<_numberOfFunctions;np++)
-	for(nq=0;nq<B.numberOfFunctions();nq++)
-	for(nr=0;nr<C.numberOfFunctions();nr++)
-	for(ns=0;ns<D.numberOfFunctions();ns++)
-			sum += _gtf[np].overlap4GTF(B.gtf()[nq],C.gtf()[nr],D.gtf()[ns]);
+		for(nq=0;nq<B.numberOfFunctions();nq++)
+			for(nr=0;nr<C.numberOfFunctions();nr++)
+				for(ns=0;ns<D.numberOfFunctions();ns++)
+					sum += _gtf[np].overlap4GTF(B.gtf()[nq],C.gtf()[nr],D.gtf()[ns]);
 
 	return sum;
 }

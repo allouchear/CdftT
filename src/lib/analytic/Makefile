@@ -1,4 +1,4 @@
-OBJECTS = LCAO.o CGTF.o GTF.o MathFunction.o WFX.o
+OBJECTS = MathFunction.o WFX.o GTF.o CGTF.o LCAO.o Orbitals.o 
 
 
 include ../../../CONFIG

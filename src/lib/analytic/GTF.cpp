@@ -18,7 +18,7 @@ GTF::GTF(const double& exposant, const double& coefficient, const vector<double>
 double GTF::GTFstarGTF (GTF& right)
 {
 	int i,j;
-	vector<double> sum(3);
+	vector<double> sum(3,0.0);
 	double t;
 	vector<double> PA(3);
 	vector<double> PB(3);
@@ -37,14 +37,11 @@ double GTF::GTFstarGTF (GTF& right)
 	c = (M_PI/gama)*sqrt(M_PI/gama)*exp(-_exposant*right._exposant/gama*R2);
 
 	for(j=0; j<3; j++)
-	{
-		sum[j]=0.0;
 		for(i=0; i<=(_l[j]+right._l[j])/2; i++)
 		{
 			sum[j]+=f(2*i, _l[j], right._l[j], PA[j], PB[j], _bino)*_bino.fact().double_factorial(2*i-1)
 		/(power(2.0,i)*power(gama,i));
 		}
-	}
 
 	return c*sum[0]*sum[1]*sum[2];
 }

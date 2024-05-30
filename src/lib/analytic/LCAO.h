@@ -15,6 +15,7 @@ class LCAO
 		vector<CGTF> _cgtf;
 		int _numberOfFunctions;
 		vector<double> _coefficient;
+		int _numberOfCoefficient;
 		Binomial _bino;
 	public:
 
@@ -36,7 +37,7 @@ class LCAO
 			//! A normal member taking no arguments and returning a vector<CGTF> value.
 			/*! \return The table of CGTF which compose the LCAO. */
 
-		vector<CGTF> cgtf()
+		vector<CGTF> cgtf() const &
 		{
 			return _cgtf;
 		}
@@ -44,7 +45,7 @@ class LCAO
 			//! A normal member taking no arguments and returning a vector<double> value.
 			/*! \return The table of coefficient of LCAO. */
 
-		vector<double> coefficient()
+		vector<double> coefficient() const &
 		{
 			return _coefficient;
 		}
@@ -52,15 +53,20 @@ class LCAO
 			//! A normal member taking no arguments and returning an int value.
 			/*! \return The number of CGTF in one LCAO. */
 
-		int numberOfFunctions()
+		int numberOfFunctions() const &
 		{
 			return _numberOfFunctions;
+		}
+
+		int numberOfCoefficient() const &
+		{
+			return _numberOfCoefficient;
 		}
 
 			//! A normal member taking three arguments and returning a double value.
 			/*! \return The ERI value ??? */
 
-		double ERICLCAO(LCAO&, LCAO&, LCAO&);
+		double ERILCAO(LCAO&, LCAO&, LCAO&);
 
 			//! A normal member taking no arguments and returning a void value.
 			/*! Normalise the LCAO. */
@@ -105,12 +111,13 @@ class LCAO
 		//bool LCAOEqLCAO(LCAO&);
 
 		void push_back(CGTF&, double);
+
+		friend ostream& operator<<(ostream&, const LCAO&);
 };
 
 //! An operator member taking two arguments and returning a bool value.
 /*! \return The bool value of an equality between two LCAO. */
 
 bool operator==(LCAO, LCAO);
-ostream& operator<<(ostream&, LCAO&);
 
 #endif

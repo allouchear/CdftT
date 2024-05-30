@@ -4,6 +4,7 @@
 #include<analytic/GTF.h>
 #include<analytic/CGTF.h>
 #include<analytic/LCAO.h>
+#include<analytic/Orbitals.h>
 #include<analytic/WFX.h>
 #include"Timer.h"
 #include<ctime>
@@ -29,15 +30,18 @@ int main()
 	
 	
 	ifstream f;
-	f.open("h2o.wfx");
+	f.open("test_code.wfx");
 	WFX wfx_test (f);
 	f.close();
 
-	ofstream g;
+	/*ofstream g;
 	g.open("test.wfx");
 	wfx_test.write_file_wfx(g);
-	g.close();
+	g.close();*/
 	
+	Orbitals Orb_test(wfx_test, Bin);
+
+	/*
 	int i,j;
 
 	GTF gtf_test;
@@ -61,8 +65,8 @@ int main()
 		}
 	}
 
-	//for(i=0; i<wfx_test.Number_of_Occupied_Molecular_Orbital(); i++)
-	//	cout<<vlcao_test[i]<<endl;
+	for(i=0; i<wfx_test.Number_of_Occupied_Molecular_Orbital(); i++)
+		cout<<vlcao_test[i]<<endl;
 
 	cout<<"Test Post Overlap ok"<<endl;
 
@@ -70,7 +74,33 @@ int main()
 		for(j=0; j<wfx_test.Number_of_Occupied_Molecular_Orbital(); j++)
 			cout<<"OverlapLCAO <"<<i<<"|"<<j<<"> = "<<vlcao_test[i].overlapLCAO(vlcao_test[j])<<endl;
 
-	cout<<"Test Overlap ok"<<endl;
+	vector<vector<double>> vtest (wfx_test.Number_of_Occupied_Molecular_Orbital(), vector<double> (wfx_test.Number_of_Occupied_Molecular_Orbital()));
+
+	for(i=0; i<wfx_test.Number_of_Occupied_Molecular_Orbital(); i++)
+		for(j=0; j<wfx_test.Number_of_Occupied_Molecular_Orbital(); j++)
+			vtest[i][j]=vlcao_test[i].overlapLCAO(vlcao_test[j]);
+
+	cout<<"Test Overlap ok"<<endl; */
+
+	//for(int i=0; i<Orb_test.NumberOfFunctions(); i++)
+	//	cout<<Orb_test.lcao(i)<<endl;
+
+	/*for(int i=0; i<Orb_test.NumberOfFunctions(); i++)
+		for(int j=0; j<Orb_test.NumberOfFunctions(); j++)
+			Orb_test.PrintOverlap(i,j);
+	*/
+
+	cout<<Orb_test<<endl;
+	/*
+	for(int i=0; i<10; i++)
+	{
+		for(int j=0; j<3; j++)
+			cout<<Orb_test.get_f(i)[j]<<endl;
+		cout<<endl;
+	}
+	*/
+	//cout<<"mu ="<<(Orb_test.eHOMO()+Orb_test.eLUMO())/2<<endl;
+
 	/*
 	ifstream h;
 	h.open("format.wfx");
