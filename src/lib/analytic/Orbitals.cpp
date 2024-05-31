@@ -4,6 +4,35 @@
 
 using namespace std;
 
+Density::Density()
+{
+	_gtf = vector<GTF> ();
+	_occupation_number = vector<double> ();
+	_orbital_coefficients = vector<vector<double>> ();
+}
+
+Density::Density(WFX& wfx, Binomial& Bin)
+{
+	int i,j;
+
+	_gtf = vector<GTF> (wfx.Number_of_Primitives());
+	_orbital_coefficients = vector<vector<double>> (wfx.Number_of_Occupied_Molecular_Orbital(), vector<double> (wfx.Number_of_Primitives()));
+	vector<vector<double>> Coord(wfx.Number_of_Nuclei(), vector<double> (0));
+
+	for(i=0; i<wfx.Number_of_Nuclei(); i++)
+		for(j=i*3; j<3*(1+i); j++)
+			Coord[i].push_back(wfx.Nuclear_Cartesian_Coordinates()[j]);
+
+	for(i=0; i<wfx.Number_of_Primitives(); i++)		
+		_gtf[i].push_back(wfx.Primitive_Exponents()[i], 1.0, Coord[wfx.Primitive_Centers()[i]-1], setLxyz(wfx.Primitive_Types()[i]), Bin);
+
+	for(i=0; i<wfx.Number_of_Occupied_Molecular_Orbital(); i++)
+		for(j=0; j<wfx.Number_of_Primitives(); j++)
+			_orbital_coefficients[i][j]=wfx.Molecular_Orbital_Primitive_Coefficients()[i].Coefficients()[j];
+
+	_occupation_number = wfx.Molecular_Orbital_Occupation_Numbers();
+}
+
 Orbitals::Orbitals()
 {
 	_all_f = vector<vector<double>> ();
@@ -41,7 +70,7 @@ Orbitals::Orbitals(WFX& wfx, Binomial& Bin)
 			_lcao[i].push_back(vcgtf[i][j], wfx.Molecular_Orbital_Primitive_Coefficients()[i].Coefficients()[j]);
 		}
 	}
-
+	_density = Density(wfx, Bin);
 	_primitive_centers=wfx.Primitive_Centers();
 	_numberOfFunctions=wfx.Number_of_Occupied_Molecular_Orbital();
 	_number_of_alpha_electrons=wfx.Number_of_Alpha_Electrons();

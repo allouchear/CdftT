@@ -63,6 +63,43 @@
 
 using namespace std;
 
+	//! A Density class.
+	/*! This class will be used to calculate the density. */
+class Density
+{
+	private:
+		vector<GTF> _gtf;
+		vector<double> _occupation_number;
+		vector<vector<double>> _orbital_coefficients;
+	public:
+
+			//! A default constructor.
+			/*! This constructor is used to set all of the parameters for one LCAO on 0 or "None" value. */
+		Density();
+
+			//! A real constructor.
+			/*! This constructor is used to add all of the parameters to calculate the density. */
+		Density(WFX&, Binomial&);
+
+			//! A default desctructor.
+			/*! We don't use it. */
+		~Density() {}
+
+			//! A normal member taking no arguments and returning a vector<GTF> value.
+			/*! \return The table of GTF which be use to calculate the density. */
+		vector<GTF> gtf() {return _gtf;}
+
+			//! A normal member taking no arguments and returning a vector<double> value.
+			/*! \return The table of occupation number which be use to calculate the Orbitals. */
+		vector<double> OccupationNumber() {return _occupation_number;}
+
+			//! A normal member taking no arguments and returning a vector<vector<double>> value.
+			/*! \return The table of orbital coefficients which be use to calculate the Orbitals. */
+		vector<vector<double>> OrbitalCoefficients() {return _orbital_coefficients;}
+};
+
+	//! An Orbitals class.
+	/*! This class will be used to calculate descriptors. */
 class Orbitals
 {
 	private:
@@ -76,6 +113,7 @@ class Orbitals
 		vector<double> _orbital_energy;
 		vector<vector<double>> _all_f;
 		vector<int> _numOrb;
+		Density _density;
 	public:
 
 			//! A default constructor.

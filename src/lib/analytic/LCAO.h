@@ -7,7 +7,7 @@
 using namespace std;
 
 	//! A LCAO class.
-	/*! This class will be used in the calculus class. */
+	/*! This class will be used in the Orbitals class. */
 
 class LCAO
 {
