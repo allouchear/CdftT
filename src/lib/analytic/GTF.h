@@ -154,13 +154,18 @@ class GTF
 			
 		void operator/=(double);
 
+			//! A normal membre taking five arguments and returning a void value.
+			/*! Insert all the data in the GTF. */
 		void push_back(const double&, const double&, const vector<double>&, const vector<int>&, Binomial&);
 
 };
 
 	//! An operator member taking two arguments and returning a bool value.
-
+	/*! \return The bool value of an equality between two CGTF. */
 bool operator==(GTF, GTF);
+
+	//! An operator member taking two arguments and returning an ostream value.
+	/*! Print all the data of one GTF */
 ostream& operator<<(ostream&, GTF&);
 
 #endif

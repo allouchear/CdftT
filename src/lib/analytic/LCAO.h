@@ -58,6 +58,9 @@ class LCAO
 			return _numberOfFunctions;
 		}
 
+			//! A normal member taking no arguments and returning an int value.
+			/*! \return The number of coefficients in one LCAO. */
+
 		int numberOfCoefficient() const &
 		{
 			return _numberOfCoefficient;
@@ -110,8 +113,12 @@ class LCAO
 
 		//bool LCAOEqLCAO(LCAO&);
 
+			//! A normal membre taking two arguments and returning a void value.
+			/*! Insert all the data in the LCAO. */
 		void push_back(CGTF&, double);
 
+			//! An operator member taking two arguments and returning an ostream value.
+			/*! Print all the data of one LCAO. */
 		friend ostream& operator<<(ostream&, const LCAO&);
 };
 

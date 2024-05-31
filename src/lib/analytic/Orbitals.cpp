@@ -11,11 +11,11 @@ Orbitals::Orbitals()
 	_symbol = vector<string> ();
 	_orbital_energy = vector<double> ();
 	_primitive_centers = vector<int> ();
+	_numOrb = vector<int> ();
 	_numberOfFunctions=0;
 	_number_of_alpha_electrons=0;
 	_number_of_beta_electrons=0;
 	_number_of_atoms=0;
-	_HeV=27.21138469;
 }
 
 Orbitals::Orbitals(WFX& wfx, Binomial& Bin)
@@ -49,10 +49,7 @@ Orbitals::Orbitals(WFX& wfx, Binomial& Bin)
 	_number_of_atoms=wfx.Number_of_Nuclei();
 	_orbital_energy=wfx.Molecular_Orbital_Energies();
 	_symbol=wfx.Nuclear_Names();
-	vector<int> NumOrb (2);
-	NumOrb[0]=HOMO();
-	NumOrb[1]=LUMO();
-	get_f(NumOrb);
+	_numOrb = vector<int> (2,0);
 }
 
 void Orbitals::PrintOverlap(int i, int j)
@@ -60,17 +57,17 @@ void Orbitals::PrintOverlap(int i, int j)
 	cout<<"OverlapLCAO <"<<i<<"|"<<j<<"> = "<<_lcao[i].overlapLCAO(_lcao[j])<<endl;
 }
 
-int Orbitals::HOMO() const
+void Orbitals::HOMO()
 {
 	if(_number_of_alpha_electrons>=_number_of_beta_electrons)
-		return _number_of_alpha_electrons-1;
+		_numOrb[0] = _number_of_alpha_electrons-1;
 	else
-		return _number_of_beta_electrons-1;
+		_numOrb[0] = _number_of_beta_electrons-1;
 }
 
-int Orbitals::LUMO() const
+void Orbitals::LUMO()
 {
-	return HOMO()+1;
+	_numOrb[1] = _numOrb[0]+1;
 }
 
 vector<vector<double>> Orbitals::get_S() const
@@ -114,27 +111,27 @@ vector<double> Orbitals::get_f(int alpha) const
 	return f;
 }
 
-void Orbitals::get_f(vector<int> NumOrb)
+void Orbitals::get_f()
 {
 	vector<vector<double>> S=get_S();
 	int i,nu,xi;
 	size_t j;
 	vector<double> V(_number_of_atoms,0.0);
-	vector<vector<double>> f(NumOrb.size(), V);
+	vector<vector<double>> f(_numOrb.size(), V);
 
 #ifdef ENABLE_OMP
 #pragma omp parallel for private(i,j,nu,xi)
 #endif
 	for(i=0; i<_number_of_atoms; i++)
-		for(j=0; j<NumOrb.size(); j++)
-			for(nu=0; nu<_lcao[NumOrb[j]].numberOfCoefficient(); nu++)
+		for(j=0; j<_numOrb.size(); j++)
+			for(nu=0; nu<_lcao[_numOrb[j]].numberOfCoefficient(); nu++)
 			{
 				if(i+1 == _primitive_centers[nu])
-					f[j][i]+=_lcao[NumOrb[j]].coefficient()[nu]*_lcao[NumOrb[j]].coefficient()[nu];
+					f[j][i]+=_lcao[_numOrb[j]].coefficient()[nu]*_lcao[_numOrb[j]].coefficient()[nu];
 
-				for(xi=0; xi<_lcao[NumOrb[j]].numberOfCoefficient(); xi++)
+				for(xi=0; xi<_lcao[_numOrb[j]].numberOfCoefficient(); xi++)
 					if(xi!=nu && i+1 == _primitive_centers[nu])
-						f[j][i]+=_lcao[NumOrb[j]].coefficient()[xi]*_lcao[NumOrb[j]].coefficient()[nu]*S[xi][nu];
+						f[j][i]+=_lcao[_numOrb[j]].coefficient()[xi]*_lcao[_numOrb[j]].coefficient()[nu]*S[xi][nu];
 			}
 
 	_all_f = f;
@@ -240,6 +237,18 @@ vector<double> Orbitals::hardnessk() const
 	return hk;
 }
 
+void Orbitals::HOMO_LUMO()
+{
+	HOMO();
+	LUMO();
+}
+
+void Orbitals::HOMO_LUMO(int i, int j)
+{
+	_numOrb[0]=i;
+	_numOrb[1]=j;
+}
+
 ostream& operator<<(ostream& flux, const Orbitals& orb)
 {
 	double HeV=27.21138469;
@@ -269,6 +278,65 @@ ostream& operator<<(ostream& flux, const Orbitals& orb)
 	flux<<left<<setw(10)<<"DEmin "<<setw(2)<<"="<<setw(10)<<orb.DEmin()*HeV<<endl;
 	flux<<left<<setw(10)<<"w+ "<<setw(2)<<"="<<setw(10)<<orb.wplus()*HeV<<endl;
 	flux<<left<<setw(10)<<"w- "<<setw(2)<<"="<<setw(10)<<orb.wminus()*HeV<<endl;
+	flux<<endl;
+	flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
+ 	flux<<"Energies (hardness, mu, w, Xi, DEmin, wk-, wk+, hardnessk-, hardnessk+, hardnessk) are given in eV"<<endl;
+ 	flux<<"Softnesses (S, sk-, sk+) are given in eV^-1"<<endl;
+	flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
+   	flux<<left<<setw(12)<<"mu-"<<"= eHOMO"<<endl;
+   	flux<<left<<setw(12)<<"mu+"<<"= eLUMO"<<endl;
+   	flux<<left<<setw(12)<<"mu"<<"= Chemical potential = (mu+ + mu-)/2"<<endl;
+   	flux<<left<<setw(12)<<"hardness"<<"= Chemical hardness = (mu+  -  mu-)"<<endl;
+   	flux<<left<<setw(12)<<"Xi"<<"= Electronegativity = -mu"<<endl;
+   	flux<<left<<setw(12)<<"w"<<"= Electrophilicity index = mu^2/(2 hardness)"<<endl;
+  	flux<<left<<setw(12)<<"w-"<<"= propensity to donate electron = mu-^2/(2 hardness)"<<endl;
+   	flux<<left<<setw(12)<<"w+"<<"= propensity to accept electron = mu+^2/(2 hardness)"<<endl; 
+   	flux<<left<<setw(12)<<"S"<<"= Global softness = 1/hardness"<<endl;
+   	flux<<left<<setw(12)<<"Qmax"<<"= Maximal electronic charge accepted by an electrophile = -mu/hardness"<<endl;
+   	flux<<left<<setw(12)<<"DEmin"<<"= Energy decrease if the electrophile take Qmax = -mu^2/(2 hardness)"<<endl; 
+   	flux<<left<<setw(12)<<"fk-"<<"= Local Fukui electrophilic attack"<<endl;
+   	flux<<left<<setw(12)<<"fk+"<<"= Local Fukui nucleophilic attack"<<endl;
+   	flux<<left<<setw(12)<<"sk-"<<"= Local softness electrophilic attack = S fk-"<<endl;
+   	flux<<left<<setw(12)<<"sk+"<<"= Local softness nucleophilic attack = S fk+"<<endl;
+   	flux<<left<<setw(12)<<"wk-"<<"= Local philicity index of electrophilic attack = w fk-"<<endl;
+   	flux<<left<<setw(12)<<"wk+"<<"= Local philicity index of nucleophilic attack = w fk+"<<endl;
+   	flux<<left<<setw(12)<<"hardnessk-"<<"= Local hardness = mu+ fk+ - mu- fk- - (mu+- mu-)*(fk+-fk-)"<<endl;
+   	flux<<left<<setw(12)<<"hardnessk+"<<"= Local hardness = mu+ fk+ - mu- fk- + (mu+- mu-)*(fk+-fk-)"<<endl;
+   	flux<<left<<setw(12)<<"hardnessk"<<"= Local hardness = mu+ fk+ - mu- fk-"<<endl;
+   	flux<<left<<setw(12)<<"Deltafk"<<"= Dual descripor = (fk+ - fk-) : "<<endl;
+    flux<<left<<setw(9)<<" "<<">0 => site favored for a nucleophilic attack"<<endl;
+    flux<<left<<setw(9)<<" "<<"<0 => site favored for an electrophilic attack"<<endl;
+	flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
+ 	flux<<left<<setw(12)<<"References:"<<endl;
+  	flux<<left<<setw(12)<<" "<<"- Revisiting the definition of local hardness and hardness kernel"<<endl; 
+    flux<<left<<setw(12)<<" "<<"C. A. Polanco-Ramrez et al"<<endl;
+    flux<<left<<setw(12)<<" "<<"Phys. Chem. Chem. Phys., 2017, 19, 12355-12364"<<endl;
+    flux<<left<<setw(12)<<" "<<"DOI: 10.1039/c7cp00691h"<<endl;
+    flux<<endl;
+  	flux<<left<<setw(12)<<" "<<"- Applications of the Conceptual Density Functional Theory"<<endl;
+    flux<<left<<setw(12)<<" "<<"Indices to Organic Chemistry Reactivity"<<endl;
+    flux<<left<<setw(12)<<" "<<"Luis R. Domingo, Mar Ríos-Gutiérrez and Patricia Pérez"<<endl;
+    flux<<left<<setw(12)<<" "<<"Molecules 2016, 21, 748; doi:10.3390/molecules21060748"<<endl;
+    flux<<endl;
+  	flux<<left<<setw(12)<<" "<<"- Electrodonating and Electroaccepting Powers"<<endl;
+    flux<<left<<setw(12)<<" "<<"José L. Gazquez, André Cedillo, and Alberto Vela"<<endl;
+    flux<<left<<setw(12)<<" "<<"J. Phys. Chem. A 2007, 111, 1966-1970, DOI: 10.1021/jp065459f"<<endl;
+    flux<<endl;
+  	flux<<left<<setw(12)<<" "<<"- Introducing “UCA-FUKUI” software: reactivity-index calculations"<<endl;
+    flux<<left<<setw(12)<<" "<<"Jesús Sánchez-Márquez et al."<<endl;
+    flux<<left<<setw(12)<<" "<<"J Mol Model (2014) 20:2492, DOI 10.1007/s00894-014-2492-1"<<endl;
+    flux<<endl;
+  	flux<<left<<setw(12)<<" "<<"- Dual descriptor and molecular electrostatic potential:"<<endl; 
+    flux<<left<<setw(12)<<" "<<"complementary tools for the study of the coordination"<<endl; 
+    flux<<left<<setw(12)<<" "<<"chemistry of ambiphilic ligands"<<endl;
+    flux<<left<<setw(12)<<" "<<"F.  Guégan et al."<<endl;
+    flux<<left<<setw(12)<<" "<<"Phys.Chem.Chem.Phys., 2014, 16 , 15558-15569,"<<endl; 
+    flux<<left<<setw(12)<<" "<<"DOI: 10.1039/c4cp01613k"<<endl;
+    flux<<endl;
+  	flux<<left<<setw(12)<<" "<<"- New Dual Descriptor for Chemical Reactivity"<<endl;
+    flux<<left<<setw(12)<<" "<<"Ch. Morell et al."<<endl;
+    flux<<left<<setw(12)<<" "<<"J. Phys. Chem. A 2005, 109, 205-212, DOI: 10.1021/jp046577a"<<endl;
+	flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
 
 	return flux;
 }

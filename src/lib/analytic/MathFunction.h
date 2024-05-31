@@ -89,15 +89,40 @@ class Binomial
 		}
 };
 
-//Ne pas oublier de commenter
+	//! A method for approximation power (small number) taking two arguments and returning a double value.
+	/*! \return The result */
 double power(double, int);
+
+	//! A method taking six arguments and returning a double value.
+	/*! \return ???*/
 double f(int, int, int, double, double, Binomial&);
+
+	//! A method taking eight arguments and returning a double value.
+	/*! \return ???*/
 double Theta(int, int, int, int, double, double, double, Binomial&);
+
+	//! A method taking one argument and returning an int value.
+	/*! \return ???*/
 int m1p(int);
+
+	//! A method taking ten arguments and returning a double value.
+	/*! \return ???*/
 double A(int, int, int, int, int, double, double, double, double, Binomial&);
+
+	//! A method taking ten arguments and returning a double value.
+	/*! \return ???*/
 double B(int,int,int , int , int , double , double , double , double , Factorial&);
+
+	//! A method taking two arguments and returning a double value.
+	/*! \return ???*/
 double myGamma(int, Factorial&);
+
+	//! A method taking three arguments and returning a double value.
+	/*! \return ???*/
 double F(int,double, Factorial&);
+
+	//! A method taking three arguments and returning a vector<double> value.
+	/*! \return ???*/
 vector<double> getFTable(int, double, Factorial&);
 
 #endif
