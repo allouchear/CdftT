@@ -5,7 +5,7 @@ ANALYTIC = analytic
 NUMERIC = numeric
 COMMON  = common
 
-ANALYTICOBJ = $(ANALYTIC)/*.o
+ANALYTICOBJ = $(ANALYTIC)/*/*.o
 NUMERICOBJ  = $(NUMERIC)/*.o
 COMMONSOBJ  = $(COMMON)/*.o
 
