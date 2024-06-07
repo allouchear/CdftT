@@ -11,11 +11,12 @@ using namespace std;
 int main()
 {
 	Timer timer;
-
-	ifstream f("/home/tmaamaatuai/tmp/test.cube");
+	//ifstream f("/home/tmaamaatuai/tmp/propane/Propane256.cube");
+	ifstream f("/home/tmaamaatuai/tmp/CH4/ch4256.cube");
+	//ifstream f("/home/tmaamaatuai/tmp/h2o/h2odens.cube");
 	//ifstream f("/home/tmaamaatuai/tmp/test256.cube");
 	//ifstream f("/home/tmaamaatuai/tmp/test500.cube");
-	if(f.is_open()==true) cout<<"fichier créé"<<endl;
+	if(f.is_open()) cout<<"fichier créé"<<endl;
 	PeriodicTable Table;
 	cout<<"tp créé"<< endl;
 	/*
@@ -24,22 +25,30 @@ int main()
 	*/
 	
 	Grid g(f, Table);
+	cout<<g.dom().dx()<<endl;
+	cout<<g.dom().O()[0]<<endl;
+	cout<<g.str().atoms()[0].coordinates()[0]<<endl;
+	cout<<g.V()[127][92][100][0]<<endl;
+	cout<<g.V()[128][92][100][0]<<endl;
+	
+	
 	cout<<"Begin gradient"<<endl;
 	timer.init();
-	Grid lap = g.gradient(8);
+	Grid lap = g.gradient(4);
 	cout<<"Time in ms "<<timer.get()<<endl;
 	
+	/*
 	cout<<"Begin AIM"<<endl;
 	timer.init();
-	Grid AIM=lap.aim_On_Grid(8);
-	cout<<"Time in ms "<<timer.get()<<endl;
-	/*
-	ofstream out("/home/tmaamaatuai/tmp/out.cube");
-	cout<<"Begin write"<<endl;
-	timer.init();
-	AIM.save(out);
+	Grid AIM=g.aim_On_Grid_Density();
 	cout<<"Time in ms "<<timer.get()<<endl;
 	*/
+	ofstream out("/home/tmaamaatuai/tmp/gradsave.cube");
+	cout<<"Begin write"<<endl;
+	timer.init();
+	lap.save(out);
+	cout<<"Time in ms "<<timer.get()<<endl;
+	
 	
 	/*
 	for(int i=0;i<10;i++)

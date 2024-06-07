@@ -2,6 +2,7 @@ using namespace std;
 #include <numeric/Grid.h>
 #include <common/Constants.h>
 #include <cmath>
+#include <list>
 #ifdef ENABLE_OMP
 #include <omp.h>
 #endif
@@ -1038,7 +1039,7 @@ void Grid::save(ofstream& nameFile)
 	{
 		nameFile<<_str.atom(i).atomic_number()<<" ";
 		nameFile<<_str.atom(i).charge()<<" ";
-		for(int j=1; j<=3;j++)
+		for(int j=0; j<3;j++)
 		{
 			nameFile<<_str.atom(i).coordinates()[j]<<" ";
 		}
@@ -1069,393 +1070,381 @@ void Grid::save(ofstream& nameFile)
 		}
 	}
 }
-vector<double> Grid::find_max_neighbour(int i, int j, int k,int xm,int xp, int ym,int yp, int zm, int zp, double Current, vector<vector<double>>& traj, const Grid& g, int& repeat,vector<double>& v)
-{	
-	repeat++;
-	cout<<"xm "<<xm<<endl;
-	cout<<"xp "<<xp<<endl;
-	cout<<"ym "<<ym<<endl;
-	cout<<"yp "<<yp<<endl;
-	cout<<"zm "<<zm<<endl;
-	cout<<"zp "<<zp<<endl;
-	cout<<Current<<endl;
-	if(-_V [xm][j][k][1]>Current)
-	{
-		cout<<"yo are here"<<endl;
-		Current= -_V [xm][j][k][1];
-		v[0]=xm;
-		v[1]=j;
-		v[2]=k;
-		cout<<"1"<<endl;
-	}
-	if(_V [xp][j][k][1]>Current)
-	{
-		Current=_V [xp][j][k][1];
-		v[0]=xp;
-		v[1]=j;
-		v[2]=k;
-		cout<<"2"<<endl;
-	}
-	if(-_V [i][ym][k][2]>Current)
-	{
-		Current= -_V [i][ym][k][2];
-		v[0]=i;
-		v[1]=ym;
-		v[2]=k;
-		cout<<"3"<<endl;
-	}
-	if(_V [i][yp][k][2] >Current)
-	{
-		Current=_V [i][yp][k][2];
-		v[0]=i;
-		v[1]=yp;
-		v[2]=k;
-		cout<<"4"<<endl;
-	}
-	if(-_V [i][j][zm][3]>Current)
-	{
-		Current= -_V [i][j][zm][3];
-		v[0]=i;
-		v[1]=j;
-		v[2]=zm;
-		cout<<"5"<<endl;
-	}
-	if(_V [i][j][zp][3]>Current)
-	{
-		Current=_V [i][j][zp][3];
-		v[0]=i;
-		v[1]=j;
-		v[2]=zp;
-		cout<<"6"<<endl;
-	}
-	if((-_V [xm] [ym] [zm][1]-_V [xm] [ym] [zm][2]-_V [xm] [ym] [zm][3])>Current)
-	{
-		Current= -_V [xm] [ym] [zm][1]-_V [xm] [ym] [zm][2]-_V [xm] [ym] [zm][3];
-		v[0]=xm;
-		v[1]=ym;
-		v[2]=zm;
-		cout<<"7"<<endl;
-	}
-	if((-_V [xm] [ym] [zp][1]-_V [xm] [ym] [zp][2]+_V [xm] [ym] [zp][3])>Current)
-	{
-		Current= -_V [xm] [ym] [zp][1]-_V [xm] [ym] [zp][2]+_V [xm] [ym] [zp][3];
-		v[0]=xm;
-		v[1]=ym;
-		v[2]=zp;
-		cout<<"8"<<endl;
-	}
-	if((-_V [xm] [yp] [zm][1]+_V [xm] [yp] [zm][2]-_V [xm] [yp] [zm][3])>Current)
-	{
-		Current= -_V [xm] [yp] [zm][1]+_V [xm] [yp] [zm][2]-_V [xm] [yp] [zm][3];
-		v[0]=xm;
-		v[1]=yp;
-		v[2]=zm;
-		cout<<"9"<<endl;
-	}
-	if((-_V [xm] [yp] [zp][1]+_V [xm] [yp] [zp][2]+_V [xm] [yp] [zp][3])>Current)
-	{
-		Current= -_V [xm] [yp] [zp][1]+_V [xm] [yp] [zp][2]+_V [xm] [yp] [zp][3];
-		v[0]=xm;
-		v[1]=yp;
-		v[2]=zp;
-		cout<<"10"<<endl;
-	}
-	if((_V [xp] [ym] [zm][1]-_V [xp] [ym] [zm][2]-_V [xp] [ym] [zm][3])>Current)
-	{
-		Current=_V [xp] [ym] [zm][1]-_V [xp] [ym] [zm][2]-_V [xp] [ym] [zm][3];
-		v[0]=xp;
-		v[1]=ym;
-		v[2]=zm;
-		cout<<"11"<<endl;
-	}
-	if((_V [xp] [ym] [zp][1]-_V [xp] [ym] [zp][2]+_V [xp] [ym] [zp][3])>Current)
-	{
-		Current=_V [xp] [ym] [zp][1]-_V [xp] [ym] [zp][2]+_V [xp] [ym] [zp][3];
-		v[0]=xp;
-		v[1]=ym;
-		v[2]=zp;
-		cout<<"12"<<endl;
-	}
-	if((_V [xp] [yp] [zm][1]+_V [xp] [yp] [zm][2]-_V [xp] [yp] [zm][3])>Current)
-	{
-		Current=_V [xp] [yp] [zm][1]+_V [xp] [yp] [zm][2]-_V [xp] [yp] [zm][3];
-		v[0]=xp;
-		v[1]=yp;
-		v[2]=zm;
-		cout<<"13"<<endl;
-	}
-	if((_V [xp] [yp] [zp][1]+_V [xp] [yp] [zp][2]+_V [xp] [yp] [zp][3])>Current)
-	{
-		Current=_V [xp] [yp] [zp][1]+_V [xp] [yp] [zp][2]+_V [xp] [yp] [zp][3];
-		v[0]=xp;
-		v[1]=yp;
-		v[2]=zp;
-		cout<<"14"<<endl;
-	}
-	if((-_V [xm] [j] [zm][1]-_V [xm] [j] [zm][3])>Current)
-	{
-		Current= -_V [xm] [j] [zm][1]-_V [xm] [j] [zm][3];
-		v[0]=xm;
-		v[1]=j;
-		v[2]=zm;
-		cout<<"15"<<endl;
-	}
-	if((-_V [xm] [ym] [k][1]-_V [xm] [ym] [k][2])>Current)
-	{
-		Current= -_V [xm] [ym] [k][1]-_V [xm] [ym] [k][2];
-		v[0]=xm;
-		v[1]=ym;
-		v[2]=k;
-		cout<<"16"<<endl;
-	}
-	if((-_V [xm] [yp] [k][1]+_V [xm] [yp] [k][2])>Current)
-	{
-		Current= -_V [xm] [yp] [k][1]+_V [xm] [yp] [k][2];
-		v[0]=xm;
-		v[1]=yp;
-		v[2]=k;
-		cout<<"17"<<endl;
-	}
-	if((-_V [xm] [j] [zp][1]+_V [xm] [j] [zp][3])>Current)
-	{
-		Current= -_V [xm] [j] [zp][1]+_V [xm] [j] [zp][3];
-		v[0]=xm;
-		v[1]=j;
-		v[2]=zp;
-		cout<<"18"<<endl;
-	}
-	if((-_V [i] [ym] [zm][2]-_V [i] [ym] [zm][3])>Current)
-	{
-		Current= -_V [i] [ym] [zm][2]-_V [i] [ym] [zm][3];
-		v[0]=i;
-		v[1]=ym;
-		v[2]=zm;
-		cout<<"19"<<endl;
-	}
-	if((_V [i] [yp] [zm][2]-_V [i] [yp] [zm][3])>Current)
-	{
-		Current=_V [i] [yp] [zm][2]-_V [i] [yp] [zm][3];
-		v[0]=i;
-		v[1]=yp;
-		v[2]=zm;
-		cout<<"20"<<endl;
-	}
-	if((-_V [i] [ym] [zp][2]+_V [i] [ym] [zp][3])>Current)
-	{
-		Current=-_V [i] [ym] [zp][2]+_V [i] [ym] [zp][3];
-		v[0]=i;
-		v[1]=ym;
-		v[2]=zp;
-		cout<<"21"<<endl;
-	}
-	if((_V [i] [yp] [zp][2]+_V [i] [yp] [zp][3])>Current)
-	{
-		Current=_V [i] [yp] [zp][2]+_V [i] [yp] [zp][3];
-		v[0]=i;
-		v[1]=yp;
-		v[2]=zp;
-		cout<<"22"<<endl;
-	}
-	if((_V [xp] [j] [zm][1]-_V [xp] [j] [zm][3])>Current)
-	{
-		Current=_V [xp] [j] [zm][1]-_V [xp] [j] [zm][3];
-		v[0]=xp;
-		v[1]=j;
-		v[2]=zm;
-		cout<<"23"<<endl;
-	}
-	if((_V [xp] [ym] [k][1]-_V [xp] [ym] [k][2])>Current)
-	{
-		Current=_V [xp] [ym] [k][1]-_V [xp] [ym] [k][2];
-		v[0]=xp;
-		v[1]=ym;
-		v[2]=k;
-		cout<<"24"<<endl;
-	}
-	if((_V [xp] [yp] [k][1]+_V [xp] [yp] [k][2])>Current)
-	{
-		Current=_V[xp] [yp] [k][1]+_V [xp] [yp] [k][2];
-		v[0]=xp;
-		v[1]=yp;
-		v[2]=k;
-		cout<<"25"<<endl;
-	}
-	
-	if((_V [xp] [j] [zp][1]+_V [xp] [j] [zp][3])>Current)
-	{
-		Current=_V [xp] [j] [zp][1]+_V [xp] [j] [zp][3];
-		v[0]=xp;
-		v[1]=j;
-		v[2]=zp;
-		cout<<"26"<<endl;
-	}
-	
-	//test if point is a max
-	bool HiMax=true;
-	if(v[0]!=i)
-	{
-		HiMax=false;
-	}
-	if(v[1]!=j)
-	{
-		HiMax=false;
-	}
-	if(v[2]!=k)
-	{
-		HiMax=false;
-	}
-	
-	v[3]=Current;
-	
-	//if point is max: exit function
-	if(HiMax)
-	{
-		cout<<"end recion"<<endl;
-		return v;
-	}
-	else
-	{
-		//test if new point is indexed
-		if(g._V[v[0]][v[1]][v[2]][0]!=0)
-		{
-			return v;
-		}
-		//repeat function for new point
-		else
-		{
-			cout<<"are we doing it?"<<endl;
-			traj.push_back(v);
-			cout<<"weve done it"<<endl;
-			for(int i=0;i<int(v.size());i++)
-			{
-				cout<<v[i]<<endl;
-			}
-			find_max_neighbour(v[0],v[1],v[2],v[0]-1,v[0]+1,v[1]-1,v[1]+1,v[2]-1,v[2]+1,v[3],traj,g,repeat,v);
-		}
-	}
-	
-	//have to index points
-	//if its been indexed have to break loop
-}
-/*
-double Grid::atom_attract_diff(int j,const vector<double>& attract)
+
+void Grid::next(int i, int j, int k, double& current, vector<vector<int>>& trajectory)
 {
-	double v;
-	for(int i=0;i<3;i++)
+	vector<int> v=trajectory.back();
+	int I[3];
+	int i2 =i-1;
+	int i1 =i+1;
+	I[0] = i2;
+	I[1] = i;
+	I[2] = i1;
+		
+	int J[3];
+	int j1 = j+1;
+	int j2 = j-1;
+	J[0] = j2;
+	J[1] = j;
+	J[2] = j1;
+			
+	int K[3];
+	int k1 = k+1;
+	int k2 = k-1;
+	K[0] = k2;
+	K[1] = k;
+	K[2] = k1;
+	if(i2<0) i2 = i;
+	if(i1>_dom.N1()-1) i1 = i;
+	if(j2<0) j2 = j;
+	if(j1>_dom.N2()-1) j1 = j;
+	if(k2<0) k2 = k;
+	if(k1>_dom.N3()-1) k1 = k;
+	for(int ic=0;ic<3;ic++)
 	{
-		v+= (_str.atom()[j+1].coords()[i]-attract[i])*(_str.atom()[j+1].coords()[i]-attract[i]);
+		for(int jc=0;jc<3;jc++)
+		{	
+				
+			for(int kc=0;kc<3;kc++)
+			{
+				if(ic==1 and jc==1 and kc==1) continue;
+				vector<double> ds(3);
+				ds[0]=(I[ic]-I[1])*_dom.dx();
+				ds[1]=(J[jc]-J[1])*_dom.dy();
+				ds[2]=(K[kc]-K[1])*_dom.dz();
+				double grad =0;
+				double normds=sqrt(ds[0]*ds[0]+ds[1]*ds[1]+ds[2]*ds[2]);
+				for(int m=1;m<=3;m++)
+				{
+					grad +=_V[I[ic]][J[jc]][K[kc]][m]*ds[m-1];
+				}
+				grad=grad/normds;
+				if(grad>current)
+				{
+					v[0]=I[ic];
+					v[1]=J[jc];
+					v[2]=K[kc];
+					current = grad;
+				}
+			}
+		}
 	}
-	v=sqrt(v);
+	
+	trajectory.push_back(v);
+}
+
+vector<double> Grid::atom_attract_diff(const vector<vector<int>>& attract)
+{
+	vector<double> v(_str.number_of_atoms());
+	double distance=0;
+	double d1=100;
+	vector<double> ds(3);
+	ds[0]=_dom.dx();
+	ds[1]=_dom.dy();
+	ds[2]=_dom.dz();
+	for(int j=0; j<_str.number_of_atoms();j++)
+	{
+		for(int n=0;n<int(attract.size()); n++)
+		{
+			for(int i=0;i<3;i++)
+			{
+				distance += double((_str.atoms()[j].coordinates()[i]-attract[n][i])*(_str.atoms()[j].coordinates()[i]-attract[n][i]))*ds[i]*ds[i];
+			}
+			distance=sqrt(distance);
+			if(distance<d1)
+			{
+				d1=distance;
+			}	
+		}
+		v[j]=d1;
+		
+	}
 	return v;
 }
-*/
+
+
+void Grid::addSurroundingEqualPoints(int i,int j,int k, vector<vector<int>>& equals, double& current)
+{
+	vector<int> v(3);
+	int I[3];
+	int i2 =i-1;
+	int i1 =i+1;
+	I[0] = i2;
+	I[1] = i;
+	I[2] = i1;
+	
+	int J[3];
+	int j1 = j+1;
+	int j2 = j-1;
+	J[0] = j2;
+	J[1] = j;
+	J[2] = j1;
+	
+	int K[3];
+	int k1 = k+1;
+	int k2 = k-1;
+	K[0] = k2;
+	K[1] = k;
+	K[2] = k1;
+	for(int ic=0;ic<3;ic++)
+	{	
+		for(int jc=0;jc<3;jc++)
+		{
+			for(int kc=0;kc<3;kc++)
+			{
+				if(ic==1 and jc==1 and kc==1) continue;
+				if(i2<0) i2 = i;
+				if(i1>_dom.N1()-1) i1 = i;
+				if(j2<0) j2 = j;
+				if(j1>_dom.N2()-1) j1 = j;
+				if(k2<0) k2 = k;
+				if(k1>_dom.N3()-1) k1 = k;
+				vector<double> ds(3);
+				ds[0]=(I[ic]-I[1])*_dom.dx();
+				ds[1]=(J[jc]-J[1])*_dom.dy();
+				ds[2]=(K[kc]-K[1])*_dom.dz();
+				double grad=0;
+				double normds=sqrt((ds[0]*ds[0])+(ds[1]*ds[1])+(ds[2]*ds[2]));
+				for(int m=1;m<3;m++)
+				{
+					grad +=_V[I[1]][J[1]][K[1]][m]*ds[m-1];
+				}
+				grad=grad/normds;
+				if(grad==current)	
+				{
+					v[0]=I[ic];
+					v[1]=J[jc];
+					v[2]=K[kc];
+					equals.push_back(v);
+				}	
+			}
+		}
+	}
+}
 Grid Grid::aim_On_Grid(int nBound)
 {
 	try
 	{
 		if(_dom.Nval()==4)
 		{
-			cout<<"begin aim"<<endl;
 			Grid g(Domain(1,_dom.N1(), _dom.N2(), _dom.N3(), _dom.O()));
 			for(int i=0;i<3;i++)
 			{
 				for(int j=0;j<3;j++)
 				{
-					g._dom.set_T(_dom.Tij(i,j)/2, i, j);
+					g._dom.set_T(_dom.Tij(i,j), i, j);
 				}
 			}
 			g._str=_str;
-			vector<vector<double>> attractors;
-			/*vector<int> attractIndex(_str.number_of_atoms);
-			for(int i=0; i<_str.number_of_atoms;i++)
-			{
-				attractIndex[i]=i+1;
-			}*/
-			
+			//make list instead
+			vector<vector<int>> attractors(0, vector<int>(3));
+			cout<<_V[36][29][32][2]<<endl;
+			cout<<_V[36][30][32][2]<<endl;
 			for(int i=nBound;i<_dom.N1()-nBound;i++)
 			{
-				cout<<"i "<<i<<endl;
-				int xp, xm;
-				xp = i + 1;
-				xm = i - 1;
 				for(int j=nBound;j<_dom.N2()-nBound;j++)
 				{
-					cout<<"j "<<j<<endl;
-					int yp,ym;
-					yp = j + 1;
-					ym = j - 1;
 					for(int k=nBound;k<_dom.N3()-nBound;k++)
 					{
-						cout<<"k "<<k<<endl;
-						int zp,zm;
-						zp = k + 1;
-						zm = k - 1;
-							
-						if(g._V[i][j][k][0]!=0)
+						if(g._V[i][j][k][0]>PRECISION)
 						{
-							break;
+							continue;
 						}
 						else
 						{	
-							double w=_V[i][j][k][1]*_V[i][j][k][1]+_V[i][j][k][2]*_V[i][j][k][2]+_V[i][j][k][3]*_V[i][j][k][3];
-							w=sqrt(w);
-							vector<vector<double>> trajectory={{double(i),double(j),double(k),w}};
-							cout<<"Begin recursion"<<endl;
-							int repeat=0;
-							vector<double> v=trajectory[0];
-							while(uplus-u>1e-10)
+							double current=0;
+							bool KnownPt=false;
+							vector<vector<int>> trajectory={{i,j,k}};
+							vector<vector<int>> equals(0, vector<int>(3));
+							do
 							{
-								u=uplus;
-								uplus = find_max_neighbour(i,j,k,xm,xp,ym,yp,zm,zp,w,trajectory,g,repeat,v)[3];
+								current=0;
+								int I=trajectory.back()[0];
+								int J=trajectory.back()[1];
+								int K=trajectory.back()[2];
+								next(I,J,K,current,trajectory);
+								
+								
+								cout<<trajectory.back()[0]<<endl;
+								cout<<trajectory.back()[1]<<endl;
+								cout<<trajectory.back()[2]<<endl;
+								if(g._V[trajectory.back()[0]][trajectory.back()[1]][trajectory.back()[2]][0]>PRECISION)
+								{
+									KnownPt=true;
+									break;
+								}
+							} while(current>PRECISION);
+							for(int p=0;p<int(trajectory.size()-1);p++)
+							{
+								g._V[trajectory[p][0]][trajectory[p][1]][trajectory[p][2]][0]=g._V[trajectory.back()[0]][trajectory.back()[1]][trajectory.back()[2]][0];
 							}
-							cout<<"end recu"<<endl;
-							//if point has been already indexed exit loop: new point
-							if(g._V[int(u[0])][int(u[1])][int(u[2])][0]!=0)
+							addSurroundingEqualPoints(trajectory.back()[0],trajectory.back()[1],trajectory.back()[2],equals,current);
+							for(int p=0;p<int(equals.size());p++)
 							{
-								break;
+								g._V[equals[p][0]][equals[p][1]][equals[p][2]][0]=g._V[trajectory.back()[0]][trajectory.back()[1]][trajectory.back()[2]][0];	
+							}
+							//if point has been already indexed exit loop: new point
+							if(KnownPt)
+							{
+								cout<<"gone"<<endl;
+								continue;	
 							}
 							
 							//Do we know max?
 							bool WhoIsMax=true;
 							//compare max to list
-							cout<<"done"<<endl;
+							cout<<i<<endl;
+							
 							for(int m=0;m<int(attractors.size());m++)
 							{
-								if(attractors[m]==u)
+								int I=1;
+								
+								if(attractors[m]==trajectory.back())
 								{
-									int I=0;
 									WhoIsMax=false;
-									I++;
 									for(int p=0;p<int(trajectory.size());p++)
 									{
-										g._V[int(trajectory[p][0])][int(trajectory[p][1])][int(trajectory[p][2])][0]=double(I);
+										g._V[trajectory[p][0]][trajectory[p][1]][trajectory[p][2]][0]=double(I);
 									}
 								}
+								I++;
 							}
-							cout<<"done"<<endl;
 							//dont know max
+							//add to known attractors
 							if(WhoIsMax)
-							{
-								//add to known attractors
-								attractors.push_back(u);
+							{	
+								if(int(trajectory.size())<(_dom.N1()*_dom.N2()*_dom.N3())/1000)
+								{
+									
+									for(int p=0;p<int(equals.size());p++)
+									{
+										g._V[equals[p][0]][equals[p][1]][equals[p][2]][0]=double(attractors.size());		
+									}
+									for(int p=0;p<int(trajectory.size());p++)
+									{
+										g._V[trajectory[p][0]][trajectory[p][1]][trajectory[p][2]][0]=double(attractors.size());
+									}
+								}
+								attractors.push_back(trajectory.back());
 								//index all points from trajectory
+								cout<<"traj size "<<trajectory.size()<<endl;
+								cout<<-_V[36][29][32][2]<<endl;
+								cout<<"attract size "<<attractors.size()<<endl;
+								for(int p=0;p<int(equals.size());p++)
+								{
+									g._V[equals[p][0]][equals[p][1]][equals[p][2]][0]=g._V[trajectory.back()[0]][trajectory.back()[1]][trajectory.back()[2]][0];		
+								}
 								for(int p=0;p<int(trajectory.size());p++)
 								{
-									g._V[int(trajectory[p][0])][int(trajectory[p][1])][int(trajectory[p][2])][0]=double(trajectory.size());
+									g._V[trajectory[p][0]][trajectory[p][1]][trajectory[p][2]][0]=double(attractors.size());
 								}
 							}
+						
 						}					
 					}
 				}
 			}
-			/*for(int m=0; m<int(attractors.size());m++)
+			/*
+			vector<vector<int>> vpos(0,vector<int>(3));
+			for(int p=0;p<int(attractors.size()); p++)
 			{
-				for(int a=0;a<4;a++)
+				for(int m=0;m<int(attractors.size());m++)
 				{
-					cout<<attractors[m][a]<<endl;
+					int I[2];
+					I[0]=-1;
+					I[1]=1;
+					for(int i=0;i<2;i++)
+					{
+						if(attractors[p][0]==attractors[m][0] +I[i] and attractors[p][1]==attractors[m][1] and attractors[p][2]==attractors[m][2])
+						{
+							vpos.push_back(attractors[m]);
+							for(int l=nBound;l<_dom.N1()-nBound;l++)
+							{
+								for(int j=nBound;j<_dom.N2()-nBound;j++)
+								{
+									for(int k=nBound;k<_dom.N3()-nBound;k++)
+									{
+										if(g._V[l][j][k][0]==m)
+										{
+											cout<<"okay"<<endl;
+											g._V[l][j][k][0]=p;
+											
+										}
+									}
+								}
+							}
+						}
+						if( attractors[p][0]==attractors[m][0] and attractors[p][1]==attractors[m][1] +I[i] and attractors[p][1]==attractors[m][1])
+						{
+							vpos.push_back(attractors[m]);
+							for(int l=nBound;l<_dom.N1()-nBound;l++)
+							{
+								for(int j=nBound;j<_dom.N2()-nBound;j++)
+								{
+									for(int k=nBound;k<_dom.N3()-nBound;k++)
+									{
+										if(g._V[l][j][k][0]==m)
+										{
+											cout<<"okay"<<endl;
+											g._V[l][j][k][0]=p;
+											
+										}
+									}
+								}
+							}
+						}
+						if(attractors[p][0]==attractors[m][0] and attractors[p][1]==attractors[m][1] and attractors[p][2]==attractors[m][2] +I[i])
+						{
+							vpos.push_back(attractors[m]);
+							for(int l=nBound;l<_dom.N1()-nBound;l++)
+							{
+								for(int j=nBound;j<_dom.N2()-nBound;j++)
+								{
+									for(int k=nBound;k<_dom.N3()-nBound;k++)
+									{
+										if(g._V[l][j][k][0]==m)
+										{
+											cout<<"okay"<<endl;
+											g._V[l][j][k][0]=p;
+											
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			for(int k=0;k<int(vpos.size());k++)
+			{
+				for(auto element:attractors)
+				{	
+					auto it=find(attractors.begin(),attractors.end(), vpos[k]);
+					if(it!=attractors.end()) attractors.erase(it);
 				}
 			}*/
+			for(int m=0; m<int(attractors.size());m++)
+			{
+				vector<double> ds(3);
+				ds[0]=_dom.dx();
+				ds[1]=_dom.dy();
+				ds[2]=_dom.dz();
+				cout<<"attractor "<<m<<endl;
+				for(int a=0;a<3;a++)
+				{
+					cout<<(attractors[m][a]*ds[a] + _dom.O()[a])*BOHRTOANG<<endl;
+				}
+			}
+			for(int m=0; m<_str.number_of_atoms();m++)
+			{
+				cout<<atom_attract_diff(attractors)[m]<<endl;
+				cout<<atom_attract_diff(attractors).size()<<endl;
+			}
+			
+			
 			return g;
+		
+		
 		}
 		else
 		{
@@ -1470,7 +1459,404 @@ Grid Grid::aim_On_Grid(int nBound)
 	}
 }
 
+void Grid::next_Density(int i, int j, int k, double& rhocenter, vector<vector<int>>& trajectory)
+{
+	//coordinates on grid of the latest point
+	vector<int> v=trajectory.back();
+	
+	// Initialize indices for neighboring points
+	int I[3] = { max(0, i-1), i, min(i+1, _dom.N1()-1) };
+	int J[3] = { max(0, j-1), j, min(j+1, _dom.N2()-1) };
+	int K[3] = { max(0, k-1), k, min(k+1, _dom.N3()-1) };
+	
+	double drhomax=0;
+	vector<double> ds(3);
+	
+	// Iterate through neighboring cells
+	for(int ic=0;ic<3;ic++)
+	{
+		for(int jc=0;jc<3;jc++)
+		{	
+				
+			for(int kc=0;kc<3;kc++)
+			{
+				// Skip the center point
+				if(ic==1 and jc==1 and kc==1) continue;
+				
+				// Calculate distances
+				ds[0]=(I[ic]-I[1])*_dom.dx();
+				ds[1]=(J[jc]-J[1])*_dom.dy();
+				ds[2]=(K[kc]-K[1])*_dom.dz();
+				
+				// Calculate the norm of the distance vector
+				double normds=sqrt(ds[0]*ds[0]+ds[1]*ds[1]+ds[2]*ds[2]);
+				
+				// Get the density at the neighboring point
+				double rho=_V[I[ic]][J[jc]][K[kc]][0];
+				
+				// Calculate the density gradient
+				double drho = (rho-rhocenter)/normds;
+				
+				// Check if this is the maximum density gradient
+				if(drho-drhomax>PRECISION)
+				{
+					v[0]=I[ic];
+					v[1]=J[jc];
+					v[2]=K[kc];
+					drhomax = drho;
+				}
+			}
+		}
+	}
+	
+	//Update density for the new point
+	rhocenter=_V[v[0]][v[1]][v[2]][0];
+	
+	//Add the new point to the ascent trajectory
+	trajectory.push_back(v);
+}
 
+void Grid::addSurroundingDensity(int i,int j,int k, vector<vector<int>>& equals, double& rhocenter)
+{
+	//coordinates on grid of the latest point
+	vector<int> v(3);
+	
+	// Initialize indices for neighboring points
+	int I[3] = { max(0, i-1), i, min(i+1, _dom.N1()-1) };
+	int J[3] = { max(0, j-1), j, min(j+1, _dom.N2()-1) };
+	int K[3] = { max(0, k-1), k, min(k+1, _dom.N3()-1) };
+	
+	for(int ic=0;ic<3;ic++)
+	{	
+		for(int jc=0;jc<3;jc++)
+		{
+			for(int kc=0;kc<3;kc++)
+			{
+				// Skip the center point
+				if(ic==1 and jc==1 and kc==1) 
+				{
+					continue;
+				}
+				
+				// Calculate distances
+				vector<double> ds(3);
+				ds[0]=(I[ic]-I[1])*_dom.dx();
+				ds[1]=(J[jc]-J[1])*_dom.dy();
+				ds[2]=(K[kc]-K[1])*_dom.dz();
+				double normds=sqrt((ds[0]*ds[0])+(ds[1]*ds[1])+(ds[2]*ds[2]));
+				
+				// Get the density at the neighboring point
+				double rho=_V[I[ic]][J[jc]][K[kc]][0];
+				
+				// Calculate the density gradient
+				rho =(rho-rhocenter)/normds;
+				
+				// Check if the gradient is zero
+				if(rho<PRECISION)
+				{
+					v[0]=I[ic];
+					v[1]=J[jc];
+					v[2]=K[kc];
+					
+					// If it is, add point to list
+					equals.push_back(v);
+				}	
+			}
+		}
+	}
+}
+
+Grid Grid::aim_On_Grid_Density()
+{
+
+	try
+	{
+		if(_dom.Nval()==1)
+		{
+			// Initialise new grid for indices
+			Grid g(Domain(1,_dom.N1(), _dom.N2(), _dom.N3(), _dom.O()));
+			for(int i=0;i<3;i++)
+			{
+				for(int j=0;j<3;j++)
+				{
+					g._dom.set_T(_dom.Tij(i,j), i, j);
+				}
+			}
+			g._str=_str;
+			//make list instead
+			// Create a list of the attractors' coordinates
+			vector<vector<int>> attractors(0, vector<int>(3));
+			for(int i=0;i<_dom.N1();i++)
+			{
+				for(int j=0;j<_dom.N2();j++)
+				{
+					for(int k=0;k<_dom.N3();k++)
+					{
+						// Check if the point has already been indexed
+						if(g._V[i][j][k][0]>PRECISION)
+						{
+							cout<<"already indexed"<<endl;
+							continue;
+						}
+						else
+						{	
+							// Initialise density at point i j k and the known point flag
+							double rhocenter=_V[i][j][k][0];
+							bool KnownPt=false;
+							
+							// Initialise ascent trajectory and equal density neighbours
+							vector<vector<int>> trajectory={{i,j,k}};
+							vector<vector<int>> equals(0, vector<int>(3));
+							
+							
+							// Start the loop to find the path of highest density gradient
+							do
+							{
+								//Initialize indices to the point
+								int I=trajectory.back()[0];
+								int J=trajectory.back()[1];
+								int K=trajectory.back()[2];
+
+								next_Density(I,J,K,rhocenter,trajectory);
+								
+								// Update indices to the new point
+								int newI = trajectory.back()[0];
+								int newJ = trajectory.back()[1];
+								int newK = trajectory.back()[2];
+								cout<<newI<<endl;
+								cout<<newJ<<endl;
+								cout<<newK<<endl;
+								cout<<rhocenter<<endl;
+								
+								// Check if a new point was added to the trajectory
+								if(I==newI and J==newJ and K==newK)
+								{
+									cout<<"no new point found"<<endl;
+									break;
+								}
+								
+								//check if the new point is already indexed
+								if(g._V[I][J][K][0]>PRECISION)
+								{
+									KnownPt=true;
+									break;
+								}
+							} while(true);
+							
+							// Iterate through the trajectory and set the index value of each point in the trajectory to the index of the associated maximum (last point)
+							for(int p=0;p<int(trajectory.size()-1);p++)
+							{
+								g._V[trajectory[p][0]][trajectory[p][1]][trajectory[p][2]][0]=g._V[trajectory.back()[0]][trajectory.back()[1]][trajectory.back()[2]][0];
+							}
+							
+							
+							// Add points surrounding the maximum with equal density gradients to equals for indexing
+							addSurroundingDensity(trajectory.back()[0],trajectory.back()[1],trajectory.back()[2],equals,rhocenter);
+							
+							
+							// Iterate through the equal points and set the index value of each point in the the vector to the index of the associated maximum 
+							for(int p=0;p<int(equals.size());p++)
+							{
+								g._V[equals[p][0]][equals[p][1]][equals[p][2]][0]=g._V[trajectory.back()[0]][trajectory.back()[1]][trajectory.back()[2]][0];
+							}
+							
+							
+							// If the point has been already indexed move on to a new point
+							if(KnownPt)
+							{
+								cout<<"gone"<<endl;
+								continue;	
+							}
+							
+							// Known attractor flag
+							bool WhoIsMax=true;
+
+							// Compare new attractor to known attractors. If the attractor is known index all points from trajectory and change flag value
+							for(int m=0;m<int(attractors.size());m++)
+							{
+								int I=1;
+								
+								if(attractors[m]==trajectory.back())
+								{
+									WhoIsMax=false;
+									for(int p=0;p<int(trajectory.size());p++)
+									{
+										g._V[trajectory[p][0]][trajectory[p][1]][trajectory[p][2]][0]=double(I);
+									}
+								}
+								I++;
+							}
+							
+							// If the attractor is unknown
+							if(WhoIsMax)
+							{	
+							
+								//if the number of points leading to the attractor is insufficient, index trajectory and equals to previous attractor and disregard current
+								if(int(trajectory.size())<(_dom.N1()*_dom.N2()*_dom.N3())/1000)
+								{
+									
+									for(int p=0;p<int(equals.size());p++)
+									{
+										g._V[equals[p][0]][equals[p][1]][equals[p][2]][0]=double(attractors.size());		
+									}
+									for(int p=0;p<int(trajectory.size());p++)
+									{
+										g._V[trajectory[p][0]][trajectory[p][1]][trajectory[p][2]][0]=double(attractors.size());
+									}
+									
+								}
+								
+								// Add the attractor to the list of attractors
+								attractors.push_back(trajectory.back());
+								
+								
+								cout<<"traj size "<<trajectory.size()<<endl;
+								cout<<"attract size "<<attractors.size()<<endl;
+								
+								// Index all points from trajectory and equals
+								for(int p=0;p<int(equals.size());p++)
+								{
+									g._V[equals[p][0]][equals[p][1]][equals[p][2]][0]=g._V[trajectory.back()[0]][trajectory.back()[1]][trajectory.back()[2]][0];		
+								}
+								for(int p=0;p<int(trajectory.size());p++)
+								{
+									g._V[trajectory[p][0]][trajectory[p][1]][trajectory[p][2]][0]=double(attractors.size());
+								}
+							}
+						
+						}					
+					}
+				}
+			}
+			/*
+			vector<vector<int>> vpos(0,vector<int>(3));
+			for(int p=0;p<int(attractors.size()); p++)
+			{
+				for(int m=0;m<int(attractors.size());m++)
+				{
+					int I[2];
+					I[0]=-1;
+					I[1]=1;
+					for(int i=0;i<2;i++)
+					{
+						if(attractors[p][0]==attractors[m][0] +I[i] and attractors[p][1]==attractors[m][1] and attractors[p][2]==attractors[m][2])
+						{
+							vpos.push_back(attractors[m]);
+							for(int l=nBound;l<_dom.N1()-nBound;l++)
+							{
+								for(int j=nBound;j<_dom.N2()-nBound;j++)
+								{
+									for(int k=nBound;k<_dom.N3()-nBound;k++)
+									{
+										if(g._V[l][j][k][0]==m)
+										{
+											cout<<"okay"<<endl;
+											g._V[l][j][k][0]=p;
+											
+										}
+									}
+								}
+							}
+						}
+						if( attractors[p][0]==attractors[m][0] and attractors[p][1]==attractors[m][1] +I[i] and attractors[p][1]==attractors[m][1])
+						{
+							vpos.push_back(attractors[m]);
+							for(int l=nBound;l<_dom.N1()-nBound;l++)
+							{
+								for(int j=nBound;j<_dom.N2()-nBound;j++)
+								{
+									for(int k=nBound;k<_dom.N3()-nBound;k++)
+									{
+										if(g._V[l][j][k][0]==m)
+										{
+											cout<<"okay"<<endl;
+											g._V[l][j][k][0]=p;
+											
+										}
+									}
+								}
+							}
+						}
+						if(attractors[p][0]==attractors[m][0] and attractors[p][1]==attractors[m][1] and attractors[p][2]==attractors[m][2] +I[i])
+						{
+							vpos.push_back(attractors[m]);
+							for(int l=nBound;l<_dom.N1()-nBound;l++)
+							{
+								for(int j=nBound;j<_dom.N2()-nBound;j++)
+								{
+									for(int k=nBound;k<_dom.N3()-nBound;k++)
+									{
+										if(g._V[l][j][k][0]==m)
+										{
+											cout<<"okay"<<endl;
+											g._V[l][j][k][0]=p;
+											
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			for(int k=0;k<int(vpos.size());k++)
+			{
+				for(auto element:attractors)
+				{	
+					auto it=find(attractors.begin(),attractors.end(), vpos[k]);
+					if(it!=attractors.end()) attractors.erase(it);
+				}
+			}*/
+			for(int m=0; m<int(attractors.size());m++)
+			{
+				vector<double> ds(3);
+				ds[0]=_dom.dx();
+				ds[1]=_dom.dy();
+				ds[2]=_dom.dz();
+				cout<<"attractor "<<m<<endl;
+				for(int a=0;a<3;a++)
+				{
+					cout<<(attractors[m][a]*ds[a]+_dom.O()[a])*BOHRTOANG<<endl;
+					cout<<attractors[m][a]<<endl;
+				}
+			}
+			for(int m=0; m<_str.number_of_atoms();m++)
+			{
+				cout<<atom_attract_diff(attractors)[m]<<endl;
+				cout<<atom_attract_diff(attractors).size()<<endl;
+			}
+			double value=0;
+			cout<<"V0000"<<g._V[0][0][0][0]<<endl;
+			for(int i=0;i<_dom.N1();i++)
+			{
+				for(int j=0;j<_dom.N2();j++)
+				{
+					for(int k=0;k<_dom.N3();k++)
+					{
+						if(g._V[i][j][k][0]>value)
+						{
+							value =g._V[i][j][k][0];
+						}
+					}
+				}
+			}
+			cout<<"number of of idices "<<int(value)<<endl;
+			return g;
+		
+		
+		}
+		else
+		{
+			throw string("Gradient grid must be used for AIM");
+		}
+	}
+	
+	catch(string error)
+	{
+		cout<<error<<endl;
+		exit(1);
+	}
+}
 
 
 

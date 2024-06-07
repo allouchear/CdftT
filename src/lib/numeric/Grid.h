@@ -13,6 +13,10 @@ class Grid
 	Structure _str;
 	vector<vector<vector<vector<double>>>> _V;
 	
+	void next_Density(int i, int j, int k, double& rhocenter, vector<vector<int>>& trajectory);
+	
+	void addSurroundingDensity(int i,int j,int k, vector<vector<int>>& equals, double& rhocenter);
+	
 	public:
 		//! reset
 		/*! resets all values _V to zero and resizes to _dom size*/
@@ -134,12 +138,39 @@ class Grid
 		//!save
 		/*!save grid onto .cube file*/
 	void save(ofstream& name);
+	
 		
-		
-	vector<double> find_max_neighbour(int i, int j, int k,int xm,int xp, int ym,int yp, int zm, int zp, double Current, vector<vector<double>>& traj, const Grid& g,int& repeat,vector<double>& v);
+	void next(int i, int j, int k, double& Current, vector<vector<int>>& traj);
+	
+	
+	vector<double> atom_attract_diff(const vector<vector<int>>& attract);
+	
+	
+	void addSurroundingEqualPoints(int i,int j,int k, vector<vector<int>>& equals, double& current);
+	
 		//include reference Tang
 	
 	Grid aim_On_Grid(int nBound);
+	
+	
+
+	
+	Grid aim_On_Grid_Density();
+};
+
+
+class AttractorOnGrid
+{
+	vector<int> _coords;
+	int _index;
+};
+
+struct GridCP
+{
+	Domain _dom;
+	Structure _str;
+	vector<vector<vector<int>>> _indices;
+	//map<vector<int>, Atom> _attractors;
 };
 
 #endif //_CDFTT_GRID_H_INCLUDED

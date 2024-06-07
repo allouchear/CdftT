@@ -39,7 +39,7 @@ void Domain::read_From_Cube(ifstream& nameFile)
 	nameFile>>_Nval;
 	nameFile>>_N1;
 	_T.resize(3, vector<double>(3));
-	if(_N1<0)
+	if(_N1>0)
 	{
 		for(int i=0; i<3; i++)
 		{
@@ -76,6 +76,10 @@ void Domain::read_From_Cube(ifstream& nameFile)
 		{
 			nameFile>>_T[2][i];
 			_T[2][i]=_T[2][i]*ANGTOBOHR;
+		}
+		for(int i=0;i<3;i++)
+		{
+			_O[i]=_O[i]*ANGTOBOHR;
 		}
 	}
 	for(int i=0; i<3;i++)
