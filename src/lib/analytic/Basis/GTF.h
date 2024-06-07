@@ -146,6 +146,8 @@ class GTF
 			
 		double ERIGTF(GTF&, GTF&, GTF&);
 			
+		double func(double x, double y, double z);
+		
 			//! An operator member taking one argument and returning a void value.
 			
 		void operator*=(double);
@@ -167,5 +169,6 @@ bool operator==(GTF, GTF);
 	//! An operator member taking two arguments and returning an ostream value.
 	/*! Print all the data of one GTF */
 ostream& operator<<(ostream&, GTF&);
+double operator*(vector<GTF>, vector<double>);
 
 #endif

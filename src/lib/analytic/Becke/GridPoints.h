@@ -9,9 +9,12 @@ using namespace std;
 class GridPoints
 {
 	private:
-		int _Lebedev_Npts;
-		int _Lebedev_Lmax;
-		int _Lebedev_L2max;
+		vector<int> _Lebedev_Npts;
+		vector<int> _Lebedev_Lmax;
+		vector<int> _Lebedev_L2max;
+		int _Npts;
+		int _Lmax;
+		int _L2max;
 		vector<vector<double>> _LebedevGridPoints;
 	public:
 
@@ -27,21 +30,23 @@ class GridPoints
 			/*! We don't use it. */
 		~GridPoints() {}
 
+		vector<int> Lebedev_Lmax() {return _Lebedev_Lmax;}
+
 			//! A normal member taking no arguments and returning an int value.
 			/*! \return The number of points which compose the grid. */
-		int Lebedev_Npts() {return _Lebedev_Npts;}
+		int Npts() {return _Npts;}
 
 			//! A normal member taking no arguments and returning an int value.
 			/*! \return The Lmax for the grid. */
-		int Lebedev_Lmax() {return _Lebedev_Lmax;}
+		int Lmax() {return _Lmax;}
 
 			//! A normal member taking no arguments and returning an int value.
 			/*! \return The L2max the grid. */
-		int Lebedev_L2max() {return _Lebedev_L2max;}
+		int L2max() {return _L2max;}
 
 			//! A normal member taking no arguments and returning a vector<vector<double>> value.
 			/*! \return All of the coordonates of points which compose the grid. */
-		vector<vector<double>> LebedevGridPoints() const {return _LebedevGridPoints;}
+		const vector<vector<double>>& LebedevGridPoints() const {return _LebedevGridPoints;}
 
 			//! A normal member taking no arguments and returning a void value.
 			/*! Initialize the grid with 6 points */

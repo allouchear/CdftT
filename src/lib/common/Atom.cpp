@@ -1,8 +1,8 @@
 #include <cmath>
 using namespace std;
 #include <iostream>
-#include "Atom.h"
-#include "Constants.h"
+#include <common/Atom.h>
+#include <common/Constants.h>
 
 /*constructeur par défaut: initialise les attributs cinématique de l'atome à 0*/
 Atom::Atom()
@@ -20,6 +20,7 @@ Atom::Atom()
 	_charge_0 = 0;
 	_hardness = 0;
 	_width = 0;
+	_covalent_radii=0;
 	_e=Element();
 }
 
@@ -36,6 +37,7 @@ Atom::Atom(const PeriodicTable& Table, const string& name)
 	_name = _e.name();
 	_symbol = _e.symbol();
 	_atomic_number = _e.atomic_number();
+	_covalent_radii=_e.covalent_radii();
 }
 
 //intialise par le numéro atomique
@@ -51,11 +53,12 @@ Atom::Atom(const PeriodicTable& Table, const int& n)
 	_name = _e.name();
 	_symbol = _e.symbol();
 	_atomic_number = _e.atomic_number();
+	_covalent_radii=_e.covalent_radii();
 }
 
 Atom::~Atom(){}
 
-double* Atom::coordinates()
+const double* Atom::coordinates() const
 {
 	return _coordinates;
 }
@@ -70,7 +73,7 @@ double* Atom::velocity()
 	return _velocity;
 }
 
-string Atom::name()
+string Atom::name() const
 {
 	return _name;
 }
@@ -80,7 +83,7 @@ string Atom::symbol()
 	return _symbol;
 }
 
-int Atom::atomic_number()
+int Atom::atomic_number() const
 {
 	return _atomic_number;
 }
@@ -103,6 +106,11 @@ double Atom::hardness()
 double Atom::width()
 {
 	return _width;
+}
+
+double Atom::covalent_radii() const
+{
+	return _covalent_radii;
 }
 
 Element Atom::element()
@@ -133,7 +141,7 @@ void Atom::Set_charge(const double& c )
 
 
 //renvoi la distance entre l'atome et un autre(a2)
-double Atom::get_distance(Atom& a2)
+double Atom::get_distance(const Atom& a2) const
 {
 	double C1[3];
 	double C2[3];

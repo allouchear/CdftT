@@ -3,7 +3,8 @@
 
 #include<iostream>
 #include<vector>
-#include"Atom.h"
+#include<common/Atom.h>
+#include<analytic/Utils/WFX.h>
 
 using namespace std;
 
@@ -55,9 +56,11 @@ class Structure
 
 		const Atom& atoms(const int& i)
 		{
-			return _atoms[i-1];
+			return _atoms[i];
 		}
 		
+		void read_from_wfx(WFX&, const PeriodicTable&);
+		Structure(WFX&, const PeriodicTable&);
 };
 
 #endif //CDFTT_STRUCTURE_H_INCLUDED

@@ -6,7 +6,7 @@ ANALYTIC = ../../lib/analytic
 NUMERIC = ../../lib/numeric
 COMMON  = ../../lib/common
 
-ANALYTICOBJ = $(ANALYTIC)/*.o
+ANALYTICOBJ = $(ANALYTIC)/*/*.o
 NUMERICOBJ  = $(NUMERIC)/*.o
 COMMONSOBJ  = $(COMMON)/*.o
 
@@ -16,7 +16,7 @@ OBJECTS = main.o \
 all: compiling cdftt
 
 %.o : %.cpp
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -g -c $(CFLAGS) $< -o $@
 
 compiling: $(OBJECTS)
 

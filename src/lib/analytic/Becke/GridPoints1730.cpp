@@ -5,9 +5,9 @@ using namespace std;
 
 void GridPoints::GridPoints1730()
 {
-    _Lebedev_Npts = 1730;
-    _Lebedev_Lmax = 71;
-    _Lebedev_L2max = 35;
+    _Npts = 1730;
+    _Lmax = 71;
+    _L2max = 35;
     _LebedevGridPoints = {
         {  1.570796326795,  0.000000000000,  0.000063090494},
         {  1.570796326795,  3.141592653590,  0.000063090494},

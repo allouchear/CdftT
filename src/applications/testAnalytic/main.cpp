@@ -1,11 +1,12 @@
 #include<iostream>
 #include<vector>
-#include<analytic/MathFunction.h>
-#include<analytic/GTF.h>
-#include<analytic/CGTF.h>
-#include<analytic/LCAO.h>
-#include<analytic/Orbitals.h>
-#include<analytic/WFX.h>
+#include<analytic/Utils/MathFunction.h>
+#include<analytic/Basis/GTF.h>
+#include<analytic/Basis/CGTF.h>
+#include<analytic/Orbitals/LCAO.h>
+#include<analytic/Orbitals/Orbitals.h>
+#include<analytic/Utils/WFX.h>
+#include<analytic/Becke/Becke.h>
 #include"Timer.h"
 #include<ctime>
 
@@ -15,10 +16,11 @@ int main()
 {
 	Timer time;
 
-	Factorial Table(100);
+	Factorial Fact(100);
 	//cout<<"Test pre-initialisation"<<endl;
-	Binomial Bin(100, Table);
+	Binomial Bin(100, Fact);
 	//cout<<"Test post-initialisation"<<endl;
+	PeriodicTable Table;
 /*
 	cout<<Bin.binomial(18,7)<<endl;
 	cout<<Table.factorial(18)/Table.factorial(7)/Table.factorial(11)<<endl;
@@ -30,7 +32,7 @@ int main()
 */
 	
 	ifstream f;
-	f.open("test_code.wfx");
+	f.open("h2o.wfx");
 	WFX wfx_test (f);
 	f.close();
 
@@ -39,7 +41,33 @@ int main()
 	wfx_test.write_file_wfx(g);
 	g.close();*/
 	
-	Orbitals Orb_test(wfx_test, Bin);
+	Becke Becketest (wfx_test, Table);
+	GTF A,B,C;
+	vector<int> l1(3), l2(3);
+	l1 = {0, 0 ,0};
+	l2 = {0, 0, 0};
+	vector<double> coord1(3), coord2(3);
+	coord1 = {-6.778167794095e-34,  5.422534235276e-33,  2.199641208994e-01};
+	coord2 = {0.000000000000e+00,  1.419184319548e+00, -8.798564835975e-01};
+	A=B=GTF(8.588500000000e+03, 1.0, coord1, l1, Bin);
+	C=GTF(1.297230000000e+03, 1.0, coord2, l2, Bin);
+
+	cout<<endl<<"***** TEST BECKE *****"<<endl;
+	cout<<"<A|A> = "<<Becketest.overlap(A,A)<<endl;
+	cout<<"<C|C> = "<<Becketest.overlap(C,C)<<endl;
+	cout<<"<A|B> = "<<Becketest.overlap(A,B)<<endl;
+	cout<<"<A|C> = "<<Becketest.overlap(A,C)<<endl;
+	cout<<"<B|C> = "<<Becketest.overlap(B,C)<<endl;
+
+	cout<<endl<<"***** TEST CHECK *****"<<endl;
+	cout<<"<A|A> = "<<A.overlapGTF(A)<<endl;
+	cout<<"<C|C> = "<<C.overlapGTF(C)<<endl;
+	cout<<"<A|B> = "<<A.overlapGTF(B)<<endl;
+	cout<<"<A|C> = "<<A.overlapGTF(C)<<endl;
+	cout<<"<B|C> = "<<B.overlapGTF(C)<<endl;
+
+
+	//Orbitals Orb_test(wfx_test, Bin);
 
 /*
 	int i,j;

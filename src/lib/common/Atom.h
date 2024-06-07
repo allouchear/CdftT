@@ -1,8 +1,8 @@
 #ifndef _CDFTT_ATOM_H_INCLUDED
 #define _CDFTT_ATOM_H_INCLUDED
 using namespace std;
-#include "PeriodicTable.h"
-#include "Element.h"
+#include <common/PeriodicTable.h>
+#include <common/Element.h>
 #include <string>
 
 	//! An Atom class.
@@ -20,6 +20,7 @@ class Atom
 	double _charge_0; // oxidation
 	double _hardness; // eta
 	double _width; // eta
+	double _covalent_radii;
 	Element _e;
 	
 	string _mm_Type;
@@ -45,7 +46,7 @@ class Atom
 		/*!<
 		creates an atom from the atomic number of an Element and searching for it in PeriodicTable
 		*/
-	double* coordinates();
+	const double* coordinates() const;
 		//!< get() function
 		/*!<
 			Returns the coordinates of the atom
@@ -61,7 +62,7 @@ class Atom
 		/*!< 
 			Returns the velocity of the atom
 		*/
-	string name();
+	string name() const;
 		//!< Get() function
 		/*!<
 			Returns the name of the atom
@@ -71,7 +72,7 @@ class Atom
 		/*!<
 			Returns the symbol of the atom
 		*/
-	int atomic_number();
+	int atomic_number() const;
 		//!< Get() function
 		/*!<
 			Returns the atomic number of the atom
@@ -95,6 +96,11 @@ class Atom
 		//!< Get() function
 		/*!<
 			Returns the width of the atom
+		*/
+	double covalent_radii() const;
+		//!< Get() function
+		/*!<
+			Returns the covalent radii of the atom
 		*/
 	Element element();
 		//!< Get() function
@@ -135,7 +141,7 @@ class Atom
 	~Atom();
 		//!< Destructeur
 		
-	double get_distance(Atom& a2);
+	double get_distance(const Atom& a2) const;
 		//!< Renvoi la distance entre l'atom et un autre (a2)
 		
 	double get_angle(Atom& a2, Atom& a3);
