@@ -1,4 +1,4 @@
-OBJECTS = Atom.o Element.o PeriodicTable.o Structure.o
+OBJECTS = Atom.o Element.o PeriodicTable.o Structure.o Descriptors.o
 
 
 include ../../../CONFIG
@@ -15,7 +15,7 @@ clean:
 	@$(RM) *o *.out *.log *.inp *~ 
 
 #make dependance
-SRCS = $(OBJECTS:%.o=%.c)
+SRCS = $(OBJECTS:%.o=%.cpp)
 dep :
 	$(CC)  $(CFLAGS) -MM $(SRCS) > Dep.mk
 

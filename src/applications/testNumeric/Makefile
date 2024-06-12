@@ -21,10 +21,10 @@ all: compiling  cdftt
 compiling: $(OBJECTS)
 
 clean:
-	@$(RM) *o *.out *.log *.inp *~ cdftt
+	@$(RM) *o *.out *.inp *~ cdftt
 
 #make dependance
-SRCS = $(OBJECTS:%.o=%.c)
+SRCS = $(OBJECTS:%.o=%.cpp)
 dep :
 	$(CC)  $(CFLAGS) -MM $(SRCS) > Dep.mk
 

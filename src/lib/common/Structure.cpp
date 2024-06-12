@@ -14,8 +14,7 @@ Structure::Structure(const vector<Atom>& A)
 
 Structure::Structure()
 {
-	_atoms.resize(1);
-	_atoms[0]=Atom();
+	_atoms=vector<Atom> ();
 }
 
 void Structure::read_From_Cube(ifstream& nameFile, int Natoms,const PeriodicTable& Table )

@@ -1,5 +1,6 @@
 using namespace std;
 #include <numeric/Grid.h>
+#include <numeric/GridCP.h>
 #include <common/Constants.h>
 #include <cmath>
 #include <list>
@@ -46,8 +47,10 @@ void Grid::read_From_Cube(ifstream& nameFile, const PeriodicTable& Table)
 	getline(nameFile, bin);
 	nameFile>>Natoms;
 	Domain d(nameFile);
+	cout<<"End read domain "<<endl;
 	_dom=d;
 	Structure S(nameFile, Natoms, Table);
+	cout<<"End read struct "<<endl;
 	_str=S;
 	reset();
 	for(int i=0; i<_dom.N1();i++)
@@ -63,6 +66,7 @@ void Grid::read_From_Cube(ifstream& nameFile, const PeriodicTable& Table)
 			}
 		}
 	}
+	cout<<"End read "<<endl;
 }
 
 Grid::Grid(ifstream& nameFile, const PeriodicTable& Table)
@@ -364,6 +368,100 @@ double Grid::integrate_Over_Dom()
 	return sum()*_dom.dv();
 }
 
+void Grid::reset_Boundary(int nBound)
+{
+	int NV=(_dom.Nval()>1)?1:0;
+	/* left */
+	for(int i=0;i<nBound;i++)
+	{
+		for(int j=0;j<_dom.N2();j++)
+		{
+			for(int k=0;k<_dom.N3();k++)
+			{	
+				for(int l=NV; l<_dom.Nval();l++)
+				{
+				_V[i][j][k][l] = _V[nBound][j][k][l];
+				}
+			}
+		}
+	}
+	
+	/* right */
+	for(int i=_dom.N1()-nBound;i<_dom.N1();i++)
+	{	
+		for(int j=0;j<_dom.N2();j++)
+		{
+			for(int k=0;k<_dom.N3();k++)
+			{	
+				for(int l=NV; l<_dom.Nval();l++)
+				{
+					_V[i][j][k][l] = _V[_dom.N1()-nBound-1][j][k][l];
+				}
+			}
+		}
+	}
+	/* front */
+	for(int j=0;j<nBound;j++)
+	{
+		for(int i=0;i<_dom.N1();i++)
+		{	
+			for(int k=0;k<_dom.N2();k++)
+			{	
+				for(int l=NV; l<_dom.Nval();l++)
+				{
+					_V[i][j][k][l] = _V[i][nBound][k][l];
+				}
+			}
+		}
+	}
+	
+	/* back */
+	for(int j=_dom.N2()-nBound;j<_dom.N2();j++)
+	{
+		for(int i=0;i<_dom.N2();i++)
+		{	
+			for(int k=0;k<_dom.N3();k++)
+			{
+				for(int l=NV; l<_dom.Nval();l++)
+				{
+					_V[i][j][k][l] = _V[i][_dom.N2()-nBound-1][k][l];
+				}
+			}
+		}
+	}
+	/* top */
+	for(int k=0;k<nBound;k++)
+	{	
+		for(int j=0;j<_dom.N2();j++)
+		{
+			for(int i=0;i<_dom.N1();i++)
+			{
+				for(int l=NV; l<_dom.Nval();l++)
+				{	
+					_V[i][j][k][l] = _V[i][j][nBound][l];
+				}
+			}
+		}
+	}
+
+
+	/* bottom */
+	for(int k=_dom.N3()-nBound;k<_dom.N3();k++)
+	{	
+		for(int j=0;j<_dom.N2();j++)
+		{
+			for(int i=0;i<_dom.N1();i++)
+			{
+				for(int l=NV; l<_dom.Nval();l++)
+				{
+					_V[i][j][k][l] = _V[i][j][_dom.N3()-nBound-1][l];
+				}
+			}
+		}
+	}
+}
+
+
 Grid Grid::coulomb_Grid(double q, vector<double> R)
 {
 	Grid V(_dom);
@@ -401,7 +499,7 @@ Grid Grid::coulomb_Grid(double q, vector<double> R)
 	return V;	
 }
 
-void Grid::coefs_Laplacian(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc)
+void Grid::coefs_Laplacian(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc) const
 {
 	vector<double> coefs(nBound+1);	
 		if(nBound==1)
@@ -502,13 +600,13 @@ void Grid::coefs_Laplacian(int nBound, vector<double>& fcx, vector<double>& fcy,
 		}
 }
 
-Grid Grid::laplacian(int nBound)
+Grid Grid::laplacian(int nBound) const
 {
 	try
 	{
 		if(nBound<1 or nBound>12)
 		{
-			throw string("nBound oustide bounds");
+			throw string("nBound oustide acceptable precision values");
 		}
 		else
 		{
@@ -536,20 +634,18 @@ Grid Grid::laplacian(int nBound)
 				{	
 					for(int k=nBound;k<g._dom.N3()-nBound;k++)
 					{
-						for(int l=0; l<g._dom.Nval();l++)
+						double v = cc*_V[i][j][k][0];
+						for(int n=1; n<=nBound ; n++)
 						{
-							double v = cc*_V[i][j][k][l];
-							for(int n=1;n<=nBound;n++)
-							{
-								v += fcx[n] *(_V[i-n][j][k][l]+_V[i+n][j][k][l]);
-								v += fcy[n] *(_V[i][j-n][k][l]+_V[i][j+n][k][l]);
-								v += fcz[n] *(_V[i][j][k-n][l]+_V[i][j][k+n][l]);
-							}
-							g._V[i][j][k][l]=v;
+							v += fcx[n] *(_V[i-n][j][k][0]+_V[i+n][j][k][0]);
+							v += fcy[n] *(_V[i][j-n][k][0]+_V[i][j+n][k][0]);
+							v += fcz[n] *(_V[i][j][k-n][0]+_V[i][j][k+n][0]);
 						}
+						g._V[i][j][k][0]=v;
 					}
 				}
 			}
+			g.reset_Boundary(nBound);
 			return g;
 		}
 	}
@@ -560,8 +656,7 @@ Grid Grid::laplacian(int nBound)
 	}				
 }
 
-
-void Grid::coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc)
+void Grid::coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz) const
 {
 	vector<double> coefs(nBound+1);	
 		if(nBound==1)
@@ -624,19 +719,17 @@ void Grid::coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, 
 		{
 			exit(1);
 		}
-		cc = 1/(_dom.dx()*_dom.dx()) + 1/(_dom.dy()*_dom.dy()) + 1/(_dom.dz()*_dom.dz());
-		cc *= coefs[0];
 
-		for(int i=0;i<=nBound;i++)
+		for(int i=0;i<nBound;i++)
 		{
 			fcx[i] =  coefs[i]/_dom.dx();
-			fcy[i] =  coefs[i]/_dom.dy()*_dom.dy();
-			fcz[i] =  coefs[i]/_dom.dz()*_dom.dz();
+			fcy[i] =  coefs[i]/_dom.dy();
+			fcz[i] =  coefs[i]/_dom.dz();
 		}
 }
 
 
-Grid Grid::gradient(int nBound)
+Grid Grid::gradient(int nBound) const
 {
 	try
 	{
@@ -649,11 +742,11 @@ Grid Grid::gradient(int nBound)
 			vector<double> fcx(nBound);
 			vector<double> fcy(nBound); 
 			vector<double> fcz(nBound);
-			double cc=0;
-			_dom.set_Nval(4);
-			Grid g(_dom);
+			Domain dg=_dom;
+			dg.set_Nval(4);
+			Grid g(dg);
 			g._str=_str;
-			coefs_Gradient(nBound, fcx, fcy, fcz, cc);
+			coefs_Gradient(nBound, fcx, fcy, fcz);
 #ifdef ENABLE_OMP
 #pragma omp parallel for
 #endif
@@ -668,33 +761,23 @@ Grid Grid::gradient(int nBound)
 				{	
 					for(int k=nBound;k<g._dom.N3()-nBound;k++)
 					{
-						for(int l=0; l<g._dom.Nval();l++)
+						g._V[i][j][k][0]=_V[i][j][k][0];
+						double gx=0;
+						double gy=0;
+						double gz=0;
+						for(int n=-nBound, kn=0 ; kn<nBound ; n++, kn++)
 						{
-							double v = cc*_V[i][j][k][l];
-							for(int n=1;n<=nBound;n++)
-							{
-								if(l==0)
-								{
-									v= v/cc;
-								}
-								if(l==1)
-								{
-								v += fcx[n] *(_V[i-n][j][k][l]+_V[i+n][j][k][l]);
-								}
-								if(l==2)
-								{
-								v += fcy[n] *(_V[i][j-n][k][l]+_V[i][j+n][k][l]);
-								}
-								if(l==3)
-								{
-								v += fcz[n] *(_V[i][j][k-n][l]+_V[i][j][k+n][l]);
-								}
-							}
-							g._V[i][j][k][l]=v;
+							gx += fcx[kn] * (_V[i+n][j][k][0]-_V[i-n][j][k][0]);
+							gy += fcy[kn] * (_V[i][j+n][k][0]-_V[i][j-n][k][0]);
+							gz += fcz[kn] * (_V[i][j][k+n][0]-_V[i][j][k-n][0]);
 						}
+						g._V[i][j][k][1]=gx;
+						g._V[i][j][k][2]=gy;
+						g._V[i][j][k][3]=gz;
 					}
 				}
 			}
+			g.reset_Boundary(nBound);
 			return g;
 		}
 	}
@@ -990,6 +1073,21 @@ Grid Grid::coarser_Grid()
 void Grid::save(ofstream& nameFile)
 {
 	nameFile.precision(14);
+	if(_dom.Nval()==1)
+	{
+		nameFile<<"Grid generated by CdftT "<<endl;
+		nameFile<<"Density"<<endl;
+	}
+	else if(_dom.Nval()==4)
+	{
+		nameFile<<"Grid generated by CdftT "<<endl;
+		nameFile<<"Gradient"<<endl;
+	}
+	else
+	{
+		nameFile<<"Grid generated by CdftT "<<endl;
+		nameFile<<"Orbitals"<<endl;
+	}
 	nameFile<<scientific;
 	nameFile<<_str.number_of_atoms()<<" ";
 	for(int i=0;i<3;i++)
@@ -998,7 +1096,7 @@ void Grid::save(ofstream& nameFile)
 	}
 	nameFile<<_dom.Nval()<<" ";
 	nameFile<<endl<<_dom.N1()<<" ";
-	if(_dom.N1()<0)
+	if(_dom.N1()>0)
 	{
 		for(int i=0;i<3;i++)
 		{
@@ -1035,7 +1133,7 @@ void Grid::save(ofstream& nameFile)
 		}
 	}
 	nameFile<<endl;
-	for(int i=1;i<=_str.number_of_atoms();i++)
+	for(int i=0;i<_str.number_of_atoms();i++)
 	{
 		nameFile<<_str.atom(i).atomic_number()<<" ";
 		nameFile<<_str.atom(i).charge()<<" ";
@@ -1069,6 +1167,14 @@ void Grid::save(ofstream& nameFile)
 			}
 		}
 	}
+}
+double Grid::value(int i, int j, int k) const
+{
+	return _V[i][j][k][0];
+}
+double Grid::value(int i, int j, int k, int l) const
+{
+	return _V[i][j][k][l];
 }
 
 void Grid::next(int i, int j, int k, double& current, vector<vector<int>>& trajectory)
@@ -1657,7 +1763,7 @@ Grid Grid::aim_On_Grid_Density()
 							// Iterate through the equal points and set the index value of each point in the the vector to the index of the associated maximum 
 							for(int p=0;p<int(equals.size());p++)
 							{
-								g._V[equals[p][0]][equals[p][1]][equals[p][2]][0]=g._V[trajectory.back()[0]][trajectory.back()[1]][trajectory.back()[2]][0];
+								g._V[equals[p][0]][equals[p][1]][equals[p][2]][0]=g._V[trajectory.back()[0]][trajectory.back()[1]][trajectory.back()[2]][0];	
 							}
 							
 							
@@ -1825,6 +1931,7 @@ Grid Grid::aim_On_Grid_Density()
 				cout<<atom_attract_diff(attractors)[m]<<endl;
 				cout<<atom_attract_diff(attractors).size()<<endl;
 			}
+			//int nbrofindices=0;
 			double value=0;
 			cout<<"V0000"<<g._V[0][0][0][0]<<endl;
 			for(int i=0;i<_dom.N1();i++)
@@ -1857,8 +1964,3 @@ Grid Grid::aim_On_Grid_Density()
 		exit(1);
 	}
 }
-
-
-
-
-

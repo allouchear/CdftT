@@ -6,6 +6,7 @@ using namespace std;
 #include <fstream>
 #include <cmath>
 #include <iostream>
+#include <sstream>
 
 
 Domain::Domain()
@@ -32,11 +33,20 @@ Domain::Domain()
 
 void Domain::read_From_Cube(ifstream& nameFile)
 {
+	string s;
+	getline(nameFile,s);
+	stringstream ss(s);
+	cout<<"s="<<s<<endl;
+	// Tokenize the input string by comma delimiter
+
 	for(int i=0;i<3;i++)
 	{
-		nameFile>>_O[i];
+		ss>>_O[i];
 	}
-	nameFile>>_Nval;
+	_Nval = 1;
+	ss>>_Nval;
+	if(ss.fail()) _Nval=1;
+
 	nameFile>>_N1;
 	_T.resize(3, vector<double>(3));
 	if(_N1>0)
@@ -216,6 +226,18 @@ double Domain::dy() const
 double Domain::dz() const
 {
 	return _dz;
+}
+double Domain::x(int i, int j, int k) const
+{
+	return _O[0]+_T[0][0]*i+_T[0][1]*j+_T[0][2]*k;
+}
+double Domain::y(int i, int j, int k) const
+{
+	return _O[1]+_T[1][0]*i+_T[1][1]*j+_T[1][2]*k;
+}
+double Domain::z(int i, int j, int k) const
+{
+	return _O[2]+_T[2][0]*i+_T[2][1]*j+_T[2][2]*k;
 }
 
 double Domain::dv() const

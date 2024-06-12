@@ -17,6 +17,10 @@ class Grid
 	
 	void addSurroundingDensity(int i,int j,int k, vector<vector<int>>& equals, double& rhocenter);
 	
+	//! sets boundary values
+	/*! sets the boundary values to closest value of the interior. Used by gradient and laplacian*/
+	void reset_Boundary(int nBound);
+	
 	public:
 		//! reset
 		/*! resets all values _V to zero and resizes to _dom size*/
@@ -110,25 +114,26 @@ class Grid
 	
 		//! Laplacian coefficients
 		/*! Gets the coefficients of the laplcian operator in finite difference*/
-	void coefs_Laplacian(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc);
+	void coefs_Laplacian(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc) const;
 
 		//! Laplacian grid
 		/*! returns a grid g where g._V are the laplacian of _V.*/
 		//* Note: the outer layers of thickness nBound of the grid will be zeroes as required by finite diff*/
-	Grid laplacian(int nBound);
+	Grid laplacian(int nBound) const;
 	
 		//! Laplacian coefficients
 		/*! Gets the coefficients of the laplcian operator in finite difference*/
-	void coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc);
+	//void coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc) const; ALLOUCHE NON
+	void coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz) const;
 
 		//! Gradient grid
 		/*! returns a grid g where g._V are the gradient of _V.*/
 		/*! Note: the outer layers of thickness nBound of the grid will be zeroes as required by finite diff*/
 		/*! Note 2: number of values per point will change to 4*/
-	Grid gradient(int nBound);
+	Grid gradient(int nBound) const;
 	
 		//! fine grid
-		/*! returns the same structure with a finer grid. Intermediate values calculated by cubic interpol*/
+		/*! returns the same structure with a finer grid. Intermediate values calculated by cubic interpolation*/
 	Grid finer_Grid();
 	
 		//!coarse grid
@@ -138,6 +143,9 @@ class Grid
 		//!save
 		/*!save grid onto .cube file*/
 	void save(ofstream& name);
+
+	double value(int i, int j, int k) const;
+	double value(int i, int j, int k, int l) const;
 	
 		
 	void next(int i, int j, int k, double& Current, vector<vector<int>>& traj);
@@ -151,26 +159,8 @@ class Grid
 		//include reference Tang
 	
 	Grid aim_On_Grid(int nBound);
-	
-	
-
-	
 	Grid aim_On_Grid_Density();
 };
 
-
-class AttractorOnGrid
-{
-	vector<int> _coords;
-	int _index;
-};
-
-struct GridCP
-{
-	Domain _dom;
-	Structure _str;
-	vector<vector<vector<int>>> _indices;
-	//map<vector<int>, Atom> _attractors;
-};
 
 #endif //_CDFTT_GRID_H_INCLUDED

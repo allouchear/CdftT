@@ -142,6 +142,9 @@ class Domain
 			Overload of operator ==
 		*/
 	bool operator!=(const Domain& D) const; 
+	double x(int i, int j, int k) const;
+	double y(int i, int j, int k) const;
+	double z(int i, int j, int k) const;
 };
 
 #endif //_CDFTT_DOMAIN_H_INCLUDED

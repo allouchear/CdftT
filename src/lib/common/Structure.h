@@ -1,5 +1,5 @@
 #ifndef CDFTT_STRUCTURE_H_INCLUDED
-#define CDFTT_STRUCTURE_H_INLCUDED
+#define CDFTT_STRUCTURE_H_INCLUDED
 
 #include<iostream>
 #include<vector>
@@ -55,7 +55,7 @@ class Structure
 
 		Atom atom(const int& i) const
 		{
-			return _atoms[i-1];
+			return _atoms[i];
 		}
 			//! Get() function
 			/*! returns _atoms as a vector of atoms */
