@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <common/Descriptors.h>
+#include <common/PeriodicTable.h>
 
 using namespace std;
 
@@ -54,19 +55,78 @@ Descriptors::Descriptors()
 	reset();
 }
 
-Descriptors::Descriptors(Structure& S, vector<double> Q0, vector<double> Qm, vector<double> Qp )
+void Descriptors::compute_All_From_Charge( vector<double> Q0, vector<double> Qm, vector<double> Qp, double I, double A )
+{
+	compute_fk_From_Charge(Q0,Qm,Qp);
+	set_all_mu(I,A);
+	compute_all();	
+}
+
+Descriptors::Descriptors(const Structure& S, vector<double> Q0, vector<double> Qm, vector<double> Qp, double I, double A )
 {
 	_str=S;
 	reset();
-	compute_fk_From_Charge(Q0,Qm,Qp);
-	set_all_mu(0.46,0.11);
-	compute_all();
+	compute_All_From_Charge(Q0,Qm,Qp,I,A);
+}
+
+void Descriptors::compute_All_From_Grid(const Grid& AIM0,const Grid& AIMM,const Grid& AIMP , double I, double A, int Aimmethod )
+{
+	GridCP gridcp0;
+	gridcp0.buildAttractors(AIM0,Aimmethod);
+	vector<double> charges0=gridcp0.computeAIMCharges(AIM0);
+
+	GridCP gridcpm;
+	gridcpm.buildAttractors(AIMM,Aimmethod);
+	vector<double> chargesM=gridcpm.computeAIMCharges(AIMM);
+	
+	GridCP gridcpp;
+	gridcpp.buildAttractors(AIMP,Aimmethod);
+	vector<double> chargesP=gridcpp.computeAIMCharges(AIMP);
+
+	_str=AIM0.str();
+	reset();	
+	compute_All_From_Charge(charges0,chargesM,chargesP,I,A);
+}
+
+Descriptors::Descriptors(const Grid& AIM0,const Grid& AIMM,const Grid& AIMP, double I, double A, int Aimmethod)
+{
+	_str=AIM0.str();
+	reset();
+	compute_All_From_Grid(AIM0, AIMM, AIMP, I, A, Aimmethod);
+}
+
+void Descriptors::compute_All_From_Cube(ifstream& file0, ifstream& fileM, ifstream& fileP, double I, double A, int Aimmethod )
+{
+	PeriodicTable Table;
+	Grid AIM0(file0, Table);
+	GridCP gridcp0;
+	gridcp0.buildAttractors(AIM0,Aimmethod);
+	vector<double> charges0=gridcp0.computeAIMCharges(AIM0);
+
+	Grid AIMM(fileM, Table);	
+	GridCP gridcpm;
+	gridcpm.buildAttractors(AIMM,Aimmethod);
+	vector<double> chargesM=gridcpm.computeAIMCharges(AIMM);
+	
+	Grid AIMP(fileP, Table);
+	GridCP gridcpp;
+	gridcpp.buildAttractors(AIMP,Aimmethod);
+	vector<double> chargesP=gridcpp.computeAIMCharges(AIMP);
+
+	_str=AIM0.str();
+	reset();	
+	compute_All_From_Charge(charges0,chargesM,chargesP,I,A);
+}
+
+Descriptors::Descriptors(ifstream& file0, ifstream& fileM, ifstream& fileP, double I, double A, int Aimmethod)
+{
+	compute_All_From_Cube(file0, fileM, fileP, I, A, Aimmethod);
 }
 
 void Descriptors::set_all_mu(const double& I,const double& A)
 {
 	_mum = -I;
-	_mup = -A;
+	_mup = A;
 	_mu = 0.5*(_mup+_mum);
 }
 
@@ -79,7 +139,7 @@ void Descriptors::compute_all()
 	_wm = (_mum*_mum*0.5)/_hardness;
 	_S = 1/_hardness;
 	_Qmax = -_mu/_hardness;
-	_DEmin = -(_mu*_mu)/_hardness;
+	_DEmin = -0.5*(_mu*_mu)/_hardness;
 
 	for(int i=0;i<_str.number_of_atoms();i++)
 	{
@@ -109,9 +169,8 @@ void Descriptors::compute_fk_From_Charge(vector<double> Q0, vector<double> Qm, v
 	{
 		for(int i=0; i<_str.number_of_atoms();i++)
 		{
-			_fk0[i] = 0.5*(Qm[i]-Qp[i]);
-			_fkp[i] = Qm[i]-Q0[i];
-			_fkm[i] = Q0[i]-Qp[i];
+			_fkp[i] = Q0[i]-Qm[i];
+			_fkm[i] = Qp[i]-Q0[i];
 		}
 	}
 }
@@ -152,8 +211,8 @@ ostream& operator<<(ostream& flux, const Descriptors& desc)
 	flux<<"Energies (hardness, mu, w, Xi, DEmin, wk-, wk+, hardnessk-, hardnessk+, hardnessk) are given in eV"<<endl;
 	flux<<"Softnesses (S, sk-, sk+) are given in eV^-1"<<endl;
 	flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
-	flux<<left<<setw(12)<<"mu-"<<"= eHOMO"<<endl;
-	flux<<left<<setw(12)<<"mu+"<<"= eLUMO"<<endl;
+	flux<<left<<setw(12)<<"mu-"<<"= -I"<<endl;
+	flux<<left<<setw(12)<<"mu+"<<"= A"<<endl;
 	flux<<left<<setw(12)<<"mu"<<"= Chemical potential = (mu+ + mu-)/2"<<endl;
 	flux<<left<<setw(12)<<"hardness"<<"= Chemical hardness = (mu+  -  mu-)"<<endl;
 	flux<<left<<setw(12)<<"Xi"<<"= Electronegativity = -mu"<<endl;

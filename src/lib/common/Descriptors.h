@@ -72,15 +72,70 @@ class Descriptors
 		vector<double> _hardnesskp;
 	
 	public:
+			//! reset vectors
+			/*! sets the vector attributes to size 0*/
 		void reset();
+		
+			//! Compute chemical descriptors
+			/*! Calculates all descriptors from partial charge vectors and stores the data in the class attributes.*/
+			/*! Q0 no charge change*/
+			/*! Qm electron added*/
+			/*! Qp electron removed*/
+		void compute_All_From_Charge(vector<double> Q0, vector<double> Qm, vector<double> Qp, double I, double A );
+		
+			//! Compute chemical descriptors
+			/*! Calculates all descriptors from Grids and stores the data in the class attributes.*/
+			/*! AIM0 no charge change*/
+			/*! AIMM electron added*/
+			/*! AIMP electron removed*/
+			/*! Aimmethod specifies the grid based AIM computation used*/
+			/*! Aimmethod = 0: On grid method*/
+			/*! Aimmethod = 1: Near grid method, no refinement*/
+			/*! Aimmethod = 2: Near grid method, with refinement*/
+		void compute_All_From_Grid(const Grid& AIM0,const Grid& AIMM,const Grid& AIMP , double I, double A, int Aimmethod );
+
+			//! Compute chemical descriptors
+			/*! Calculates all descriptors from cube files and stores the data in the class attributes.*/
+			/*! file0 no charge change*/
+			/*! fileM electron added*/
+			/*! fileP electron removed*/
+			/*! Aimmethod specifies the grid based AIM computation used*/
+			/*! Aimmethod = 0: On grid method*/
+			/*! Aimmethod = 1: Near grid method, no refinement*/
+			/*! Aimmethod = 2: Near grid method, with refinement*/
+		void compute_All_From_Cube(ifstream& file0, ifstream& fileM, ifstream& fileP, double I, double A, int Aimmethod );
+		
+			//! Default Constructor
+			/*! Sets all attributes to 0 and calls reset()*/
 		Descriptors();
-		Descriptors(GridCP& g0, vector<double> Q0, vector<double> Qm, vector<double> Qp);
+		
+			//! Constructor
+			/*! Build an object from charge vectors*/
+		Descriptors(const Structure& S, vector<double> Q0, vector<double> Qm, vector<double> Qp, double I, double A);
+		
+			//! Constructor
+			/*! Build an object from grids*/
+			/*! Aimmethod specifies the grid based AIM computation used*/
+			/*! Aimmethod = 0: On grid method*/
+			/*! Aimmethod = 1: Near grid method, no refinement*/
+			/*! Aimmethod = 2: Near grid method, with refinement*/
+		Descriptors(const Grid& AIM0,const Grid& AIMM,const Grid& AIMP, double I, double A, int Aimmethod);
+		
+			//! Constructor
+			/*! Build an object from cube files*/
+			/*! Aimmethod specifies the grid based AIM computation used*/
+			/*! Aimmethod = 0: On grid method*/
+			/*! Aimmethod = 1: Near grid method, no refinement*/
+			/*! Aimmethod = 2: Near grid method, with refinement*/
+		Descriptors(ifstream& file0, ifstream& fileM, ifstream& fileP, double I, double A, int Aimmethod);
+		
+			//! Destructor
 		~Descriptors() {}
 
+			//! Compute chemical descriptors
+			/*! Compute all descriptors given fukui and chemical potential*/
 		void compute_all();
-	
 
-	
 			//! Mu, Mum, Mup
 			/*! Sets the values of mu given the ionisation potential and the elctron affinity*/
 		void set_all_mu(const double& I,const double& A);
@@ -90,6 +145,9 @@ class Descriptors
 		void compute_fk_From_Charge( vector<double> Q0, vector<double> Qm, vector<double> Qp);
 	
 		/********************************************************************************************/
+		
+			//! print
+			/*! overload of flux operator. Prints out the data in a table*/
 		friend ostream& operator<<(ostream& flux, const Descriptors&);
 };
 

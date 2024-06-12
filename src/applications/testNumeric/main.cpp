@@ -42,6 +42,9 @@ int main()
 	*/
 	
 	Grid AIM0(f, Table);
+	Grid AIMM(e, Table);
+	Grid AIMP(d, Table);
+	
 	/*
 	cout<<g.dom().dx()<<endl;
 	cout<<g.dom().O()[0]<<endl;
@@ -53,6 +56,7 @@ int main()
 	lap.save(S);
 	*/
 	
+	/*
 	GridCP gridcp0;
 	cout<<"Begin AIM on grid"<<endl;
 	timer.init();
@@ -63,7 +67,7 @@ int main()
 	
 	GridCP gridcpm;
 	cout<<"Begin AIM near grid without refinement"<<endl;
-	Grid AIMM(e, Table);
+	
 	timer.init();
 	gridcpm.buildAttractors(AIMM,0);
 	gridcpm.printCriticalPoints();
@@ -72,7 +76,6 @@ int main()
 	
 	GridCP gridcpp;
 	cout<<"Begin AIM near grid with refinement"<<endl;
-	Grid AIMP(d, Table);
 	timer.init();
 	gridcpp.buildAttractors(AIMP,0);
 	//gridcp.printCriticalPoints();
@@ -86,10 +89,26 @@ int main()
 		cout<<"Qp "<<chargesP[i]<<endl;
 	}
 	
-	Descriptors D(gridcp0, charges0, chargesM, chargesP);
+	Descriptors D(gridcp0.str(), charges0, chargesM, chargesP, 0.46, 0.11);
 	cout<<D;
-	Descriptors E(gridcp0, charges0, chargesM, chargesP);
+	
+	vector<double> Q0={-0.86200, 0.43100,0.43100};
+	vector<double> QM={-1.06949,0.03474,0.03474};
+	vector<double> QP={-0.018,0.50930,0.50930};
+	Descriptors E(gridcp0.str(), Q0, QM, QP, 0.46, 0.11);
 	cout<<E;
+	*/
+	
+	
+	Descriptors D(AIM0,AIMM,AIMP,0.46,0.11,2);
+	cout<<D;
+		
+	
+	/*
+	Descriptors D(f,e,d,0.46,0.11,2);
+	cout<<D;
+	*/
+	
 	/*GridCP gridcp;
 	cout<<"Begin AIM on grid"<<endl;
 	timer.init();
