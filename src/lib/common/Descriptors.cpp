@@ -48,7 +48,7 @@ void Descriptors::compute_all()
 	_wm = (_mum*_mum*0.5)/_hardness;
 	_S = 1/_hardness;
 	_Qmax = -_mu/_hardness;
-	_DEmin = -(_mu*_mu)/_hardness;
+	_DEmin = -(_mu*_mu)/(2*_hardness);
 
 	for(int i=0;i<_str.number_of_atoms();i++)
 	{
@@ -93,14 +93,14 @@ void Descriptors::set_mu_fk_data(vector<vector<double>> data)
 	_fkp.resize(_str.number_of_atoms());
 	_fkm.resize(_str.number_of_atoms());
 
-	_mum=data[2][0]-data[0][0];
-	_mup=data[0][0]-data[1][0];
+	_mum=data[0][0]-data[1][0];
+	_mup=data[2][0]-data[0][0];
 	_mu = 0.5*(_mup+_mum);
 
 	for(int i=1; i<=_str.number_of_atoms(); i++)
 	{
-		_fkp[i]=data[2][i]-data[0][i];
 		_fkm[i]=data[0][i]-data[1][i];
+		_fkp[i]=data[2][i]-data[0][i];
 		_fk0[i]=0.5*(data[2][i]-data[1][i]);
 	}
 

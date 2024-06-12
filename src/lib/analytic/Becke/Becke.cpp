@@ -495,6 +495,9 @@ vector<double> Becke::multicenter_sub_integration(function<double(int nf, vector
     -------
     I       : value of the integral
     */
+    vector<LCAO> l=_orbitals.vlcao();
+    vector<double> n=_orbitals.OccupationNumber();
+    int nf=_orbitals.NumberOfFunctions();
 
     if(_multigrid==false)
     {
@@ -513,7 +516,7 @@ vector<double> Becke::multicenter_sub_integration(function<double(int nf, vector
         #pragma omp parallel for reduction(+:integ)
         #endif
         for(size_t J=0; J<_grid_weights[I].size(); J++)
-            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(Nat, _orbitals.OccupationNumber(), _orbitals.vlcao(), _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2]);       // evaluate function on the grid
+            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(nf, n, l, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2]);       // evaluate function on the grid
         sub_integral[I] = integ;
     }
 
@@ -621,11 +624,15 @@ double Becke::overlapLCAO(LCAO A, LCAO B, int kmax, int lebedev_order, int radia
 
 void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
 {
-    vector<double> qn (_molecule.number_of_atoms());
+    int Nat=_molecule.number_of_atoms();
+    vector<double> qn (Nat);
     vector<double> In = multicenter_sub_integration(&density, kmax, lebedev_order, radial_grid_factor);
 
-    for(int i=0; i<_molecule.number_of_atoms() ;i++)
+    for(int i=0; i<Nat ;i++)
+    {
         qn[i]=_molecule.atoms(i).atomic_number() - In[i];
+        cout<<"q["<<i<<"] = "<<qn[i]<<endl;
+    }
 
     _partial_charge=qn;
     cout<<"Partial Charge Check"<<endl;
@@ -634,13 +641,16 @@ void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
 double Becke::density(int nf, vector<double> ni, vector<LCAO> vlcao, double x, double y, double z)
 {
     double rho=0.0;
+    double p;
+    if(nf==(int)2*vlcao.size())
+        nf/=2;
 
     for(int i=0; i<nf; i++)
-    {
-        vector<LCAO> l (2, vlcao[i]);
-        if(ni[i]!=0.0)
-            rho+=ni[i] * prodLCAO(l, x, y, z);
-    }
+        if(ni[i]>10e-10)
+        {
+            p=vlcao[i].func(x,y,z);
+            rho+=ni[i] * p * p;
+        }
 
     return rho;
 }

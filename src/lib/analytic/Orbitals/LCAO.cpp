@@ -243,10 +243,6 @@ ostream& operator<<(ostream& flux, const LCAO& lcao)
 double operator*(vector<LCAO> a, vector<double> b)
 {
 	double r=1.0;
-
-#ifdef ENABLE_OMP
-#pragma omp parallel for reduction(*:r)
-#endif
 	for(size_t i=0; i<a.size(); i++)
 		r*=a[i].func(b[0],b[1],b[2]);
 	
