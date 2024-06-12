@@ -78,7 +78,7 @@ string Atom::name() const
 	return _name;
 }
 
-string Atom::symbol()
+string Atom::symbol() const
 {
 	return _symbol;
 }

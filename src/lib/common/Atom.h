@@ -67,7 +67,7 @@ class Atom
 		/*!<
 			Returns the name of the atom
 		*/
-	string symbol();
+	string symbol() const;
 		//!< Get() function 
 		/*!<
 			Returns the symbol of the atom

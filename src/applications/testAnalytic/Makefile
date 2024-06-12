@@ -16,7 +16,7 @@ OBJECTS = main.o \
 all: compiling cdftt
 
 %.o : %.cpp
-	$(CC) -g -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 compiling: $(OBJECTS)
 

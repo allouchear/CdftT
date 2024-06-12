@@ -15,7 +15,7 @@ clean:
 	@$(RM) *o *.out *.log *.inp *~ 
 
 #make dependance
-SRCS = $(OBJECTS:%.o=%.c)
+SRCS = $(OBJECTS:%.o=%.cpp)
 dep :
 	$(CC)  $(CFLAGS) -MM $(SRCS) > Dep.mk
 

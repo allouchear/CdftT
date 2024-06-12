@@ -117,6 +117,8 @@ class LCAO
 			/*! Insert all the data in the LCAO. */
 		void push_back(CGTF&, double);
 
+		double func(double x, double y, double z);
+
 			//! An operator member taking two arguments and returning an ostream value.
 			/*! Print all the data of one LCAO. */
 		friend ostream& operator<<(ostream&, const LCAO&);
@@ -126,5 +128,7 @@ class LCAO
 /*! \return The bool value of an equality between two LCAO. */
 
 bool operator==(LCAO, LCAO);
+
+double operator*(vector<LCAO>, vector<double>);
 
 #endif

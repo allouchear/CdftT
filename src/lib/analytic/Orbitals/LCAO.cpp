@@ -175,6 +175,16 @@ double LCAO::LCAOxyzLCAO(LCAO& right, int ix, int iy, int iz)
 	return sum;
 }
 
+double LCAO::func(double x, double y, double z)
+{
+	double r=0.0;
+
+	for(size_t i=0; i<_cgtf.size(); i++)
+		r+=_coefficient[i] * _cgtf[i].func(x,y,z);
+
+	return r;
+}
+
 /*
 bool LCAO::LCAOEqLCAO(LCAO& t2)
 {
@@ -228,4 +238,17 @@ ostream& operator<<(ostream& flux, const LCAO& lcao)
 		flux<<left<<setw(20)<<lcao.coefficient()[i]<<lcao.cgtf()[i]<<endl;
 
 	return flux;
+}
+
+double operator*(vector<LCAO> a, vector<double> b)
+{
+	double r=1.0;
+
+#ifdef ENABLE_OMP
+#pragma omp parallel for reduction(*:r)
+#endif
+	for(size_t i=0; i<a.size(); i++)
+		r*=a[i].func(b[0],b[1],b[2]);
+	
+	return r;
 }

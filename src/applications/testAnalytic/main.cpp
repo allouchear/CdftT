@@ -33,31 +33,93 @@ int main()
 	
 	ifstream f;
 	f.open("h2o.wfx");
-	WFX wfx_test (f);
+	WFX wfx_h2o (f);
 	f.close();
+
+	cout<<endl;
+
+	ifstream g;
+	g.open("h2ominus.wfx");
+	WFX wfx_h2ominus (g);
+	g.close();
+
+	cout<<endl;
+
+	ifstream h;
+	h.open("h2oplus.wfx");
+	WFX wfx_h2oplus (h);
+	h.close();
+
+	cout<<endl;
 
 	/*ofstream g;
 	g.open("test.wfx");
 	wfx_test.write_file_wfx(g);
 	g.close();*/
 	
-	Becke Becketest (wfx_test, Table);
+	Becke h2o (wfx_h2o, Bin, Table);
+	Becke h2ominus (wfx_h2ominus, Bin, Table);
+	Becke h2oplus (wfx_h2oplus, Bin, Table);
+
+	vector<vector<double>> all (3);
+
+	all[0]=h2o.PartialChargeAndEnergy();
+	all[1]=h2ominus.PartialChargeAndEnergy();
+	all[2]=h2oplus.PartialChargeAndEnergy();
+
+	Descriptors test(wfx_h2o, Table);
+	test.set_mu_fk_data(all);
+	test.compute_all();
+	cout<<test<<endl;
+
+	Orbitals Orbtest(wfx_h2o, Bin, Table);
+
+
+
+	//Orbtest.PrintDescriptors();
+
+/*
 	GTF A,B,C;
 	vector<int> l1(3), l2(3);
-	l1 = {0, 0 ,0};
-	l2 = {0, 0, 0};
+	l1 = {0, 0 ,2};
+	l2 = {0, 1, 1};
 	vector<double> coord1(3), coord2(3);
 	coord1 = {-6.778167794095e-34,  5.422534235276e-33,  2.199641208994e-01};
 	coord2 = {0.000000000000e+00,  1.419184319548e+00, -8.798564835975e-01};
 	A=B=GTF(8.588500000000e+03, 1.0, coord1, l1, Bin);
 	C=GTF(1.297230000000e+03, 1.0, coord2, l2, Bin);
 
+	A=B=GTF(8.588500000000e+00, 1.0, coord1, l1, Bin);
+	C=GTF(1.297230000000e+00, 1.0, coord2, l2, Bin);
+*/
+/*
+	LCAO A,B,C;
+	A=Orbtest.vlcao()[0];
+	B=Orbtest.vlcao()[1];
+	C=Orbtest.vlcao()[2];
+	cout<<setprecision(10);
+
+	double OLAA, OLCC, OLAB, OLAC, OLBC;
+	OLAA=Becketest.overlapLCAO(A,A);
+	OLCC=Becketest.overlapLCAO(C,C);
+	OLAB=Becketest.overlapLCAO(A,B);
+	OLAC=Becketest.overlapLCAO(A,C);
+	OLBC=Becketest.overlapLCAO(B,C);
+
+	cout<<endl<<right<<setw(30)<<"*** TEST BECKE ***"<<setw(30)<<"*** ANALYTIQUE ***"<<setw(30)<<"*** DIFF ***"<<endl;
+
+	cout<<left<<setw(10)<<"<A|A> = "<<right<<setw(20)<<OLAA<<setw(30)<<A.overlapLCAO(A)<<setw(30)<<OLAA-A.overlapLCAO(A)<<endl;
+	cout<<left<<setw(10)<<"<C|C> = "<<right<<setw(20)<<OLCC<<setw(30)<<C.overlapLCAO(C)<<setw(30)<<OLCC-C.overlapLCAO(C)<<endl;
+	cout<<left<<setw(10)<<"<A|B> = "<<right<<setw(20)<<OLAB<<setw(30)<<A.overlapLCAO(B)<<setw(30)<<OLAB-A.overlapLCAO(B)<<endl;
+	cout<<left<<setw(10)<<"<A|C> = "<<right<<setw(20)<<OLAC<<setw(30)<<A.overlapLCAO(C)<<setw(30)<<OLAC-A.overlapLCAO(C)<<endl;
+	cout<<left<<setw(10)<<"<B|C> = "<<right<<setw(20)<<OLBC<<setw(30)<<B.overlapLCAO(C)<<setw(30)<<OLBC-B.overlapLCAO(C)<<endl;
+*/
+/*
 	cout<<endl<<"***** TEST BECKE *****"<<endl;
-	cout<<"<A|A> = "<<Becketest.overlap(A,A)<<endl;
-	cout<<"<C|C> = "<<Becketest.overlap(C,C)<<endl;
-	cout<<"<A|B> = "<<Becketest.overlap(A,B)<<endl;
-	cout<<"<A|C> = "<<Becketest.overlap(A,C)<<endl;
-	cout<<"<B|C> = "<<Becketest.overlap(B,C)<<endl;
+	cout<<"<C|C> = "<<Becketest.overlapGTF(C,C)<<endl;
+	cout<<"<A|B> = "<<Becketest.overlapGTF(A,B)<<endl;
+	cout<<"<A|C> = "<<Becketest.overlapGTF(A,C)<<endl;
+	cout<<"<B|C> = "<<Becketest.overlapGTF(B,C)<<endl;
 
 	cout<<endl<<"***** TEST CHECK *****"<<endl;
 	cout<<"<A|A> = "<<A.overlapGTF(A)<<endl;
@@ -65,7 +127,7 @@ int main()
 	cout<<"<A|B> = "<<A.overlapGTF(B)<<endl;
 	cout<<"<A|C> = "<<A.overlapGTF(C)<<endl;
 	cout<<"<B|C> = "<<B.overlapGTF(C)<<endl;
-
+*/
 
 	//Orbitals Orb_test(wfx_test, Bin);
 
@@ -115,7 +177,7 @@ int main()
 /*
 	for(int i=0; i<Orb_test.NumberOfFunctions(); i++)
 		for(int j=0; j<Orb_test.NumberOfFunctions(); j++)
-			Orb_test.PrintOverlap(i,j);
+			Orb_test.PrintOverlapGTF(i,j);
 */
 
 /*

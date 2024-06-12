@@ -186,6 +186,16 @@ void CGTF::push_back(GTF& gtf)
 	_numberOfFunctions++;
 }
 
+double CGTF::func(double x, double y, double z)
+{
+	double r=0.0;
+
+	for(size_t i=0; i<_gtf.size(); i++)
+		r+=_gtf[i].func(x,y,z);
+
+	return r;
+}
+
 bool operator==(CGTF a, CGTF b)
 {
 	size_t i,j;
@@ -211,4 +221,14 @@ ostream& operator<<(ostream& flux, CGTF& cgtf)
 		flux<<cgtf.gtf()[i]<<endl;
 	}
 	return flux;
+}
+
+double operator*(vector<CGTF> a, vector<double> b)
+{
+	double r=1.0;
+
+	for(size_t i=0; i<a.size(); i++)
+		r*=a[i].func(b[0],b[1],b[2]);
+	
+	return r;
 }

@@ -1,5 +1,5 @@
 #ifndef CDFTT_STRUCTURE_H_INCLUDED
-#define CDFTT_STRUCTURE_H_INLCUDED
+#define CDFTT_STRUCTURE_H_INCLUDED
 
 #include<iostream>
 #include<vector>
@@ -46,7 +46,7 @@ class Structure
 			//! A normal member taking no arguments and returning an integer value.
 			/*! \return The number of atoms in our structure. */
 
-		int number_of_atoms()
+		int number_of_atoms() const
 		{
 			return _atoms.size();
 		}
@@ -54,7 +54,7 @@ class Structure
 			//! A normal member taking one arguments and returning an atom value.
 			/*! \return The atom i of our structure. */
 
-		const Atom& atoms(const int& i)
+		const Atom& atoms(const int& i) const
 		{
 			return _atoms[i];
 		}

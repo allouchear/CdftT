@@ -109,6 +109,8 @@ class CGTF
 			//! A normal membre taking one argument and returning a void value.
 			/*! Insert all the data in the CGTF. */
 		void push_back(GTF&);
+
+		double func(double x, double y, double z);
 };
 
 	//! An operator member taking two arguments and returning a bool value.
@@ -118,5 +120,7 @@ bool operator==(CGTF, CGTF);
 	//! An operator member taking two arguments and returning an ostream value.
 	/*! Print all the data of one CGTF */
 ostream& operator<<(ostream&, CGTF&);
+
+double operator*(vector<CGTF>, vector<double>);
 
 #endif
