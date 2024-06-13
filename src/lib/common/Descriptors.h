@@ -41,7 +41,7 @@ class Descriptors
 	private:
 
 		Structure _str;
-
+		bool _okCharge;
 		/******************************************GLOBAL DESCRIPTORS**************************************************/
 		double _mu;
 		double _mup;
@@ -57,6 +57,10 @@ class Descriptors
 		double _DEmin;
 		
 		/******************************************LOCAL DESCRIPTORS**************************************************/
+		vector<double> _Q0;
+		vector<double> _Qm;
+		vector<double> _Qp;
+		
 		vector<double> _fk0;
 		vector<double> _fkm;
 		vector<double> _fkp;
@@ -81,7 +85,7 @@ class Descriptors
 			/*! Q0 no charge change*/
 			/*! Qm electron added*/
 			/*! Qp electron removed*/
-		void compute_All_From_Charge(vector<double> Q0, vector<double> Qm, vector<double> Qp, double I, double A );
+		void compute_All_From_Charge(double I, double A );
 		
 			//! Compute chemical descriptors
 			/*! Calculates all descriptors from Grids and stores the data in the class attributes.*/
@@ -142,7 +146,7 @@ class Descriptors
 	
 			//! fukui
 			/*! Calculates and sets the values of the fukui functions*/
-		void compute_fk_From_Charge( vector<double> Q0, vector<double> Qm, vector<double> Qp);
+		void compute_fk_From_Charge();
 	
 		/********************************************************************************************/
 		

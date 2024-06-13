@@ -33,6 +33,10 @@ int main()
 	ifstream e("h2o_m_Grad80.cube");
 	ifstream d("h2o_p_Grad80.cube");
 	
+	//ifstream f("Ala_0_256.cube");
+	//ifstream e("Ala_m_256.cube");
+	//ifstream d("Ala_p_256.cube");
+	
 	if(f.is_open()==true) cout<<"fichier créé"<<endl;
 	PeriodicTable Table;
 	cout<<"tp créé"<< endl;
@@ -98,11 +102,11 @@ int main()
 	Descriptors E(gridcp0.str(), Q0, QM, QP, 0.46, 0.11);
 	cout<<E;
 	*/
-	
-	
-	Descriptors D(AIM0,AIMM,AIMP,0.46,0.11,2);
+	cout<<"Begin Descriptor calculation"<<endl;
+	timer.init();
+	Descriptors D(AIM0,AIMM,AIMP,0.309,0.057,2);
 	cout<<D;
-		
+	cout<<"Time in ms "<<timer.get()<<endl;
 	
 	/*
 	Descriptors D(f,e,d,0.46,0.11,2);

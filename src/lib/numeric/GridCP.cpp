@@ -91,7 +91,9 @@ void GridCP::initGridCP(const Grid& grid, bool ongrid)
 	int nval = _V[0][0][0].size();
 	if(nval<4 && !ongrid)
 	{
+		cout<<"begin grad"<<endl;
 		Grid g= grid.gradient(1);
+		cout<<"end grad"<<endl;
 		_V = g.V();
 		_domain = g.dom();
 		_str = g.str();
@@ -612,16 +614,21 @@ void GridCP::assignGridCP(bool ongrid)
 /**************************************************************************/
 void GridCP::buildAttractors(const Grid& grid, int method)
 {
+	cout<<"done"<<endl;
 	bool ongrid=(method==0);
 	initGridCP(grid, ongrid);
+	cout<<"init"<<endl;
 	assignGridCP(ongrid);
+	cout<<"assign"<<endl;
 	if(method==2) 
 	{
+		cout<<"done"<<endl;
 		int itermax=30;
 		int N = _domain.N1()* _domain.N2()* _domain.N3()/1000;
 		int nold = refineEdge();
 		int n = refineEdge();
 		int iter = 0;
+		cout<<"done"<<endl;
 		//cout<<"n-nold="<<abs(n-nold)<<" => N max="<<N<<endl;
 		while(abs(n-nold)>N)
 		{
@@ -631,6 +638,7 @@ void GridCP::buildAttractors(const Grid& grid, int method)
 			n = refineEdge();
 			//cout<<"n-nold="<<abs(n-nold)<<" => N max="<<N<<endl;
 		}
+		cout<<"done"<<endl;
 	}
 
 	resetKnown();

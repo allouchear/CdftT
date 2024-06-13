@@ -385,7 +385,7 @@ void Grid::reset_Boundary(int nBound)
 			}
 		}
 	}
-	
+	cout<<"done left"<<endl;
 	/* right */
 	for(int i=_dom.N1()-nBound;i<_dom.N1();i++)
 	{	
@@ -400,12 +400,13 @@ void Grid::reset_Boundary(int nBound)
 			}
 		}
 	}
+	cout<<"done right"<<endl;
 	/* front */
 	for(int j=0;j<nBound;j++)
 	{
 		for(int i=0;i<_dom.N1();i++)
 		{	
-			for(int k=0;k<_dom.N2();k++)
+			for(int k=0;k<_dom.N3();k++)
 			{	
 				for(int l=NV; l<_dom.Nval();l++)
 				{
@@ -414,11 +415,11 @@ void Grid::reset_Boundary(int nBound)
 			}
 		}
 	}
-	
+	cout<<"done front"<<endl;
 	/* back */
 	for(int j=_dom.N2()-nBound;j<_dom.N2();j++)
 	{
-		for(int i=0;i<_dom.N2();i++)
+		for(int i=0;i<_dom.N1();i++)
 		{	
 			for(int k=0;k<_dom.N3();k++)
 			{
@@ -429,6 +430,7 @@ void Grid::reset_Boundary(int nBound)
 			}
 		}
 	}
+	cout<<"done back"<<endl;
 	/* top */
 	for(int k=0;k<nBound;k++)
 	{	
@@ -443,7 +445,7 @@ void Grid::reset_Boundary(int nBound)
 			}
 		}
 	}
-
+	cout<<"done top"<<endl;
 
 	/* bottom */
 	for(int k=_dom.N3()-nBound;k<_dom.N3();k++)
@@ -459,6 +461,7 @@ void Grid::reset_Boundary(int nBound)
 			}
 		}
 	}
+	cout<<"done bot"<<endl;
 }
 
 
@@ -745,8 +748,11 @@ Grid Grid::gradient(int nBound) const
 			Domain dg=_dom;
 			dg.set_Nval(4);
 			Grid g(dg);
+			cout<<"done dg"<<endl;
 			g._str=_str;
+			
 			coefs_Gradient(nBound, fcx, fcy, fcz);
+			cout<<"done coefs"<<endl;
 #ifdef ENABLE_OMP
 #pragma omp parallel for
 #endif
@@ -777,7 +783,9 @@ Grid Grid::gradient(int nBound) const
 					}
 				}
 			}
+			cout<<"begin reset"<<endl;
 			g.reset_Boundary(nBound);
+			cout<<"end reset"<<endl;
 			return g;
 		}
 	}

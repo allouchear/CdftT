@@ -8,6 +8,9 @@ void Descriptors::reset()
 {
 	if (_str.number_of_atoms()<1 )
 	{
+		_Q0 = vector<double>();
+		_Qm = vector<double>();
+		_Qp = vector<double>();
 		_fk0 = vector<double>();
 		_fkm = vector<double>();
 		_fkp = vector<double>();
@@ -23,6 +26,9 @@ void Descriptors::reset()
 	}
 	else 
 	{
+		_Q0 = vector<double>(_str.number_of_atoms());
+		_Qm = vector<double>(_str.number_of_atoms());
+		_Qp = vector<double>(_str.number_of_atoms());
 		_fk0 = vector<double>(_str.number_of_atoms());
 		_fkm = vector<double>(_str.number_of_atoms());
 		_fkp = vector<double>(_str.number_of_atoms());
@@ -40,7 +46,9 @@ void Descriptors::reset()
 
 Descriptors::Descriptors()
 {
-	Structure _str;
+	Structure str;
+	_str=str;
+	_okCharge=false;
 	_mu=0.0;
 	_mup=0.0;
 	_mum=0.0;
@@ -55,9 +63,9 @@ Descriptors::Descriptors()
 	reset();
 }
 
-void Descriptors::compute_All_From_Charge( vector<double> Q0, vector<double> Qm, vector<double> Qp, double I, double A )
+void Descriptors::compute_All_From_Charge(double I, double A )
 {
-	compute_fk_From_Charge(Q0,Qm,Qp);
+	compute_fk_From_Charge();
 	set_all_mu(I,A);
 	compute_all();	
 }
@@ -66,26 +74,30 @@ Descriptors::Descriptors(const Structure& S, vector<double> Q0, vector<double> Q
 {
 	_str=S;
 	reset();
-	compute_All_From_Charge(Q0,Qm,Qp,I,A);
+	_Q0=Q0;
+	_Qm=Qm;
+	_Qp=Qp;
+	compute_All_From_Charge(I,A);
 }
 
 void Descriptors::compute_All_From_Grid(const Grid& AIM0,const Grid& AIMM,const Grid& AIMP , double I, double A, int Aimmethod )
 {
-	GridCP gridcp0;
-	gridcp0.buildAttractors(AIM0,Aimmethod);
-	vector<double> charges0=gridcp0.computeAIMCharges(AIM0);
-
-	GridCP gridcpm;
-	gridcpm.buildAttractors(AIMM,Aimmethod);
-	vector<double> chargesM=gridcpm.computeAIMCharges(AIMM);
-	
-	GridCP gridcpp;
-	gridcpp.buildAttractors(AIMP,Aimmethod);
-	vector<double> chargesP=gridcpp.computeAIMCharges(AIMP);
-
+	_okCharge=true;
 	_str=AIM0.str();
 	reset();	
-	compute_All_From_Charge(charges0,chargesM,chargesP,I,A);
+	GridCP gridcp0;
+	gridcp0.buildAttractors(AIM0,Aimmethod);
+	_Q0 =gridcp0.computeAIMCharges(AIM0);
+	
+	GridCP gridcpm;
+	gridcpm.buildAttractors(AIMM,Aimmethod);
+	_Qm =gridcpm.computeAIMCharges(AIMM);
+
+	GridCP gridcpp;
+	gridcpp.buildAttractors(AIMP,Aimmethod);
+	_Qp=gridcpp.computeAIMCharges(AIMP);
+
+	compute_All_From_Charge(I,A);
 }
 
 Descriptors::Descriptors(const Grid& AIM0,const Grid& AIMM,const Grid& AIMP, double I, double A, int Aimmethod)
@@ -97,25 +109,26 @@ Descriptors::Descriptors(const Grid& AIM0,const Grid& AIMM,const Grid& AIMP, dou
 
 void Descriptors::compute_All_From_Cube(ifstream& file0, ifstream& fileM, ifstream& fileP, double I, double A, int Aimmethod )
 {
+	_okCharge=true;
 	PeriodicTable Table;
 	Grid AIM0(file0, Table);
+	_str=AIM0.str();
+	reset();	
 	GridCP gridcp0;
 	gridcp0.buildAttractors(AIM0,Aimmethod);
-	vector<double> charges0=gridcp0.computeAIMCharges(AIM0);
+	_Q0=gridcp0.computeAIMCharges(AIM0);
 
 	Grid AIMM(fileM, Table);	
 	GridCP gridcpm;
 	gridcpm.buildAttractors(AIMM,Aimmethod);
-	vector<double> chargesM=gridcpm.computeAIMCharges(AIMM);
+	_Qm=gridcpm.computeAIMCharges(AIMM);
 	
 	Grid AIMP(fileP, Table);
 	GridCP gridcpp;
 	gridcpp.buildAttractors(AIMP,Aimmethod);
-	vector<double> chargesP=gridcpp.computeAIMCharges(AIMP);
+	_Qp=gridcpp.computeAIMCharges(AIMP);
 
-	_str=AIM0.str();
-	reset();	
-	compute_All_From_Charge(charges0,chargesM,chargesP,I,A);
+	compute_All_From_Charge(I,A);
 }
 
 Descriptors::Descriptors(ifstream& file0, ifstream& fileM, ifstream& fileP, double I, double A, int Aimmethod)
@@ -158,9 +171,9 @@ void Descriptors::compute_all()
 
 }
 
-void Descriptors::compute_fk_From_Charge(vector<double> Q0, vector<double> Qm, vector<double> Qp)
+void Descriptors::compute_fk_From_Charge()
 {	
-	if(int(Qm.size())!=_str.number_of_atoms() or int(Qp.size())!=_str.number_of_atoms() or int(Q0.size())!=_str.number_of_atoms())
+	if(int(_Qm.size())!=_str.number_of_atoms() or int(_Qp.size())!=_str.number_of_atoms() or int(_Q0.size())!=_str.number_of_atoms())
 	{
 		cout<<" number of atoms in _str inconsistent with vector sizes.. Please check vectors"<<endl;
 		exit(1);
@@ -169,8 +182,8 @@ void Descriptors::compute_fk_From_Charge(vector<double> Q0, vector<double> Qm, v
 	{
 		for(int i=0; i<_str.number_of_atoms();i++)
 		{
-			_fkp[i] = Q0[i]-Qm[i];
-			_fkm[i] = Qp[i]-Q0[i];
+			_fkp[i] = _Q0[i]-_Qm[i];
+			_fkm[i] = _Qp[i]-_Q0[i];
 		}
 	}
 }
@@ -184,28 +197,38 @@ ostream& operator<<(ostream& flux, const Descriptors& desc)
 	flux<<scientific;
 	flux<<setprecision(6);
 	flux<<setw(15);
-	flux<<left<<setw(7)<<"Symbol"<<setw(4)<<"k"<<setw(15)<<"f-"<<setw(15)<<"f+"<<setw(15)<<"f0"<<setw(15)<<"Delta f"
-	<<setw(15)<<"w-"<<setw(15)<<"w+"<<setw(15)<<"s-"<<setw(15)<<"s+"<<setw(15)<<"s-/s+"<<setw(15)
-	<<"hardness-"<<setw(15)<<"hardness+"<<setw(15)<<"hardness"<<endl;
+	if(desc._okCharge)
+	{
+		
+		flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
+		flux<<left<<setw(7)<<"Symbol"<<setw(4)<<"k"<<setw(15)<<right<<"Qk-"<<setw(15)<<right<<"Qk+"<<setw(15)<<right<<"Qk0"<<endl;
+		for(int i=0; i<desc._str.number_of_atoms(); i++)
+			flux<<left<<setw(7)<<desc._str.atom(i).symbol()<<setw(4)<<i+1<<setw(15)<<right<<desc._Qm[i]<<setw(15)<<right<<desc._Qp[i]<<setw(15)<<right<<desc._Q0[i]<<endl;
+		flux<<endl;
+	}
+	flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
+	flux<<left<<setw(7)<<"Symbol"<<setw(4)<<"k"<<setw(15)<<right<<"f-"<<setw(15)<< right<< "f+"<<setw(15)<<right<<"f0"<<setw(15)<<right<<"Delta f"<<endl;
 	for(int i=0; i<desc._str.number_of_atoms(); i++)
-		flux<<left<<setw(7)<<desc._str.atom(i).symbol()<<setw(4)<<i+1<<setw(15)<<desc._fkm[i]<<setw(15)<<desc._fkp[i]<<
-		setw(15)<<desc._fk0[i]<<setw(15)<<desc._Deltafk[i]<<setw(15)<<desc._wkm[i]*HeV<<setw(15)
-		<<desc._wkp[i]*HeV<<setw(15)<<desc._Skm[i]/HeV<<setw(15)<<desc._Skp[i]/HeV<<setw(15)<<desc._Skfrac[i]
-		<<setw(15)<<desc._hardnesskm[i]*HeV<<setw(15)<<desc._hardnesskp[i]*HeV<<setw(15)<<desc._hardnessk[i]*HeV<<endl;
-	
+		flux<<left<<setw(7)<<desc._str.atom(i).symbol()<<setw(4)<<i+1<<setw(15)<<right<<desc._fkm[i]<<setw(15)<<right<<desc._fkp[i]<<setw(15)<<right<<desc._fk0[i]<<setw(15)<<right<<desc._Deltafk[i]<<endl;
+	flux<<endl;	
+	flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
+	flux<<left<<setw(15)<<right<<"w-"<<setw(15)<<right<<"w+"<<setw(15)<<right<<"s-"<<setw(15)<<right<<"s+"<<setw(15)<<right<<"s-/s+"<<setw(15)<<right<<"hardness-"<<setw(15)<<right<<"hardness+"<<setw(15)<<right<<"hardness"<<endl;
+	for(int i=0; i<desc._str.number_of_atoms(); i++)
+		flux<<setw(15)<<right<<desc._wkm[i]*HeV<<setw(15)<<right<<desc._wkp[i]*HeV<<setw(15)<<right<<desc._Skm[i]/HeV<<setw(15)<<right<<desc._Skp[i]/HeV<<setw(15)<<right<<desc._Skfrac[i]<<setw(15)<<right<<desc._hardnesskm[i]*HeV<<setw(15)<<right<<desc._hardnesskp[i]*HeV<<setw(15)<<right<<desc._hardnessk[i]*HeV<<endl;
 	flux<<endl;
 	
-	flux<<left<<setw(10)<<"mu+ "<<setw(2)<<"="<<setw(10)<<desc._mup*HeV<<endl;
-	flux<<left<<setw(10)<<"mu- "<<setw(2)<<"="<<setw(10)<<desc._mum*HeV<<endl;
-	flux<<left<<setw(10)<<"mu "<<setw(2)<<"="<<setw(10)<<desc._mu*HeV<<endl;
-	flux<<left<<setw(10)<<"Xi "<<setw(2)<<"="<<setw(10)<<desc._xi*HeV<<endl;
-	flux<<left<<setw(10)<<"hardness "<<setw(2)<<"="<<setw(10)<<desc._hardness*HeV<<endl;
-	flux<<left<<setw(10)<<"w "<<setw(2)<<"="<<setw(10)<<desc._w*HeV<<endl;
-	flux<<left<<setw(10)<<"S "<<setw(2)<<"="<<setw(10)<<desc._S/HeV<<endl;
-	flux<<left<<setw(10)<<"Qmax "<<setw(2)<<"="<<setw(10)<<desc._Qmax<<endl;
-	flux<<left<<setw(10)<<"DEmin "<<setw(2)<<"="<<setw(10)<<desc._DEmin*HeV<<endl;
-	flux<<left<<setw(10)<<"w+ "<<setw(2)<<"="<<setw(10)<<desc._wp*HeV<<endl;
-	flux<<left<<setw(10)<<"w- "<<setw(2)<<"="<<setw(10)<<desc._wm*HeV<<endl;
+	flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
+	flux<<left<<setw(10)<<"mu+ "<<setw(2)<<"="<<setw(16)<<right<<desc._mup*HeV<<endl;
+	flux<<left<<setw(10)<<"mu- "<<setw(2)<<"="<<setw(16)<<right<<desc._mum*HeV<<endl;
+	flux<<left<<setw(10)<<"mu "<<setw(2)<<"="<<setw(16)<<right<<desc._mu*HeV<<endl;
+	flux<<left<<setw(10)<<"Xi "<<setw(2)<<"="<<setw(16)<<right<<desc._xi*HeV<<endl;
+	flux<<left<<setw(10)<<"hardness "<<setw(2)<<"="<<setw(16)<<right<<desc._hardness*HeV<<endl;
+	flux<<left<<setw(10)<<"w "<<setw(2)<<"="<<setw(16)<<right<<desc._w*HeV<<endl;
+	flux<<left<<setw(10)<<"S "<<setw(2)<<"="<<setw(16)<<right<<desc._S/HeV<<endl;
+	flux<<left<<setw(10)<<"Qmax "<<setw(2)<<"="<<setw(16)<<right<<desc._Qmax<<endl;
+	flux<<left<<setw(10)<<"DEmin "<<setw(2)<<"="<<setw(16)<<right<<desc._DEmin*HeV<<endl;
+	flux<<left<<setw(10)<<"w+ "<<setw(2)<<"="<<setw(16)<<right<<desc._wp*HeV<<endl;
+	flux<<left<<setw(10)<<"w- "<<setw(2)<<"="<<setw(16)<<right<<desc._wm*HeV<<endl;
 	flux<<endl;
 	flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
 	flux<<"Energies (hardness, mu, w, Xi, DEmin, wk-, wk+, hardnessk-, hardnessk+, hardnessk) are given in eV"<<endl;
