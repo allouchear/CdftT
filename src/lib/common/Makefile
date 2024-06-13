@@ -7,7 +7,7 @@ CFLAGS =  $(COMMONCFLAGS)
 all: compiling 
 
 %.o : %.cpp
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -g -c $(CFLAGS) $< -o $@
 
 compiling: $(OBJECTS)
 

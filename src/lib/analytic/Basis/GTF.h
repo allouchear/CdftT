@@ -146,7 +146,7 @@ class GTF
 			
 		double ERIGTF(GTF&, GTF&, GTF&);
 			
-		double func(double x, double y, double z);
+		double func(double x, double y, double z) const;
 		
 			//! An operator member taking one argument and returning a void value.
 			

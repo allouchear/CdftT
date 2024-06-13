@@ -175,12 +175,15 @@ double LCAO::LCAOxyzLCAO(LCAO& right, int ix, int iy, int iz)
 	return sum;
 }
 
-double LCAO::func(double x, double y, double z)
+double LCAO::func(double x, double y, double z) const
 {
 	double r=0.0;
 
 	for(size_t i=0; i<_cgtf.size(); i++)
-		r+=_coefficient[i] * _cgtf[i].func(x,y,z);
+	{
+		if(abs(_coefficient[i])>1e-10)
+			r+=_coefficient[i] * _cgtf[i].func(x,y,z);
+	}
 
 	return r;
 }

@@ -308,7 +308,7 @@ vector<vector<double>> Becke::join_grids()
     return join_grid;
 }
 
-double Becke::multicenter_integration(function<double(vector<GTF> p, double x, double y, double z)> f, vector<GTF> p, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::multicenter_integration(function<double(const vector<GTF>& p, double x, double y, double z)> f, const vector<GTF>& p, int kmax, int lebedev_order, int radial_grid_factor)
 {    /*
     compute the integral
 
@@ -361,7 +361,7 @@ double Becke::multicenter_integration(function<double(vector<GTF> p, double x, d
     return integral;
 }
 
-double Becke::multicenter_integration(function<double(vector<CGTF> p, double x, double y, double z)> f, vector<CGTF> p, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::multicenter_integration(function<double(const vector<CGTF>& p, double x, double y, double z)> f, const vector<CGTF>& p, int kmax, int lebedev_order, int radial_grid_factor)
 {    /*
     compute the integral
 
@@ -413,7 +413,7 @@ double Becke::multicenter_integration(function<double(vector<CGTF> p, double x, 
     return integral;
 }
 
-double Becke::multicenter_integration(function<double(vector<LCAO> p, double x, double y, double z)> f, vector<LCAO> p, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::multicenter_integration(function<double(const vector<LCAO>& p, double x, double y, double z)> f, const vector<LCAO>& p, int kmax, int lebedev_order, int radial_grid_factor)
 {    /*
     compute the integral
 
@@ -466,7 +466,7 @@ double Becke::multicenter_integration(function<double(vector<LCAO> p, double x, 
     return integral;
 }
 
-vector<double> Becke::multicenter_sub_integration(function<double(int nf, vector<double> ni, vector<LCAO> vlcao, double x, double y, double z)> f, int kmax, int lebedev_order, int radial_grid_factor)
+vector<double> Becke::multicenter_sub_integration(function<double(int nf, const vector<double>& ni, const vector<LCAO>& vlcao, double x, double y, double z)> f, int kmax, int lebedev_order, int radial_grid_factor)
 {   
     /*
     compute the integral
@@ -523,7 +523,7 @@ vector<double> Becke::multicenter_sub_integration(function<double(int nf, vector
     return sub_integral;
 }
 
-double Becke::overlapGTF(GTF A, GTF B, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::overlapGTF(const GTF& A, const GTF& B, int kmax, int lebedev_order, int radial_grid_factor)
 {
     /*
     overlap between two basis functions
@@ -556,7 +556,7 @@ double Becke::overlapGTF(GTF A, GTF B, int kmax, int lebedev_order, int radial_g
     return Sab;
 }
 
-double Becke::overlapCGTF(CGTF A, CGTF B, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::overlapCGTF(const CGTF& A, const CGTF& B, int kmax, int lebedev_order, int radial_grid_factor)
 {
     /*
     overlap between two basis functions
@@ -589,7 +589,7 @@ double Becke::overlapCGTF(CGTF A, CGTF B, int kmax, int lebedev_order, int radia
     return Sab;
 }
 
-double Becke::overlapLCAO(LCAO A, LCAO B, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::overlapLCAO(const LCAO& A, const LCAO& B, int kmax, int lebedev_order, int radial_grid_factor)
 {
     /*
     overlap between two basis functions
@@ -629,24 +629,18 @@ void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
     vector<double> In = multicenter_sub_integration(&density, kmax, lebedev_order, radial_grid_factor);
 
     for(int i=0; i<Nat ;i++)
-    {
         qn[i]=_molecule.atoms(i).atomic_number() - In[i];
-        cout<<"q["<<i<<"] = "<<qn[i]<<endl;
-    }
 
     _partial_charge=qn;
-    cout<<"Partial Charge Check"<<endl;
 }
 
-double Becke::density(int nf, vector<double> ni, vector<LCAO> vlcao, double x, double y, double z)
+double Becke::density(int nf, const vector<double>& ni, const vector<LCAO>& vlcao, double x, double y, double z)
 {
     double rho=0.0;
     double p;
-    if(nf==(int)2*vlcao.size())
-        nf/=2;
 
     for(int i=0; i<nf; i++)
-        if(ni[i]>10e-10)
+        if(ni[i]>1e-10)
         {
             p=vlcao[i].func(x,y,z);
             rho+=ni[i] * p * p;
@@ -655,7 +649,7 @@ double Becke::density(int nf, vector<double> ni, vector<LCAO> vlcao, double x, d
     return rho;
 }
 
-double Becke::prodGTF(vector<GTF> p, double x, double y, double z)
+double Becke::prodGTF(const vector<GTF>& p, double x, double y, double z)
 {
     vector<double> c (3);
     c[0]=x;
@@ -664,7 +658,7 @@ double Becke::prodGTF(vector<GTF> p, double x, double y, double z)
     return p*c;
 }
 
-double Becke::prodCGTF(vector<CGTF> p, double x, double y ,double z)
+double Becke::prodCGTF(const vector<CGTF>& p, double x, double y ,double z)
 {
     vector<double> c(3);
     c[0]=x;
@@ -673,7 +667,7 @@ double Becke::prodCGTF(vector<CGTF> p, double x, double y ,double z)
     return p*c;
 }
 
-double Becke::prodLCAO(vector<LCAO> p, double x, double y ,double z)
+double Becke::prodLCAO(const vector<LCAO>& p, double x, double y ,double z)
 {
     vector<double> c(3);
     c[0]=x;

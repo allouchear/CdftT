@@ -117,7 +117,7 @@ class LCAO
 			/*! Insert all the data in the LCAO. */
 		void push_back(CGTF&, double);
 
-		double func(double x, double y, double z);
+		double func(double x, double y, double z) const;
 
 			//! An operator member taking two arguments and returning an ostream value.
 			/*! Print all the data of one LCAO. */

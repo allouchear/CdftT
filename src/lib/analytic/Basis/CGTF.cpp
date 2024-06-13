@@ -186,7 +186,7 @@ void CGTF::push_back(GTF& gtf)
 	_numberOfFunctions++;
 }
 
-double CGTF::func(double x, double y, double z)
+double CGTF::func(double x, double y, double z) const
 {
 	double r=0.0;
 

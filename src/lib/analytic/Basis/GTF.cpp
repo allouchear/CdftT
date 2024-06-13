@@ -429,13 +429,13 @@ double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)
 	return sum;
 }
 
-double GTF::func(double x, double y, double z)
+double GTF::func(double x, double y, double z) const
 {
 	double xA=x-_coord[0];
 	double yA=y-_coord[1];
 	double zA=z-_coord[2];
 
-	return pow(xA, _l[0])*pow(yA, _l[1])*pow(zA, _l[2])*exp(-_exposant * (xA*xA + yA*yA + zA*zA));
+	return power(xA, _l[0])*power(yA, _l[1])*power(zA, _l[2])*exp(-_exposant * (xA*xA + yA*yA + zA*zA));
 }
 
 void GTF::operator/=(double c)

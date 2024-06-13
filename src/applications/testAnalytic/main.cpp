@@ -61,11 +61,11 @@ int main()
 	Becke h2ominus (wfx_h2ominus, Bin, Table);
 	Becke h2oplus (wfx_h2oplus, Bin, Table);
 
-	vector<vector<double>> all (3, vector<double> ());
+	vector<vector<double>> all (3, vector<double> (3));
 
-	all[0]=h2o.PartialChargeAndEnergy(3, 23, 1);
-	all[1]=h2ominus.PartialChargeAndEnergy(3, 23, 1);
-	all[2]=h2oplus.PartialChargeAndEnergy(3, 23, 1);
+	all[0]=h2o.PartialChargeAndEnergy();
+	all[1]=h2ominus.PartialChargeAndEnergy();
+	all[2]=h2oplus.PartialChargeAndEnergy();
 
 	Descriptors test(wfx_h2o, Table);
 	test.set_mu_fk_data(all);

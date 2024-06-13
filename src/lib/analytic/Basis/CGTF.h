@@ -110,7 +110,7 @@ class CGTF
 			/*! Insert all the data in the CGTF. */
 		void push_back(GTF&);
 
-		double func(double x, double y, double z);
+		double func(double x, double y, double z) const;
 };
 
 	//! An operator member taking two arguments and returning a bool value.
