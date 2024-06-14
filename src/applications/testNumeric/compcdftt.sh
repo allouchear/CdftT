@@ -3,7 +3,7 @@ cd ../../..
 source env.sh
 cd -
 cd ../../lib
-./cleancdfttlib.sh
+#./cleancdfttlib.sh
 ./compcdfttlib.sh
 cd -
 ./cleancdftt.sh

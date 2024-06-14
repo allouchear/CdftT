@@ -2,20 +2,19 @@ LIBPTHREAD    = -lpthread
 RM = rm -f
 MAKE = make
 WIN32LIB   = 
-<<<<<<< HEAD
-<<<<<<< HEAD
-X11LIB   = -lX11
-#CC = gcc -pg
+
 LIBCDFTTDIR =/home/allouche/MySoftwares/CdftT/CdftT
 
+#CC = g++ -pg
 CC = g++ -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
+#CC = g++ -g -pg -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
 
 use_nvhpc = 0
 ifeq ($(use_nvhpc),1)
 CC = nvc++ -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
 endif
 
-enable_omp = 1
+enable_omp = 0
 ifeq ($(enable_omp),1)
 #OMPLIB=-L/usr/lib -lgomp
 OMPLIB= -lgomp
@@ -24,6 +23,7 @@ endif
 
 enable_acc = 0
 ifeq ($(enable_acc),1)
+CC = nvc++ -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
 ACCPLIB=
 ACCCFLAGS=-DENABLE_ACC -acc -target=gpu 
 #ACCCFLAGS=-DENABLE_ACC -acc -target=gpu -Minfo 

@@ -6,9 +6,10 @@ ANALYTIC = ../../lib/analytic
 NUMERIC = ../../lib/numeric
 COMMON  = ../../lib/common
 
-ANALYTICOBJ = $(ANALYTIC)/*.o
+ANALYTICOBJ = $(ANALYTIC)/*/*.o
 NUMERICOBJ  = $(NUMERIC)/*.o
 COMMONSOBJ  = $(COMMON)/*.o
+
 
 OBJECTS = main.o \
 	$(ANALYTICOBJ) $(NUMERICOBJ) $(COMMONSOBJ)

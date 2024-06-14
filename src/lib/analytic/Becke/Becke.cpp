@@ -155,9 +155,9 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
     for(int i=0; i<Nat; i++)
         for(int j=i+1; j<Nat; j++)
         {
-            R[i][j] = R[j][i] = _molecule.atoms(i).get_distance(_molecule.atoms(j));
+            R[i][j] = R[j][i] = _molecule.atom(i).get_distance(_molecule.atom(j));
             // ratio of Slater radii
-            chi = _molecule.atoms(i).covalent_radii() / _molecule.atoms(j).covalent_radii();
+            chi = _molecule.atom(i).covalent_radii() / _molecule.atom(j).covalent_radii();
             uij = (chi-1)/(chi+1);
             a[i][j] = uij/(uij*uij - 1);
             a[j][i] = -a[i][j];
@@ -168,10 +168,10 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
     for(int I=0; I<Nat; I++)
     {
         // radial grid
-        Nr = number_of_radial_points(_molecule.atoms(I).atomic_number());
+        Nr = number_of_radial_points(_molecule.atom(I).atomic_number());
         // increase number of grid points is requested
         Nr *= radial_grid_factor;
-        rm = 0.5*_molecule.atoms(I).covalent_radii();
+        rm = 0.5*_molecule.atom(I).covalent_radii();
         Npts = Nr*Nang;
 
         vector<double> k (Nr);
@@ -205,9 +205,9 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
         for (int i=0; i<Nr; i++)
             for(int j=0; j<Nang; j++)
             {
-                x[n] = r[i] * sc[j] + _molecule.atoms(I).coordinates()[0];
-                y[n] = r[i] * ss[j] + _molecule.atoms(I).coordinates()[1];
-                z[n] = r[i] * c[j] + _molecule.atoms(I).coordinates()[2];
+                x[n] = r[i] * sc[j] + _molecule.atom(I).coordinates()[0];
+                y[n] = r[i] * ss[j] + _molecule.atom(I).coordinates()[1];
+                z[n] = r[i] * c[j] + _molecule.atom(I).coordinates()[2];
                 weights[n] = radial_weights[i] * 4.0 * M_PI * wang[j];
                 n++;
             }
@@ -215,7 +215,7 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
         // distance between grid points and atom i
         for (int i=0; i<Nat; i++)
             for(int j=0; j<Npts; j++)
-                dist[i][j] = sqrt((x[j] - _molecule.atoms(i).coordinates()[0])*(x[j] - _molecule.atoms(i).coordinates()[0]) + (y[j] - _molecule.atoms(i).coordinates()[1])*(y[j] - _molecule.atoms(i).coordinates()[1]) + (z[j] - _molecule.atoms(i).coordinates()[2])*(z[j] - _molecule.atoms(i).coordinates()[2]) );
+                dist[i][j] = sqrt((x[j] - _molecule.atom(i).coordinates()[0])*(x[j] - _molecule.atom(i).coordinates()[0]) + (y[j] - _molecule.atom(i).coordinates()[1])*(y[j] - _molecule.atom(i).coordinates()[1]) + (z[j] - _molecule.atom(i).coordinates()[2])*(z[j] - _molecule.atom(i).coordinates()[2]) );
                 
 
         // P_i(r) as defined in eqn. (13)
@@ -629,7 +629,7 @@ void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
     vector<double> In = multicenter_sub_integration(&density, kmax, lebedev_order, radial_grid_factor);
 
     for(int i=0; i<Nat ;i++)
-        qn[i]=_molecule.atoms(i).atomic_number() - In[i];
+        qn[i]=_molecule.atom(i).atomic_number() - In[i];
 
     _partial_charge=qn;
 }

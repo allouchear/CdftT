@@ -21,4 +21,4 @@ export LIBCDFTTSRC=$LIBCDFTTDIR/src/applications
 export LIBCDFTT=$LIBCDFTTDIR/lib/libcdftt.so
 #export PYTHONPATH=$LIBCDFTTDIR/python/src/Utils:$LIBCDFTTDIR/python/src/Molecule
 echo $LIBCDFTTSRC
-source /home/allouche/Softwares/nvhpc/env.sh
+#source /home/allouche/Softwares/nvhpc/env.sh

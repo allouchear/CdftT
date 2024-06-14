@@ -41,7 +41,6 @@ Structure::Structure(ifstream& nameFile, const int Natoms, const PeriodicTable& 
 	read_From_Cube(nameFile, Natoms, Table);	
 }
 
-<<<<<<< HEAD
 Structure Structure::operator+(const Structure& S) const
 {
 	if(S._atoms.size()>_atoms.size())
@@ -91,26 +90,6 @@ Structure Structure::add(const Structure& S)
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-=======
 void Structure::read_from_wfx(WFX& wfx, const PeriodicTable& Table)
 {
 	int n=0;
@@ -132,4 +111,3 @@ Structure::Structure(WFX& wfx, const PeriodicTable& Table)
 {
 	read_from_wfx(wfx, Table);
 }
->>>>>>> dbuffat

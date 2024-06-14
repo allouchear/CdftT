@@ -2,4 +2,4 @@
 cd ../..
 source env.sh
 cd -
-make -j 10
+make clean

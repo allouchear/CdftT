@@ -104,7 +104,6 @@ class Descriptors
 		vector<double> _hardnesskp;
 	
 	public:
-<<<<<<< HEAD
 			//! reset vectors
 			/*! sets the vector attributes to size 0*/
 		void reset();
@@ -185,6 +184,9 @@ class Descriptors
 
 		Descriptors(WFX&, const PeriodicTable&);
 		friend ostream& operator<<(ostream& flux, const Descriptors&);
+		void compute_fk();
+		void set_mu_fk_data(vector<vector<double>> f, double eH, double eL);
+		void set_mu_fk_data(vector<vector<double>> data);
 };
 
 #endif
