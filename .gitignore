@@ -4,6 +4,13 @@
 bin/
 Documentation/
 # ignore ALL .o files
+*/*/*.cube
+*/*/*.txt
+*/*/*/*.cube
+*/*/*/*.txt
+*.cube
+*.txt
+*.com
 *.o
 *.exe
 # p
