@@ -26,7 +26,7 @@ Element PeriodicTable::element(const string& n) const
 {
 	if(n.size()==1 || n.size()==2)
 	{
-		for(size_t i=0; i<_periodic_table.size(); i++)
+		for(int i=0; i<int(_periodic_table.size()); i++)
 		{
 			if(n==_periodic_table[i].symbol())
 				return _periodic_table[i];

@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <common/Descriptors.h>
+<<<<<<< HEAD
 #include <common/PeriodicTable.h>
 
 using namespace std;
@@ -134,12 +135,48 @@ void Descriptors::compute_All_From_Cube(ifstream& file0, ifstream& fileM, ifstre
 Descriptors::Descriptors(ifstream& file0, ifstream& fileM, ifstream& fileP, double I, double A, int Aimmethod)
 {
 	compute_All_From_Cube(file0, fileM, fileP, I, A, Aimmethod);
+=======
+
+using namespace std;
+
+Descriptors::Descriptors()
+{
+	_Qp=vector<double> ();
+	_Q0=vector<double> ();
+	_Qm=vector<double> ();
+	_mu=0.0;
+	_mup=0.0;
+	_mum=0.0;
+	_fk0=vector<double> ();
+	_fkm=vector<double> ();
+	_fkp=vector<double> ();
+}
+
+Descriptors::Descriptors(WFX& wfx, const PeriodicTable& Table)
+{
+	_str=Structure(wfx, Table);
+	_Deltafk.resize(_str.number_of_atoms());
+	_wkm.resize(_str.number_of_atoms());
+	_wkp.resize(_str.number_of_atoms());
+	_Skm.resize(_str.number_of_atoms());
+	_Skp.resize(_str.number_of_atoms());
+	_Skfrac.resize(_str.number_of_atoms());
+	_hardnessk.resize(_str.number_of_atoms());
+	_hardnesskm.resize(_str.number_of_atoms());
+	_hardnesskp.resize(_str.number_of_atoms());
+
+	_fk0.resize(_str.number_of_atoms());
+>>>>>>> dbuffat
 }
 
 void Descriptors::set_all_mu(const double& I,const double& A)
 {
 	_mum = -I;
+<<<<<<< HEAD
 	_mup = A;
+=======
+	_mup = -A;
+>>>>>>> dbuffat
 	_mu = 0.5*(_mup+_mum);
 }
 
@@ -152,12 +189,20 @@ void Descriptors::compute_all()
 	_wm = (_mum*_mum*0.5)/_hardness;
 	_S = 1/_hardness;
 	_Qmax = -_mu/_hardness;
+<<<<<<< HEAD
 	_DEmin = -0.5*(_mu*_mu)/_hardness;
+=======
+	_DEmin = -(_mu*_mu)/(2*_hardness);
+>>>>>>> dbuffat
 
 	for(int i=0;i<_str.number_of_atoms();i++)
 	{
 		_Deltafk[i] = _fkm[i]-_fkp[i];
+<<<<<<< HEAD
 		_fk0[i]=0.5*(_fkm[i]+_fkp[i]);
+=======
+		_fk0[i] = 0.5 * (_fkp[i]+_fkm[i]);
+>>>>>>> dbuffat
 		_wkm[i] = _fkm[i]*_w;
 		_wkp[i] = _fkp[i]*_w;
 		_Skm[i] = _fkm[i]*_S;
@@ -167,6 +212,7 @@ void Descriptors::compute_all()
 		_hardnesskm[i] = _hardnessk[i]-((_mup-_mum)*(_fkp[i]-_fkm[i]));
 		_hardnesskp[i] = _hardnessk[i]+((_mup-_mum)*(_fkp[i]-_fkm[i]));
 	}
+<<<<<<< HEAD
 
 
 }
@@ -186,6 +232,49 @@ void Descriptors::compute_fk_From_Charge()
 			_fkm[i] = _Qp[i]-_Q0[i];
 		}
 	}
+=======
+}
+
+void Descriptors::compute_fk()
+{
+	_fk0.resize(_str.number_of_atoms());
+	_fkp.resize(_str.number_of_atoms());
+	_fkm.resize(_str.number_of_atoms());
+	for(int i=0; i<_str.number_of_atoms();i++)
+	{
+		_fk0[i] = 0.5*(_Qm[i]-_Qp[i]);
+		_fkp[i] = _Qm[i]-_Q0[i];
+		_fkm[i] = _Q0[i]-_Qp[i];
+	}
+}
+
+void Descriptors::set_mu_fk_data(vector<vector<double>> f, double eH, double eL)
+{
+	_mum=eH;
+	_mup=eL;
+	_mu = 0.5*(_mup+_mum);
+	_fkm=f[0];
+	_fkp=f[1];
+}
+
+void Descriptors::set_mu_fk_data(vector<vector<double>> data)
+{
+	_fk0.resize(_str.number_of_atoms());
+	_fkp.resize(_str.number_of_atoms());
+	_fkm.resize(_str.number_of_atoms());
+
+	_mum= -(data[2][0]-data[0][0]);
+	_mup= -(data[0][0]-data[1][0]);
+	_mu = 0.5*(_mup+_mum);
+
+	for(int i=0; i<_str.number_of_atoms(); i++)
+	{
+		_fkm[i]=data[0][i+1]-data[1][i+1];
+		_fkp[i]=data[2][i+1]-data[0][i+1];
+		_fk0[i]=0.5*(data[2][i+1]-data[1][i+1]);
+	}
+
+>>>>>>> dbuffat
 }
 
 /********************************************************************************************/
@@ -197,6 +286,7 @@ ostream& operator<<(ostream& flux, const Descriptors& desc)
 	flux<<scientific;
 	flux<<setprecision(6);
 	flux<<setw(15);
+<<<<<<< HEAD
 	if(desc._okCharge)
 	{
 		
@@ -229,13 +319,42 @@ ostream& operator<<(ostream& flux, const Descriptors& desc)
 	flux<<left<<setw(10)<<"DEmin "<<setw(2)<<"="<<setw(16)<<right<<desc._DEmin*HeV<<endl;
 	flux<<left<<setw(10)<<"w+ "<<setw(2)<<"="<<setw(16)<<right<<desc._wp*HeV<<endl;
 	flux<<left<<setw(10)<<"w- "<<setw(2)<<"="<<setw(16)<<right<<desc._wm*HeV<<endl;
+=======
+	flux<<left<<setw(7)<<"Symbol"<<setw(4)<<"k"<<setw(15)<<"f-"<<setw(15)<<"f+"<<setw(15)<<"f0"<<setw(15)<<"Delta f"
+	<<setw(15)<<"w-"<<setw(15)<<"w+"<<setw(15)<<"s-"<<setw(15)<<"s+"<<setw(15)<<"s-/s+"<<setw(15)
+	<<"hardness-"<<setw(15)<<"hardness+"<<setw(15)<<"hardness"<<endl;
+	for(int i=0; i<desc._str.number_of_atoms(); i++)
+		flux<<left<<setw(7)<<desc._str.atoms(i).symbol()<<setw(4)<<i+1<<setw(15)<<desc._fkm[i]<<setw(15)<<desc._fkp[i]<<
+		setw(15)<<desc._fk0[i]<<setw(15)<<desc._Deltafk[i]<<setw(15)<<desc._wkm[i]*HeV<<setw(15)
+		<<desc._wkp[i]*HeV<<setw(15)<<desc._Skm[i]/HeV<<setw(15)<<desc._Skp[i]/HeV<<setw(15)<<desc._Skfrac[i]
+		<<setw(15)<<desc._hardnesskm[i]*HeV<<setw(15)<<desc._hardnesskp[i]*HeV<<setw(15)<<desc._hardnessk[i]*HeV<<endl;
+	
+	flux<<endl;
+	
+	flux<<left<<setw(10)<<"mu+ "<<setw(2)<<"="<<setw(10)<<desc._mup*HeV<<endl;
+	flux<<left<<setw(10)<<"mu- "<<setw(2)<<"="<<setw(10)<<desc._mum*HeV<<endl;
+	flux<<left<<setw(10)<<"mu "<<setw(2)<<"="<<setw(10)<<desc._mu*HeV<<endl;
+	flux<<left<<setw(10)<<"Xi "<<setw(2)<<"="<<setw(10)<<desc._xi*HeV<<endl;
+	flux<<left<<setw(10)<<"hardness "<<setw(2)<<"="<<setw(10)<<desc._hardness*HeV<<endl;
+	flux<<left<<setw(10)<<"w "<<setw(2)<<"="<<setw(10)<<desc._w*HeV<<endl;
+	flux<<left<<setw(10)<<"S "<<setw(2)<<"="<<setw(10)<<desc._S/HeV<<endl;
+	flux<<left<<setw(10)<<"Qmax "<<setw(2)<<"="<<setw(10)<<desc._Qmax<<endl;
+	flux<<left<<setw(10)<<"DEmin "<<setw(2)<<"="<<setw(10)<<desc._DEmin*HeV<<endl;
+	flux<<left<<setw(10)<<"w+ "<<setw(2)<<"="<<setw(10)<<desc._wp*HeV<<endl;
+	flux<<left<<setw(10)<<"w- "<<setw(2)<<"="<<setw(10)<<desc._wm*HeV<<endl;
+>>>>>>> dbuffat
 	flux<<endl;
 	flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
 	flux<<"Energies (hardness, mu, w, Xi, DEmin, wk-, wk+, hardnessk-, hardnessk+, hardnessk) are given in eV"<<endl;
 	flux<<"Softnesses (S, sk-, sk+) are given in eV^-1"<<endl;
 	flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
+<<<<<<< HEAD
 	flux<<left<<setw(12)<<"mu-"<<"= -I"<<endl;
 	flux<<left<<setw(12)<<"mu+"<<"= A"<<endl;
+=======
+	flux<<left<<setw(12)<<"mu-"<<"= eHOMO"<<endl;
+	flux<<left<<setw(12)<<"mu+"<<"= eLUMO"<<endl;
+>>>>>>> dbuffat
 	flux<<left<<setw(12)<<"mu"<<"= Chemical potential = (mu+ + mu-)/2"<<endl;
 	flux<<left<<setw(12)<<"hardness"<<"= Chemical hardness = (mu+  -  mu-)"<<endl;
 	flux<<left<<setw(12)<<"Xi"<<"= Electronegativity = -mu"<<endl;

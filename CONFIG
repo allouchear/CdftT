@@ -3,6 +3,7 @@ RM = rm -f
 MAKE = make
 WIN32LIB   = 
 <<<<<<< HEAD
+<<<<<<< HEAD
 X11LIB   = -lX11
 #CC = gcc -pg
 LIBCDFTTDIR =/home/allouche/MySoftwares/CdftT/CdftT

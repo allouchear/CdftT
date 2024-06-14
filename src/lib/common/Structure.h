@@ -3,7 +3,8 @@
 
 #include<iostream>
 #include<vector>
-#include"Atom.h"
+#include<common/Atom.h>
+#include<analytic/Utils/WFX.h>
 
 using namespace std;
 
@@ -72,6 +73,8 @@ class Structure
 			/*! Overload of - returns the structure with the biggest number of atoms */
 		Structure add(const Structure& S);
 
+		void read_from_wfx(WFX&, const PeriodicTable&);
+		Structure(WFX&, const PeriodicTable&);
 };
 
 #endif //CDFTT_STRUCTURE_H_INCLUDED

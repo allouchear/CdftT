@@ -1,8 +1,8 @@
 #ifndef _CDFTT_ATOM_H_INCLUDED
 #define _CDFTT_ATOM_H_INCLUDED
 using namespace std;
-#include "PeriodicTable.h"
-#include "Element.h"
+#include <common/PeriodicTable.h>
+#include <common/Element.h>
 #include <string>
 
 	//! An Atom class.
@@ -20,6 +20,7 @@ class Atom
 	double _charge_0; // oxidation
 	double _hardness; // eta
 	double _width; // eta
+	double _covalent_radii;
 	Element _e;
 	
 	string _mm_Type;
@@ -45,7 +46,7 @@ class Atom
 		/*!<
 		creates an atom from the atomic number of an Element and searching for it in PeriodicTable
 		*/
-	double* coordinates();
+	const double* coordinates() const;
 		//!< get() function
 		/*!<
 			Returns the coordinates of the atom
@@ -96,7 +97,12 @@ class Atom
 		/*!<
 			Returns the width of the atom
 		*/
-	Element element() const;
+	double covalent_radii() const;
+		//!< Get() function
+		/*!<
+			Returns the covalent radii of the atom
+		*/
+	Element element();
 		//!< Get() function
 		/*!<	Returns the element associated with the atom */
 		/*!<	The attributes of Element are properties of the atom	*/

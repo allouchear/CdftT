@@ -17,7 +17,7 @@ SCRIPT=$(read_link $0)
 export  WORKDIR=`dirname $SCRIPT`
 echo WORKDIR=$WORKDIR
 export LIBCDFTTDIR=$WORKDIR/src/lib
-export LIBCDFTTSRC=$LIBCDFTTDIR/src/appliactions
+export LIBCDFTTSRC=$LIBCDFTTDIR/src/applications
 export LIBCDFTT=$LIBCDFTTDIR/lib/libcdftt.so
 #export PYTHONPATH=$LIBCDFTTDIR/python/src/Utils:$LIBCDFTTDIR/python/src/Molecule
 echo $LIBCDFTTSRC

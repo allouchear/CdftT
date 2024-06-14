@@ -1,8 +1,8 @@
 #include <cmath>
 using namespace std;
 #include <iostream>
-#include "Atom.h"
-#include "Constants.h"
+#include <common/Atom.h>
+#include <common/Constants.h>
 
 /*constructeur par défaut: initialise les attributs cinématique de l'atome à 0*/
 Atom::Atom()
@@ -20,6 +20,7 @@ Atom::Atom()
 	_charge_0 = 0;
 	_hardness = 0;
 	_width = 0;
+	_covalent_radii=0;
 	_e=Element();
 }
 
@@ -36,6 +37,7 @@ Atom::Atom(const PeriodicTable& Table, const string& name)
 	_name = _e.name();
 	_symbol = _e.symbol();
 	_atomic_number = _e.atomic_number();
+	_covalent_radii=_e.covalent_radii();
 }
 
 //intialise par le numéro atomique
@@ -51,11 +53,12 @@ Atom::Atom(const PeriodicTable& Table, const int& n)
 	_name = _e.name();
 	_symbol = _e.symbol();
 	_atomic_number = _e.atomic_number();
+	_covalent_radii=_e.covalent_radii();
 }
 
 Atom::~Atom(){}
 
-double* Atom::coordinates()
+const double* Atom::coordinates() const
 {
 	return _coordinates;
 }
@@ -105,7 +108,12 @@ double Atom::width() const
 	return _width;
 }
 
-Element Atom::element() const
+double Atom::covalent_radii() const
+{
+	return _covalent_radii;
+}
+
+Element Atom::element()
 {
 	return _e;
 }

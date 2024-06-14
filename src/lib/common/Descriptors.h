@@ -2,6 +2,33 @@
 #define CDFTT_DESCRIPTORS_H_INCLUDED
 /*
 ------------------------------------------------------------------------------------------------------------------------------
+ Energies (hardness, mu, w, Xi, DEmin, wk-, wk+, hardnessk-, hardnessk+, hardnessk) are given in eV
+ Softnesses (S, sk-, sk+) are given in eV^-1
+------------------------------------------------------------------------------------------------------------------------------
+   mu-         = eHOMO
+   mu+         = eLUMO
+   mu          = Chemical potential = (mu+ + mu-)/2
+   hardness    = Chemical hardness = (mu+  -  mu-)
+   Xi          = Electronegativity = -mu
+   w           = Electrophilicity index = mu^2/(2 hardness) 
+   w-          = propensity to donate electron = mu-^2/(2 hardness) 
+   w+          = propensity to accept electron = mu+^2/(2 hardness) 
+   S           = Global softness = 1/hardness
+   Qmax        = Maximal electronic charge accepted by an electrophile = -mu/hardness
+   DEmin       = Energy decrease if the electrophile take Qmax = -mu^2/(2 hardness) 
+   fk-         = Local Fukui electrophilic attack
+   fk+         = Local Fukui nucleophilic attack
+   sk-         = Local softness electrophilic attack = S fk-
+   sk+         = Local softness nucleophilic attack = S fk+
+   wk-         = Local philicity index of electrophilic attack = w fk-
+   wk+         = Local philicity index of nucleophilic attack = w fk+
+   hardnessk-  = Local hardness = mu+ fk+ - mu- fk- - (mu+- mu-)*(fk+-fk-)
+   hardnessk+  = Local hardness = mu+ fk+ - mu- fk- + (mu+- mu-)*(fk+-fk-)
+   hardnessk   = Local hardness = mu+ fk+ - mu- fk-
+   Deltafk     = Dual descripor = (fk+ - fk-) : 
+                 >0 => site favored for a nucleophilic attack
+                 <0 => site favored for an electrophilic attack
+------------------------------------------------------------------------------------------------------------------------------
  References:
   - Revisiting the definition of local hardness and hardness kernel 
     C. A. Polanco-Ramrez et al
@@ -30,11 +57,11 @@
 */
 #include <numeric/Grid.h>
 #include <numeric/GridCP.h>
+
 #include <vector>
 #include <common/Structure.h>
 
 using namespace std;
-
 
 class Descriptors
 {	
@@ -47,6 +74,7 @@ class Descriptors
 		double _mup;
 		double _mum;
 		
+
 		double _xi;
 		double _hardness;
 		double _w;
@@ -76,6 +104,7 @@ class Descriptors
 		vector<double> _hardnesskp;
 	
 	public:
+<<<<<<< HEAD
 			//! reset vectors
 			/*! sets the vector attributes to size 0*/
 		void reset();
@@ -152,6 +181,9 @@ class Descriptors
 		
 			//! print
 			/*! overload of flux operator. Prints out the data in a table*/
+		friend ostream& operator<<(ostream& flux, const Descriptors&);
+
+		Descriptors(WFX&, const PeriodicTable&);
 		friend ostream& operator<<(ostream& flux, const Descriptors&);
 };
 

@@ -1,23 +1,40 @@
-OBJECTS = WFX.o
-
-
 include ../../../CONFIG
-CFLAGS =  $(COMMONCFLAGS) 
 
-all: compiling 
 
-%.o : %.cpp
-	$(CC) -c $(CFLAGS) $< -o $@
+BASIS = Basis
+BECKE = Becke
+ORBITALS = Orbitals
+UTILS = Utils
 
-compiling: $(OBJECTS)
+BASISOBJ = $(BASIS)/*.o
+BECKEOBJ  = $(BECKE)/*.o
+ORBITALSOBJ  = $(ORBITALS)/*.o
+UTILSOBJ = $(UTILS)/*.o
 
+SUBDIRS = \
+	$(BASIS) $(BECKE) $(ORBITALS) $(UTILS)
+
+OBJECTS = \
+	$(BASISOBJ) $(BECKEOBJ) $(ORBITALSOBJ) $(UTILSOBJ)
+
+TARGETS = all clean dep
+ 
+.PHONY: $(SUBDIRS)
+
+$(TARGETS): $(SUBDIRS)
+
+$(SUBDIRS):
+	@$(MAKE) --directory=$@ $(MAKECMDGOALS)
+
+all: cchemilib
+
+cchemilib: $(SUBDIRS)
+	$(CC) -fPIC -shared $(LDFLAGS) $(OBJECTS) -o ../../../lib/libcdftt.so  $(WIN32LIB)  $(OMPLIB) $(CLLIB) -g -lm
+ 
 clean:
-	@$(RM) *o *.out *.log *.inp *~ 
-
-#make dependance
-SRCS = $(OBJECTS:%.o=%.cpp)
-dep :
-	$(CC)  $(CFLAGS) -MM $(SRCS) > Dep.mk
-
--include Dep.mk
-
+	@$(RM) p
+	@$(RM) pp
+	@$(RM) p.cpp
+	@$(RM) *.log
+	@$(RM) *.out
+	@$(RM) *.txt
