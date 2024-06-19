@@ -111,3 +111,25 @@ Structure::Structure(WFX& wfx, const PeriodicTable& Table)
 {
 	read_from_wfx(wfx, Table);
 }
+
+void Structure::read_from_fchk(FCHK& fchk, const PeriodicTable& Table)
+{
+	int n=0;
+	_atoms.resize(fchk.NumberOfAtoms());
+	for(int i=0; i<fchk.NumberOfAtoms(); i++)
+	{
+		_atoms[i]=Atom(Table, fchk.AtomicNumbers()[i]);
+		_atoms[i].Set_charge(fchk.NuclearCharges()[i]);
+		n=3*i;
+		for(int j=0; j<3; j++)
+		{
+			_atoms[i].Set_coordinates(j, fchk.CurrentCartesianCoordinates()[n]);
+			n++;
+		}
+	}
+}
+
+Structure::Structure(FCHK& fchk, const PeriodicTable& Table)
+{
+	read_from_fchk(fchk, Table);
+}

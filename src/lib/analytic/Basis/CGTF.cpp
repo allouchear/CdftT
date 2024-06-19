@@ -186,6 +186,11 @@ void CGTF::push_back(GTF& gtf)
 	_numberOfFunctions++;
 }
 
+void CGTF::setNumCenter(int nC)
+{
+	_num_center=nC;
+}
+
 double CGTF::func(double x, double y, double z) const
 {
 	double r=0.0;
@@ -223,7 +228,7 @@ ostream& operator<<(ostream& flux, CGTF& cgtf)
 	return flux;
 }
 
-double operator*(vector<CGTF> a, vector<double> b)
+double operator*(const vector<CGTF>& a, const vector<double>& b)
 {
 	double r=1.0;
 

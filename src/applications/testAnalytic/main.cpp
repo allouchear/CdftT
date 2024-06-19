@@ -1,11 +1,12 @@
 #include<iostream>
 #include<vector>
-#include<analytic/Utils/MathFunction.h>
+#include<analytic/Utils/Utils.h>
 #include<analytic/Basis/GTF.h>
 #include<analytic/Basis/CGTF.h>
 #include<analytic/Orbitals/LCAO.h>
 #include<analytic/Orbitals/Orbitals.h>
 #include<analytic/Utils/WFX.h>
+#include<analytic/Utils/FCHK.h>
 #include<analytic/Becke/Becke.h>
 #include"Timer.h"
 #include<ctime>
@@ -21,6 +22,7 @@ int main()
 	Binomial Bin(100, Fact);
 	//cout<<"Test post-initialisation"<<endl;
 	PeriodicTable Table;
+
 /*
 	cout<<Bin.binomial(18,7)<<endl;
 	cout<<Table.factorial(18)/Table.factorial(7)/Table.factorial(11)<<endl;
@@ -30,7 +32,7 @@ int main()
 	cout<<endl;
 	cout<<Table.double_factorial(10)<<endl<<endl;
 */
-	
+/*
 	ifstream f;
 	f.open("h2o.wfx");
 	WFX wfx_h2o (f);
@@ -51,33 +53,42 @@ int main()
 	h.close();
 
 	cout<<endl;
-
-	/*ofstream g;
+*/
+/*
+	ofstream g;
 	g.open("test.wfx");
 	wfx_test.write_file_wfx(g);
-	g.close();*/
-	
+	g.close();
+*/
+	ifstream t;
+	t.open("h2o.fchk");
+	FCHK fchk_test (t);
+	t.close();
+
+//	cout<<fchk_test.NumberOfElectrons()<<endl;
+/*
 	Becke h2o (wfx_h2o, Bin, Table);
 	Becke h2ominus (wfx_h2ominus, Bin, Table);
 	Becke h2oplus (wfx_h2oplus, Bin, Table);
 
-	vector<vector<double>> all (3, vector<double> (3));
+	vector<vector<double>> h2oQE;
+	vector<vector<double>> h2ominusQE;
+	vector<vector<double>> h2oplusQE;
 
-	all[0]=h2o.PartialChargeAndEnergy();
-	all[1]=h2ominus.PartialChargeAndEnergy();
-	all[2]=h2oplus.PartialChargeAndEnergy();
+	h2oQE=h2o.PartialChargeAndEnergy();
+	h2ominusQE=h2ominus.PartialChargeAndEnergy();
+	h2oplusQE=h2oplus.PartialChargeAndEnergy();
 
-	Descriptors test(wfx_h2o, Table);
-	test.set_mu_fk_data(all);
-	test.compute_all();
+	double I, A;
+	I=h2oplusQE[0][0]-h2oQE[0][0];
+	A=h2ominusQE[0][0]-h2oQE[0][0];
+	Descriptors test(h2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
 	cout<<test<<endl;
-
-	//Orbitals Orbtest(wfx_h2o, Bin, Table);
-
-
-
-	//Orbtest.PrintDescriptors();
-
+*/
+/*
+	Orbitals Orbtest(wfx_h2o, Bin, Table);
+	Orbtest.PrintDescriptors();
+*/
 /*
 	GTF A,B,C;
 	vector<int> l1(3), l2(3);

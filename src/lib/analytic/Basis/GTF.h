@@ -4,7 +4,7 @@
 #include<iostream>
 #include<iomanip>
 #include<vector>
-#include<analytic/Utils/MathFunction.h>
+#include<analytic/Utils/Utils.h>
 
 using namespace std;
 
@@ -169,6 +169,6 @@ bool operator==(GTF, GTF);
 	//! An operator member taking two arguments and returning an ostream value.
 	/*! Print all the data of one GTF */
 ostream& operator<<(ostream&, GTF&);
-double operator*(vector<GTF>, vector<double>);
+double operator*(const vector<GTF>&, const vector<double>&);
 
 #endif

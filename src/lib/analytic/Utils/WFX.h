@@ -5,6 +5,7 @@
 #include<vector>
 #include<string>
 #include<fstream>
+#include<analytic/Utils/Utils.h>
 
 using namespace std;
 
@@ -161,10 +162,10 @@ class WFX
 		vector<int> _Primitive_Types;
 		vector<vector<int>> _Lxyz;											
 		vector<double> _Primitive_Exponents;									
-		vector<double> _Molecular_Orbital_Occupation_Numbers;				
-		vector<double> _Molecular_Orbital_Energies;
+		vector<vector<double>> _Molecular_Orbital_Occupation_Numbers;				
+		vector<vector<double>> _Molecular_Orbital_Energies;
 		vector<string> _Molecular_Orbital_Spin_Types;					
-		vector<MOPC> _Molecular_Orbital_Primitive_Coefficients;
+		vector<vector<MOPC>> _Molecular_Orbital_Primitive_Coefficients;
 		double _Energy; // Energy = T + Vne + Vee + Vnn
 		double _Virial_Ratio; // (-V/T)
 		vector<NCEG> _Nuclear_Cartesian_Energy_Gradients;
@@ -172,6 +173,8 @@ class WFX
 		double _Full_Virial_Ratio; // ,-(V-W)/T
 		int _Number_of_Core_Electrons;
 		AEDF _Additionnal_Electron_Density_Function; //(EDF)
+
+		bool _alpha_and_beta;
 	public:
 
 			//! A default constructor.
@@ -297,12 +300,12 @@ class WFX
 			//! A normal member taking no arguments and returning a vector<double> value.
 			/*! \return The table of molecular orbital occupation numbers. */
 
-		vector<double> Molecular_Orbital_Occupation_Numbers() {return _Molecular_Orbital_Occupation_Numbers;}
+		vector<vector<double>> Molecular_Orbital_Occupation_Numbers() {return _Molecular_Orbital_Occupation_Numbers;}
 
 			//! A normal member taking no arguments and returning a vector<double> value.
 			/*! \return The table of molecular orbital energies. */
 
-		vector<double> Molecular_Orbital_Energies() {return _Molecular_Orbital_Energies;}
+		vector<vector<double>> Molecular_Orbital_Energies() {return _Molecular_Orbital_Energies;}
 
 			//! A normal member taking no arguments and returning a vector<string> value.
 			/*! \return The table of molecular orbital spin types. */
@@ -312,7 +315,7 @@ class WFX
 			//! A normal member taking no arguments and returning a vector<MOPC> value.
 			/*! \return The table of molecular orbital primitive coefficients. */
 
-		vector<MOPC> Molecular_Orbital_Primitive_Coefficients() {return _Molecular_Orbital_Primitive_Coefficients;}
+		vector<vector<MOPC>> Molecular_Orbital_Primitive_Coefficients() {return _Molecular_Orbital_Primitive_Coefficients;}
 
 			//! A normal member taking no arguments and returning a double value.
 			/*! \return The energy. */
@@ -348,6 +351,8 @@ class WFX
 			/*! \return The additionnal electron density function. */
 
 		AEDF Additionnal_Electron_Density_Function() {return _Additionnal_Electron_Density_Function;} //(EDF)
+
+		bool AlphaAndBeta() {return _alpha_and_beta;}
 
 
 			//! A normal member taking four arguments and returning a vector<int> value.
@@ -429,6 +434,8 @@ class WFX
 			//! A normal member taking four arguments and returning a void value.
 			/*! Write one int */
 
+		void write_one_matrix_real(ofstream&, vector<vector<double>>, string, bool);
+
 		void write_int(ofstream&, int, string, bool);
 
 			//! A normal member taking four arguments and returning a void value.
@@ -444,7 +451,7 @@ class WFX
 			//! A normal member taking four arguments and returning a void value.
 			/*! Write MOPC block */
 
-		void write_MOPC_block(ofstream&, vector<MOPC>, bool);
+		void write_MOPC_block(ofstream&, vector<vector<MOPC>>, bool);
 
 			//! A normal member taking four arguments and returning a void value.
 			/*! Write NCEG block */

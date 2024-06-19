@@ -478,7 +478,7 @@ ostream& operator<<(ostream& flux, GTF& gtf)
 	return flux;
 }
 
-double operator*(vector<GTF> a, vector<double> b)
+double operator*(const vector<GTF>& a, const vector<double>& b)
 {
 	double r=1.0;
 

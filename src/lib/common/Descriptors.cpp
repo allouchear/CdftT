@@ -72,6 +72,7 @@ void Descriptors::compute_All_From_Charge(double I, double A )
 
 Descriptors::Descriptors(const Structure& S, vector<double> Q0, vector<double> Qm, vector<double> Qp, double I, double A )
 {
+	_okCharge=true;
 	_str=S;
 	reset();
 	_Q0=Q0;
@@ -328,7 +329,8 @@ ostream& operator<<(ostream& flux, const Descriptors& desc)
 	flux<<left<<setw(12)<<" "<<"J. Phys. Chem. A 2005, 109, 205-212, DOI: 10.1021/jp046577a"<<endl;
 	flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
 	return flux;
-}	
+}
+
 Descriptors::Descriptors(WFX& wfx, const PeriodicTable& Table)
 {
 	_str=Structure(wfx, Table);
@@ -345,3 +347,18 @@ Descriptors::Descriptors(WFX& wfx, const PeriodicTable& Table)
 	_fk0.resize(_str.number_of_atoms());
 }
 
+Descriptors::Descriptors(FCHK& fchk, const PeriodicTable& Table)
+{
+	_str=Structure(fchk, Table);
+	_Deltafk.resize(_str.number_of_atoms());
+	_wkm.resize(_str.number_of_atoms());
+	_wkp.resize(_str.number_of_atoms());
+	_Skm.resize(_str.number_of_atoms());
+	_Skp.resize(_str.number_of_atoms());
+	_Skfrac.resize(_str.number_of_atoms());
+	_hardnessk.resize(_str.number_of_atoms());
+	_hardnesskm.resize(_str.number_of_atoms());
+	_hardnesskp.resize(_str.number_of_atoms());
+
+	_fk0.resize(_str.number_of_atoms());
+}

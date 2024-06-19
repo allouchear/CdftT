@@ -3,6 +3,7 @@
 
 #include<iostream>
 #include<analytic/Basis/CGTF.h>
+#include<analytic/Utils/FCHK.h>
 
 using namespace std;
 
@@ -14,8 +15,6 @@ class LCAO
 	private:
 		vector<CGTF> _cgtf;
 		int _numberOfFunctions;
-		vector<double> _coefficient;
-		int _numberOfCoefficient;
 		Binomial _bino;
 	public:
 
@@ -27,7 +26,9 @@ class LCAO
 			//! A real constructor.
 			/*! This constructor is used to add all of the parameters for one LCAO. */
 
-		LCAO(vector<CGTF>, vector<double>);
+		LCAO(vector<CGTF>);
+
+		LCAO(FCHK&, Binomial&);
 
 			//! A default desctructor.
 			/*! We don't use it. */
@@ -42,28 +43,12 @@ class LCAO
 			return _cgtf;
 		}
 
-			//! A normal member taking no arguments and returning a vector<double> value.
-			/*! \return The table of coefficient of LCAO. */
-
-		vector<double> coefficient() const &
-		{
-			return _coefficient;
-		}
-
 			//! A normal member taking no arguments and returning an int value.
 			/*! \return The number of CGTF in one LCAO. */
 
 		int numberOfFunctions() const &
 		{
 			return _numberOfFunctions;
-		}
-
-			//! A normal member taking no arguments and returning an int value.
-			/*! \return The number of coefficients in one LCAO. */
-
-		int numberOfCoefficient() const &
-		{
-			return _numberOfCoefficient;
 		}
 
 			//! A normal member taking three arguments and returning a double value.
@@ -79,17 +64,17 @@ class LCAO
 			//! A normal member taking one argument and returning a double value.
 			/*! \return The overlap value between two LCAO. */
 
-		double overlapLCAO(LCAO&);
+		double overlapLCAO();
 
 			//! A normal member taking two arguments and returning a double value.
 			/*! \return The overlap value between three LCAO. */
 
-		double overlap3LCAO(LCAO&, LCAO&);
+		double overlap3LCAO(const vector<double>& c1, const vector<double>& c2, const vector<double>& c3);
 
 			//! A normal member taking three arguments and returning a double value.
 			/*! \return The overlap value between four LCAO. */
 
-		double overlap4LCAO(LCAO&, LCAO&, LCAO&);
+		double overlap4LCAO(const vector<double>& c1, const vector<double>& c2, const vector<double>& c3, const vector<double>& c4);
 
 			//! A normal member taking one argument and returning a double value.
 			/*! \return The kinetic value ??? */
@@ -115,9 +100,9 @@ class LCAO
 
 			//! A normal membre taking two arguments and returning a void value.
 			/*! Insert all the data in the LCAO. */
-		void push_back(CGTF&, double);
+		void push_back(const vector<CGTF>&);
 
-		double func(double x, double y, double z) const;
+		double func(const vector<double>& c, double x, double y, double z) const;
 
 			//! An operator member taking two arguments and returning an ostream value.
 			/*! Print all the data of one LCAO. */
@@ -129,6 +114,6 @@ class LCAO
 
 bool operator==(LCAO, LCAO);
 
-double operator*(vector<LCAO>, vector<double>);
+double operator*(const LCAO&, const vector<vector<double>>&);
 
 #endif

@@ -110,6 +110,8 @@ class CGTF
 			/*! Insert all the data in the CGTF. */
 		void push_back(GTF&);
 
+		void setNumCenter(int);
+
 		double func(double x, double y, double z) const;
 };
 
@@ -121,6 +123,6 @@ bool operator==(CGTF, CGTF);
 	/*! Print all the data of one CGTF */
 ostream& operator<<(ostream&, CGTF&);
 
-double operator*(vector<CGTF>, vector<double>);
+double operator*(const vector<CGTF>&, const vector<double>&);
 
 #endif

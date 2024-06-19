@@ -1,4 +1,4 @@
-OBJECTS = MathFunction.o WFX.o
+OBJECTS = Utils.o LM.o WFX.o FCHK.o
 
 
 include ../../../../CONFIG

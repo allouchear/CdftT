@@ -5,6 +5,7 @@
 #include<vector>
 #include<common/Atom.h>
 #include<analytic/Utils/WFX.h>
+#include<analytic/Utils/FCHK.h>
 
 using namespace std;
 
@@ -75,6 +76,8 @@ class Structure
 
 		void read_from_wfx(WFX&, const PeriodicTable&);
 		Structure(WFX&, const PeriodicTable&);
+		void read_from_fchk(FCHK&, const PeriodicTable&);
+		Structure(FCHK&, const PeriodicTable&);
 };
 
 #endif //CDFTT_STRUCTURE_H_INCLUDED

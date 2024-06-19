@@ -183,7 +183,7 @@ class Descriptors
 		friend ostream& operator<<(ostream& flux, const Descriptors&);
 
 		Descriptors(WFX&, const PeriodicTable&);
-		friend ostream& operator<<(ostream& flux, const Descriptors&);
+		Descriptors(FCHK&, const PeriodicTable&);
 		void compute_fk();
 		void set_mu_fk_data(vector<vector<double>> f, double eH, double eL);
 		void set_mu_fk_data(vector<vector<double>> data);

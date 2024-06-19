@@ -66,6 +66,7 @@ void AEDF::push_back(int a, vector<int> b, vector<int> c, vector<double> d, vect
 
 WFX::WFX()
 {
+	_alpha_and_beta = false;
 	_Title="None";														
 	_Keywords="None";													
 	_Number_of_Nuclei=0;												
@@ -101,6 +102,7 @@ WFX::WFX()
 
 WFX::WFX(ifstream& file)
 {
+	_alpha_and_beta = false;
 	read_file_wfx(file);
 	vector<int> l(3);
 	_Lxyz.resize(_Number_of_Primitives, l);
@@ -497,6 +499,10 @@ void WFX::read_file_wfx(ifstream& file)
 	string cc="Number of Core Electrons";
 	string dd="Additional Electron Density Function (EDF)";
 
+	_Molecular_Orbital_Occupation_Numbers=vector<vector<double>> (2);
+	_Molecular_Orbital_Energies=vector<vector<double>> (2);
+	_Molecular_Orbital_Primitive_Coefficients=vector<vector<MOPC>> (2);
+
 	_Title=read_string(file, a, true);
 	_Keywords=read_string(file, b, true);
 	_Number_of_Nuclei=read_int(file, c, true);
@@ -516,10 +522,10 @@ void WFX::read_file_wfx(ifstream& file)
 	_Primitive_Centers=read_one_block_int(file,q, true, _Number_of_Primitives);
 	_Primitive_Types=read_one_block_int(file,r, true, _Number_of_Primitives);
 	_Primitive_Exponents=read_one_block_real(file,s, true, _Number_of_Primitives);
-	_Molecular_Orbital_Occupation_Numbers=read_one_block_real(file,t, true);
-	_Molecular_Orbital_Energies=read_one_block_real(file,u, true);
+	_Molecular_Orbital_Occupation_Numbers[0]=read_one_block_real(file,t, true);
+	_Molecular_Orbital_Energies[0]=read_one_block_real(file,u, true);
 	_Molecular_Orbital_Spin_Types=read_one_block_string(file,v, true);
-	_Molecular_Orbital_Primitive_Coefficients=read_MOPC_block(file,w, true);
+	_Molecular_Orbital_Primitive_Coefficients[0]=read_MOPC_block(file,w, true);
 	_Energy=read_real(file,x, true);
 	_Virial_Ratio=read_real(file,y, true);
 	_Nuclear_Cartesian_Energy_Gradients=read_NCEG_block(file,z, false);
@@ -527,6 +533,42 @@ void WFX::read_file_wfx(ifstream& file)
 	_Full_Virial_Ratio=read_real(file,bb, false);
 	_Number_of_Core_Electrons=read_int(file,cc, false);
 	_Additionnal_Electron_Density_Function=read_AEDF_block(file,dd, false);
+
+	if(_Molecular_Orbital_Spin_Types[0]==" Alpha and Beta")
+	{
+		_alpha_and_beta = true;
+		_Molecular_Orbital_Occupation_Numbers[1]=_Molecular_Orbital_Occupation_Numbers[0];
+		_Molecular_Orbital_Energies[1]=_Molecular_Orbital_Energies[0];
+		_Molecular_Orbital_Primitive_Coefficients[1]=_Molecular_Orbital_Primitive_Coefficients[0];
+	}
+	
+	else
+	{	
+		_Molecular_Orbital_Occupation_Numbers[1]=vector<double> (0);
+		_Molecular_Orbital_Energies[1]=vector<double> (0);
+		_Molecular_Orbital_Primitive_Coefficients[1]=vector<MOPC> (0);
+
+		for(size_t np=0; np<_Molecular_Orbital_Spin_Types.size(); np++)
+		{
+			if(_Molecular_Orbital_Spin_Types[np]==" Beta")
+			{
+				_Molecular_Orbital_Occupation_Numbers[1].push_back(_Molecular_Orbital_Occupation_Numbers[0][np]);
+				_Molecular_Orbital_Energies[1].push_back(_Molecular_Orbital_Energies[0][np]);
+				_Molecular_Orbital_Primitive_Coefficients[1].push_back(_Molecular_Orbital_Primitive_Coefficients[0][np]);
+			}
+		}
+
+		int nb=_Molecular_Orbital_Primitive_Coefficients[1].size();
+		int nc=0;
+
+		while(nc<nb)
+		{
+			_Molecular_Orbital_Occupation_Numbers[0].pop_back();
+			_Molecular_Orbital_Energies[0].pop_back();
+			_Molecular_Orbital_Primitive_Coefficients[0].pop_back();
+			nc++;
+		}
+	}
 }
 
 void WFX::write_one_block_int(ofstream& f, vector<int> v, string b, bool r, int nint)
@@ -577,6 +619,19 @@ void WFX::write_one_block_string(ofstream& f, vector<string> v, string b, bool r
 	f<<b<<endl;
 }
 
+void WFX::write_one_matrix_real(ofstream& f, vector<vector<double>> v, string b, bool r)
+{
+	if(!r && v.size()==0)
+		return;
+	f<<b<<endl;
+	int i,j;
+	for(i=0; i<int(v.size()); i++)
+		for(j=0; j<int(v[i].size()); j++)
+			f<<" "<<v[i][j]<<"\t";
+	b.insert(1,"\\");
+	f<<endl<<b<<endl;
+}
+
 void WFX::write_int(ofstream& f, int i, string b, bool r)
 {
 	if(!r && i==0)
@@ -607,7 +662,7 @@ void WFX::write_string(ofstream& f, string s, string b, bool r)
 	f<<b<<endl;
 }
 
-void WFX::write_MOPC_block(ofstream& f, vector<MOPC> v, bool r)
+void WFX::write_MOPC_block(ofstream& f, vector<vector<MOPC>> v, bool r)
 {
 	if(!r && v.size()==0)
 		return;
@@ -616,19 +671,28 @@ void WFX::write_MOPC_block(ofstream& f, vector<MOPC> v, bool r)
 	string m2=m1;
 	m2.insert(1,"\\");
 	f<<b<<endl;
-	int i,j;
+	int i,j,k;
 	int n=_Number_of_Primitives;
-	int nMO=v.back().MO_Number();
-	for(i=0; i<nMO; i++)
+	vector<int> nMO (2);
+	
+	nMO[0]=v[0].size();
+	nMO[1]=v[1].size();
+
+	for(i=0; i<2; i++)
 	{
-		f<<m1<<endl;
-		f<<" "<<v[i].MO_Number()<<endl;
-		f<<m2<<endl;
-		for(j=0; j<n; j++)
+		for(j=0; j<nMO[i]; j++)
 		{
-			f<<" "<<v[i].Coefficients()[j];
+			f<<m1<<endl;
+			f<<" "<<v[i][j].MO_Number()<<endl;
+			f<<m2<<endl;
+			for(k=0; k<n; k++)
+			{
+				f<<" "<<v[i][j].Coefficients()[k];
+			}
+			f<<endl;
 		}
-		f<<endl;
+		if(_alpha_and_beta)
+			break;
 	}
 	b.insert(1,"\\");
 	f<<b<<endl;
@@ -725,10 +789,10 @@ void WFX::write_file_wfx(ofstream& file)
 	write_one_block_int(file, _Primitive_Centers, q, true, _Number_of_Primitives);
 	write_one_block_int(file, _Primitive_Types, r, true, _Number_of_Primitives);
 	write_one_block_real(file, _Primitive_Exponents, s, true);
-	write_one_block_real(file, _Molecular_Orbital_Occupation_Numbers, t, true);
-	write_one_block_real(file, _Molecular_Orbital_Energies, u, true);
+	write_one_matrix_real(file, _Molecular_Orbital_Occupation_Numbers, t, true);		//probleme
+	write_one_matrix_real(file, _Molecular_Orbital_Energies, u, true);		// probleme
 	write_one_block_string(file, _Molecular_Orbital_Spin_Types, v, true);
-	write_MOPC_block(file, _Molecular_Orbital_Primitive_Coefficients, true);
+	write_MOPC_block(file, _Molecular_Orbital_Primitive_Coefficients, true); //probleme
 	write_real(file, _Energy, w, true);
 	write_real(file, _Virial_Ratio, x, true);
 	write_NCEG_block(file, _Nuclear_Cartesian_Energy_Gradients, false);
