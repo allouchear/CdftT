@@ -13,7 +13,7 @@ Becke::Becke()
     _grid_weights=vector<vector<double>> ();
     _grid_volumes=vector<vector<double>> ();
     _multigrid=false;
-    _alpha_and_beta=false;
+    
     _energy=0.0;
 }
 
@@ -27,7 +27,18 @@ Becke::Becke(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
     _grid_volumes=vector<vector<double>> ();
     _multigrid=false;
     _energy=wfx.Energy();
-    _alpha_and_beta=wfx.AlphaAndBeta();
+}
+
+Becke::Becke(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
+{
+    _molecule=Structure(fchk, Table);
+    _grid=GridPoints();
+    _orbitals=Orbitals(fchk, Bin, Table);
+    _grid_points=vector<vector<vector<double>>> ();
+    _grid_weights=vector<vector<double>> ();
+    _grid_volumes=vector<vector<double>> ();
+    _multigrid=false;
+    _energy=fchk.TotalEnergy();
 }
 
 int Becke::number_of_radial_points(int Z)
@@ -363,7 +374,7 @@ double Becke::multicenter_integration(function<double(const vector<GTF>& p, doub
     return integral;
 }
 
-double Becke::multicenter_integration(function<double(const vector<CGTF>& p, double x, double y, double z)> f, const vector<CGTF>& p, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::multicenter_integration(function<double(Orbitals&, int i, int j, double x, double y, double z)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor)
 {    /*
     compute the integral
 
@@ -408,14 +419,14 @@ double Becke::multicenter_integration(function<double(const vector<CGTF>& p, dou
         #pragma omp parallel for reduction(+:integ)
         #endif
         for(size_t J=0; J<_grid_weights[I].size(); J++)
-            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(p, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2]);       // evaluate function on the grid
+            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, i, j, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2]);       // evaluate function on the grid
         integral+=integ;
     }
 
     return integral;
 }
 
-double Becke::multicenter_integration(function<double(const LCAO& p, const vector<vector<double>>& m)> f, const LCAO& p, int kmax, int lebedev_order, int radial_grid_factor, int alpha)
+double Becke::multicenter_integration(function<double(Orbitals& Orb, int i, int j, double x, double y, double z, int alpha)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor, int alpha)
 {    /*
     compute the integral
 
@@ -451,10 +462,6 @@ double Becke::multicenter_integration(function<double(const LCAO& p, const vecto
     }
 
     int Nat = _molecule.number_of_atoms();
-    vector<vector<double>> m (_orbitals.coefficients()[alpha].size());
-
-    for(size_t i=1; i<m.size(); i++)
-        m[i]=_orbitals.coefficients()[alpha][i];
 
     double integral = 0.0;
 
@@ -465,17 +472,15 @@ double Becke::multicenter_integration(function<double(const LCAO& p, const vecto
         #pragma omp parallel for reduction(+:integ)
         #endif
         for(size_t J=0; J<_grid_weights[I].size(); J++)
-        {
-            m[0]={_grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2]};
-            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(p, m);       // evaluate function on the grid
-        }
+            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, i, j, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2], alpha);       // evaluate function on the grid
+
         integral+=integ;
     }
 
     return integral;
 }
 
-vector<double> Becke::multicenter_sub_integration(function<double(int nf, const vector<vector<double>>& ni, const LCAO& lcao, const vector<vector<vector<double>>>& coef, double x, double y, double z, bool AlphaAndBeta)> f, int kmax, int lebedev_order, int radial_grid_factor)
+vector<double> Becke::multicenter_sub_integration(function<double(Orbitals& Orb, double x, double y, double z)> f, int kmax, int lebedev_order, int radial_grid_factor)
 {   
     /*
     compute the integral
@@ -504,9 +509,6 @@ vector<double> Becke::multicenter_sub_integration(function<double(int nf, const 
     -------
     I       : value of the integral
     */
-    LCAO l=_orbitals.lcao();
-    vector<vector<double>> n=_orbitals.OccupationNumber();
-    int nf=_orbitals.NumberOfFunctions();
 
     if(_multigrid==false)
     {
@@ -525,7 +527,7 @@ vector<double> Becke::multicenter_sub_integration(function<double(int nf, const 
         #pragma omp parallel for reduction(+:integ)
         #endif
         for(size_t J=0; J<_grid_weights[I].size(); J++)
-            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(nf, n, l, _orbitals.coefficients(),_grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2], _alpha_and_beta);       // evaluate function on the grid
+            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2]);       // evaluate function on the grid
 
         sub_integral[I] = integ;
     }
@@ -533,7 +535,7 @@ vector<double> Becke::multicenter_sub_integration(function<double(int nf, const 
     return sub_integral;
 }
 
-double Becke::overlapGTF(const GTF& A, const GTF& B, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::OverlapGTF(const GTF& A, const GTF& B, int kmax, int lebedev_order, int radial_grid_factor)
 {
     /*
     overlap between two basis functions
@@ -566,7 +568,7 @@ double Becke::overlapGTF(const GTF& A, const GTF& B, int kmax, int lebedev_order
     return Sab;
 }
 
-double Becke::overlapCGTF(const CGTF& A, const CGTF& B, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::OverlapCGTF(int i, int j, int kmax, int lebedev_order, int radial_grid_factor)
 {
     /*
     overlap between two basis functions
@@ -590,16 +592,13 @@ double Becke::overlapCGTF(const CGTF& A, const CGTF& B, int kmax, int lebedev_or
     //    return bfA(x,y,z).conjugate() * bfB(x,y,z)
     //                                    
     // 2. integrate density on a multicenter grid
-    vector<CGTF> p (2);
-    p[0]=A;
-    p[1]=B;
 
-    double Sab = multicenter_integration(&prodCGTF, p, kmax, lebedev_order, radial_grid_factor);
+    double Sab = multicenter_integration(&CGTFstarCGTF, i, j, kmax, lebedev_order, radial_grid_factor);
 
     return Sab;
 }
 
-double Becke::overlapLCAO(const LCAO& A, int kmax, int lebedev_order, int radial_grid_factor, int alpha)
+double Becke::Overlap(int i, int j, int kmax, int lebedev_order, int radial_grid_factor, int alpha)
 {
     /*
     overlap between two basis functions
@@ -624,7 +623,7 @@ double Becke::overlapLCAO(const LCAO& A, int kmax, int lebedev_order, int radial
     //                                    
     // 2. integrate density on a multicenter grid
 
-    double Sab = multicenter_integration(&prodLCAO, A, kmax, lebedev_order, radial_grid_factor, alpha);
+    double Sab = multicenter_integration(&phistarphi, i, j, kmax, lebedev_order, radial_grid_factor, alpha);
 
     return Sab;
 }
@@ -641,24 +640,20 @@ void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
     _partial_charge=qn;
 }
 
-double Becke::density(int nf, const vector<vector<double>>& ni, const LCAO& lcao, const vector<vector<vector<double>>>& coef, double x, double y, double z, bool AlphaAndBeta)
+double Becke::density(Orbitals& Orb, double x, double y, double z)
 {
     double rho=0.0;
-    double p;
     int n;
 
-    if(AlphaAndBeta)
+    if(Orb.AlphaAndBeta())
         n=1;
     else
         n=2;
 
     for(int i=0; i<n; i++)
-        for(int j=0; j<nf; j++)
-            if(ni[i][j]>1e-10)
-            {
-                p=lcao.func(coef[i][j],x,y,z);
-                rho+=ni[i][j] * p * p;
-            }
+        for(int j=0; j<Orb.NumberOfMo(); j++)
+            if(Orb.OccupationNumber()[i][j]>1e-10)
+                rho+=Orb.OccupationNumber()[i][j] * phistarphi(Orb,j,j,x,y,z,i);
 
     return rho;
 }
@@ -672,18 +667,54 @@ double Becke::prodGTF(const vector<GTF>& p, double x, double y, double z)
     return p*c;
 }
 
-double Becke::prodCGTF(const vector<CGTF>& p, double x, double y ,double z)
+double Becke::CGTFstarCGTF(Orbitals& Orb, int i, int j, double x, double y ,double z)
 {
-    vector<double> c(3);
-    c[0]=x;
-    c[1]=y;
-    c[2]=z;
-    return p*c;
+    double c=0.0;
+
+    if(i==j)
+    {
+        c=Orb.vcgtf()[i].func(x,y,z);
+        return c*c;
+    }
+
+    else
+        c=Orb.vcgtf()[i].func(x,y,z)*Orb.vcgtf()[j].func(x,y,z);
+
+    return c;
 }
 
-double Becke::prodLCAO(const LCAO& p, const vector<vector<double>>& d)
+double Becke::phi(Orbitals& Orb, int i, double x, double y, double z, int alpha)
 {
-    return p*d;
+    double phi=0.0;
+    
+    for(size_t j=0; j<Orb.vcgtf().size(); j++)
+        phi+=Orb.coefficients()[alpha][i][j]*Orb.vcgtf()[i].func(x,y,z);
+
+    return phi;
+}
+
+double Becke::phistarphi(Orbitals& Orb, int i, int j, double x, double y, double z, int alpha)
+{
+    if(i==j)
+    {
+        double phi=0.0;
+    
+        for(size_t k=0; k<Orb.vcgtf().size(); k++)
+            phi+=Orb.coefficients()[alpha][i][k]*Orb.vcgtf()[k].func(x,y,z);
+        
+        return phi*phi;
+    }
+
+    double phii=0.0;
+    double phij=0.0;
+
+    for(size_t k=0; k<Orb.vcgtf().size(); k++)
+    {
+        phii+=Orb.coefficients()[alpha][i][k]*Orb.vcgtf()[k].func(x,y,z);
+        phij+=Orb.coefficients()[alpha][j][k]*Orb.vcgtf()[k].func(x,y,z);
+    }
+
+    return phii*phij;
 }
 
 vector<vector<double>> Becke::PartialChargeAndEnergy(int kmax, int lebedev_order, int radial_grid_factor)

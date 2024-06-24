@@ -36,11 +36,13 @@ FCHK::FCHK()
 	_highest_angular_momentum=0;
 
 	_ok_alpha=0;
+	_alpha_and_beta=false;
 }
 
 FCHK::FCHK(ifstream& file)
 {
 	_ok_alpha=0;
+	_alpha_and_beta=false;
 	read_file_fchk(file);
 	if(_beta_orbital_energies==vector<double> ())
 		_beta_orbital_energies=_alpha_orbital_energies;
@@ -247,6 +249,13 @@ void FCHK::read_file_fchk(ifstream& file)
 	_number_of_contracted_shells=read_one_int(file, x);
 	_number_of_primitive_shells=read_one_int(file, y);
 	_highest_angular_momentum=read_one_int(file, z);
+
+	if((_beta_mo_coefficients.size()==0) && (_beta_orbital_energies.size()==0) && (_ok_alpha==2))
+	{
+		_beta_mo_coefficients=_alpha_mo_coefficients;
+		_beta_orbital_energies=_alpha_orbital_energies;
+		_alpha_and_beta=true;
+	}	
 }
 
 long int LocaliseData(ifstream& f, string b)
@@ -271,4 +280,61 @@ long int LocaliseData(ifstream& f, string b)
 		return -1;	
 
 	return position;
+}
+
+void FCHK::PrintData()
+{
+	cout<<"Number of electrons : "<<_number_of_electrons<<endl;
+	cout<<"Number of alpha electrons : "<<_number_of_alpha_electrons<<endl;
+	cout<<"Number of beta electrons : "<<_number_of_beta_electrons<<endl;
+	cout<<"Number of basis functions : "<<_number_of_basis_functions<<endl;
+	for(size_t i=0; i<_atomic_numbers.size(); i++)
+		cout<<"Atomic number "<<i<<" : "<<_atomic_numbers[i]<<endl;
+	for(size_t i=0; i<_nuclear_charges.size(); i++)
+		cout<<"Nuclear charges "<<i<<" : "<<_nuclear_charges[i]<<endl;
+	for(int i=0; i<_number_of_atoms; i++)
+	{
+		cout<<"Current Cartesian Coordinates "<<i<<" : ";
+		for(int j=0; j<3; j++)
+			cout<<_current_cartesian_coordinates[j+3*i]<<"   ";
+		cout<<endl;
+	}
+	for(size_t i=0; i<_primitive_exponents.size(); i++)
+		cout<<"Primitive exponents "<<i<<" : "<<_primitive_exponents[i]<<endl;
+	for(size_t i=0; i<_contraction_coefficients.size(); i++)
+		cout<<"Contraction coefficients "<<i<<" : "<<_contraction_coefficients[i]<<endl;
+	for(size_t i=0; i<_alpha_orbital_energies.size(); i++)
+		cout<<"Alpha orbital energies "<<i<<" : "<<_alpha_orbital_energies[i]<<endl;
+	for(size_t i=0; i<_alpha_mo_coefficients.size(); i++)
+		cout<<"Alpha MO coefficients "<<i<<" : "<<_alpha_mo_coefficients[i]<<endl;
+	for(size_t i=0; i<_beta_orbital_energies.size(); i++)
+		cout<<"Beta orbital energies "<<i<<" : "<<_beta_orbital_energies[i]<<endl;
+	for(size_t i=0; i<_beta_mo_coefficients.size(); i++)
+		cout<<"Beta MO coefficients "<<i<<" : "<<_beta_mo_coefficients[i]<<endl;
+	cout<<"Total energy : "<<_total_energy<<endl;
+	for(size_t i=0; i<_mulliken_charges.size(); i++)
+		cout<<"Mulliken charges "<<i<<" : "<<_mulliken_charges[i]<<endl;
+	for(size_t i=0; i<_npa_charges.size(); i++)
+		cout<<"NPA charges "<<i<<" : "<<_npa_charges[i]<<endl;
+	for(size_t i=0; i<_dipole_moment.size(); i++)
+		cout<<"Dipole moment "<<i<<" : "<<_dipole_moment[i]<<endl;
+	for(size_t i=0; i<_shell_types.size(); i++)
+		cout<<"Shell types "<<i<<" : "<<_shell_types[i]<<endl;
+	for(size_t i=0; i<_shell_to_atom_map.size(); i++)
+		cout<<"Shell to atom map "<<i<<" : "<<_shell_to_atom_map[i]<<endl;
+	for(size_t i=0; i<_number_of_primitives_per_shell.size(); i++)
+		cout<<"Number of primitives per shell "<<i<<" : "<<_number_of_primitives_per_shell[i]<<endl;
+	for(size_t i=0; i<_sp_contraction_coefficients.size(); i++)
+		cout<<"SP contraction coefficients "<<i<<" : "<<_sp_contraction_coefficients[i]<<endl;
+	for(int i=0; i<_number_of_contracted_shells; i++)
+	{
+		cout<<"Coordinates for each shells "<<i<<" : ";
+		for(int j=0; j<3; j++)
+			cout<<_coordinates_for_shells[j+3*i]<<"   ";
+		cout<<endl;
+	}
+	cout<<"Number of atoms : "<<_number_of_atoms<<endl;
+	cout<<"Number of contracted shells : "<<_number_of_contracted_shells<<endl;
+	cout<<"Number of primitive shells : "<<_number_of_primitive_shells<<endl;
+	cout<<"Highest angular momentum : "<<_highest_angular_momentum<<endl;
 }

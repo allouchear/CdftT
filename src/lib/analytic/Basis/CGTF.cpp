@@ -7,6 +7,7 @@ CGTF::CGTF()
 {
 	_gtf.resize(0);
 	_numberOfFunctions=0;
+	_coefficients=vector<double> ();
 	_L=0;
 	_M=0;
 	_bino = Binomial();
@@ -15,9 +16,15 @@ CGTF::CGTF()
 CGTF::CGTF(vector<GTF> A) : _gtf(A)
 {
 	_numberOfFunctions=_gtf.size();
+	_coefficients=vector<double> (_numberOfFunctions, 1);
 	_L=0;
 	_M=0;
 	_bino=A[0].bino();
+}
+
+void CGTF::setCoef(double c)
+{
+	_coefficients.push_back(c);
 }
 
 double CGTF::ERICGTF(CGTF& q, CGTF& r, CGTF& s)
@@ -39,18 +46,22 @@ void CGTF::normaliseCGTF()
 {
 	int n,np;
 	double sum=0.0;
+
 	for(n=0 ; n<_numberOfFunctions ; n++)
-		sum += _gtf[n].coefficient()*_gtf[n].coefficient()* _gtf[n].GTFstarGTF(_gtf[n]);
+		_gtf[n].normaliseRadialGTF();
+
+	for(n=0 ; n<_numberOfFunctions ; n++)
+		sum += _coefficients[n]*_coefficients[n]* _gtf[n].overlapGTF(_gtf[n]);
 
 	for(n=0;n<_numberOfFunctions-1 ; n++)
 		for(np=n+1; np<_numberOfFunctions; np++)
-			sum += 2*_gtf[n].coefficient()*_gtf[np].coefficient()*_gtf[n].GTFstarGTF(_gtf[np]);
+			sum += 2*_coefficients[n]*_coefficients[np]*_gtf[n].overlapGTF(_gtf[np]);
 
 	if(sum>1.e-20)
 	{
 		sum = sqrt(sum);
 		for(n=0 ; n<_numberOfFunctions ; n++)
-			_gtf[n]/=sum;
+			_coefficients[n]/=sum;
 	}
 	else
 	{
@@ -66,8 +77,8 @@ double CGTF::overlapCGTF(CGTF& right)
 	//cout<<"Number of Function GTF in CGTF = "<<_numberOfFunctions<<endl;
 
 	for(int n=0;n<_numberOfFunctions;n++)
-		for(int np=0;np<_numberOfFunctions;np++)
-			sum += _gtf[n].overlapGTF(right._gtf[np]);
+		for(int np=0;np<right._numberOfFunctions;np++)
+			sum += _coefficients[n]*right._coefficients[np]*_gtf[n].overlapGTF(right._gtf[np]);
 
 	//cout<<"Test Overlap in CGTF "<<endl;
 
@@ -195,8 +206,8 @@ double CGTF::func(double x, double y, double z) const
 {
 	double r=0.0;
 
-	for(size_t i=0; i<_gtf.size(); i++)
-		r+=_gtf[i].func(x,y,z);
+	for(int i=0; i<_numberOfFunctions; i++)
+		r+=_coefficients[i]*_gtf[i].func(x,y,z);
 
 	return r;
 }
@@ -220,11 +231,8 @@ bool operator==(CGTF a, CGTF b)
 ostream& operator<<(ostream& flux, CGTF& cgtf)
 {
 	for(int i=0; i<cgtf.numberOfFunctions(); i++)
-	{
-		if(i>0)
-			flux<<setw(20)<<" ";
-		flux<<cgtf.gtf()[i]<<endl;
-	}
+		flux<<setw(20)<<cgtf.coefficients()[i]<<cgtf.gtf()[i]<<endl;
+
 	return flux;
 }
 

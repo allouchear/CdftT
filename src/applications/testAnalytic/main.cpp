@@ -3,7 +3,6 @@
 #include<analytic/Utils/Utils.h>
 #include<analytic/Basis/GTF.h>
 #include<analytic/Basis/CGTF.h>
-#include<analytic/Orbitals/LCAO.h>
 #include<analytic/Orbitals/Orbitals.h>
 #include<analytic/Utils/WFX.h>
 #include<analytic/Utils/FCHK.h>
@@ -32,7 +31,7 @@ int main()
 	cout<<endl;
 	cout<<Table.double_factorial(10)<<endl<<endl;
 */
-/*
+
 	ifstream f;
 	f.open("h2o.wfx");
 	WFX wfx_h2o (f);
@@ -53,41 +52,96 @@ int main()
 	h.close();
 
 	cout<<endl;
-*/
+
 /*
 	ofstream g;
 	g.open("test.wfx");
 	wfx_test.write_file_wfx(g);
 	g.close();
 */
-	ifstream t;
-	t.open("h2o.fchk");
-	FCHK fchk_test (t);
-	t.close();
+	ifstream x;
+	x.open("h2o.fchk");
+	FCHK fchk_h2o (x);
+	x.close();
+
+	cout<<endl;
+
+	ifstream y;
+	y.open("h2ominus.fchk");
+	FCHK fchk_h2ominus (y);
+	y.close();
+
+	cout<<endl;
+
+	ifstream z;
+	z.open("h2oplus.fchk");
+	FCHK fchk_h2oplus (z);
+	z.close();
 
 //	cout<<fchk_test.NumberOfElectrons()<<endl;
+
+	Becke wh2o (wfx_h2o, Bin, Table);
+	Becke wh2ominus (wfx_h2ominus, Bin, Table);
+	Becke wh2oplus (wfx_h2oplus, Bin, Table);
 /*
-	Becke h2o (wfx_h2o, Bin, Table);
-	Becke h2ominus (wfx_h2ominus, Bin, Table);
-	Becke h2oplus (wfx_h2oplus, Bin, Table);
+	cout<<endl<<endl;
+
+	fchk_h2o.PrintData();
+
+	cout<<endl<<endl;
+
+	fchk_h2ominus.PrintData();
+
+	cout<<endl<<endl;
+
+	fchk_h2oplus.PrintData();
+*/
+/*
+	cout<<h2o.Overlap(0,0)<<endl;
+	cout<<h2o.Overlap(1,0)<<endl;
+	cout<<h2o.Overlap(1,1)<<endl;
+*/
 
 	vector<vector<double>> h2oQE;
 	vector<vector<double>> h2ominusQE;
 	vector<vector<double>> h2oplusQE;
 
-	h2oQE=h2o.PartialChargeAndEnergy();
-	h2ominusQE=h2ominus.PartialChargeAndEnergy();
-	h2oplusQE=h2oplus.PartialChargeAndEnergy();
+	h2oQE=wh2o.PartialChargeAndEnergy(1, 11, 1);
+	h2ominusQE=wh2ominus.PartialChargeAndEnergy(1, 11, 1);
+	h2oplusQE=wh2oplus.PartialChargeAndEnergy(1, 11, 1);
 
 	double I, A;
 	I=h2oplusQE[0][0]-h2oQE[0][0];
 	A=h2ominusQE[0][0]-h2oQE[0][0];
-	Descriptors test(h2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
+	Descriptors test(wh2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
 	cout<<test<<endl;
-*/
+
+	Becke fh2o (fchk_h2o, Bin, Table);
+	Becke fh2ominus (fchk_h2ominus, Bin, Table);
+	Becke fh2oplus (fchk_h2oplus, Bin, Table);
+
+	h2oQE=fh2o.PartialChargeAndEnergy(1, 21 ,3);
+	h2ominusQE=fh2ominus.PartialChargeAndEnergy(1, 21 ,3);
+	h2oplusQE=fh2oplus.PartialChargeAndEnergy(1, 21 ,3);
+
+	//double I, A;
+	I=h2oplusQE[0][0]-h2oQE[0][0];
+	A=h2ominusQE[0][0]-h2oQE[0][0];
+	Descriptors test2(fh2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
+	cout<<test2<<endl;
+
+
+//	Becke Becketest(fchk_test, Bin, Table);
+//	Orbitals Orbtest(fchk_test, Bin, Table);
+//	cout<<Orbtest<<endl;
+//	Orbtest.PrintDescriptors();
 /*
-	Orbitals Orbtest(wfx_h2o, Bin, Table);
-	Orbtest.PrintDescriptors();
+	Orbitals Orb(wfx_h2o, Bin, Table);
+	Orb.PrintOverlap(0,0);
+	Orb.PrintOverlap(1,0);
+	Orb.PrintOverlap(1,1);
+	Orb.PrintDescriptors();
+	cout<<Orb<<endl;
 */
 /*
 	GTF A,B,C;
@@ -104,10 +158,6 @@ int main()
 	C=GTF(1.297230000000e+00, 1.0, coord2, l2, Bin);
 */
 /*
-	LCAO A,B,C;
-	A=Orbtest.vlcao()[0];
-	B=Orbtest.vlcao()[1];
-	C=Orbtest.vlcao()[2];
 	cout<<setprecision(10);
 
 	double OLAA, OLCC, OLAB, OLAC, OLBC;

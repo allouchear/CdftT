@@ -1,4 +1,4 @@
-OBJECTS = LCAO.o Orbitals.o 
+OBJECTS = Orbitals.o 
 
 
 include ../../../../CONFIG

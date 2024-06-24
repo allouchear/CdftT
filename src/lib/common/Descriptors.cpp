@@ -157,7 +157,7 @@ void Descriptors::compute_all()
 
 	for(int i=0;i<_str.number_of_atoms();i++)
 	{
-		_Deltafk[i] = _fkm[i]-_fkp[i];
+		_Deltafk[i] = _fkp[i]-_fkm[i];
 		_fk0[i]=0.5*(_fkm[i]+_fkp[i]);
 		_wkm[i] = _fkm[i]*_w;
 		_wkp[i] = _fkp[i]*_w;

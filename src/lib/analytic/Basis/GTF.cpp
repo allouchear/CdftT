@@ -185,13 +185,14 @@ double GTF::normeGTF(GTF& q)
 			/(q.bino().fact().double_factorial(q.l()[0])*q.bino().fact().double_factorial(q.l()[1])*q.bino().fact().double_factorial(q.l()[2])));
 }
 
-void GTF::normalise_radialGTF()
+void GTF::normaliseRadialGTF()
 {
-	GTF q(_exposant, _coefficient, _coord, _l, _bino);
 	int l_bis=_l[0]+_l[1]+_l[2];
-	q.l()[0]=l_bis;
-	q.l()[1]=0;
-	q.l()[2]=0;
+	vector<int> l (3);
+	l[0]=l_bis;
+	l[1]=0;
+	l[2]=0;
+	GTF q(_exposant, _coefficient, _coord, l, _bino);
 	_coefficient*=normeGTF(q);
 }
 
@@ -435,7 +436,7 @@ double GTF::func(double x, double y, double z) const
 	double yA=y-_coord[1];
 	double zA=z-_coord[2];
 
-	return power(xA, _l[0])*power(yA, _l[1])*power(zA, _l[2])*exp(-_exposant * (xA*xA + yA*yA + zA*zA));
+	return _coefficient*power(xA, _l[0])*power(yA, _l[1])*power(zA, _l[2])*exp(-_exposant * (xA*xA + yA*yA + zA*zA));
 }
 
 void GTF::operator/=(double c)
@@ -473,7 +474,7 @@ bool operator==(GTF a, GTF b)
 
 ostream& operator<<(ostream& flux, GTF& gtf)
 {
-	flux<<left<<setw(20)<<gtf.exposant()<<setw(20)<<gtf.coefficient()<<setw(5)<<gtf.l()[0]<<setw(5)<<gtf.l()[1]
+	flux<<left<<setw(20)<<gtf.coefficient()<<setw(20)<<gtf.exposant()<<setw(5)<<gtf.l()[0]<<setw(5)<<gtf.l()[1]
 	<<setw(5)<<gtf.l()[2]<<setw(20)<<gtf.coord()[0]<<setw(20)<<gtf.coord()[1]<<setw(20)<<gtf.coord()[2];
 	return flux;
 }

@@ -89,7 +89,7 @@ class GTF
 			//! A normal member taking one argument.
 			/*! This member normalise the radial's composant of the GTF. */
 
-		void normalise_radialGTF();
+		void normaliseRadialGTF();
 
 			//! A normal member taking one argument.
 			/*! This member normalise the GTF. */

@@ -14,6 +14,7 @@ class CGTF
 	private:
 		int _num_center;
 		int _numberOfFunctions;
+		vector<double> _coefficients;
 		vector<GTF> _gtf;
 		int _L;
 		int _M;
@@ -37,6 +38,10 @@ class CGTF
 
 			//! A normal member taking no arguments and returning an int value.
 			/*! \return The number of GTF. */
+
+		void setCoef(double);
+
+		vector<double> coefficients() {return _coefficients;}
 
 		int numberOfFunctions()
 		{

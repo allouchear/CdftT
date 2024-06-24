@@ -42,6 +42,7 @@ private:
 	int _highest_angular_momentum;
 
 	int _ok_alpha;
+	bool _alpha_and_beta;
 
 public:
 	FCHK();
@@ -75,11 +76,13 @@ public:
 	int NumberOfAtoms() {return _number_of_atoms;}
 	int NumberOfContractedShells() {return _number_of_contracted_shells;}
 	int HighestAngularMomentum() {return _highest_angular_momentum;}
+	bool AlphaAndBeta() {return _alpha_and_beta;}
 	int read_one_int(ifstream&, string);
 	double read_one_real(ifstream&, string);
 	vector<int> read_one_block_int(ifstream&, string);
 	vector<double> read_one_block_real(ifstream&, string);
 	void read_file_fchk(ifstream&);
+	void PrintData();
 };
 
 long int LocaliseData(ifstream&, string);

@@ -4,6 +4,7 @@
 #include<iostream>
 #include<functional>
 #include<analytic/Utils/WFX.h>
+#include<analytic/Utils/FCHK.h>
 #include<analytic/Orbitals/Orbitals.h>
 #include<analytic/Becke/GridPoints.h>
 #include<common/Descriptors.h>
@@ -22,10 +23,10 @@ class Becke
 		vector<double> _partial_charge;
 		double _energy;
 		bool _multigrid;
-		bool _alpha_and_beta;
 	public:
 		Becke();
 		Becke(WFX&, Binomial& Bin, const PeriodicTable&);
+		Becke(FCHK&, Binomial& Bin, const PeriodicTable&);
 		~Becke() {}
 		Structure str() {return _molecule;}
 		int number_of_radial_points(int);
@@ -34,18 +35,19 @@ class Becke
 		vector<vector<double>> join_grids();
 		double s(double, int);
 		double multicenter_integration(function<double(const vector<GTF>&, double,double,double)>, const vector<GTF>&, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-		double multicenter_integration(function<double(const vector<CGTF>&, double,double,double)>, const vector<CGTF>&, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-		double multicenter_integration(function<double(const LCAO&, const vector<vector<double>>&)>, const LCAO&, int kmax=3, int lebedev_order=41, int radial_grid_factor=5, int alpha=0);
-		vector<double> multicenter_sub_integration(function<double(int, const vector<vector<double>>&, const LCAO&, const vector<vector<vector<double>>>&, double, double, double, bool)> f, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
+		double multicenter_integration(function<double(Orbitals&, int, int, double,double,double)>, int, int, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
+		double multicenter_integration(function<double(Orbitals&, int, int, double, double, double, int)> f, int i, int j, int kmax=3, int lebedev_order=41, int radial_grid_factor=5, int alpha=0);
+		vector<double> multicenter_sub_integration(function<double(Orbitals&, double, double, double)> f, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
 		void partial_charge(int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-		static double density(int, const vector<vector<double>>&, const LCAO&, const vector<vector<vector<double>>>&, double, double, double, bool);
-		double overlapGTF(const GTF&, const GTF&, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
+		static double density(Orbitals&, double, double, double);
+		double OverlapGTF(const GTF&, const GTF&, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
 		static double prodGTF(const vector<GTF>& p, double x, double y, double z);
-		double overlapCGTF(const CGTF&, const CGTF&, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-		static double prodCGTF(const vector<CGTF>& p, double x, double y, double z);
-		double overlapLCAO(const LCAO&, int kmax=3, int lebedev_order=41, int radial_grid_factor=5, int alpha=0);
-		static double prodLCAO(const LCAO& p, const vector<vector<double>>& d);
+		double OverlapCGTF(int i, int j, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
+		static double CGTFstarCGTF(Orbitals& Orb, int i, int j, double x, double y, double z);
+		double Overlap(int i, int j, int kmax=3, int lebedev_order=41, int radial_grid_factor=5, int alpha=0);
 		vector<vector<double>> PartialChargeAndEnergy(int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
+		static double phi(Orbitals& Orb, int i, double x, double y, double z, int alpha=0);
+		static double phistarphi(Orbitals& Orb, int i, int j, double x, double y, double z, int alpha=0);
 };
 
 #endif
