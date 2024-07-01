@@ -136,7 +136,6 @@ Structure::Structure(FCHK& fchk, const PeriodicTable& Table)
 
 void Structure::read_from_moldengab(MOLDENGAB& moldengab, const PeriodicTable& Table)
 {
-	int n=0;
 	_atoms.resize(moldengab.NumberOfAtoms());
 	for(int i=0; i<moldengab.NumberOfAtoms(); i++)
 	{

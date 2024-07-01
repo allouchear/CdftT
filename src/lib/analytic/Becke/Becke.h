@@ -5,6 +5,7 @@
 #include<functional>
 #include<analytic/Utils/WFX.h>
 #include<analytic/Utils/FCHK.h>
+#include<analytic/Utils/MOLDENGAB.h>
 #include<analytic/Orbitals/Orbitals.h>
 #include<analytic/Becke/GridPoints.h>
 #include<common/Descriptors.h>
@@ -25,8 +26,9 @@ class Becke
 		bool _multigrid;
 	public:
 		Becke();
-		Becke(WFX&, Binomial& Bin, const PeriodicTable&);
-		Becke(FCHK&, Binomial& Bin, const PeriodicTable&);
+		Becke(WFX&, Binomial&, const PeriodicTable&);
+		Becke(FCHK&, Binomial&, const PeriodicTable&);
+		Becke(MOLDENGAB&, Binomial&, const PeriodicTable&);
 		~Becke() {}
 		Structure str() {return _molecule;}
 		int number_of_radial_points(int);
@@ -48,6 +50,9 @@ class Becke
 		vector<vector<double>> PartialChargeAndEnergy(int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
 		static double phi(Orbitals& Orb, int i, double x, double y, double z, int alpha=0);
 		static double phistarphi(Orbitals& Orb, int i, int j, double x, double y, double z, int alpha=0);
+
+		double eHOMO() {_orbitals.HOMO(); return _orbitals.eHOMO();}
+		double eLUMO() {_orbitals.LUMO(); return _orbitals.eLUMO();}
 };
 
 #endif

@@ -77,33 +77,33 @@ int main()
 */
 	ifstream u;
 	u.open("h2o.gab");
-	MOLDENGAB molden_h2o (u);
+	MOLDENGAB moldengab_h2o (u);
 	u.close();
-	molden_h2o.PrintData();
+	moldengab_h2o.PrintData();
 
-/*	cout<<endl;
+	cout<<endl;
 
 	ifstream v;
-	v.open("h2ominus.molden");
-	MOLDEN molden_h2ominus (v);
+	v.open("h2ominus.gab");
+	MOLDENGAB moldengab_h2ominus (v);
 	v.close();
 
 	cout<<endl;
 
 	ifstream w;
-	w.open("h2oplus.molden");
-	MOLDEN molden_h2oplus (w);
+	w.open("h2oplus.gab");
+	MOLDENGAB moldengab_h2oplus (w);
 	w.close();
-*/
-/*
+
+/*													//WFX
 	Becke wh2o (wfx_h2o, Bin, Table);
 	Becke wh2ominus (wfx_h2ominus, Bin, Table);
 	Becke wh2oplus (wfx_h2oplus, Bin, Table);
-
+*/
 	vector<vector<double>> h2oQE;
 	vector<vector<double>> h2ominusQE;
 	vector<vector<double>> h2oplusQE;
-
+/*
 	h2oQE=wh2o.PartialChargeAndEnergy(1, 11, 1);
 	h2ominusQE=wh2ominus.PartialChargeAndEnergy(1, 11, 1);
 	h2oplusQE=wh2oplus.PartialChargeAndEnergy(1, 11, 1);
@@ -113,7 +113,7 @@ int main()
 	A=h2ominusQE[0][0]-h2oQE[0][0];
 	Descriptors test(wh2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
 	cout<<test<<endl;
-
+													//FCHK
 	Becke fh2o (fchk_h2o, Bin, Table);
 	Becke fh2ominus (fchk_h2ominus, Bin, Table);
 	Becke fh2oplus (fchk_h2oplus, Bin, Table);
@@ -127,7 +127,20 @@ int main()
 	A=h2ominusQE[0][0]-h2oQE[0][0];
 	Descriptors test2(fh2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
 	cout<<test2<<endl;
-*/
+*/													//MOLDENGAB
+	Becke mgh2o (moldengab_h2o, Bin, Table);
+	Becke mgh2ominus (moldengab_h2ominus, Bin, Table);
+	Becke mgh2oplus (moldengab_h2oplus, Bin, Table);
+
+	h2oQE=mgh2o.PartialChargeAndEnergy(1, 21 ,3);
+	h2ominusQE=mgh2ominus.PartialChargeAndEnergy(1, 21 ,3);
+	h2oplusQE=mgh2oplus.PartialChargeAndEnergy(1, 21 ,3);
+
+	double I, A;
+	I= -mgh2o.eHOMO();
+	A= -mgh2o.eLUMO();
+	Descriptors test2(mgh2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
+	cout<<test2<<endl;
 
 //	Becke Becketest(fchk_test, Bin, Table);
 //	Orbitals Orbtest(fchk_test, Bin, Table);

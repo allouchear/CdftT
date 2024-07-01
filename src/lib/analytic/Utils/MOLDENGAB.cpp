@@ -3,6 +3,8 @@
 #include<analytic/Utils/MOLDENGAB.h>
 #include<common/Constants.h>
 
+using namespace std;
+
 MOLDENGAB::MOLDENGAB()
 {
 	_symbol=vector<string> ();
@@ -95,11 +97,12 @@ MOLDENGAB::MOLDENGAB(ifstream& file)
 	}
 
 	read_atom_data(file);
-	read_basis_data(file);
-	read_MO_data(file);
 
 	_number_of_atoms=_atomic_number.size();
 	_n_at_basis=vector<int> (_number_of_atoms);
+	
+	read_basis_data(file);
+	read_MO_data(file);
 
 	if(_coord_type=="Angs")
 		for(int i=0; i<_number_of_atoms; i++)

@@ -41,6 +41,20 @@ Becke::Becke(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
     _energy=fchk.TotalEnergy();
 }
 
+Becke::Becke(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Table)
+{
+    _molecule=Structure(moldengab, Table);
+    _grid=GridPoints();
+    _orbitals=Orbitals(moldengab, Bin, Table);
+    _grid_points=vector<vector<vector<double>>> ();
+    _grid_weights=vector<vector<double>> ();
+    _grid_volumes=vector<vector<double>> ();
+    _multigrid=false;
+    _energy=0;
+
+    cout<<_orbitals<<endl;
+}
+
 int Becke::number_of_radial_points(int Z)
 {
     /*
@@ -652,8 +666,11 @@ double Becke::density(Orbitals& Orb, double x, double y, double z)
 
     for(int i=0; i<n; i++)
         for(int j=0; j<Orb.NumberOfMo(); j++)
+        {
+            cout<<j+1<<" / "<<Orb.NumberOfMo()<<endl;
             if(Orb.OccupationNumber()[i][j]>1e-10)
                 rho+=Orb.OccupationNumber()[i][j] * phistarphi(Orb,j,j,x,y,z,i);
+        }
 
     return rho;
 }
@@ -699,6 +716,9 @@ double Becke::phistarphi(Orbitals& Orb, int i, int j, double x, double y, double
     {
         double phi=0.0;
     
+        cout<<"nCGTF = "<<Orb.vcgtf().size()<<endl;
+        cout<<"nCoefs = "<<Orb.coefficients()[alpha][i].size()<<endl;
+
         for(size_t k=0; k<Orb.vcgtf().size(); k++)
             phi+=Orb.coefficients()[alpha][i][k]*Orb.vcgtf()[k].func(x,y,z);
         

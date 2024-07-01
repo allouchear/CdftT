@@ -30,7 +30,7 @@ private:
 	int _number_of_MO_coefs;
 	int _number_of_MO;
 	bool _alpha_and_beta; //true de base
-	vector<int> n_at_basis;
+	vector<int> _n_at_basis;
 
 //Pour séparer alpha et beta
 	vector<double> _alpha_occupation;
