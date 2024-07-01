@@ -231,6 +231,141 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 	NormaliseAllBasis();
 }
 
+Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Table)
+{
+	_coefficients[0]=moldengab.AlphaMOCoefs();
+	_coefficients[1]=moldengab.BetaMOCoefs();
+
+	_number_of_alpha_electrons=0;
+	_number_of_beta_electrons=0;
+
+	for(size_t i=0; i<moldengab.OccupationNumber().size(); i++)
+	{
+		if(moldengab.SpinTypes()[i]=="Alpha")
+			_number_of_alpha_electrons++;
+		else if(moldengab.SpinTypes()[i]=="Beta")
+			_number_of_beta_electrons++;
+	}
+
+	_number_of_atoms=moldengab.NumberOfAtoms();
+	_numberOfMo=moldengab.NumberOfMO();
+	_bino=Bin;
+		
+	_atomic_numbers=moldengab.AtomicNumbers();
+	_symbol=moldengab.Symbol();
+	_orbital_energy[0]=moldengab.AlphaEnergies();
+	_orbital_energy[1]=moldengab.BetaEnergies();	
+	_numOrb=vector<int> (2,0);
+	_occupation_number[0]=moldengab.AlphaOccupation();
+	_occupation_number[1]=moldengab.BetaOccupation();
+	_alpha_and_beta=moldengab.AlphaAndBeta();
+	_descriptors=Descriptors(moldengab, Table);
+
+	vector<int> Ltypes = moldengab.Ltypes();
+	int nShells = Ltypes.size();	
+	int lmax=0;
+	for(int i=0; i<nShells; i++)
+		if(lmax<abs(Ltypes[i]))
+			lmax=abs(Ltypes[i]);
+
+	int llmax = (lmax+1)*(lmax+2)/2;
+	vector<int> nPrimitivesByShell = moldengab.NumberOfGtf();
+	vector<int> nCoefs (llmax);
+	
+	vector<double> cgtfCoefs = moldengab.CgtfCoefficients();
+	vector<double> gtfCoefs = moldengab.GtfCoefficients();
+	vector<double> coordinatesForShells = moldengab.Coordinates();
+	vector<double> primitiveExponents = moldengab.Exposants();
+	vector<vector<double>> coefs (llmax, vector<double> (llmax));
+	vector<vector<vector<int>>> l (3, vector<vector<int>> (llmax, vector<int> (llmax)));
+
+	int NOrb = _numberOfMo;
+	_vcgtf = vector<CGTF> (NOrb);
+
+	int kOrb = 0;
+	int kPrimitive = 0;
+	for(int nS = 0;nS<nShells; nS++)
+	{
+		int nM = 0;
+
+		if(Ltypes[nS]<-1)
+			nM = 2*abs(Ltypes[nS])+1; /* Sperical D, F, G, ...*/
+		else if(Ltypes[nS]==-1)
+			nM = 1; /* This a SP. Make S before */
+		else
+			nM = (Ltypes[nS]+1)*(Ltypes[nS]+2)/2;
+
+		if(Ltypes[nS]==-1)
+			getlTable(0, nCoefs, coefs, l, _bino); /* This a SP. Make S before */
+		else
+			getlTable(Ltypes[nS], nCoefs, coefs, l, _bino); 
+
+		for(int m=0;m<nM;m++)
+		{
+			int ip,j,n;
+			_vcgtf[kOrb]= CGTF ();
+  			j = -1;
+	 		for(ip=0;ip<nPrimitivesByShell[nS];ip++)
+ 				for(n=0;n<nCoefs[m];n++)
+	 			{
+	 		   		j++;
+	   				vector<double> coord_ (3);
+	   				vector<int> l_ (3);
+	   				for(int c=0;c<3;c++)
+	   				{
+	   					coord_[c] = coordinatesForShells[c+nS*3];
+						l_[c] = l[c][m][n];
+	   				}
+	   				GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
+	   				gtf.setCoef(gtfCoefs[kPrimitive+ip]);
+	   				_vcgtf[kOrb].push_back(gtf);
+	 				_vcgtf[kOrb].setCoef(cgtfCoefs[kPrimitive+ip]*coefs[m][n]);
+	 			}
+			kOrb++;
+		}
+		if(Ltypes[nS]==-1) /* This a SP. Now make P*/
+		{
+			getlTable(-1, nCoefs, coefs, l, _bino);
+			nM = 3;
+			for(int m=0;m<nM;m++)
+			{
+				int ip,j,n;
+
+				_vcgtf[kOrb]= CGTF ();
+          			j = -1;
+	 			for(ip=0;ip<nPrimitivesByShell[nS];ip++)
+ 					for(n=0;n<nCoefs[m];n++)
+	 				{
+	 		   			j++;
+	   					vector<double> coord_ (3);
+	   					vector<int> l_ (3);
+	   					for(int c=0;c<3;c++)
+	   					{
+	   						coord_[c] = coordinatesForShells[c+nS*3];
+	   						l_[c] = l[c][m][n];
+	   					}
+	   				GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
+	   				gtf.setCoef(gtfCoefs[kPrimitive+ip]);
+	   				_vcgtf[kOrb].push_back(gtf);
+	   				_vcgtf[kOrb].setCoef(cgtfCoefs[kPrimitive+ip]*coefs[m][n]);
+	 			}
+				kOrb++;
+			}
+		}
+		kPrimitive += nPrimitivesByShell[nS];
+	}
+
+	_numberOfAo=_vcgtf.size();
+
+	if(_numberOfAo != _numberOfMo)
+	{
+		cout<<"Error : Their is "<<_vcgtf.size()<<" CGTF for "<<_numberOfMo<<" basis in file."<<endl;
+		cout<<"Please check your file."<<endl;
+		exit(1);
+	}
+
+}
+
 double Orbitals::ERIorbitals(Orbitals& q, Orbitals& r, Orbitals& s)
 {
 	int np,nq;

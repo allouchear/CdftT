@@ -1,4 +1,4 @@
-OBJECTS = Utils.o LM.o WFX.o FCHK.o
+OBJECTS = Utils.o LM.o WFX.o FCHK.o MOLDENGAB.o
 
 
 include ../../../../CONFIG

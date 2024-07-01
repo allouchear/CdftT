@@ -4,6 +4,7 @@
 #include<iostream>
 #include<analytic/Utils/WFX.h>
 #include<analytic/Utils/FCHK.h>
+#include<analytic/Utils/MOLDENGAB.h>
 #include<analytic/Basis/CGTF.h>
 #include<common/PeriodicTable.h>
 #include<common/Descriptors.h>
@@ -45,9 +46,11 @@ class Orbitals
 
 		Orbitals(FCHK&, Binomial&, const PeriodicTable&);
 
+		Orbitals(MOLDENGAB&, Binomial&, const PeriodicTable&);
+
 			//! A default desctructor.
 			/*! We don't use it. */
-		~Orbitals() {};
+		~Orbitals() {}
 
 			//! A normal member taking no arguments and returning a vector<LCAO> value.
 			/*! \return The table of LCAO which compose the Orbitals. */

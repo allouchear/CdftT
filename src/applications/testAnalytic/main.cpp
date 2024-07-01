@@ -6,6 +6,7 @@
 #include<analytic/Orbitals/Orbitals.h>
 #include<analytic/Utils/WFX.h>
 #include<analytic/Utils/FCHK.h>
+#include<analytic/Utils/MOLDENGAB.h>
 #include<analytic/Becke/Becke.h>
 #include"Timer.h"
 #include<ctime>
@@ -31,7 +32,7 @@ int main()
 	cout<<endl;
 	cout<<Table.double_factorial(10)<<endl<<endl;
 */
-
+/*
 	ifstream f;
 	f.open("h2o.wfx");
 	WFX wfx_h2o (f);
@@ -53,12 +54,6 @@ int main()
 
 	cout<<endl;
 
-/*
-	ofstream g;
-	g.open("test.wfx");
-	wfx_test.write_file_wfx(g);
-	g.close();
-*/
 	ifstream x;
 	x.open("h2o.fchk");
 	FCHK fchk_h2o (x);
@@ -78,29 +73,32 @@ int main()
 	FCHK fchk_h2oplus (z);
 	z.close();
 
-//	cout<<fchk_test.NumberOfElectrons()<<endl;
+	cout<<endl;
+*/
+	ifstream u;
+	u.open("h2o.gab");
+	MOLDENGAB molden_h2o (u);
+	u.close();
+	molden_h2o.PrintData();
 
+/*	cout<<endl;
+
+	ifstream v;
+	v.open("h2ominus.molden");
+	MOLDEN molden_h2ominus (v);
+	v.close();
+
+	cout<<endl;
+
+	ifstream w;
+	w.open("h2oplus.molden");
+	MOLDEN molden_h2oplus (w);
+	w.close();
+*/
+/*
 	Becke wh2o (wfx_h2o, Bin, Table);
 	Becke wh2ominus (wfx_h2ominus, Bin, Table);
 	Becke wh2oplus (wfx_h2oplus, Bin, Table);
-/*
-	cout<<endl<<endl;
-
-	fchk_h2o.PrintData();
-
-	cout<<endl<<endl;
-
-	fchk_h2ominus.PrintData();
-
-	cout<<endl<<endl;
-
-	fchk_h2oplus.PrintData();
-*/
-/*
-	cout<<h2o.Overlap(0,0)<<endl;
-	cout<<h2o.Overlap(1,0)<<endl;
-	cout<<h2o.Overlap(1,1)<<endl;
-*/
 
 	vector<vector<double>> h2oQE;
 	vector<vector<double>> h2ominusQE;
@@ -129,7 +127,7 @@ int main()
 	A=h2ominusQE[0][0]-h2oQE[0][0];
 	Descriptors test2(fh2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
 	cout<<test2<<endl;
-
+*/
 
 //	Becke Becketest(fchk_test, Bin, Table);
 //	Orbitals Orbtest(fchk_test, Bin, Table);

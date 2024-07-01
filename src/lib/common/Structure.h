@@ -6,6 +6,7 @@
 #include<common/Atom.h>
 #include<analytic/Utils/WFX.h>
 #include<analytic/Utils/FCHK.h>
+#include<analytic/Utils/MOLDENGAB.h>
 
 using namespace std;
 
@@ -42,7 +43,7 @@ class Structure
 			
 			//! A default desctructor.
 			/*! We don't use it. */
-		~Structure(){};
+		~Structure(){}
 
 			//! A normal member taking no arguments and returning an integer value.
 			/*! \return The number of atoms in our structure. */
@@ -78,6 +79,8 @@ class Structure
 		Structure(WFX&, const PeriodicTable&);
 		void read_from_fchk(FCHK&, const PeriodicTable&);
 		Structure(FCHK&, const PeriodicTable&);
+		void read_from_moldengab(MOLDENGAB&, const PeriodicTable&);
+		Structure(MOLDENGAB&, const PeriodicTable&);
 };
 
 #endif //CDFTT_STRUCTURE_H_INCLUDED

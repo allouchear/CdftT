@@ -133,3 +133,20 @@ Structure::Structure(FCHK& fchk, const PeriodicTable& Table)
 {
 	read_from_fchk(fchk, Table);
 }
+
+void Structure::read_from_moldengab(MOLDENGAB& moldengab, const PeriodicTable& Table)
+{
+	int n=0;
+	_atoms.resize(moldengab.NumberOfAtoms());
+	for(int i=0; i<moldengab.NumberOfAtoms(); i++)
+	{
+		_atoms[i]=Atom(Table, moldengab.AtomicNumbers()[i]);
+		for(int j=0; j<3; j++)
+			_atoms[i].Set_coordinates(j, moldengab.Coordinates()[i][j]);
+	}
+}
+
+Structure::Structure(MOLDENGAB& moldengab, const PeriodicTable& Table)
+{
+	read_from_moldengab(moldengab, Table);
+}
