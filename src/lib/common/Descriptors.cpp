@@ -86,15 +86,15 @@ void Descriptors::compute_All_From_Grid(const Grid& AIM0,const Grid& AIMM,const 
 	_str=AIM0.str();
 	reset();	
 	GridCP gridcp0;
-	gridcp0.buildAttractors(AIM0,Aimmethod);
+	gridcp0.buildBasins(AIM0,Aimmethod);
 	_Q0 =gridcp0.computeAIMCharges(AIM0);
 	
 	GridCP gridcpm;
-	gridcpm.buildAttractors(AIMM,Aimmethod);
+	gridcpm.buildBasins(AIMM,Aimmethod);
 	_Qm =gridcpm.computeAIMCharges(AIMM);
 
 	GridCP gridcpp;
-	gridcpp.buildAttractors(AIMP,Aimmethod);
+	gridcpp.buildBasins(AIMP,Aimmethod);
 	_Qp=gridcpp.computeAIMCharges(AIMP);
 
 	compute_All_From_Charge(I,A);
@@ -115,17 +115,17 @@ void Descriptors::compute_All_From_Cube(ifstream& file0, ifstream& fileM, ifstre
 	_str=AIM0.str();
 	reset();	
 	GridCP gridcp0;
-	gridcp0.buildAttractors(AIM0,Aimmethod);
+	gridcp0.buildBasins(AIM0,Aimmethod);
 	_Q0=gridcp0.computeAIMCharges(AIM0);
 
 	Grid AIMM(fileM, Table);	
 	GridCP gridcpm;
-	gridcpm.buildAttractors(AIMM,Aimmethod);
+	gridcpm.buildBasins(AIMM,Aimmethod);
 	_Qm=gridcpm.computeAIMCharges(AIMM);
 	
 	Grid AIMP(fileP, Table);
 	GridCP gridcpp;
-	gridcpp.buildAttractors(AIMP,Aimmethod);
+	gridcpp.buildBasins(AIMP,Aimmethod);
 	_Qp=gridcpp.computeAIMCharges(AIMP);
 
 	compute_All_From_Charge(I,A);

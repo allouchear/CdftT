@@ -15,6 +15,7 @@ class Domain
 	int _N3;
 	double _O[3];
 	vector<vector<double>> _T;
+	vector<vector<double>> _inv_T;
 	double _dx;
 	double _dy;
 	double _dz;
@@ -142,9 +143,18 @@ class Domain
 			Overload of operator ==
 		*/
 	bool operator!=(const Domain& D) const; 
+	
 	double x(int i, int j, int k) const;
+	
 	double y(int i, int j, int k) const;
+	
 	double z(int i, int j, int k) const;
+	
+	int i(double x, double y, double z) const;
+	int j(double x, double y, double z) const;
+	int k(double x, double y, double z) const;
+	
+	void inverse_T();
 };
 
 #endif //_CDFTT_DOMAIN_H_INCLUDED

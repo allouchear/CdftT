@@ -1,7 +1,8 @@
 OBJECTS = LCAO.o Orbitals.o 
 
 
-include ../../../../CONFIG
+include $(LIBCDFTTDIR)/CONFIG
+
 CFLAGS =  $(COMMONCFLAGS) 
 
 all: compiling 

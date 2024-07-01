@@ -4,6 +4,7 @@ using namespace std;
 #include <common/Structure.h>
 #include <cmath>
 #include <iomanip>
+#include <common/PeriodicTable.h>
 #ifdef ENABLE_OMP
 #include <omp.h>
 #endif
@@ -43,7 +44,7 @@ CriticalPoint  GridCP::newCriticalPoint(int i, int j, int k, int numV)
 	cp.nuclearCharge = 0;
 	cp.numVolume = numV;
 	cp.numCenter = 0;
-	cp.rho = 0;
+	cp.value = 0;
 	return cp;
 }
 /**************************************************************************/
@@ -427,7 +428,7 @@ void GridCP::computeNumCenters()
 	}
 }
 /**************************************************************************/
-void GridCP::removeAttractor0()
+void GridCP::removeBasins0()
 {
 	vector< CriticalPoint > newCriticalPoints;
 	for(size_t ip=0;ip<_criticalPoints.size();ip++)
@@ -444,22 +445,55 @@ void GridCP::removeAttractor0()
 	_criticalPoints= newCriticalPoints;
 }
 /**************************************************************************/
-void GridCP::removeNonSignificantAttractor()
+void GridCP::removeNonSignificantBasins()
 {
-	int n = _domain.N1()* _domain.N2()* _domain.N3()/100;
-	vector< CriticalPoint > newCriticalPoints;
+	int nAtoms=_str.number_of_atoms();
+	int nCP=_criticalPoints.size();
+
+	if (nCP==nAtoms) return;
+	if (nCP<nAtoms)
+	{
+		cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+		cout<<"WARNING : Number of attractors < number of atoms    "<<endl;
+		cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+		return;
+	}
+	cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+	cout<<"WARNING : Number of attractors > number of atoms    "<<endl;
+	cout<<"        : We will remove "<<nCP-nAtoms<<" attractor(s)"<<endl;
+	cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+
+	vector< double > nPoints(_criticalPoints.size(),0);
 	for(size_t ip=0;ip<_criticalPoints.size();ip++)
 	{
 
 		CriticalPoint cp = _criticalPoints[ip];
-		//cout<<" CP # "<<ip+1<<" npts="<< cp.volume/_domain.dv()<<" nmin="<<n<<" rho= "<<cp.rho<<endl;
-		if(cp.volume/_domain.dv()>=n) 
-			newCriticalPoints.push_back(cp);
+		nPoints[ip] = cp.volume/_domain.dv();
 	}
-	_criticalPoints= newCriticalPoints;
+	// sort by nPoints
+	for(size_t i=0;i<_criticalPoints.size();i++)
+	{
+		size_t k=0;
+		for(size_t j=i+1;j<_criticalPoints.size();j++)
+		{
+			if(nPoints[j]>nPoints[k])
+				k=j;
+		}
+		if(k!=i)
+		{
+			double t=nPoints[i];
+			CriticalPoint cp = _criticalPoints[i];
+			nPoints[i]=nPoints[k];
+			nPoints[k]=t;
+			_criticalPoints[i] = _criticalPoints[k];
+			_criticalPoints[k] = cp;
+		}
+	}
+
+	_criticalPoints.resize(nAtoms);
 }
 /**************************************************************************/
-int GridCP::refineEdge()
+int GridCP::refineEdgeNearGrad()
 {
 	if(!okDomain()) return 0;
 	size_t N[3] ={ size_t(_domain.N1()), size_t(_domain.N2()), size_t(_domain.N3())};
@@ -542,7 +576,7 @@ int GridCP::refineEdge()
 	return ne;
 }
 /**************************************************************************/
-void GridCP::assignGridCP(bool ongrid)
+void GridCP::assignPointsByGradient(bool ongrid)
 {
 	double scal;
 	string str ="Assigning points to volumes... Please wait";
@@ -558,7 +592,7 @@ void GridCP::assignGridCP(bool ongrid)
 	scal = 1.0/(_domain.N1()-1);
 	cout<<str<<endl;
 #ifdef ENABLE_OMP
-#pragma omp parallel
+#pragma omp parallel for
 #endif
 	for(int i=0;i<_domain.N1();i++)
 	{
@@ -603,7 +637,7 @@ void GridCP::assignGridCP(bool ongrid)
 
 					_volumeNumberOfPoints[current[0]][current[1]][current[2]] = -icp;
 					CriticalPoint  cp = newCriticalPoint(current[0], current[1], current[2],numberOfCriticalPoints);
-					cp.rho= _V[current[0]][current[1]][current[2]][0];
+					cp.value= _V[current[0]][current[1]][current[2]][0];
 					_criticalPoints.insert(_criticalPoints.begin(),cp);
 				}
 
@@ -612,21 +646,21 @@ void GridCP::assignGridCP(bool ongrid)
 	}
 }
 /**************************************************************************/
-void GridCP::buildAttractors(const Grid& grid, int method)
+void GridCP::buildBasins(const Grid& grid, int method)
 {
-	cout<<"done"<<endl;
-	bool ongrid=(method==0);
+	bool ongrid=((method==0) || (method>=3));
 	initGridCP(grid, ongrid);
-	cout<<"init"<<endl;
-	assignGridCP(ongrid);
-	cout<<"assign"<<endl;
+	if(method<=2)
+	{
+		assignPointsByGradient(ongrid);
+	}
 	if(method==2) 
 	{
 		cout<<"done"<<endl;
 		int itermax=30;
 		int N = _domain.N1()* _domain.N2()* _domain.N3()/1000;
-		int nold = refineEdge();
-		int n = refineEdge();
+		int nold = refineEdgeNearGrad();
+		int n = refineEdgeNearGrad();
 		int iter = 0;
 		cout<<"done"<<endl;
 		//cout<<"n-nold="<<abs(n-nold)<<" => N max="<<N<<endl;
@@ -635,17 +669,39 @@ void GridCP::buildAttractors(const Grid& grid, int method)
 			iter++;
 			if(iter>itermax) break;
 			nold = n;
-			n = refineEdge();
+			n = refineEdgeNearGrad();
 			//cout<<"n-nold="<<abs(n-nold)<<" => N max="<<N<<endl;
 		}
 		cout<<"done"<<endl;
 	}
 
-	resetKnown();
-	computeNumCenters();
-	computeVolumes();
-	removeAttractor0();
-	removeNonSignificantAttractor();
+	if(method<3) 
+	{
+		resetKnown();
+		//cout<<"Begin computeNumCenters"<<endl;
+		computeNumCenters();
+		//cout<<"End computeNumCenters"<<endl;
+		computeVolumes();
+		//cout<<"End computeVolumes"<<endl;
+		removeBasins0();
+		//cout<<"End removeBasins0"<<endl;
+		removeNonSignificantBasins();
+		//cout<<"End removeNonSignificantBasins"<<endl;
+		int nt=0;
+		for(size_t ip=0;ip<_criticalPoints.size();ip++)
+		{
+			int i=int(_criticalPoints[ip].volume/_domain.dv());
+			nt+=i;
+			cout<<"Point n "<<ip<<" nPoints="<<i<<endl;
+		}
+		cout<<"ntot="<<nt<<endl;
+		cout<<"N1*N2*n3="<<_domain.N1()*_domain.N2()*_domain.N3()<<endl;
+	}
+	if(method==3) 
+	{
+		buildVDD();
+	}
+
 }
 /**************************************************************************/
 void GridCP::printCriticalPoints()
@@ -657,11 +713,13 @@ void GridCP::printCriticalPoints()
 		int i = cp.index[0];
 		int j = cp.index[1];
 		int k = cp.index[2];
-		cout<<" Index = "<<i<<", "<<j<<", "<<k<<" rho = "<<cp.rho<<" Z="<< cp.nuclearCharge<<" Integral = "<< cp.integral<<endl;
+		cout<<" Index = "<<left<<setw(10)<<i<<", "<<setw(10)<<j<<", "<<setw(10)<<k
+		<<" value = "<<setw(15)<<cp.value<<" Z="<< setw(15)<<cp.nuclearCharge
+		<<" Integral = "<< cp.integral<<endl;
 	}
 }
 /**************************************************************************/
-vector<double> GridCP::computeAIMCharges(const Grid& grid)
+void GridCP::computeIntegrals(const Grid& grid)
 {
 	double dv=_domain.dv() ;
 	for(size_t ip=0;ip<_criticalPoints.size();ip++)
@@ -678,6 +736,11 @@ vector<double> GridCP::computeAIMCharges(const Grid& grid)
 			}
 		}
 	}
+}
+/**************************************************************************/
+vector<double> GridCP::computeAIMCharges(const Grid& grid)
+{
+	computeIntegrals(grid);
 	cout<<"Partial charges (Pos in Angstrom) "<<endl;
 	double r[3];
 	double totalCharge = 0;
@@ -696,9 +759,10 @@ vector<double> GridCP::computeAIMCharges(const Grid& grid)
 		for(int c=0; c<3;c++)
 			r[c]=_str.atom(ia).coordinates()[c]*BOHRTOANG;
 		
-		cout<<" Center = "<<fixed<<setprecision(6)<<x<<", "<<y<<", "<<z;
-		cout<<" Atom = "<<r[0]<<", "<<r[1]<<", "<<r[2]<<", "<< cp.nuclearCharge;
-		cout<<" Charge = "<<fixed<<setprecision(10)<< PartCharge <<endl;
+		cout<<" Center = "<<fixed<<setprecision(6)<<right<<setw(10)<<x<<", "<<setw(10)<<y<<", "<<setw(10)<<z;
+		cout<<left<<" Atom = "<<right<<setw(10)<<r[0]<<", "<<setw(10)<<r[1]<<", "<<setw(10)<<r[2]<<", "<< setw(10)<<cp.nuclearCharge;
+		cout<<left<<" Integral = "<<setw(10)<<cp.integral;
+		cout<<left<<" Charge = "<<fixed<<setprecision(10)<< setw(15)<<PartCharge <<endl;
 		PartCharges[ia]=PartCharge;
 		totalCharge +=  PartCharge;
 	}
@@ -716,3 +780,414 @@ Structure GridCP::str() const
 	return _str;
 }
 
+// Ref : Fonseca Guerra et al. https://doi.org/10.1002/jcc.10351
+/**************************************************************************/
+void GridCP::buildVDD()
+{
+	PeriodicTable pTable;
+	double scal;
+	string str ="Assigning points to volumes... Please wait";
+	int N[3]={_domain.N1(),_domain.N2(), _domain.N3()};
+
+	if(!okDomain()) return;
+
+	if(_criticalPoints.size()>0)
+		_criticalPoints.clear();
+
+	int nAtoms=_str.number_of_atoms();
+	//cout<<"nAtoms="<<nAtoms<<endl;
+	for(int ia=0;ia<nAtoms;ia++)
+	{
+			CriticalPoint  cp = newCriticalPoint(0,0,0,ia+1);
+			cp.value= 0;
+			_criticalPoints.push_back(cp);
+	}
+	vector< double > V(3,0);
+	vector< vector<double> > coordinates(nAtoms,V);
+	vector< double > rcov2(nAtoms,0);
+	for(int ia=0;ia<nAtoms;ia++)
+	{
+			//double rcov =   _str.atom(ia).element().covalent_radii();
+			double rcov =   _str.atom(ia).element().radii();
+			rcov2[ia] = rcov*rcov;
+			//rcov2[ia] = 0.5*0.5;
+			for(int c=0;c<3;c++)
+				coordinates[ia][c] = _str.atom(ia).coordinates()[c];
+	}
+	vector< double > r2minAtom(nAtoms,-1);
+
+	scal = 1.0/(_domain.N1()-1);
+	cout<<str<<endl;
+#ifdef ENABLE_OMP
+#pragma omp parallel for
+#endif
+	for(int i=0;i<N[0];i++)
+	{
+		cout<<setw(10)<<fixed<<setprecision(5)<<i*scal*100<<"%"<<endl;
+		for(int j=0;j<N[1];j++)
+		{
+			for(int k=0;k<N[2];k++)
+			{
+				int iamin=-1;
+				double r2min=-1;
+				_volumeNumberOfPoints[i] [j] [k] = 0;
+				double r[] = {_domain.x(i,j,k), _domain.y(i,j,k), _domain.z(i,j,k)};
+				for(int ia=0;ia<nAtoms;ia++)
+				{
+					double r2 = 0;
+					for(int c=0;c<3;c++)
+						r2 += (r[c]-coordinates[ia][c])*(r[c]-coordinates[ia][c]);
+					r2 /= rcov2[ia];
+					if(iamin==-1 || r2<r2min)
+					{
+						r2min= r2;
+						iamin=ia;
+					}
+				}
+				if(iamin<0) 
+					continue;
+				_volumeNumberOfPoints[i] [j] [k] = iamin+1;
+				if (r2minAtom[iamin]<0 || r2min<r2minAtom[iamin])
+				{
+					r2minAtom[iamin]=r2min;
+					_criticalPoints[iamin].value = _V[i][j][k][0];
+					_criticalPoints[iamin].index[0] = i;
+					_criticalPoints[iamin].index[1] = j;
+					_criticalPoints[iamin].index[2] = k;
+
+				}
+			}
+		}
+	}
+	resetKnown();
+	computeNumCenters();
+	computeVolumes();
+	int nt=0;
+	for(size_t ip=0;ip<_criticalPoints.size();ip++)
+	{
+		int i=int(_criticalPoints[ip].volume/_domain.dv());
+		nt+=i;
+		cout<<"Point n "<<ip<<" nPoints="<<i<<endl;
+	}
+	cout<<"ntot="<<nt<<endl;
+	cout<<"N1*N2*n3="<<_domain.N1()*_domain.N2()*_domain.N3()<<endl;
+}
+/**************************************************************************/
+bool GridCP::addSurroundingSignPoints(int current[], vector<vector<int>>& listOfVisitedPoints, double cutoff)
+{
+	int i = current[0];
+	int j = current[1];
+	int k = current[2];
+	// Initialize indices for neighboring points
+	int I[3] = { max(0, i-1), i, min(i+1, _domain.N1()-1) };
+	int J[3] = { max(0, j-1), j, min(j+1, _domain.N2()-1) };
+	int K[3] = { max(0, k-1), k, min(k+1, _domain.N3()-1) };
+
+	if(!okDomain()) return false;
+
+	double v0 = _V[I[1]][J[1]][K[1]][0];
+	_known[i][j][k]=1;
+	for(size_t ic=0;ic<3;ic++)
+	for(size_t jc=0;jc<3;jc++)
+	for(size_t kc=0;kc<3;kc++)
+	{
+		if(ic==1 && jc==1 && kc==1) continue;
+		if(_known[I[ic]][J[jc]][K[kc]]>0) continue;
+		double v =_V[I[ic]][J[jc]][K[kc]][0];
+		//if(abs(v)<TOL) continue;
+		if(abs(v)>cutoff && v*v0>0)
+		{
+			vector<int>  data = { I[ic], J[jc], K[kc]};
+			listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
+			_known[I[ic]][J[jc]][K[kc]] = 1;
+		}
+	}
+	return true;
+}
+/**************************************************************************/
+void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
+{
+	initGridCP(grid, 0);
+	if(abs(cutoff)<TOL) cutoff=TOL;
+	cutoff=abs(cutoff);
+	double scal;
+	string str ="Assigning points to volumes... Please wait";
+
+	if(!okDomain()) return;
+
+	if(_criticalPoints.size()>0)
+		_criticalPoints.clear();
+
+	resetKnown();
+	scal = 1.0/(_domain.N1()-1);
+	cout<<str<<endl;
+	int numberOfCriticalPoints=0;
+#ifdef ENABLE_OMP
+#pragma omp parallel for
+#endif
+	for(int i=0;i<_domain.N1();i++)
+	{
+		int current[3];
+		//cout<<setw(10)<<fixed<<setprecision(5)<<i*scal*100<<"%";
+		for(int j=0;j<_domain.N2();j++)
+		{
+			for(int k=0;k<_domain.N3();k++)
+			{
+				double v0 = _V[i][j][k][0];
+				if(abs(v0)<cutoff) continue;
+				vector<vector<int>> listOfVisitedPoints;
+				current[0] = i;
+				current[1] = j;
+				current[2] = k;
+				vector<int>  data = { current[0], current[1], current[2]};
+				listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
+				addSurroundingSignPoints(current, listOfVisitedPoints,cutoff);
+				//cout<<"Number of visited points ="<<listOfVisitedPoints.size()<<endl;
+				if(_volumeNumberOfPoints [current[0]][current[1]][current[2]] != 0)
+				{
+					int icp = _volumeNumberOfPoints[current[0]][current[1]][current[2]];
+					for(size_t ip=0;ip<listOfVisitedPoints.size();ip++)
+						_volumeNumberOfPoints[listOfVisitedPoints[ip][0]] [listOfVisitedPoints[ip][1]] [listOfVisitedPoints[ip][2]] = icp;
+
+				}
+				else
+				{
+					numberOfCriticalPoints++;
+					int icp = -numberOfCriticalPoints;
+					for(size_t ip=0;ip<listOfVisitedPoints.size();ip++)
+						_volumeNumberOfPoints[listOfVisitedPoints[ip][0]] [listOfVisitedPoints[ip][1]] [listOfVisitedPoints[ip][2]] = icp;
+				}
+
+			}
+		}
+	}
+	resetKnown();
+	int n=0;
+	for(int i=0;i<_domain.N1();i++)
+			for(int k=0;k<_domain.N3();k++)
+				for(int j=0;j<_domain.N2();j++)
+			{
+				double v0 = _V[i][j][k][0];
+				if(abs(v0)<cutoff) continue;
+				vector<vector<int>> listOfVisitedPoints;
+				int I[3] = { max(0, i-1), i, min(i+1, _domain.N1()-1) };
+				int J[3] = { max(0, j-1), j, min(j+1, _domain.N2()-1) };
+				int K[3] = { max(0, k-1), k, min(k+1, _domain.N3()-1) };
+				for(size_t ic=0;ic<3;ic++)
+				for(size_t jc=0;jc<3;jc++)
+				for(size_t kc=0;kc<3;kc++)
+				{
+					if(ic==1 && jc==1 && kc==1) continue;
+					double v =_V[I[ic]][J[jc]][K[kc]][0];
+					if(abs(v)>cutoff && v*v0>0 && _volumeNumberOfPoints[i][j][k] != _volumeNumberOfPoints[I[ic]][J[jc]][K[kc]])
+					{
+						vector<int>  data = { I[ic], J[jc], K[kc]};
+						listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
+					}
+				}
+				if(listOfVisitedPoints.size()>0) 
+				{
+					n+=listOfVisitedPoints.size();
+					int icp = _volumeNumberOfPoints[i][j][k];
+					for(size_t ip=0;ip<listOfVisitedPoints.size();ip++)
+						_volumeNumberOfPoints[listOfVisitedPoints[ip][0]] [listOfVisitedPoints[ip][1]] [listOfVisitedPoints[ip][2]] = icp;
+				}
+			}
+	cout<<"Number of changed points : ======>"<<n<<endl;
+	n=0;
+	for(int k=0;k<_domain.N3();k++)
+		for(int i=0;i<_domain.N1();i++)
+			for(int j=0;j<_domain.N2();j++)
+			{
+				double v0 = _V[i][j][k][0];
+				if(abs(v0)<cutoff) continue;
+				vector<vector<int>> listOfVisitedPoints;
+				int I[3] = { max(0, i-1), i, min(i+1, _domain.N1()-1) };
+				int J[3] = { max(0, j-1), j, min(j+1, _domain.N2()-1) };
+				int K[3] = { max(0, k-1), k, min(k+1, _domain.N3()-1) };
+				for(size_t ic=0;ic<3;ic++)
+				for(size_t jc=0;jc<3;jc++)
+				for(size_t kc=0;kc<3;kc++)
+				{
+					if(ic==1 && jc==1 && kc==1) continue;
+					double v =_V[I[ic]][J[jc]][K[kc]][0];
+					if(abs(v)>cutoff && v*v0>0 && _volumeNumberOfPoints[i][j][k] != _volumeNumberOfPoints[I[ic]][J[jc]][K[kc]])
+					{
+						vector<int>  data = { I[ic], J[jc], K[kc]};
+						listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
+					}
+				}
+				if(listOfVisitedPoints.size()>0) 
+				{
+					n+=listOfVisitedPoints.size();
+					//cout<<"Number of visited points======>"<<listOfVisitedPoints.size()<<endl;
+					int icp = _volumeNumberOfPoints[i][j][k];
+					for(size_t ip=0;ip<listOfVisitedPoints.size();ip++)
+						_volumeNumberOfPoints[listOfVisitedPoints[ip][0]] [listOfVisitedPoints[ip][1]] [listOfVisitedPoints[ip][2]] = icp;
+				}
+			}
+	cout<<"Number of changed points : ======>"<<n<<endl;
+	n=0;
+		for(int i=0;i<_domain.N1();i++)
+			for(int j=0;j<_domain.N2();j++)
+	for(int k=0;k<_domain.N3();k++)
+			{
+				double v0 = _V[i][j][k][0];
+				if(abs(v0)<cutoff) continue;
+				vector<vector<int>> listOfVisitedPoints;
+				int I[3] = { max(0, i-1), i, min(i+1, _domain.N1()-1) };
+				int J[3] = { max(0, j-1), j, min(j+1, _domain.N2()-1) };
+				int K[3] = { max(0, k-1), k, min(k+1, _domain.N3()-1) };
+				for(size_t ic=0;ic<3;ic++)
+				for(size_t jc=0;jc<3;jc++)
+				for(size_t kc=0;kc<3;kc++)
+				{
+					if(ic==1 && jc==1 && kc==1) continue;
+					double v =_V[I[ic]][J[jc]][K[kc]][0];
+					if(abs(v)>cutoff && v*v0>0 && _volumeNumberOfPoints[i][j][k] != _volumeNumberOfPoints[I[ic]][J[jc]][K[kc]])
+					{
+						vector<int>  data = { I[ic], J[jc], K[kc]};
+						listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
+					}
+				}
+				if(listOfVisitedPoints.size()>0) 
+				{
+					n+=listOfVisitedPoints.size();
+					//cout<<"Number of visited points======>"<<listOfVisitedPoints.size()<<endl;
+					int icp = _volumeNumberOfPoints[i][j][k];
+					for(size_t ip=0;ip<listOfVisitedPoints.size();ip++)
+						_volumeNumberOfPoints[listOfVisitedPoints[ip][0]] [listOfVisitedPoints[ip][1]] [listOfVisitedPoints[ip][2]] = icp;
+				}
+			}
+	cout<<"Number of changed points : ======>"<<n<<endl;
+
+
+
+	cout<<"build CP "<<endl;
+	for(int i=0;i<_domain.N1();i++)
+		for(int j=0;j<_domain.N2();j++)
+			for(int k=0;k<_domain.N3();k++)
+			{
+				int icp=_volumeNumberOfPoints[i][j][k];
+				if(icp==0) continue;
+				//cout<<"CP size = "<<_criticalPoints.size()<<endl;
+				if(_criticalPoints.size()==0)
+				{
+					CriticalPoint  cp = newCriticalPoint(i,j,k,icp);
+					cp.value= _V[i][j][k][0];
+					_criticalPoints.insert(_criticalPoints.begin(),cp);
+				}
+				else {
+					bool ok=true;
+					for(size_t ip=0;ip<_criticalPoints.size();ip++)
+					{
+						if(icp==_criticalPoints[ip].numVolume)
+						{
+							ok = false;
+							break;
+						}
+					}
+					if(ok)
+					{
+						CriticalPoint  cp = newCriticalPoint(i,j,k,icp);
+						cp.value= _V[i][j][k][0];
+						_criticalPoints.insert(_criticalPoints.begin(),cp);
+					}
+					
+				}
+			}
+	// resort number
+	for(size_t ip=0;ip<_criticalPoints.size();ip++)
+	{
+			int icp = _criticalPoints[ip].numVolume;
+			int nv = ip+1;
+			double maxv=0;
+			for(int i=0;i<_domain.N1();i++)
+				for(int j=0;j<_domain.N2();j++)
+					for(int k=0;k<_domain.N3();k++)
+						if(_volumeNumberOfPoints[i][j][k]==icp)
+						{
+							_volumeNumberOfPoints[i][j][k] = nv;
+							if(abs(_V[i][j][k][0])>abs(maxv))
+								maxv= _V[i][j][k][0];
+						}
+			 _criticalPoints[ip].numVolume=nv;
+			 _criticalPoints[ip].value=maxv;
+	}
+	resetKnown();
+	computeNumCenters();
+	computeVolumes();
+	int nt=0;
+	for(size_t ip=0;ip<_criticalPoints.size();ip++)
+	{
+		int i=int(_criticalPoints[ip].volume/_domain.dv());
+		nt+=i;
+		cout<<"Point n "<<ip<<" nPoints="<<i<<endl;
+	}
+	cout<<"ntot="<<nt<<endl;
+	cout<<"N1*N2*n3="<<_domain.N1()*_domain.N2()*_domain.N3()<<endl;
+}
+/**************************************************************************/
+void GridCP::build2BasinSign(const Grid& grid)
+{
+	initGridCP(grid, 0);
+	double scal;
+	string str ="Assigning points to volumes... Please wait";
+	int N[3]={_domain.N1(),_domain.N2(), _domain.N3()};
+
+	if(!okDomain()) return;
+
+	if(_criticalPoints.size()>0)
+		_criticalPoints.clear();
+
+	int nAtoms=_str.number_of_atoms();
+	//cout<<"nAtoms="<<nAtoms<<endl;
+	CriticalPoint  cp;
+	cp = newCriticalPoint(0,0,0,1);
+	cp.value= 0;
+	_criticalPoints.push_back(cp);
+	cp = newCriticalPoint(0,0,0,2);
+	cp.value= 0;
+	_criticalPoints.push_back(cp);
+
+	scal = 1.0/(_domain.N1()-1);
+	cout<<str<<endl;
+#ifdef ENABLE_OMP
+#pragma omp parallel for
+#endif
+	for(int i=0;i<N[0];i++)
+	{
+		//cout<<setw(10)<<fixed<<setprecision(5)<<i*scal*100<<"%"<<endl;
+		for(int j=0;j<N[1];j++)
+		{
+			for(int k=0;k<N[2];k++)
+			{
+				if(_V[i][j][k][0]<0)
+				{
+					_volumeNumberOfPoints[i][j][k] = 1;
+					if(_criticalPoints[0].value>_V[i][j][k][0]) 
+						_criticalPoints[0].value=_V[i][j][k][0]; 
+				}
+				else
+				if(_V[i][j][k][0]>0)
+				{
+					_volumeNumberOfPoints[i] [j] [k] = 2;
+					if(_criticalPoints[1].value<_V[i][j][k][0]) 
+						_criticalPoints[1].value=_V[i][j][k][0]; 
+				}
+			}
+		}
+	}
+	resetKnown();
+	computeNumCenters();
+	computeVolumes();
+	int nt=0;
+	for(size_t ip=0;ip<_criticalPoints.size();ip++)
+	{
+		int i=int(_criticalPoints[ip].volume/_domain.dv());
+		nt+=i;
+		cout<<"Point n "<<ip<<" nPoints="<<i<<endl;
+	}
+	cout<<"ntot="<<nt<<endl;
+	cout<<"N1*N2*n3="<<_domain.N1()*_domain.N2()*_domain.N3()<<endl;
+}

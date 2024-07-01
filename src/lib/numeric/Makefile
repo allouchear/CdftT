@@ -1,7 +1,8 @@
 OBJECTS = Domain.o Grid.o functions.o GridCP.o
 
 
-include ../../../CONFIG
+include $(LIBCDFTTDIR)/CONFIG
+
 CFLAGS =  $(COMMONCFLAGS) 
 
 all: compiling 

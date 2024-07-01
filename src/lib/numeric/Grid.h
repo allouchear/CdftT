@@ -160,6 +160,8 @@ class Grid
 	
 	Grid aim_On_Grid(int nBound);
 	Grid aim_On_Grid_Density();
+	
+	double value(double x, double y, double z);
 };
 
 

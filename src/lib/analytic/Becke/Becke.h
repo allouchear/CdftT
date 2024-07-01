@@ -44,6 +44,7 @@ class Becke
 		double overlapLCAO(const LCAO&, const LCAO&, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
 		static double prodLCAO(const vector<LCAO>& p, double x, double y, double z);
 		vector<double> PartialChargeAndEnergy(int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
+		double multicenter_integration(const Grid& g, int kmax, int lebedev_order, int radial_grid_factor);
 };
 
 #endif

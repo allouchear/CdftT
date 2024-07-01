@@ -1972,3 +1972,41 @@ Grid Grid::aim_On_Grid_Density()
 		exit(1);
 	}
 }
+
+double Grid::value(double x, double y, double z)
+{
+	int i = _dom.i(x,y,z);
+	int j = _dom.j(x,y,z);
+	int k = _dom.k(x,y,z);
+	
+	if(i>=_dom.N1() or j>=_dom.N2() or k>=_dom.N3())
+	{
+		return 0;
+	}
+	
+	int I[2] = {i, i+1};
+	int J[2] = {j, j+1};
+	int K[2] = {k, k+1};
+	
+	double S=0;
+	
+	for(int ic=0;ic<2;ic++)
+	{	
+		for(int jc=0;jc<2;jc++)
+		{
+			for(int kc=0;kc<2;kc++)
+			{
+				S += _V[I[ic]][J[jc]][K[kc]][0]*exp(-sqrt((x-_dom.x(I[ic],J[jc],K[kc]))*(x-_dom.x(I[ic],J[jc],K[kc]))+(y-_dom.y(I[ic],J[jc],K[kc]))*(y-_dom.y(I[ic],J[jc],K[kc]))+(z-_dom.z(I[ic],J[jc],K[kc]))*(z-_dom.z(I[ic],J[jc],K[kc]))));
+			}
+		}
+	}
+	return S;
+}
+
+
+
+
+
+
+
+

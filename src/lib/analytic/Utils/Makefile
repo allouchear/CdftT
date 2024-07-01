@@ -1,7 +1,8 @@
 OBJECTS = MathFunction.o WFX.o
 
 
-include ../../../../CONFIG
+include $(LIBCDFTTDIR)/CONFIG
+
 CFLAGS =  $(COMMONCFLAGS) 
 
 all: compiling 

@@ -1,5 +1,4 @@
-include ../../../CONFIG
-
+include $(LIBCDFTTDIR)/CONFIG
 
 BASIS = Basis
 BECKE = Becke

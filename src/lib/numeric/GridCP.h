@@ -21,7 +21,7 @@ struct CriticalPoint
 	int numVolume;
 	int numCenter;
 	double volume;
-	double rho;
+	double value;
 };
 
 	//! Critical point grid
@@ -76,7 +76,7 @@ class GridCP
 		
 			//!Assign grid ints
 			/*! Assigns the points of the grid to bader volumes with onGrid or near grid*/
-		void assignGridCP(bool ongrid);
+		void assignPointsByGradient(bool ongrid);
 		
 			//! Calculate NumCenters
 			/*! Finds the closest atom of the structure to each critical point and assigns them to it*/
@@ -104,15 +104,22 @@ class GridCP
 		
 			//! Remove attractor
 			/*! Removes attractors with density smaller than TOL*/
-		void removeAttractor0();
+		void removeBasins0();
 		
 			//!Remove attractor
 			/*!Removes attractors whose domain is smaller than Npoints/1000*/
-		void removeNonSignificantAttractor();
+		void removeNonSignificantBasins();
 		
 			//! Refine edge points
 			/*! refines points adjacent to bader surface*/
-		int refineEdge();
+		int refineEdgeNearGrad();
+
+			//!Assign grid points
+			/*! Assigns the points of the grid to VDD volumes.  Ref : Fonseca Guerra et al. https://doi.org/10.1002/jcc.10351 */
+		void buildVDD();
+
+
+		bool addSurroundingSignPoints(int current[], vector<vector<int>>& listOfVisitedPoints, double cutoff);
 
 	public:
 		
@@ -120,9 +127,13 @@ class GridCP
 			/*! calls rest() to set all attributes to 0*/
 		GridCP();
 			
-			//! Build Attractors
-			/*! calls methods to build attractors using Grid and method=0,1,2 ( on grid, near grid, near+refine resp.)*/
-		void buildAttractors(const Grid&, int method);
+			//! Build Basins
+			/*! calls methods to build basins using Grid and method=0,1,2,3 ( on grid, near grid, near+refine, VDD resp.)*/
+		void buildBasins(const Grid&, int method);
+
+			//! Compute Integrals
+			/*! Integrates over attractor indices*/
+		void computeIntegrals(const Grid& grid);
 		
 			//! Compute AIM
 			/*! Integrates over attractor indices and calculates AIM charges for each atom*/
@@ -133,6 +144,13 @@ class GridCP
 		void printCriticalPoints();
 
 		Structure str() const;
+
+			//!Assign grid points
+			/*! Assigns the points based on the sign of function.  Refs :  V. Tognetti : https://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.23840 &  T. le Bahers : https://pubs.acs.org/doi/abs/10.1021/ct200308m */
+		void build2BasinSign(const Grid& grid);
+			//!Assign grid points
+			/*! Assigns the points based on the sign of function.  Refs :  V. Tognetti : https://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.23840 &  T. le Bahers : https://pubs.acs.org/doi/abs/10.1021/ct200308m */
+		void buildBasinsBySign(const Grid& grid, double cutoff);
 };
 
 #endif //_CDFTT_GRIDCP_H_INCLUDED

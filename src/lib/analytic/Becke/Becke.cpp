@@ -16,6 +16,18 @@ Becke::Becke()
     _energy=0.0;
 }
 
+Becke::Becke(const Structure& S)
+{
+	_molecule=S;
+	_grid=GridPoints();
+	_orbitals=Orbitals();
+	_grid_points=vector<vector<vector<double>>> ();
+	_grid_weights=vector<vector<double>> ();
+	_grid_volumes=vector<vector<double>> ();
+	_multigrid=false;
+	_energy=0.0;
+}
+
 Becke::Becke(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
 {
 	_molecule=Structure(wfx, Table);
@@ -27,6 +39,7 @@ Becke::Becke(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
     _multigrid=false;
     _energy=wfx.Energy();
 }
+
 
 int Becke::number_of_radial_points(int Z)
 {
@@ -682,4 +695,32 @@ vector<double> Becke::PartialChargeAndEnergy(int kmax, int lebedev_order, int ra
     vector<double> c = _partial_charge;
     c.insert(c.begin(), _energy);
     return c;
+}
+
+double Becke::multicenter_integration(const Grid& g, int kmax, int lebedev_order, int radial_grid_factor)
+{  
+
+	if(_multigrid==false)
+	{
+		multicenter_grids(kmax, lebedev_order, radial_grid_factor);
+        	_multigrid=true;
+	}
+
+	int Nat = _molecule.number_of_atoms();
+
+	double integral = 0.0;
+
+	for(int I=0; I<Nat; I++)
+	{
+		double integ=0.0;
+		#ifdef ENABLE_OMP
+		#pragma omp parallel for reduction(+:integ)
+		#endif
+		for(size_t J=0; J<_grid_weights[I].size(); J++)
+		{        
+			integ += _grid_volumes[I][J] * _grid_weights[I][J] * g.value(_grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2]);       // evaluate function on the grid
+		}
+		integral+=integ;
+	}
+    return integral;
 }

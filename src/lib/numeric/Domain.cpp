@@ -16,7 +16,7 @@ Domain::Domain()
 	_N2=0;
 	_N3=0;
 	_T.resize(3, vector<double>(3));
-	
+	_inv_T.resize(3, vector<double>(3));
 	for(int i=0;i<3;i++)
 	{
 		_O[i]=0;
@@ -25,6 +25,7 @@ Domain::Domain()
 			_T[i][j]=0;
 		}
 	}
+	inverse_T();
 	_dx=0;
 	_dy=0;
 	_dz=0;
@@ -98,6 +99,7 @@ void Domain::read_From_Cube(ifstream& nameFile)
 		_dy += _T[1][i]*_T[1][i];
 		_dz += _T[2][i]*_T[2][i];
 	}
+	inverse_T();
 	_dx = sqrt(_dx);
 	_dy = sqrt(_dy);
 	_dz = sqrt(_dz);
@@ -106,7 +108,7 @@ void Domain::read_From_Cube(ifstream& nameFile)
 
 Domain::Domain(ifstream& nameFile)
 {
-	read_From_Cube(nameFile);	
+	read_From_Cube(nameFile);
 }
 
 Domain::Domain(int i, int n, int m, int l, double* O)
@@ -146,6 +148,7 @@ Domain::Domain(int i, int n, int m, int l, double* O)
 		_dy += _T[1][i]*_T[1][i];
 		_dz += _T[2][i]*_T[2][i];
 	}
+	inverse_T();
 	_dx = sqrt(_dx);
 	_dy = sqrt(_dy);
 	_dz = sqrt(_dz);
@@ -240,6 +243,21 @@ double Domain::z(int i, int j, int k) const
 	return _O[2]+_T[2][0]*i+_T[2][1]*j+_T[2][2]*k;
 }
 
+int Domain::i(double x, double y, double z) const
+{
+	return floor((x-_O[0])*_inv_T[0][0]+(y-_O[1])*_inv_T[0][1]+(z-_O[2])*_inv_T[0][2]);
+}
+
+int Domain::j(double x, double y, double z) const
+{
+	return floor((x-_O[0])*_inv_T[1][0]+(y-_O[1])*_inv_T[1][1]+(z-_O[2])*_inv_T[1][2]);
+}
+
+int Domain::k(double x, double y, double z) const
+{
+	return floor((x-_O[0])*_inv_T[2][0]+(y-_O[1])*_inv_T[2][1]+(z-_O[2])*_inv_T[2][2]);
+}
+
 double Domain::dv() const
 {
 	return _dv;
@@ -258,4 +276,47 @@ bool Domain::operator!=(const Domain& D) const
 		return true;
 	else
 		return false;
+}
+
+void Domain::inverse_T()
+{
+	double t4,t6,t8,t10,t12,t14,t17;
+	
+	t4 = _T[0][0]*_T[1][1];     
+	t6 = _T[0][0]*_T[1][2];
+	t8 = _T[0][1]*_T[1][0];
+	t10 = _T[0][2]*_T[1][0];
+	t12 = _T[0][1]*_T[2][0];
+	t14 = _T[0][2]*_T[2][0];
+	t17 = (t4*_T[2][2]-t6*_T[2][1]-t8*_T[2][2]+t10*_T[2][1]+t12*_T[1][2]-t14*_T[1][1]);
+	if(fabs(t17)<1e-12)
+	{
+		for(int i=0;i<3;i++)
+		{
+			for(int j=0; j<3;j++)
+			{
+				if(i==j)
+				{
+					_inv_T[i][j]=1;	
+				}
+				else
+				{
+					_inv_T[i][j]=0;
+				}
+			}
+		}
+	}
+	else
+	{
+		t17 = 1/t17;
+		_inv_T[0][0] = (_T[1][1]*_T[2][2]-_T[1][2]*_T[2][1])*t17;
+		_inv_T[0][1] = -(_T[0][1]*_T[2][2]-_T[0][2]*_T[2][1])*t17;
+		_inv_T[0][2] = -(-_T[0][1]*_T[1][2]+_T[0][2]*_T[1][1])*t17;
+		_inv_T[1][0] = -(_T[1][0]*_T[2][2]-_T[1][2]*_T[2][0])*t17;
+		_inv_T[1][1] = (_T[0][0]*_T[2][2]-t14)*t17;
+		_inv_T[1][2] = -(t6-t10)*t17;
+		_inv_T[2][0] = -(-_T[1][0]*_T[2][1]+_T[1][1]*_T[2][0])*t17;
+		_inv_T[2][1] = -(_T[0][0]*_T[2][1]-t12)*t17;
+		_inv_T[2][2] = (t4-t8)*t17;
+	}
 }

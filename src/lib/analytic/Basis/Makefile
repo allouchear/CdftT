@@ -1,7 +1,8 @@
 OBJECTS = GTF.o CGTF.o
 
 
-include ../../../../CONFIG
+include $(LIBCDFTTDIR)/CONFIG
+
 CFLAGS =  $(COMMONCFLAGS) 
 
 all: compiling 

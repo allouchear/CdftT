@@ -1,7 +1,8 @@
 OBJECTS = Atom.o Element.o PeriodicTable.o Structure.o Descriptors.o
 
 
-include ../../../CONFIG
+include $(LIBCDFTTDIR)/CONFIG
+
 CFLAGS =  $(COMMONCFLAGS) 
 
 all: compiling 
