@@ -45,5 +45,6 @@ public:
 long int LocaliseDataLog(ifstream&, string);
 long int LocaliseDataLogBefore(ifstream&, string);
 long int LocaliseNextDataLog(ifstream&, string);
+long int LocaliseNextDataLogBefore(ifstream&, string);
 
 #endif

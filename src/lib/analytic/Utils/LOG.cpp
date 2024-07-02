@@ -142,7 +142,12 @@ void LOG::read_basis_data(ifstream& f)
 		}while(p.find("*")==string::npos);
 	}
 
-	//LocaliseNextDataLog();			//N basis functions, primitives, alpha/beta electrons....
+	pos=LocaliseNextDataLogBefore(f, "basis functions,");
+	f.clear();
+	f.seekg(pos);
+	getline(f,p);
+
+	
 
 }
 
@@ -206,6 +211,29 @@ long int LocaliseNextDataLog(ifstream& f, string b)
 		if(test.find(b)!=string::npos)
 		{
 			position=f.tellg();
+			ok=true;
+			break;
+		}
+	}
+
+	if(!ok) 
+		return -1;	
+
+	return position;
+}
+
+long int LocaliseNextDataLogBefore(ifstream& f, string b)
+{
+	long int position;
+	f.clear();
+	string test;
+	bool ok=false;
+	while(!f.eof())
+	{
+		position=f.tellg();	
+		getline(f, test);
+		if(test.find(b)!=string::npos)
+		{
 			ok=true;
 			break;
 		}

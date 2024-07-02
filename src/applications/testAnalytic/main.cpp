@@ -79,7 +79,7 @@ int main()
 	u.open("h2o.gab");
 	MOLDENGAB moldengab_h2o (u);
 	u.close();
-	moldengab_h2o.PrintData();
+	//moldengab_h2o.PrintData();
 
 	cout<<endl;
 
@@ -87,6 +87,7 @@ int main()
 	v.open("h2ominus.gab");
 	MOLDENGAB moldengab_h2ominus (v);
 	v.close();
+	//moldengab_h2ominus.PrintData();
 
 	cout<<endl;
 
@@ -94,6 +95,7 @@ int main()
 	w.open("h2oplus.gab");
 	MOLDENGAB moldengab_h2oplus (w);
 	w.close();
+	//moldengab_h2oplus.PrintData();
 
 /*													//WFX
 	Becke wh2o (wfx_h2o, Bin, Table);

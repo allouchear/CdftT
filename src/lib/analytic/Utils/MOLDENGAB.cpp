@@ -14,8 +14,8 @@ MOLDENGAB::MOLDENGAB()
 	_L_types=vector<int> ();
 	_exposants=vector<double> ();
 	_number_of_gtf=vector<int> ();
-	_gtf_coefs=vector<double> ();
 	_cgtf_coefs=vector<double> ();
+	_factor_coefs=vector<double> ();
 	_MO_energy=vector<double> ();
 	_MO_coefs=vector<vector<double>> ();
 	_occupation=vector<double> ();
@@ -45,8 +45,8 @@ MOLDENGAB::MOLDENGAB(ifstream& file)
 	_L_types=vector<int> ();
 	_exposants=vector<double> ();
 	_number_of_gtf=vector<int> ();
-	_gtf_coefs=vector<double> ();
 	_cgtf_coefs=vector<double> ();
+	_factor_coefs=vector<double> ();
 	_MO_energy=vector<double> ();
 	_alpha_energies=vector<double> ();
 	_beta_energies=vector<double> ();
@@ -218,7 +218,7 @@ void MOLDENGAB::read_basis_data(ifstream& f)
 
 		else if(_shell_types[i]=="p" || _shell_types[i]=="P")
 		{
-			_L_types.push_back(-1);
+			_L_types.push_back(1);
 			_number_of_MO_coefs+=3;
 		}
 
@@ -315,7 +315,7 @@ void MOLDENGAB::read_one_basis_data(istream& f)
 	string p, t;
 	int n,m;
 	int v=0;
-	double pc;
+	double pc,c;
 
 	getline(f,p);
 	stringstream k(p);
@@ -329,12 +329,12 @@ void MOLDENGAB::read_one_basis_data(istream& f)
 		_shell_types.push_back(p);
 		s>>n;
 		_number_of_gtf.push_back(n);
-		s>>pc;
-		_cgtf_coefs.push_back(pc);
+		s>>c;
 
 		for(int i=0; i<n; i++)
 		{
 			v++;
+			_factor_coefs.push_back(c);
 			getline(f,p);
 			if(p.find("D")!=string::npos)
 				p.replace(p.find("D"),1,"E");
@@ -350,7 +350,7 @@ void MOLDENGAB::read_one_basis_data(istream& f)
 			ss>>pc;
 			_exposants.push_back(pc);
 			ss>>pc;
-			_gtf_coefs.push_back(pc);
+			_cgtf_coefs.push_back(pc);
 		}
 
 		getline(f,p);
@@ -444,10 +444,10 @@ void MOLDENGAB::PrintData()
 		cout<<"Exposant "<<i<<" = "<<_exposants[i]<<endl;
 	for(size_t i=0; i<_number_of_gtf.size(); i++)
 		cout<<"Number of GTF "<<i<<" = "<<_number_of_gtf[i]<<endl;
-	for(size_t i=0; i<_gtf_coefs.size(); i++)
-		cout<<"GTF coefficient "<<i<<" = "<<_gtf_coefs[i]<<endl;
 	for(size_t i=0; i<_cgtf_coefs.size(); i++)
-		cout<<"CGTF coefficient "<<i<<" = "<<_cgtf_coefs[i]<<endl;
+		cout<<"GTF coefficient "<<i<<" = "<<_cgtf_coefs[i]<<endl;
+	for(size_t i=0; i<_factor_coefs.size(); i++)
+		cout<<"CGTF coefficient "<<i<<" = "<<_factor_coefs[i]<<endl;
 	for(size_t i=0; i<_alpha_energies.size(); i++)
 		cout<<"Alpha MO energy "<<i<<" = "<<_MO_energy[i]<<endl;
 	for(size_t i=0; i<_beta_energies.size(); i++)

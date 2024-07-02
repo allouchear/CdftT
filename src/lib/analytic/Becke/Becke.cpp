@@ -665,12 +665,9 @@ double Becke::density(Orbitals& Orb, double x, double y, double z)
         n=2;
 
     for(int i=0; i<n; i++)
-        for(int j=0; j<Orb.NumberOfMo(); j++)
-        {
-            cout<<j+1<<" / "<<Orb.NumberOfMo()<<endl;
+        for(int j=0; j<Orb.NumberOfMo(); j++)                                         //Il faudra enlever le /2 et le mettre dans orbitals(moldengab) !!!
             if(Orb.OccupationNumber()[i][j]>1e-10)
                 rho+=Orb.OccupationNumber()[i][j] * phistarphi(Orb,j,j,x,y,z,i);
-        }
 
     return rho;
 }
@@ -715,9 +712,6 @@ double Becke::phistarphi(Orbitals& Orb, int i, int j, double x, double y, double
     if(i==j)
     {
         double phi=0.0;
-    
-        cout<<"nCGTF = "<<Orb.vcgtf().size()<<endl;
-        cout<<"nCoefs = "<<Orb.coefficients()[alpha][i].size()<<endl;
 
         for(size_t k=0; k<Orb.vcgtf().size(); k++)
             phi+=Orb.coefficients()[alpha][i][k]*Orb.vcgtf()[k].func(x,y,z);

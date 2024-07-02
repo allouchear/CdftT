@@ -252,6 +252,9 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 	_numberOfMo=moldengab.NumberOfMO();
 	_alpha_and_beta=moldengab.AlphaAndBeta();
 
+	if(!_alpha_and_beta)
+		_numberOfMo/=2;
+
 	_bino=Bin;
 		
 	_atomic_numbers=moldengab.AtomicNumbers();
@@ -266,7 +269,8 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 	_descriptors=Descriptors(moldengab, Table);
 
 	vector<int> Ltypes = moldengab.Ltypes();
-	int nShells = Ltypes.size();	
+	int nShells = Ltypes.size();
+
 	int lmax=0;
 	for(int i=0; i<nShells; i++)
 		if(lmax<abs(Ltypes[i]))
@@ -276,21 +280,21 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 	vector<int> nPrimitivesByShell = moldengab.NumberOfGtf();
 	vector<int> nCoefs (llmax);
 	
-	vector<double> cgtfCoefs = moldengab.CgtfCoefficients();
-	vector<double> gtfCoefs = moldengab.GtfCoefficients();
+	vector<double> FactorCoefs = moldengab.FactorCoefficients();
+	vector<double> CgtfCoefs = moldengab.CgtfCoefficients();
 	vector<vector<double>> coordinatesForShells;
 	vector<int> NatBasis = moldengab.NatBasis();
 
 	for(int i=0; i<_number_of_atoms; i++)
 		for(int j=0; j<NatBasis[i]; j++)
 			coordinatesForShells.push_back(moldengab.Coordinates()[i]);
-	
 
 	vector<double> primitiveExponents = moldengab.Exposants();
 	vector<vector<double>> coefs (llmax, vector<double> (llmax));
 	vector<vector<vector<int>>> l (3, vector<vector<int>> (llmax, vector<int> (llmax)));
 
 	int NOrb = _numberOfMo;
+	cout<<"Norb = "<<NOrb<<endl;
 	_vcgtf = vector<CGTF> (NOrb);
 
 	int kOrb = 0;
@@ -324,12 +328,12 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 	   				vector<int> l_ (3);
 	   				for(int c=0;c<3;c++)
 	   				{
-	   					coord_[c] = coordinatesForShells[nS][c];
+	   					coord_[c] = coordinatesForShells[kPrimitive+ip][c];
 						l_[c] = l[c][m][n];
 	   				}
-	   				GTF gtf (primitiveExponents[kPrimitive+ip], gtfCoefs[kPrimitive+ip], coord_, l_, _bino);
+	   				GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
 	   				_vcgtf[kOrb].push_back(gtf);
-	 				_vcgtf[kOrb].setCoef(cgtfCoefs[kPrimitive+ip]*coefs[m][n]);
+	 				_vcgtf[kOrb].setCoef(FactorCoefs[kPrimitive+ip]*CgtfCoefs[kPrimitive+ip]*coefs[m][n]);
 	 			}
 			kOrb++;
 		}
@@ -354,14 +358,15 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 	   						coord_[c] = coordinatesForShells[nS][c];
 	   						l_[c] = l[c][m][n];
 	   					}
-	   				GTF gtf (primitiveExponents[kPrimitive+ip], gtfCoefs[kPrimitive+ip], coord_, l_, _bino);
+	   				GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
 	   				_vcgtf[kOrb].push_back(gtf);
-	   				_vcgtf[kOrb].setCoef(cgtfCoefs[kPrimitive+ip]*coefs[m][n]);
+	   				_vcgtf[kOrb].setCoef(FactorCoefs[kOrb]*CgtfCoefs[kPrimitive+ip]*coefs[m][n]);
 	 			}
 				kOrb++;
 			}
 		}
-		//kPrimitive += nPrimitivesByShell[nS];
+		kPrimitive += nPrimitivesByShell[nS];
+		cout<<"kOrb =  "<<kOrb<<endl;
 	}
 
 	_numberOfAo=_vcgtf.size();
@@ -372,6 +377,13 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 		cout<<"Please check your file."<<endl;
 		exit(1);
 	}
+
+	for(int i=0; i<_numberOfAo; i++)
+	{
+		cout<<_vcgtf[i]<<endl;
+	}
+
+	NormaliseAllBasis();
 }
 
 double Orbitals::ERIorbitals(Orbitals& q, Orbitals& r, Orbitals& s)
