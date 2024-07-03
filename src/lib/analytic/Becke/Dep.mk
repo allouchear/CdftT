@@ -50,20 +50,20 @@ GridPoints5810.o: GridPoints5810.cpp \
  /home/tmaamaatuai/CdftT/src/lib/analytic/Becke/GridPoints.h
 GridPoints.o: GridPoints.cpp \
  /home/tmaamaatuai/CdftT/src/lib/analytic/Becke/GridPoints.h
-Becke.o: Becke.cpp /home/tmaamaatuai/CdftT/src/lib/analytic/Becke/Becke.h \
+Becke.o: Becke.cpp /home/tmaamaatuai/CdftT/src/lib/numeric/Grid.h \
+ /home/tmaamaatuai/CdftT/src/lib/numeric/Domain.h \
+ /home/tmaamaatuai/CdftT/src/lib/common/Structure.h \
+ /home/tmaamaatuai/CdftT/src/lib/common/Atom.h \
+ /home/tmaamaatuai/CdftT/src/lib/common/PeriodicTable.h \
+ /home/tmaamaatuai/CdftT/src/lib/common/Element.h \
+ /home/tmaamaatuai/CdftT/src/lib/common/Element.h \
  /home/tmaamaatuai/CdftT/src/lib/analytic/Utils/WFX.h \
+ /home/tmaamaatuai/CdftT/src/lib/analytic/Becke/Becke.h \
  /home/tmaamaatuai/CdftT/src/lib/analytic/Orbitals/Orbitals.h \
  /home/tmaamaatuai/CdftT/src/lib/analytic/Orbitals/LCAO.h \
  /home/tmaamaatuai/CdftT/src/lib/analytic/Basis/CGTF.h \
  /home/tmaamaatuai/CdftT/src/lib/analytic/Basis/GTF.h \
  /home/tmaamaatuai/CdftT/src/lib/analytic/Utils/MathFunction.h \
- /home/tmaamaatuai/CdftT/src/lib/common/PeriodicTable.h \
- /home/tmaamaatuai/CdftT/src/lib/common/Element.h \
  /home/tmaamaatuai/CdftT/src/lib/common/Descriptors.h \
- /home/tmaamaatuai/CdftT/src/lib/numeric/Grid.h \
- /home/tmaamaatuai/CdftT/src/lib/numeric/Domain.h \
- /home/tmaamaatuai/CdftT/src/lib/common/Structure.h \
- /home/tmaamaatuai/CdftT/src/lib/common/Atom.h \
- /home/tmaamaatuai/CdftT/src/lib/common/Element.h \
  /home/tmaamaatuai/CdftT/src/lib/numeric/GridCP.h \
  /home/tmaamaatuai/CdftT/src/lib/analytic/Becke/GridPoints.h

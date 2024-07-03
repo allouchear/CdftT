@@ -75,13 +75,70 @@ bool Job::readOneString(const string& tag, string& value)
 	return false;
 }
 /******************************************************************************************/
+template<typename T> bool Job::readOneType(const string& tag, T& x)
+{ 
+	string& value;
+	if(readOneString(tag, value))
+	{
+		size_t i=0;
+		while(i<value.size())
+		{
+			if(value[i]==',' or value[i]==';')
+			{
+				value[i]=' ';
+			}
+			i++;
+		}
+		stringstream ss(value);
+		ss>>x;
+		if(ss.fail()) 
+		{	
+			return false;
+		}	
+		return true;
+	}
+	return false;
+}
+/******************************************************************************************/
+template<typename T> bool Job::readListType(const string& tag, vector<T>& x)
+{
+	string& value;
+	if(readOneString(tag, value))
+	{
+		size_t i=0;
+		while(i<value.size())
+		{
+			if(value[i]==',' or value[i]==';')
+			{
+				value[i]=' ';
+			}
+			i++;
+		}
+
+		T a;
+		stringstream ss(value);
+
+		while(!ss.fail())
+		{
+			ss>>a;
+			if(ss.fail()) 
+			{	
+				return false;
+			}
+			x.push_back(a);
+		}
+		return true;
+	}
+	return false;
+}
+/******************************************************************************************/
 void Job::setJobList()
 {
-	_jobsList = {"computeAIMCharges" ,"Help"}; 
+	_jobsList = {"computeAIMCharges" ,"Help","computeDescriptorsFromCubes"}; 
 }
 void Job::printListOfRunTypes()
 {
-	cout<<"available runType :"<<endl;
+	cout<<"Available runType :"<<endl;
 	for(size_t i=0;i<_jobsList.size();i++) 
 			cout<<_jobsList[i]<<endl;
 }
@@ -107,7 +164,6 @@ Job::Job():_inputFileName("input.cdft")
 Job::Job(string inputFileName):_inputFileName(inputFileName)
 {
 	setJobList();
-	_inputFile.open(_inputFileName);
 	openInputFile();
 }
 /******************************************************************************************/
@@ -125,26 +181,32 @@ void Job::computeLocalIntegrals()
 void Job::printCriticalPoints()
 {
 }
-vector<double> Job::computeAIMCharges(const string& gridfname)
+vector<double> Job::computeAIMCharges(const string& gridfname, int method)
 {
 	ifstream gridf(gridfname);
 	Grid grid(gridf, _table);
 
 	GridCP gridcp;
-	cout<<"Begin Sign"<<endl;
-	gridcp.buildBasins(grid,0);
+	gridcp.buildBasins(grid,method);
 	gridcp.computeIntegrals(grid);
 	gridcp.printCriticalPoints();
 	vector<double> charges=gridcp.computeAIMCharges(grid);
 	return charges;
 }
+Descriptors computeDescriptors(const string& GridFileName1, const string& GridFileName2, const string& GridFileName3, double I, double A, int AIMmethod)
+{
+	ifstream grid1(GridFileName1);
+	ifstream grid2(GridFileName2);
+	ifstream grid3(GridFileName3);
+	Descriptors D(grid1, grid2, grid3, I, A, AIMmethod);
+	return D;
+}	
 /******************************************************************************************/
 void Job::run() 
 {
 	string runType;
 	string gridFileName;
-	if(!readOneString("RunType",runType)) runType = "computeAIMCharges";
-	if(!readOneString("Grid",gridFileName)) runType = "grid.cube";
+	if(!readOneString("RunType",runType)) runType = "HELP";
 	cout<<"----------------------------------------------------------"<<endl;
 	cout<<"runType="<<runType<<endl;
 	cout<<"----------------------------------------------------------"<<endl;
@@ -152,11 +214,55 @@ void Job::run()
 
 	if(to_upper(runType)=="HELP")
 		printListOfRunTypes();
-	else
+	else if ( to_upper(runType) == to_upper("computeAIMCharges"))
 	{
-		if ( to_upper(runType) == to_upper("computeAIMCharges"))
+		if(!readOneString("Grid",gridFileName)) gridFileName = "grid.cube";
+		int Method;
+		string Mdef;
+		if(!readOneString("AIMmethod",Mdef))
 		{
-			vector<double> charges = computeAIMCharges(gridFileName);
+			Method=0;
 		}
+		else if(to_upper(Mdef) == to_upper("on-grid"))
+		{
+			Method=0;
+		}
+		else if(to_upper(Mdef) == to_upper("near-grid"))
+		{
+			Method=1;
+		}
+		else if(to_upper(Mdef) == to_upper("near-grid-refinement"))
+		{
+			Method=2;
+		}
+		else if(to_upper(Mdef) == to_upper("VDD"))
+		{
+			Method=3;
+		}
+		else
+		{
+			cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+			cerr<<"Sorry, AIM method type unknown. Please check AIMmethod input. "<<endl;
+			cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+			exit(1);
+		}
+		vector<double> charges = computeAIMCharges(gridFileName,Method);
+	}
+	else if ( to_upper(runType) == to_upper("ComputeDescriptorsFromCube"))
+	{
+		vector<string> gridFileNames;
+		if(!readListType<string>("Grid",gridFileNames)) 
+		{
+			gridFileNames[0]="grid1.cube";
+			gridFileNames[1]="grid2.cube";
+			gridFileNames[2]="grid3.cube";
+		}
+		if(gridFileNames.size()>3)
+		{
+			cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+			cerr<<"Warning: too many grids. Proceeding with the first three. "<<endl;
+			cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+		}
+
 	}
 }

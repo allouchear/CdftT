@@ -17,10 +17,12 @@ class Job
 		void buildBasins();
 		void computeLocalIntegrals();
 		void printCriticalPoints();
-		std::vector<double> computeAIMCharges(const string& gridfname);
+		std::vector<double> computeAIMCharges(const string& gridfname, int method);
 		void openInputFile();
 		void printListOfRunTypes();
 		bool readOneString(const string& tag, string& value);
+		template<typename T> bool readOneType(const string& tag, T& x);
+		template<typename T> bool readListType(const string& tag, vector<T>& x);
 	public:
 			//!Default constructor
 			/*! set _inputFileName to input.cdft and open it*/

@@ -25,6 +25,8 @@ class Becke
 	public:
 		Becke();
 		Becke(WFX&, Binomial& Bin, const PeriodicTable&);
+		Becke(const Structure& s);
+		Becke(const Grid& g);
 		~Becke() {}
 		int number_of_radial_points(int);
 		GridPoints select_angular_grid(int);
@@ -44,7 +46,9 @@ class Becke
 		double overlapLCAO(const LCAO&, const LCAO&, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
 		static double prodLCAO(const vector<LCAO>& p, double x, double y, double z);
 		vector<double> PartialChargeAndEnergy(int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-		double multicenter_integration(const Grid& g, int kmax, int lebedev_order, int radial_grid_factor);
+		double multicenter_integration(const Grid& g, int kmax=3 , int lebedev_order=41, int radial_grid_factor=5);
+		vector<double> multicenter_sub_integration(const Grid& g, int kmax=3 , int lebedev_order=41, int radial_grid_factor=5);
+		void partial_charge(const Grid& g, int kmax=3 , int lebedev_order=41, int radial_grid_factor=5);
+		vector<double> PartialChargeAndEnergy(const Grid& g, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
 };
-
 #endif

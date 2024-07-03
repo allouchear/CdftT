@@ -175,6 +175,9 @@ class Descriptors
 			//! fukui
 			/*! Calculates and sets the values of the fukui functions*/
 		void compute_fk_From_Charge();
+
+		vector<double> compute_Charges_From_Grid(const Grid& AIM, int Aimmethod);
+		vector<double> compute_Charges_From_File(ifstream& file, int Aimmethod );
 	
 		/********************************************************************************************/
 		

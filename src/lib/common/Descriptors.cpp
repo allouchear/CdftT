@@ -70,64 +70,220 @@ void Descriptors::compute_All_From_Charge(double I, double A )
 	compute_all();	
 }
 
-Descriptors::Descriptors(const Structure& S, vector<double> Q0, vector<double> Qm, vector<double> Qp, double I, double A )
+Descriptors::Descriptors(const Structure& S, vector<double> Q1, vector<double> Q2, vector<double> Q3, double I, double A )
 {
 	_str=S;
 	reset();
-	_Q0=Q0;
-	_Qm=Qm;
-	_Qp=Qp;
-	compute_All_From_Charge(I,A);
-}
-
-void Descriptors::compute_All_From_Grid(const Grid& AIM0,const Grid& AIMM,const Grid& AIMP , double I, double A, int Aimmethod )
-{
-	_okCharge=true;
-	_str=AIM0.str();
-	reset();	
-	GridCP gridcp0;
-	gridcp0.buildBasins(AIM0,Aimmethod);
-	_Q0 =gridcp0.computeAIMCharges(AIM0);
 	
-	GridCP gridcpm;
-	gridcpm.buildBasins(AIMM,Aimmethod);
-	_Qm =gridcpm.computeAIMCharges(AIMM);
-
-	GridCP gridcpp;
-	gridcpp.buildBasins(AIMP,Aimmethod);
-	_Qp=gridcpp.computeAIMCharges(AIMP);
-
+	double s1=0;
+	double s2=0;
+	double s3=0;
+	for(size_t i=0; i<Q1.size();i++)
+	{
+		s1+=Q1[i];
+		s2+=Q2[i];
+		s3+=Q3[i];
+	}
+	if(abs(s1-s2)>1e-10 and abs(s1-s3)>1e-10)
+	{
+		if(abs(s2-s3)>1e-10)
+		{
+			_Qp=Q1;
+			_Q0=Q2;
+			_Qm=Q3;
+		}
+		else
+		{
+			_Qp=Q1;
+			_Qm=Q2;
+			_Q0=Q3;
+		}
+	}
+	if(abs(s2-s1)>1e-10 and abs(s2-s3)>1e-10)
+	{
+		if(abs(s1-s3)>1e-10)
+		{
+			_Qp=Q2;
+			_Q0=Q1;
+			_Qm=Q3;
+		}
+		else
+		{
+			_Qp=Q2;
+			_Qm=Q1;
+			_Q0=Q3;
+		}
+	}
+	if(abs(s3-s1)>1e-10 and abs(s3-s2)>1e-10)
+	{
+		if(abs(s1-s2)>1e-10)
+		{
+			_Qp=Q3;
+			_Q0=Q1;
+			_Qm=Q2;
+		}
+		else
+		{
+			_Qp=Q3;
+			_Qm=Q1;
+			_Q0=Q2;
+		}
+	}
 	compute_All_From_Charge(I,A);
 }
 
-Descriptors::Descriptors(const Grid& AIM0,const Grid& AIMM,const Grid& AIMP, double I, double A, int Aimmethod)
+vector<double> Descriptors::compute_Charges_From_Grid(const Grid& AIM, int Aimmethod )
 {
-	_str=AIM0.str();
-	reset();
-	compute_All_From_Grid(AIM0, AIMM, AIMP, I, A, Aimmethod);
+	GridCP gridcp;
+	gridcp.buildBasins(AIM,Aimmethod);
+	auto Q = gridcp.computeAIMCharges(AIM);
+	return Q;
 }
 
-void Descriptors::compute_All_From_Cube(ifstream& file0, ifstream& fileM, ifstream& fileP, double I, double A, int Aimmethod )
+vector<double> Descriptors::compute_Charges_From_File(ifstream& file, int Aimmethod )
 {
-	_okCharge=true;
 	PeriodicTable Table;
-	Grid AIM0(file0, Table);
-	_str=AIM0.str();
+	Grid AIM(file, Table);
+	_str=AIM.str();
 	reset();	
-	GridCP gridcp0;
-	gridcp0.buildBasins(AIM0,Aimmethod);
-	_Q0=gridcp0.computeAIMCharges(AIM0);
+	GridCP gridcp;
+	gridcp.buildBasins(AIM,Aimmethod);
+	vector<double> Q=gridcp.computeAIMCharges(AIM);
+	return Q;
+}
 
-	Grid AIMM(fileM, Table);	
-	GridCP gridcpm;
-	gridcpm.buildBasins(AIMM,Aimmethod);
-	_Qm=gridcpm.computeAIMCharges(AIMM);
-	
-	Grid AIMP(fileP, Table);
-	GridCP gridcpp;
-	gridcpp.buildBasins(AIMP,Aimmethod);
-	_Qp=gridcpp.computeAIMCharges(AIMP);
+void Descriptors::compute_All_From_Grid(const Grid& AIM1,const Grid& AIM2,const Grid& AIM3 , double I, double A, int Aimmethod )
+{
+	_okCharge=true;
+	_str=AIM1.str();
+	reset();
+	vector<double> Q1 = compute_Charges_From_Grid(AIM1, Aimmethod );
+	vector<double> Q2 = compute_Charges_From_Grid(AIM2, Aimmethod );
+	vector<double> Q3 = compute_Charges_From_Grid(AIM3, Aimmethod );
+	double s1=0;
+	double s2=0;
+	double s3=0;
+	for(size_t i=0; i<Q1.size();i++)
+	{
+		s1+=Q1[i];
+		s2+=Q2[i];
+		s3+=Q3[i];
+	}
+	if(abs(s1-s2)>1e-10 and abs(s1-s3)>1e-10)
+	{
+		if(abs(s2-s3)>1e-10)
+		{
+			_Qp=Q1;
+			_Q0=Q2;
+			_Qm=Q3;
+		}
+		else
+		{
+			_Qp=Q1;
+			_Qm=Q2;
+			_Q0=Q3;
+		}
+	}
+	if(abs(s2-s1)>1e-10 and abs(s2-s3)>1e-10)
+	{
+		if(abs(s1-s3)>1e-10)
+		{
+			_Qp=Q2;
+			_Q0=Q1;
+			_Qm=Q3;
+		}
+		else
+		{
+			_Qp=Q2;
+			_Qm=Q1;
+			_Q0=Q3;
+		}
+	}
+	if(abs(s3-s1)>1e-10 and abs(s3-s2)>1e-10)
+	{
+		if(abs(s1-s2)>1e-10)
+		{
+			_Qp=Q3;
+			_Q0=Q1;
+			_Qm=Q2;
+		}
+		else
+		{
+			_Qp=Q3;
+			_Qm=Q1;
+			_Q0=Q2;
+		}
+	}
+	compute_All_From_Charge(I,A);
+}
 
+Descriptors::Descriptors(const Grid& AIM1,const Grid& AIM2,const Grid& AIM3, double I, double A, int Aimmethod)
+{
+	_str=AIM1.str();
+	reset();
+	compute_All_From_Grid(AIM1, AIM2, AIM3, I, A, Aimmethod);
+}
+
+void Descriptors::compute_All_From_Cube(ifstream& file1, ifstream& file2, ifstream& file3, double I, double A, int Aimmethod )
+{
+	_okCharge=true;
+	vector<double> Q1 = compute_Charges_From_File(file1, Aimmethod);
+	vector<double> Q2 = compute_Charges_From_File(file2, Aimmethod);
+	vector<double> Q3 = compute_Charges_From_File(file3, Aimmethod);
+	double s1=0;
+	double s2=0;
+	double s3=0;
+	for(size_t i=0; i<Q1.size();i++)
+	{
+		s1+=Q1[i];
+		s2+=Q2[i];
+		s3+=Q3[i];
+	}
+	if(abs(s1-s2)>1e-10 and abs(s1-s3)>1e-10)
+	{
+		if(abs(s2-s3)>1e-10)
+		{
+			_Qp=Q1;
+			_Q0=Q2;
+			_Qm=Q3;
+		}
+		else
+		{
+			_Qp=Q1;
+			_Qm=Q2;
+			_Q0=Q3;
+		}
+	}
+	if(abs(s2-s1)>1e-10 and abs(s2-s3)>1e-10)
+	{
+		if(abs(s1-s3)>1e-10)
+		{
+			_Qp=Q2;
+			_Q0=Q1;
+			_Qm=Q3;
+		}
+		else
+		{
+			_Qp=Q2;
+			_Qm=Q1;
+			_Q0=Q3;
+		}
+	}
+	if(abs(s3-s1)>1e-10 and abs(s3-s2)>1e-10)
+	{
+		if(abs(s1-s2)>1e-10)
+		{
+			_Qp=Q3;
+			_Q0=Q1;
+			_Qm=Q2;
+		}
+		else
+		{
+			_Qp=Q3;
+			_Qm=Q1;
+			_Q0=Q2;
+		}
+	}
 	compute_All_From_Charge(I,A);
 }
 
@@ -156,7 +312,7 @@ void Descriptors::compute_all()
 
 	for(int i=0;i<_str.number_of_atoms();i++)
 	{
-		_Deltafk[i] = _fkm[i]-_fkp[i];
+		_Deltafk[i] = _fkp[i]-_fkm[i];
 		_fk0[i]=0.5*(_fkm[i]+_fkp[i]);
 		_wkm[i] = _fkm[i]*_w;
 		_wkp[i] = _fkp[i]*_w;

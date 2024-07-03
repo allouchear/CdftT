@@ -1,5 +1,6 @@
 #include<iostream>
 #include<cmath>
+#include<numeric/Grid.h>
 #include<analytic/Becke/Becke.h>
 
 using namespace std;
@@ -19,6 +20,18 @@ Becke::Becke()
 Becke::Becke(const Structure& S)
 {
 	_molecule=S;
+	_grid=GridPoints();
+	_orbitals=Orbitals();
+	_grid_points=vector<vector<vector<double>>> ();
+	_grid_weights=vector<vector<double>> ();
+	_grid_volumes=vector<vector<double>> ();
+	_multigrid=false;
+	_energy=0.0;
+}
+
+Becke::Becke(const Grid& g)
+{
+	_molecule=g.str();
 	_grid=GridPoints();
 	_orbitals=Orbitals();
 	_grid_points=vector<vector<vector<double>>> ();
@@ -699,7 +712,6 @@ vector<double> Becke::PartialChargeAndEnergy(int kmax, int lebedev_order, int ra
 
 double Becke::multicenter_integration(const Grid& g, int kmax, int lebedev_order, int radial_grid_factor)
 {  
-
 	if(_multigrid==false)
 	{
 		multicenter_grids(kmax, lebedev_order, radial_grid_factor);
@@ -723,4 +735,48 @@ double Becke::multicenter_integration(const Grid& g, int kmax, int lebedev_order
 		integral+=integ;
 	}
     return integral;
+}
+
+vector<double> Becke::multicenter_sub_integration(const Grid& g,int kmax , int lebedev_order, int radial_grid_factor)
+{   
+	if(_multigrid==false)
+	{
+		multicenter_grids(kmax, lebedev_order, radial_grid_factor);
+		_multigrid=true;
+	}
+	int Nat = _molecule.number_of_atoms();
+	vector<double> sub_integral(Nat,0.0) ;
+	for(int I=0; I<Nat; I++)
+	{
+		double integ=0.0;
+		#ifdef ENABLE_OMP
+		#pragma omp parallel for reduction(+:integ)
+		#endif
+		for(size_t J=0; J<_grid_weights[I].size(); J++)
+		{
+			integ  += _grid_volumes[I][J] * _grid_weights[I][J]*g.value(_grid_points[I][J][0] , _grid_points[I][J][1], _grid_points[I][J][2]);       // evaluate function on the grid
+		}
+		sub_integral[I] = integ;
+	}
+	return sub_integral;
+}
+
+void Becke::partial_charge(const Grid& g, int kmax, int lebedev_order, int radial_grid_factor)
+{
+	int Nat=_molecule.number_of_atoms();
+	vector<double> qn (Nat);
+	vector<double> In = multicenter_sub_integration(g);
+	for(int i=0; i<Nat ;i++)
+	{
+		qn[i]=_molecule.atom(i).atomic_number() - In[i];
+	}
+	_partial_charge=qn;
+}
+
+vector<double> Becke::PartialChargeAndEnergy(const Grid& g, int kmax, int lebedev_order, int radial_grid_factor)
+{
+    partial_charge(g,kmax, lebedev_order, radial_grid_factor);
+    vector<double> c = _partial_charge;
+    c.insert(c.begin(), _energy);
+    return c;
 }

@@ -14,7 +14,7 @@ ifeq ($(use_nvhpc),1)
 CC = nvc++ -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
 endif
 
-enable_omp = 1
+enable_omp = 0
 ifeq ($(enable_omp),1)
 #OMPLIB=-L/usr/lib -lgomp
 OMPLIB= -lgomp

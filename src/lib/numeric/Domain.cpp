@@ -37,7 +37,6 @@ void Domain::read_From_Cube(ifstream& nameFile)
 	string s;
 	getline(nameFile,s);
 	stringstream ss(s);
-	cout<<"s="<<s<<endl;
 	// Tokenize the input string by comma delimiter
 
 	for(int i=0;i<3;i++)
@@ -46,8 +45,7 @@ void Domain::read_From_Cube(ifstream& nameFile)
 	}
 	_Nval = 1;
 	ss>>_Nval;
-	if(ss.fail()) _Nval=1;
-
+	if(ss.fail()) _Nval=1;	
 	nameFile>>_N1;
 	_T.resize(3, vector<double>(3));
 	if(_N1>0)
@@ -99,6 +97,7 @@ void Domain::read_From_Cube(ifstream& nameFile)
 		_dy += _T[1][i]*_T[1][i];
 		_dz += _T[2][i]*_T[2][i];
 	}
+	_inv_T.resize(3, vector<double>(3));
 	inverse_T();
 	_dx = sqrt(_dx);
 	_dy = sqrt(_dy);
@@ -148,6 +147,7 @@ Domain::Domain(int i, int n, int m, int l, double* O)
 		_dy += _T[1][i]*_T[1][i];
 		_dz += _T[2][i]*_T[2][i];
 	}
+	_inv_T.resize(3, vector<double>(3));
 	inverse_T();
 	_dx = sqrt(_dx);
 	_dy = sqrt(_dy);
@@ -289,7 +289,7 @@ void Domain::inverse_T()
 	t12 = _T[0][1]*_T[2][0];
 	t14 = _T[0][2]*_T[2][0];
 	t17 = (t4*_T[2][2]-t6*_T[2][1]-t8*_T[2][2]+t10*_T[2][1]+t12*_T[1][2]-t14*_T[1][1]);
-	if(fabs(t17)<1e-12)
+	if(abs(t17)<1e-12)
 	{
 		for(int i=0;i<3;i++)
 		{
