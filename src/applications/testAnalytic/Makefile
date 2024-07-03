@@ -21,7 +21,7 @@ all: compiling cdftt
 compiling: $(OBJECTS)
 
 clean:
-	@$(RM) cdftt *o *.out *.log *.inp *~ 
+	@$(RM) cdftt *o *.out *.inp *~ 
 
 cdftt: 
 	$(CC) $(LDFLAGS) $(OBJECTS) -o cdftt $(OMPLIB) -g -lm -lgomp 

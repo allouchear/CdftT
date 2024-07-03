@@ -7,6 +7,7 @@
 #include<analytic/Utils/WFX.h>
 #include<analytic/Utils/FCHK.h>
 #include<analytic/Utils/MOLDENGAB.h>
+#include<analytic/Utils/LOG.h>
 
 using namespace std;
 
@@ -81,6 +82,8 @@ class Structure
 		Structure(FCHK&, const PeriodicTable&);
 		void read_from_moldengab(MOLDENGAB&, const PeriodicTable&);
 		Structure(MOLDENGAB&, const PeriodicTable&);
+		void read_from_log(LOG&, const PeriodicTable&);
+		Structure(LOG&, const PeriodicTable&);
 };
 
 #endif //CDFTT_STRUCTURE_H_INCLUDED

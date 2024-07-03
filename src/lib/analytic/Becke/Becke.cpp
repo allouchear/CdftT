@@ -51,8 +51,18 @@ Becke::Becke(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Table)
     _grid_volumes=vector<vector<double>> ();
     _multigrid=false;
     _energy=0;
+}
 
-    cout<<_orbitals<<endl;
+Becke::Becke(LOG& log, Binomial& Bin, const PeriodicTable& Table)
+{
+    _molecule=Structure(log, Table);
+    _grid=GridPoints();
+    _orbitals=Orbitals(log, Bin, Table);
+    _grid_points=vector<vector<vector<double>>> ();
+    _grid_weights=vector<vector<double>> ();
+    _grid_volumes=vector<vector<double>> ();
+    _multigrid=false;
+    _energy=log.Energy();
 }
 
 int Becke::number_of_radial_points(int Z)

@@ -6,6 +6,7 @@
 #include<analytic/Utils/WFX.h>
 #include<analytic/Utils/FCHK.h>
 #include<analytic/Utils/MOLDENGAB.h>
+#include<analytic/Utils/LOG.h>
 #include<analytic/Orbitals/Orbitals.h>
 #include<analytic/Becke/GridPoints.h>
 #include<common/Descriptors.h>
@@ -29,6 +30,7 @@ class Becke
 		Becke(WFX&, Binomial&, const PeriodicTable&);
 		Becke(FCHK&, Binomial&, const PeriodicTable&);
 		Becke(MOLDENGAB&, Binomial&, const PeriodicTable&);
+		Becke(LOG&, Binomial&, const PeriodicTable&);
 		~Becke() {}
 		Structure str() {return _molecule;}
 		int number_of_radial_points(int);

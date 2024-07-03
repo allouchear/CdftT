@@ -48,6 +48,8 @@ class Orbitals
 
 		Orbitals(MOLDENGAB&, Binomial&, const PeriodicTable&);
 
+		Orbitals(LOG&, Binomial&, const PeriodicTable&);
+
 			//! A default desctructor.
 			/*! We don't use it. */
 		~Orbitals() {}

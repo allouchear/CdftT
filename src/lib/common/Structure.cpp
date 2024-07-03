@@ -149,3 +149,19 @@ Structure::Structure(MOLDENGAB& moldengab, const PeriodicTable& Table)
 {
 	read_from_moldengab(moldengab, Table);
 }
+
+void Structure::read_from_log(LOG& log, const PeriodicTable& Table)
+{
+	_atoms.resize(log.NumberOfAtoms());
+	for(int i=0; i<log.NumberOfAtoms(); i++)
+	{
+		_atoms[i]=Atom(Table, log.AtomicNumbers()[i]);
+		for(int j=0; j<3; j++)
+			_atoms[i].Set_coordinates(j, log.Coordinates()[i][j]);
+	}
+}
+
+Structure::Structure(LOG& log, const PeriodicTable& Table)
+{
+	read_from_log(log, Table);
+}

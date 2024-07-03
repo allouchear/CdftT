@@ -378,3 +378,19 @@ Descriptors::Descriptors(MOLDENGAB& moldengab, const PeriodicTable& Table)
 
 	_fk0.resize(_str.number_of_atoms());
 }
+
+Descriptors::Descriptors(LOG& log, const PeriodicTable& Table)
+{
+	_str=Structure(log, Table);
+	_Deltafk.resize(_str.number_of_atoms());
+	_wkm.resize(_str.number_of_atoms());
+	_wkp.resize(_str.number_of_atoms());
+	_Skm.resize(_str.number_of_atoms());
+	_Skp.resize(_str.number_of_atoms());
+	_Skfrac.resize(_str.number_of_atoms());
+	_hardnessk.resize(_str.number_of_atoms());
+	_hardnesskm.resize(_str.number_of_atoms());
+	_hardnesskp.resize(_str.number_of_atoms());
+
+	_fk0.resize(_str.number_of_atoms());
+}

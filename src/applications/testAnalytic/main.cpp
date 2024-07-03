@@ -7,6 +7,7 @@
 #include<analytic/Utils/WFX.h>
 #include<analytic/Utils/FCHK.h>
 #include<analytic/Utils/MOLDENGAB.h>
+#include<analytic/Utils/LOG.h>
 #include<analytic/Becke/Becke.h>
 #include"Timer.h"
 #include<ctime>
@@ -74,7 +75,7 @@ int main()
 	z.close();
 
 	cout<<endl;
-*/
+
 	ifstream u;
 	u.open("h2o.gab");
 	MOLDENGAB moldengab_h2o (u);
@@ -96,6 +97,30 @@ int main()
 	MOLDENGAB moldengab_h2oplus (w);
 	w.close();
 	//moldengab_h2oplus.PrintData();
+
+	cout<<endl;
+*/
+	ifstream l1;
+	l1.open("h2o.log");
+	LOG log_h2o (l1);
+	l1.close();
+	//log_h2o.PrintData();
+
+	cout<<endl;
+
+	ifstream l2;
+	l2.open("h2ominus.log");
+	LOG log_h2ominus (l2);
+	l2.close();
+	//log_h2ominus.PrintData();
+
+	cout<<endl;
+
+	ifstream l3;
+	l3.open("h2oplus.log");
+	LOG log_h2oplus (l3);
+	l3.close();
+	//log_h2oplus.PrintData();
 
 /*													//WFX
 	Becke wh2o (wfx_h2o, Bin, Table);
@@ -129,7 +154,7 @@ int main()
 	A=h2ominusQE[0][0]-h2oQE[0][0];
 	Descriptors test2(fh2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
 	cout<<test2<<endl;
-*/													//MOLDENGAB
+													//MOLDENGAB
 	Becke mgh2o (moldengab_h2o, Bin, Table);
 	Becke mgh2ominus (moldengab_h2ominus, Bin, Table);
 	Becke mgh2oplus (moldengab_h2oplus, Bin, Table);
@@ -142,6 +167,20 @@ int main()
 	I= -mgh2o.eHOMO();
 	A= -mgh2o.eLUMO();
 	Descriptors test2(mgh2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
+	cout<<test2<<endl;
+*/													//LOG
+	Becke lh2o (log_h2o, Bin, Table);
+	Becke lh2ominus (log_h2ominus, Bin, Table);
+	Becke lh2oplus (log_h2oplus, Bin, Table);
+
+	h2oQE=lh2o.PartialChargeAndEnergy(1, 21 ,3);
+	h2ominusQE=lh2ominus.PartialChargeAndEnergy(1, 21 ,3);
+	h2oplusQE=lh2oplus.PartialChargeAndEnergy(1, 21 ,3);
+
+	double I, A;
+	I=h2oplusQE[0][0]-h2oQE[0][0];
+	A=h2ominusQE[0][0]-h2oQE[0][0];
+	Descriptors test2(lh2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
 	cout<<test2<<endl;
 
 //	Becke Becketest(fchk_test, Bin, Table);

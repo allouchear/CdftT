@@ -185,6 +185,7 @@ class Descriptors
 		Descriptors(WFX&, const PeriodicTable&);
 		Descriptors(FCHK&, const PeriodicTable&);
 		Descriptors(MOLDENGAB&, const PeriodicTable&);
+		Descriptors(LOG&, const PeriodicTable&);
 		void compute_fk();
 		void set_mu_fk_data(vector<vector<double>> f, double eH, double eL);
 		void set_mu_fk_data(vector<vector<double>> data);
