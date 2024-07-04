@@ -155,6 +155,10 @@ class Orbitals
 				//! An operator member taking two arguments and returning an ostream value.
 				/*! Print all the data of two Orbitals */
 		friend ostream& operator<<(ostream&, Orbitals&);
+		void Save(string&);
+		void Save_wfx(string&);
+		void Save_molden(string&);
+		void Save_gab(string&);
 };
 
 double operator*(const Orbitals& a, const vector<double>& coord);
