@@ -1,0 +1,47 @@
+#!/bin/bash
+
+function grepOneCube()
+{
+	fn=$1
+	nb=$2
+	awk -v nb=$nb 'BEGIN{
+	i=0
+	}
+	{
+		i +=1
+		if (i>=nb)
+		{
+			ne=NF
+			if(NF != 6 && NF != 2)
+			{
+				printf("Check line %d\n",i)
+				printf("line %s\n",$0)
+			}
+			else
+			{
+				for (j=1;j<=NF;j++)
+					printf("%d %s\n",i,$j)
+			}
+		}
+	
+	}' $fn
+}
+
+tmp1=tmp1.txt
+tmp2=tmp2.txt
+fn1=savelap.cube
+fn2=lap.gcube
+grepOneCube $fn1 10 > $tmp1
+grepOneCube $fn2 10 > $tmp2
+
+tmp=tmp.txt
+paste $tmp1 $tmp2 > $tmp
+awk -v fn1=$fn1 'BEGIN{i=0}{
+	i+=1
+	diff=$2-$4
+	if(diff<0) diff=-diff
+	if(diff>1e-15) 
+	{
+		printf("Line %d ======> %0.15f : line# %s=%d ; %f %f\n",i, diff,fn1, $1, $2,$4)
+	}
+}' $tmp 
