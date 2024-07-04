@@ -1,5 +1,0 @@
-# RunType
-#RunType=Help
-RunType=computeAIMCharges
-# GridFileName
-Grid=h2o_80.gcube
