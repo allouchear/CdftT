@@ -1,19 +1,27 @@
-include ../../CONFIG
+include $(LIBCDFTTDIR)/CONFIG
 
 
-ANALYTIC = analytic
-NUMERIC = numeric
-COMMON  = common
+BASIS = Basis
+BECKE = Becke
+CUBE = Cube
+ORBITALS = Orbitals
+UTILS = Utils
+COMMON  = Common
+JOBCONTROL  = JobControl
 
-ANALYTICOBJ = $(ANALYTIC)/*/*.o
-NUMERICOBJ  = $(NUMERIC)/*.o
+BASISOBJ  = $(BASIS)/*.o
+BECKEOBJ  = $(BECKE)/*.o
+ORBITALSOBJ  = $(ORBITALS)/*.o
+UTILSOBJ  = $(UTILS)/*.o
+CUBEOBJ  = $(CUBE)/*.o
 COMMONSOBJ  = $(COMMON)/*.o
+JOBCONTROLOBJ  = $(JOBCONTROL)/*.o
 
 SUBDIRS = \
-	$(COMMON) $(NUMERIC) $(ANALYTIC)
+	$(COMMON) $(CUBE) $(BASIS) $(BECKE) $(ORBITALS) $(UTILS) $(JOBCONTROL)
 
 OBJECTS = \
-	$(ANALYTICOBJ) $(NUMERICOBJ) $(COMMONSOBJ)
+	$(COMMONOBJ) $(CUBEOBJ) $(BASISOBJ) $(BECKEOBJ) $(ORBITALSOBJ) $(UTILSOBJ) $(JOBCONTROLOBJ)
 
 TARGETS = all clean dep
  
@@ -27,7 +35,7 @@ $(SUBDIRS):
 all: cchemilib
 
 cchemilib: $(SUBDIRS)
-	$(CC) -fPIC -shared $(LDFLAGS) $(OBJECTS) -o ../../lib/libcdftt.so  $(WIN32LIB)  $(OMPLIB) $(CLLIB) -g -lm
+	$(CC) -fPIC -shared $(LDFLAGS) $(OBJECTS) -o $(LIBCDFTTDIR)/lib/libcdftt.so  $(WIN32LIB)  $(OMPLIB) $(CLLIB) -g -lm
  
 clean:
 	@$(RM) p

@@ -1,14 +1,14 @@
 #include<iostream>
 #include<vector>
-#include<analytic/Utils/Utils.h>
-#include<analytic/Basis/GTF.h>
-#include<analytic/Basis/CGTF.h>
-#include<analytic/Orbitals/Orbitals.h>
-#include<analytic/Utils/WFX.h>
-#include<analytic/Utils/FCHK.h>
-#include<analytic/Utils/MOLDENGAB.h>
-#include<analytic/Utils/LOG.h>
-#include<analytic/Becke/Becke.h>
+#include<Utils/Utils.h>
+#include<Basis/GTF.h>
+#include<Basis/CGTF.h>
+#include<Orbitals/Orbitals.h>
+#include<Utils/WFX.h>
+#include<Utils/FCHK.h>
+#include<Utils/MOLDENGAB.h>
+#include<Utils/LOG.h>
+#include<Becke/Becke.h>
 #include"Timer.h"
 #include<ctime>
 
@@ -173,9 +173,9 @@ int main()
 	Becke lh2ominus (log_h2ominus, Bin, Table);
 	Becke lh2oplus (log_h2oplus, Bin, Table);
 
-	h2oQE=lh2o.PartialChargeAndEnergy(1, 21 ,3);
-	h2ominusQE=lh2ominus.PartialChargeAndEnergy(1, 21 ,3);
-	h2oplusQE=lh2oplus.PartialChargeAndEnergy(1, 21 ,3);
+	h2oQE=lh2o.PartialChargesAndEnergy(1, 21 ,3);
+	h2ominusQE=lh2ominus.PartialChargesAndEnergy(1, 21 ,3);
+	h2oplusQE=lh2oplus.PartialChargesAndEnergy(1, 21 ,3);
 
 	double I, A;
 	I=h2oplusQE[0][0]-h2oQE[0][0];

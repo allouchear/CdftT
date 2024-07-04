@@ -1,17 +1,25 @@
-include ../../../CONFIG
+include $(LIBCDFTTDIR)/CONFIG
 
 CFLAGS =  $(COMMONCFLAGS) 
 
-ANALYTIC = ../../lib/analytic
-NUMERIC = ../../lib/numeric
-COMMON  = ../../lib/common
+BASIS = $(LIBCDFTTDIR)/src/lib/Basis
+BECKE = $(LIBCDFTTDIR)/src/lib/Becke
+CUBE = $(LIBCDFTTDIR)/src/lib/Cube
+ORBITALS = $(LIBCDFTTDIR)/src/lib/Orbitals
+UTILS = $(LIBCDFTTDIR)/src/lib/Utils
+COMMON  = $(LIBCDFTTDIR)/src/lib/Common
+JOBCONTROL  = $(LIBCDFTTDIR)/src/lib/JobControl
 
-ANALYTICOBJ = $(ANALYTIC)/*/*.o
-NUMERICOBJ  = $(NUMERIC)/*.o
-COMMONSOBJ  = $(COMMON)/*.o
+BASISOBJ  = $(BASIS)/*.o
+BECKEOBJ  = $(BECKE)/*.o
+ORBITALSOBJ  = $(ORBITALS)/*.o
+UTILSOBJ  = $(UTILS)/*.o
+CUBEOBJ  = $(CUBE)/*.o
+COMMONOBJ  = $(COMMON)/*.o
+JOBCONTROLOBJ  = $(JOBCONTROL)/*.o
 
 OBJECTS = main.o \
-	$(ANALYTICOBJ) $(NUMERICOBJ) $(COMMONSOBJ)
+	$(COMMONOBJ) $(CUBEOBJ) $(BASISOBJ) $(BECKEOBJ) $(ORBITALSOBJ) $(UTILSOBJ) $(JOBCONTROLOBJ)
 
 all: compiling cdftt
 

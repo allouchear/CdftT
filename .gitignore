@@ -5,6 +5,8 @@ bin/
 Documentation/
 # ignore ALL .o files
 */*/*.cube
+*/*/*.gcube
+*/*/*.chk
 */*/*.txt
 */*/*/*.cube
 */*/*/*.txt

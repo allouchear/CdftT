@@ -3,7 +3,7 @@ RM = rm -f
 MAKE = make
 WIN32LIB   = 
 
-LIBCDFTTDIR =/home/dbuffat/CdftT
+LIBCDFTTDIR =/home/tmaamaatuai/CdftT
 
 #CC = g++ -pg
 #CC = g++ -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
@@ -14,7 +14,7 @@ ifeq ($(use_nvhpc),1)
 CC = nvc++ -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
 endif
 
-enable_omp = 0
+enable_omp = 1
 ifeq ($(enable_omp),1)
 #OMPLIB=-L/usr/lib -lgomp
 OMPLIB= -lgomp
