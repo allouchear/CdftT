@@ -178,6 +178,9 @@ class Descriptors
 
 		vector<double> compute_Charges_From_Grid(const Grid& AIM, int Aimmethod);
 		vector<double> compute_Charges_From_File(ifstream& file, int Aimmethod );
+		void compute_All_From_Cube(ifstream& file1, ifstream& file2, ifstream& file3, vector<double> E, int Aimmethod );
+		Descriptors(ifstream& file0, ifstream& fileM, ifstream& fileP, vector<double> E, int Aimmethod);
+		vector<double> compute_Charges_From_Becke(const Grid& grid);
 	
 		/********************************************************************************************/
 		

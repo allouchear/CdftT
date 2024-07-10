@@ -1,5 +1,12 @@
 # RunType
 #RunType=Help
-RunType=computeAIMCharges
+Runtype=ComputeIntegrals
+#RunType=ComputeDescriptorsFromCube
+#RunType=ComputeGridDifference
 # GridFileName
-Grid=h2o_80.gcube
+#Grids=H3COCl_m.gcube H3COCl_0.gcube fp.cube
+#Grids=fp.cube fm.cube diff.cube
+Grids= diff.cube
+PartitionMethod=BBS
+Cutoff=0.01
+Energies=0.463, -0.109

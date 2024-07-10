@@ -845,3 +845,19 @@ vector<vector<double>> Becke::PartialChargesAndEnergy(int kmax, int lebedev_orde
     
     return c;
 }
+vector<double> Becke::get_Partial_Charge()
+{
+	return _partial_charge;
+}
+double Becke::get_Energy()
+{
+	return _energy;
+}
+void Becke::printCharges()
+{
+	cout<<"Number of atoms = "<<_molecule.number_of_atoms()<<endl;
+	for(int i=0;i<_molecule.number_of_atoms();i++)
+	{
+		cout<<" Atom = "<<left<<setw(10)<<_molecule.atom(i).symbol()<<", "<<setw(10)<<" value = "<<setw(15)<<_partial_charge[i]<<endl;
+	}
+}

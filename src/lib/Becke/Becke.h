@@ -50,7 +50,6 @@ class Becke
 		static double prodGTF(const vector<GTF>& p, double x, double y, double z);
 		double overlapCGTF(const CGTF&, const CGTF&, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
 		static double prodCGTF(const vector<CGTF>& p, double x, double y, double z);
-		vector<double> PartialChargeAndEnergy(int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
 		double multicenter_integration(const Grid& g, int kmax=3 , int lebedev_order=41, int radial_grid_factor=5);
 		vector<double> multicenter_sub_integration(const Grid& g, int kmax=3 , int lebedev_order=41, int radial_grid_factor=5);
 		void partial_charge(const Grid& g, int kmax=3 , int lebedev_order=41, int radial_grid_factor=5);
@@ -64,5 +63,8 @@ class Becke
 		double eLUMO() {_orbitals.LUMO(); return _orbitals.eLUMO();}
 		vector<double> PartialChargeAndEnergy(const Grid& g, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
 		vector<vector<double>> PartialChargesAndEnergy(int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
+		double get_Energy();
+		vector<double> get_Partial_Charge();
+		void printCharges();
 };
 #endif

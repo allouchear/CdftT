@@ -22,6 +22,7 @@ struct CriticalPoint
 	int numCenter;
 	double volume;
 	double value;
+	double volCenter[3];
 };
 
 	//! Critical point grid
@@ -101,6 +102,10 @@ class GridCP
 			//! Compute Volumes
 			/*! Computes the volumes of each critical point*/
 		void computeVolumes();
+			
+			//! Compute Volumes' centers
+			/*! Computes the center point of each volume*/
+		void computeVolCenters();
 		
 			//! Remove attractor
 			/*! Removes attractors with density smaller than TOL*/

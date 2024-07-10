@@ -152,3 +152,4 @@ class Atom
 };
 
 #endif //_CDFTT_ATOM_H_INCLUDED
+       

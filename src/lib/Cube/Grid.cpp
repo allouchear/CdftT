@@ -2,6 +2,7 @@ using namespace std;
 #include <Cube/Grid.h>
 #include <Cube/GridCP.h>
 #include <Common/Constants.h>
+#include <Orbitals/Orbitals.h>
 #include <cmath>
 #include <list>
 #ifdef ENABLE_OMP
@@ -47,10 +48,8 @@ void Grid::read_From_Cube(ifstream& nameFile, const PeriodicTable& Table)
 	getline(nameFile, bin);
 	nameFile>>Natoms;
 	Domain d(nameFile);
-	cout<<"End read domain "<<endl;
 	_dom=d;
 	Structure S(nameFile, Natoms, Table);
-	cout<<"End read struct "<<endl;
 	_str=S;
 	reset();
 	for(int i=0; i<_dom.N1();i++)
@@ -66,7 +65,7 @@ void Grid::read_From_Cube(ifstream& nameFile, const PeriodicTable& Table)
 			}
 		}
 	}
-	cout<<"End read "<<endl;
+	cout<<"File has been read... Proceeding "<<endl;
 }
 
 Grid::Grid(ifstream& nameFile, const PeriodicTable& Table)
@@ -619,9 +618,7 @@ Grid Grid::laplacian(int nBound) const
 			double cc=0;
 			Grid g(_dom);
 			g.set_str(_str);
-			cout<<"end create grid"<<endl;
 			coefs_Laplacian(nBound, fcx, fcy, fcz, cc);
-			cout<<"coefs done"<<endl;
 #ifdef ENABLE_OMP
 //cout<<"Number of cores = "<<omp_get_num_procs()<<endl;
 #pragma omp parallel for shared(g,_V,fcx,fcy,fcz,cc,nBound)
@@ -748,11 +745,9 @@ Grid Grid::gradient(int nBound) const
 			Domain dg=_dom;
 			dg.set_Nval(4);
 			Grid g(dg);
-			cout<<"done dg"<<endl;
 			g._str=_str;
 			
 			coefs_Gradient(nBound, fcx, fcy, fcz);
-			cout<<"done coefs"<<endl;
 #ifdef ENABLE_OMP
 #pragma omp parallel for
 #endif
@@ -783,9 +778,7 @@ Grid Grid::gradient(int nBound) const
 					}
 				}
 			}
-			cout<<"begin reset"<<endl;
 			g.reset_Boundary(nBound);
-			cout<<"end reset"<<endl;
 			return g;
 		}
 	}
@@ -2006,8 +1999,43 @@ double Grid::value(double x, double y, double z) const
 		S/= norm;
 	return S;
 }
+double Grid::density(Orbitals& Orb, double x, double y, double z)
+{
+	double rho=0.0;
+	int n;
 
+	if(Orb.AlphaAndBeta())
+		n=1;
+	else
+		n=2;
 
+	for(int i=0; i<n; i++)
+	for(int j=0; j<Orb.NumberOfMo(); j++)                                         //Il faudra enlever le /2 et le mettre dans orbitals(moldengab) !!!
+	{
+		if(Orb.OccupationNumber()[i][j]>1e-10)
+		{
+			rho+=Orb.OccupationNumber()[i][j] * phistarphi(Orb,j,j,x,y,z,i);
+		}
+	}
+	return rho;
+}
+void Grid::densityFromOrbitals(Orbitals& Orb)
+{
+	for(int i=0;i<_dom.N1();i++)
+	{	
+		for(int j=0;j<_dom.N2();j++)
+		{
+			for(int k=0;k<_dom.N3();k++)
+			{
+				V[i][k][l][0]=density(Orb, _dom.x(i,j,k),_dom.y(i,j,k),_dom.z(i,j,k));
+			}
+		}
+	}
+}
+Grid::Grid(Orbitals& Orb)
+{
+
+}
 
 
 

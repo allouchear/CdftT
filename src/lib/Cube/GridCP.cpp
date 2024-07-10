@@ -428,6 +428,31 @@ void GridCP::computeNumCenters()
 	}
 }
 /**************************************************************************/
+void GridCP::computeVolCenters()
+{
+	for(size_t ip=0;ip<_criticalPoints.size();ip++)
+	{
+		_criticalPoints[ip].integral=0;
+		int N=0;
+		for(int i=0;i<_domain.N1();i++)
+		for(int j=0;j<_domain.N2();j++)
+		for(int k=0;k<_domain.N3();k++)
+		for(int I=0;I<3;I++)
+		{
+			int n=abs(_volumeNumberOfPoints [i][j][k]);
+			if(n==_criticalPoints[ip].numVolume)
+			{
+				_criticalPoints[ip].volCenter[0]+=i;
+				_criticalPoints[ip].volCenter[1]+=j;
+				_criticalPoints[ip].volCenter[2]+=k;
+				N++;
+			}
+		}
+		for(int i=0;i<3;i++)
+			_criticalPoints[ip].volCenter[i]/=N;
+	}
+}
+/**************************************************************************/
 void GridCP::removeBasins0()
 {
 	vector< CriticalPoint > newCriticalPoints;
@@ -656,13 +681,11 @@ void GridCP::buildBasins(const Grid& grid, int method)
 	}
 	if(method==2) 
 	{
-		cout<<"done"<<endl;
 		int itermax=30;
 		int N = _domain.N1()* _domain.N2()* _domain.N3()/1000;
 		int nold = refineEdgeNearGrad();
 		int n = refineEdgeNearGrad();
 		int iter = 0;
-		cout<<"done"<<endl;
 		//cout<<"n-nold="<<abs(n-nold)<<" => N max="<<N<<endl;
 		while(abs(n-nold)>N)
 		{
@@ -672,7 +695,6 @@ void GridCP::buildBasins(const Grid& grid, int method)
 			n = refineEdgeNearGrad();
 			//cout<<"n-nold="<<abs(n-nold)<<" => N max="<<N<<endl;
 		}
-		cout<<"done"<<endl;
 	}
 
 	if(method<3) 
@@ -686,6 +708,7 @@ void GridCP::buildBasins(const Grid& grid, int method)
 		removeBasins0();
 		//cout<<"End removeBasins0"<<endl;
 		removeNonSignificantBasins();
+		computeVolCenters();
 		//cout<<"End removeNonSignificantBasins"<<endl;
 		int nt=0;
 		for(size_t ip=0;ip<_criticalPoints.size();ip++)
@@ -713,9 +736,12 @@ void GridCP::printCriticalPoints()
 		int i = cp.index[0];
 		int j = cp.index[1];
 		int k = cp.index[2];
+		int I = cp.volCenter[0];
+		int J = cp.volCenter[1];
+		int K = cp.volCenter[2];
 		cout<<" Index = "<<left<<setw(10)<<i<<", "<<setw(10)<<j<<", "<<setw(10)<<k
 		<<" value = "<<setw(15)<<cp.value<<" Z="<< setw(15)<<cp.nuclearCharge
-		<<" Integral = "<< cp.integral<<endl;
+		<<" Integral = "<<setw(15)<< cp.integral<<", "<<right<<"  Volume center = "<<left<<setw(10)<<I<<", "<<setw(10)<<J<<", "<<setw(10)<<K<<"; "<<" x = "<<setw(10)<<_domain.x(I,J,K)<<", "<<" y= "<<setw(10)<<_domain.y(I,J,K)<<", "<<" z = "<<setw(10)<<_domain.z(I,J,K)<<endl;
 	}
 }
 /**************************************************************************/
@@ -862,6 +888,7 @@ void GridCP::buildVDD()
 	resetKnown();
 	computeNumCenters();
 	computeVolumes();
+	computeVolCenters();
 	int nt=0;
 	for(size_t ip=0;ip<_criticalPoints.size();ip++)
 	{
@@ -1117,6 +1144,7 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
 	resetKnown();
 	computeNumCenters();
 	computeVolumes();
+	computeVolCenters();
 	int nt=0;
 	for(size_t ip=0;ip<_criticalPoints.size();ip++)
 	{
@@ -1180,6 +1208,7 @@ void GridCP::build2BasinSign(const Grid& grid)
 	}
 	resetKnown();
 	computeNumCenters();
+	computeVolCenters();
 	computeVolumes();
 	int nt=0;
 	for(size_t ip=0;ip<_criticalPoints.size();ip++)

@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <Common/Descriptors.h>
 #include <Common/PeriodicTable.h>
+#include <Becke/Becke.h>
 
 using namespace std;
 
@@ -132,6 +133,15 @@ Descriptors::Descriptors(const Structure& S, vector<double> Q1, vector<double> Q
 	}
 	compute_All_From_Charge(I,A);
 }
+vector<double> Descriptors::compute_Charges_From_Becke(const Grid& grid)
+{
+	Factorial fact(100);
+	Binomial bino (100, fact);
+	Becke B(grid);
+	B.partial_charge(grid);
+	vector<double> Bint=B.get_Partial_Charge();
+	return B.get_Partial_Charge();
+}
 
 vector<double> Descriptors::compute_Charges_From_Grid(const Grid& AIM, int Aimmethod )
 {
@@ -146,10 +156,18 @@ vector<double> Descriptors::compute_Charges_From_File(ifstream& file, int Aimmet
 	PeriodicTable Table;
 	Grid AIM(file, Table);
 	_str=AIM.str();
-	reset();	
-	GridCP gridcp;
-	gridcp.buildBasins(AIM,Aimmethod);
-	vector<double> Q=gridcp.computeAIMCharges(AIM);
+	reset();
+	vector<double> Q;
+	if(Aimmethod==4)
+	{
+		Q=compute_Charges_From_Becke(AIM);
+	}
+	else
+	{
+		GridCP gridcp;
+		gridcp.buildBasins(AIM,Aimmethod);
+		Q=gridcp.computeAIMCharges(AIM);
+	}
 	return Q;
 }
 
@@ -549,4 +567,86 @@ Descriptors::Descriptors(LOG& log, const PeriodicTable& Table)
 	_hardnesskp.resize(_str.number_of_atoms());
 
 	_fk0.resize(_str.number_of_atoms());
+}
+void Descriptors::compute_All_From_Cube(ifstream& file1, ifstream& file2, ifstream& file3, vector<double> E, int Aimmethod )
+{
+	_okCharge=true;
+	vector<double> Q1 = compute_Charges_From_File(file1, Aimmethod);
+	vector<double> Q2 = compute_Charges_From_File(file2, Aimmethod);
+	vector<double> Q3 = compute_Charges_From_File(file3, Aimmethod);
+	double s1=0;
+	double s2=0;
+	double s3=0;
+	double I=0;
+	double A=0;	
+	for(size_t i=0; i<Q1.size();i++)
+	{
+		s1+=Q1[i];
+		s2+=Q2[i];
+		s3+=Q3[i];
+	}
+	if(abs(s1-s2)>1e-10 and abs(s1-s3)>1e-10)
+	{
+		if(abs(s2-s3)>1e-10)
+		{
+			_Qp=Q1;
+			_Q0=Q2;
+			_Qm=Q3;
+			I=E[0]-E[1];
+			A=E[1]-E[2];
+		}
+		else
+		{
+			_Qp=Q1;
+			_Qm=Q2;
+			_Q0=Q3;
+			I=E[0]-E[2];
+			A=E[2]-E[1];
+		}
+	}
+	if(abs(s2-s1)>1e-10 and abs(s2-s3)>1e-10)
+	{
+		if(abs(s1-s3)>1e-10)
+		{
+			_Qp=Q2;
+			_Q0=Q1;
+			_Qm=Q3;
+			I=E[1]-E[0];
+			A=E[0]-E[2];
+		}
+		else
+		{
+			_Qp=Q2;
+			_Qm=Q1;
+			_Q0=Q3;
+			I=E[1]-E[2];
+			A=E[2]-E[0];
+		}
+	}
+	if(abs(s3-s1)>1e-10 and abs(s3-s2)>1e-10)
+	{
+		if(abs(s1-s2)>1e-10)
+		{
+			_Qp=Q3;
+			_Q0=Q1;
+			_Qm=Q2;
+			I=E[2]-E[0];
+			A=E[0]-E[1];
+		}
+		else
+		{
+			_Qp=Q3;
+			_Qm=Q1;
+			_Q0=Q2;
+			I=E[2]-E[1];
+			A=E[1]-E[0];
+		}
+	}
+	compute_All_From_Charge(I,A);
+}
+
+Descriptors::Descriptors(ifstream& file0, ifstream& fileM, ifstream& fileP, vector<double> E, int Aimmethod)
+{
+	compute_All_From_Cube(file0, fileM, fileP, E, Aimmethod);
+
 }
