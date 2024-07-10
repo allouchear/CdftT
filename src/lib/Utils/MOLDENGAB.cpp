@@ -45,6 +45,7 @@ MOLDENGAB::MOLDENGAB(ifstream& file)
 	_L_types=vector<int> ();
 	_exposants=vector<double> ();
 	_number_of_gtf=vector<int> ();
+	_num_center=vector<int> ();
 	_cgtf_coefs=vector<double> ();
 	_factor_coefs=vector<double> ();
 	_MO_energy=vector<double> ();
@@ -320,10 +321,10 @@ void MOLDENGAB::read_one_basis_data(istream& f)
 	getline(f,p);
 	stringstream k(p);
 	k>>m;
-	m--;
 	getline(f,p);
 	
 	do{
+		_num_center.push_back(m);
 		stringstream s(p);
 		s>>p;
 		_shell_types.push_back(p);
@@ -359,6 +360,7 @@ void MOLDENGAB::read_one_basis_data(istream& f)
 			t.erase(t.find(" "),1);
 
 	}while(!t.empty());
+	m--;
 	_n_at_basis[m]=v;
 }
 
@@ -438,6 +440,10 @@ void MOLDENGAB::PrintData()
 	for(size_t i=0; i<_coord.size(); i++)
 		for(size_t j=0; j<_coord[i].size(); j++)
 			cout<<"Coordinates "<<j<<" for atom "<<i<<" = "<<_coord[i][j]<<endl;
+	for(size_t i=0; i<_num_center.size(); i++)
+		cout<<"Num center "<<i<<" = "<<_num_center[i]<<endl;
+	for(size_t i=0; i<_n_at_basis.size(); i++)
+		cout<<"N at basis "<<i<<" = "<<_n_at_basis[i]<<endl;
 	for(size_t i=0; i<_shell_types.size(); i++)
 		cout<<"Shell type "<<i<<" = "<<_shell_types[i]<<endl;
 	for(size_t i=0; i<_exposants.size(); i++)

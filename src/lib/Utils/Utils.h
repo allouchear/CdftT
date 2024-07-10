@@ -126,4 +126,7 @@ double F(int,double, Factorial&);
 	/*! \return ???*/
 vector<double> getFTable(int, double, Factorial&);
 
+int getwfxType(vector<int>);
+string getLType(vector<int>);
+
 #endif

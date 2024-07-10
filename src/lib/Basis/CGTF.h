@@ -2,6 +2,7 @@
 #define CDFTT_CGTF_H_INCLUDED
 
 #include<iostream>
+#include<string>
 #include <Basis/GTF.h>
 
 using namespace std;
@@ -14,6 +15,8 @@ class CGTF
 	private:
 		int _num_center;
 		int _numberOfFunctions;
+		string _l_type;
+		double _factor_coef;
 		vector<double> _coefficients;
 		vector<GTF> _gtf;
 		int _L;
@@ -42,6 +45,9 @@ class CGTF
 		void setCoef(double);
 
 		vector<double> coefficients() {return _coefficients;}
+		string Ltype() {return _l_type;}
+		int NumCenter() {return _num_center;}
+		double FactorCoef() {return _factor_coef;}
 
 		int numberOfFunctions()
 		{
@@ -116,6 +122,8 @@ class CGTF
 		void push_back(GTF&);
 
 		void setNumCenter(int);
+		void setLtype(string);
+		void setFactorCoef(double);
 
 		double func(double x, double y, double z) const;
 };

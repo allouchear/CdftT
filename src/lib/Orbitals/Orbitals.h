@@ -18,19 +18,23 @@ class Orbitals
 {
 	private:
 		vector<CGTF> _vcgtf;
+		vector<CGTF> _vcgtf_non_normalise;
 		vector<vector<vector<double>>> _coefficients;
 		int _numberOfAo;
 		int _numberOfMo;
 		int _number_of_alpha_electrons;
 		int _number_of_beta_electrons;
 		int _number_of_atoms;
+		int _number_of_gtf;
 		vector<int> _primitive_centers;
 		vector<int> _atomic_numbers;
+		vector<double> _coordinates;
 		vector<string> _symbol;
 		vector<vector<double>> _orbital_energy;
 		vector<vector<double>> _all_f;
 		vector<int> _numOrb;
 		vector<vector<double>> _occupation_number;
+		double _energy;
 		bool _alpha_and_beta;
 		Binomial _bino;
 		Descriptors _descriptors;

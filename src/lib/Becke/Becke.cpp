@@ -700,7 +700,7 @@ double Becke::density(Orbitals& Orb, double x, double y, double z)
         n=2;
 
     for(int i=0; i<n; i++)
-        for(int j=0; j<Orb.NumberOfMo(); j++)                                         //Il faudra enlever le /2 et le mettre dans orbitals(moldengab) !!!
+        for(int j=0; j<Orb.NumberOfMo(); j++)
             if(Orb.OccupationNumber()[i][j]>1e-10)
                 rho+=Orb.OccupationNumber()[i][j] * phistarphi(Orb,j,j,x,y,z,i);
 

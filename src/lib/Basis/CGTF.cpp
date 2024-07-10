@@ -202,6 +202,16 @@ void CGTF::setNumCenter(int nC)
 	_num_center=nC;
 }
 
+void CGTF::setLtype(string s)
+{
+	_l_type=s;
+}
+
+void CGTF::setFactorCoef(double d)
+{
+	_factor_coef=d;
+}
+
 double CGTF::func(double x, double y, double z) const
 {
 	double r=0.0;

@@ -18,6 +18,7 @@ private:
 	vector<int> _L_types;
 	vector<double> _exposants;
 	vector<int> _number_of_gtf;
+	vector<int> _num_center;
 	vector<double> _cgtf_coefs;
 	vector<double> _factor_coefs;
 	vector<double> _MO_energy;
@@ -60,6 +61,7 @@ public:
 	vector<int> Ltypes() {return _L_types;}
 	vector<double> Exposants() {return _exposants;}
 	vector<int> NumberOfGtf() {return _number_of_gtf;}
+	vector<int> Numcenter() {return _num_center;}
 	vector<double> CgtfCoefficients() {return _cgtf_coefs;}
 	vector<double> FactorCoefficients() {return _factor_coefs;}
 	vector<double> MO_Energy() {return _MO_energy;}				 //Pas utile

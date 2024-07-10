@@ -79,12 +79,14 @@ Descriptors::Descriptors(const Structure& S, vector<double> Q1, vector<double> Q
 	double s1=0;
 	double s2=0;
 	double s3=0;
+
 	for(size_t i=0; i<Q1.size();i++)
 	{
 		s1+=Q1[i];
 		s2+=Q2[i];
 		s3+=Q3[i];
 	}
+
 	if(abs(s1-s2)>1e-10 and abs(s1-s3)>1e-10)
 	{
 		if(abs(s2-s3)>1e-10)
@@ -100,6 +102,7 @@ Descriptors::Descriptors(const Structure& S, vector<double> Q1, vector<double> Q
 			_Q0=Q3;
 		}
 	}
+
 	if(abs(s2-s1)>1e-10 and abs(s2-s3)>1e-10)
 	{
 		if(abs(s1-s3)>1e-10)
@@ -115,6 +118,7 @@ Descriptors::Descriptors(const Structure& S, vector<double> Q1, vector<double> Q
 			_Q0=Q3;
 		}
 	}
+
 	if(abs(s3-s1)>1e-10 and abs(s3-s2)>1e-10)
 	{
 		if(abs(s1-s2)>1e-10)
@@ -130,6 +134,7 @@ Descriptors::Descriptors(const Structure& S, vector<double> Q1, vector<double> Q
 			_Q0=Q2;
 		}
 	}
+
 	compute_All_From_Charge(I,A);
 }
 
