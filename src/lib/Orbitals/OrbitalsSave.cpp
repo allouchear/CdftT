@@ -217,30 +217,96 @@ void Orbitals::Save_molden(string& tag)
 
 	s<<"[GTO]"<<endl;
 
-	int k=0;
+	int lt,q,m,k=0;
+	double save_alpha;
+
 	for(int i=0; i<_number_of_atoms; i++)
 	{
 		s<<"\t"<<_vcgtf_non_normalise[k].NumCenter()<<" "<<0<<endl;
+
 		do{
-			/*if(k>0 && k+2<int(_vcgtf_non_normalise.size()))
-				if((_vcgtf_non_normalise[k-1].Ltype()!="S" || _vcgtf_non_normalise[k-1].Ltype()!="s") && _vcgtf_non_normalise[k+2].Ltype()==_vcgtf_non_normalise[k-1].Ltype())
+			if(k==0)	//First shell
+			{
+				s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  "<<setprecision(6)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+
+				for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
+					s<<right<<setw(6)<<" "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+
+				k++;
+			}
+
+			else if(k+1<int(_vcgtf_non_normalise.size()))	//Other shell
+			{
+
+
+				if(_vcgtf_non_normalise[k].Ltype()==_vcgtf_non_normalise[k+1].Ltype() && _vcgtf_non_normalise[k].gtf()[0].exposant()==_vcgtf_non_normalise[k+1].gtf()[0].exposant())	//Other format
 				{
-					if(_vcgtf_non_normalise[k+2].gtf()[0].exposant()==_vcgtf_non_normalise[k-1].gtf()[0].exposant())
+					lt=_vcgtf_non_normalise[k].gtf()[0].l()[0]+_vcgtf_non_normalise[k].gtf()[0].l()[1]+_vcgtf_non_normalise[k].gtf()[0].l()[2];
+					m=(lt+1)*(lt+2)/2;
+
+					s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  "<<setprecision(6)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+
+					for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
+						s<<right<<setw(6)<<" "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+
+					k+=m;
+				}
+
+				else if(_vcgtf_non_normalise[k].Ltype()==_vcgtf_non_normalise[k+1].Ltype())   		//WFX
+				{
+					lt=_vcgtf_non_normalise[k].gtf()[0].l()[0]+_vcgtf_non_normalise[k].gtf()[0].l()[1]+_vcgtf_non_normalise[k].gtf()[0].l()[2];
+
+					if(lt!=0)
 					{
-						k++;
-						continue;
+						m=(lt+1)*(lt+2)/2;
+						q=k;
+						save_alpha=_vcgtf_non_normalise[k].gtf()[0].exposant();
+
+						do{
+							s<<" "<<_vcgtf_non_normalise[q].Ltype()<<"\t"<<_vcgtf_non_normalise[q].numberOfFunctions()<<"  "<<setprecision(6)<<_vcgtf_non_normalise[q].FactorCoef()<<endl;
+
+							for(int j=0; j<_vcgtf_non_normalise[q].numberOfFunctions(); j++)
+								s<<right<<setw(6)<<" "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[q].gtf()[j].exposant()<<"  "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[q].coefficients()[j]<<endl;
+
+							q++;
+						}while(_vcgtf_non_normalise[q].gtf()[0].exposant()!=save_alpha);
+						q=q-k+1;
+						k+=q*(m-1)+1;
 					}
-					else if(_vcgtf_non_normalise[k].gtf()[0].exposant()==_vcgtf_non_normalise[k].gtf()[0].exposant())
+
+					else
 					{
+						s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  "<<setprecision(6)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+
+						for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
+							s<<right<<setw(6)<<" "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+
 						k++;
-						continue;
 					}
-				}*/
-			s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  "<<setprecision(6)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
-			for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
-				s<<right<<setw(6)<<" "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
-			k++;
-		}while(k<int(_vcgtf.size()) && i+1==_vcgtf_non_normalise[k].NumCenter());
+				}
+
+				else   			//Other case
+				{
+					s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  "<<setprecision(6)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+
+					for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
+						s<<right<<setw(6)<<" "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+
+					k++;
+				}
+			}
+			else   			//Last shell
+			{
+				s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  "<<setprecision(6)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+
+				for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
+					s<<right<<setw(6)<<" "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+
+				k++;
+			}
+
+			
+		}while(k<int(_vcgtf_non_normalise.size()) && i+1==_vcgtf_non_normalise[k].NumCenter());
 		s<<endl;
 	}
 

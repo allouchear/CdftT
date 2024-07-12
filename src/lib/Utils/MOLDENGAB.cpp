@@ -366,14 +366,13 @@ void MOLDENGAB::read_one_basis_data(istream& f)
 
 void MOLDENGAB::read_MO_data(ifstream& f)
 {
-	string p;
+	string p,t;
 	double a;
 	vector<double> aa;
 
 	if(LocaliseDataMolGab(f,"Spin= Beta")!=-1)
 	{
 		_alpha_and_beta=false;
-		_number_of_MO*=2;
 	}
 
 	long int pos=LocaliseDataMolGab(f, "[MO]");
@@ -388,8 +387,7 @@ void MOLDENGAB::read_MO_data(ifstream& f)
 	f.seekg(pos);
 	getline(f,p);
 
-	for(int i=0; i<_number_of_MO; i++)
-	{
+	do{
 		for(int j=0; j<4; j++)
 		{
 			if(j!=0)
@@ -425,9 +423,12 @@ void MOLDENGAB::read_MO_data(ifstream& f)
 		_MO_coefs.push_back(aa);
 		aa=vector<double> ();
 		getline(f,p);
-		if((p.find("Sym")==string::npos) && (p.find("Ene")==string::npos) && (p.find("Spin")==string::npos) && (p.find("Occup")==string::npos))
-			break;
-	}
+		t=p;
+		while(t.find(" ")!=string::npos)
+			t.erase(t.find(" "),1);
+	}while(!t.empty());
+
+	_number_of_MO=_MO_energy.size();
 }
 
 void MOLDENGAB::PrintData()

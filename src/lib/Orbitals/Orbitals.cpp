@@ -186,7 +186,7 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 	   				GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
 	   				_vcgtf[kOrb].push_back(gtf);
 	   				_vcgtf[kOrb].setCoef(contractionsCoefsSP[kPrimitive+ip]*coefs[m][n]);
-	   				_vcgtf[kOrb].setLtype(getLType(_vcgtf[j].gtf()[0].l()));
+	   				_vcgtf[kOrb].setLtype(getLType(l_));
 	 			}
 				kOrb++;
 			}
@@ -347,7 +347,7 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 	vector<vector<double>> coefs (llmax, vector<double> (llmax));
 	vector<vector<vector<int>>> l (3, vector<vector<int>> (llmax, vector<int> (llmax)));
 
-	int NOrb = _numberOfMo;
+	int NOrb = moldengab.NumberOfMOCoefs();
 	_vcgtf = vector<CGTF> (NOrb);
 
 	int kOrb = 0;
@@ -431,9 +431,9 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 
 	_numberOfAo=_vcgtf.size();
 
-	if(_numberOfAo != _numberOfMo)
+	if(_numberOfAo != moldengab.NumberOfMOCoefs())
 	{
-		cout<<"Error : Their is "<<_vcgtf.size()<<" CGTF for "<<_numberOfMo<<" basis in file."<<endl;
+		cout<<"Error : Their is "<<_vcgtf.size()<<" CGTF for "<<moldengab.NumberOfMOCoefs()<<" basis in file."<<endl;
 		cout<<"Please check your file."<<endl;
 		exit(1);
 	}

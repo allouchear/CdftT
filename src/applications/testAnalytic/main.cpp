@@ -333,6 +333,7 @@ int main()
 	cout<<"Test 4"<<endl;
 */
 	Orbitals h2owfxtest (wfx_h2o, Bin, Table);
+	cout<<h2owfxtest<<endl;
 	Orbitals h2ominuswfxtest (wfx_h2ominus, Bin, Table);
 	Orbitals h2opluswfxtest (wfx_h2oplus, Bin, Table);
 
@@ -341,6 +342,7 @@ int main()
 	Orbitals h2oplusfchktest (fchk_h2oplus, Bin, Table);
 
 	Orbitals h2omoldengabtest (moldengab_h2o, Bin, Table);
+	cout<<h2omoldengabtest<<endl;
 	Orbitals h2ominusmoldengabtest (moldengab_h2ominus, Bin, Table);
 	Orbitals h2oplusmoldengabtest (moldengab_h2oplus, Bin, Table);
 
@@ -463,22 +465,23 @@ int main()
 	MOLDENGAB log_moldengab_h2oplus (t12);
 	t12.close();
 
-/*
-	Orbitals h2owfxwfx (wfx_wfx_h2o, Bin, Table);
-	Orbitals h2ominuswfxwfx (wfx_wfx_h2ominus, Bin, Table);
-	Orbitals h2opluswfxwfx (wfx_wfx_h2oplus, Bin, Table);
 
-	Orbitals h2ofchkwfx (fchk_wfx_h2o, Bin, Table);
-	Orbitals h2ominusfchkwfx (fchk_wfx_h2ominus, Bin, Table);
-	Orbitals h2oplusfchkwfx (fchk_wfx_h2oplus, Bin, Table);
+	Orbitals h2owfxmoldengab (wfx_moldengab_h2o, Bin, Table);
+	cout<<h2owfxmoldengab<<endl;
+/*	Orbitals h2ominuswfxmoldengab (wfx_moldengab_h2ominus, Bin, Table);
+	Orbitals h2opluswfxmoldengab (wfx_moldengab_h2oplus, Bin, Table);
 
-	Orbitals h2omoldengabwfx (moldengab_wfx_h2o, Bin, Table);
-	Orbitals h2ominusmoldengabwfx (moldengab_wfx_h2ominus, Bin, Table);
-	Orbitals h2oplusmoldengabwfx (moldengab_wfx_h2oplus, Bin, Table);
+	Orbitals h2ofchkmoldengab (fchk_moldengab_h2o, Bin, Table);
+	Orbitals h2ominusfchkmoldengab (fchk_moldengab_h2ominus, Bin, Table);
+	Orbitals h2oplusfchkmoldengab (fchk_moldengab_h2oplus, Bin, Table);
 
-	Orbitals h2ologwfx (log_wfx_h2o, Bin, Table);
-	Orbitals h2ominuslogwfx (log_wfx_h2ominus, Bin, Table);
-	Orbitals h2opluslogwfx (log_wfx_h2oplus, Bin, Table);
+	Orbitals h2omoldengabmoldengab (moldengab_moldengab_h2o, Bin, Table);
+	Orbitals h2ominusmoldengabmoldengab (moldengab_moldengab_h2ominus, Bin, Table);
+	Orbitals h2oplusmoldengabmoldengab (moldengab_moldengab_h2oplus, Bin, Table);
+
+	Orbitals h2ologmoldengab (log_moldengab_h2o, Bin, Table);
+	Orbitals h2ominuslogmoldengab (log_moldengab_h2ominus, Bin, Table);
+	Orbitals h2opluslogmoldengab (log_moldengab_h2oplus, Bin, Table);
 */
 
 /*	double I, A;
