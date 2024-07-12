@@ -28,6 +28,7 @@ class Job
 		template<typename T> bool readListType(const string& tag, vector<T>& x);
 		Descriptors computeDescriptors(const string& GridFileName1, const string& GridFileName2, const string& GridFileName3, double I, double A, int AIMmethod);
 		Descriptors computeDescriptors(const string& GridFileName1, const string& GridFileName2, const string& GridFileName3, vector<double>E,  int AIMmethod);
+		template<typename T> void createCube(const string& analyticFileName, const string& cubeFileName,int Nval, int N1, int N2, int N3, double xmax, double ymax, double zmax, vector<vector<double>>& t);
 	public:
 			//!Default constructor
 			/*! set _inputFileName to input.cdft and open it*/

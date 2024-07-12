@@ -2,7 +2,6 @@ using namespace std;
 #include <Cube/Grid.h>
 #include <Cube/GridCP.h>
 #include <Common/Constants.h>
-#include <Orbitals/Orbitals.h>
 #include <cmath>
 #include <list>
 #ifdef ENABLE_OMP
@@ -103,6 +102,10 @@ void Grid::set_str(const Structure& S)
 void Grid::set_V(const vector<vector<vector<vector<double>>>>& U)
 {
 	_V=U;
+}
+void Grid::set_Vijkl(double rho, int i, int j, int k, int l)
+{
+	_V[i][j][k][l]=rho;
 }
 
 Grid Grid::operator+(const Grid& g)
@@ -1999,42 +2002,35 @@ double Grid::value(double x, double y, double z) const
 		S/= norm;
 	return S;
 }
-double Grid::density(Orbitals& Orb, double x, double y, double z)
+
+vector<double> Grid::sizeUpMol(double scale)
 {
-	double rho=0.0;
-	int n;
-
-	if(Orb.AlphaAndBeta())
-		n=1;
-	else
-		n=2;
-
-	for(int i=0; i<n; i++)
-	for(int j=0; j<Orb.NumberOfMo(); j++)                                         //Il faudra enlever le /2 et le mettre dans orbitals(moldengab) !!!
+	double Xmax=0;
+	double Ymax=0;
+	double Zmax=0;
+	vector<Atom> atoms=_str.atoms();
+	for(int i=0; i<_str.number_of_atoms(); i++)
+	for(int j=0; j<_str.number_of_atoms(); j++)
 	{
-		if(Orb.OccupationNumber()[i][j]>1e-10)
+		if(i==j) continue;
+		double Xtmp= atoms[i].coordinates()[0]-atoms[j].coordinates()[0];
+		if(abs(Xmax-Xtmp)>1e-10)
 		{
-			rho+=Orb.OccupationNumber()[i][j] * phistarphi(Orb,j,j,x,y,z,i);
+			Xmax=Xtmp;	
+		}
+		double Ytmp= atoms[i].coordinates()[1]-atoms[j].coordinates()[1];
+		if(abs(Ymax-Ytmp)>1e-10)
+		{
+			Ymax=Ytmp;	
+		}
+		double Ztmp= atoms[i].coordinates()[2]-atoms[j].coordinates()[2];
+		if(abs(Zmax-Ztmp)>1e-10)
+		{
+			Zmax=Ztmp;	
 		}
 	}
-	return rho;
-}
-void Grid::densityFromOrbitals(Orbitals& Orb)
-{
-	for(int i=0;i<_dom.N1();i++)
-	{	
-		for(int j=0;j<_dom.N2();j++)
-		{
-			for(int k=0;k<_dom.N3();k++)
-			{
-				V[i][k][l][0]=density(Orb, _dom.x(i,j,k),_dom.y(i,j,k),_dom.z(i,j,k));
-			}
-		}
-	}
-}
-Grid::Grid(Orbitals& Orb)
-{
-
+	vector<double> size={Xmax,Ymax,Zmax};
+	return size;
 }
 
 

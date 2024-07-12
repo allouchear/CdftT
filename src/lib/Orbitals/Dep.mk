@@ -10,10 +10,10 @@ Orbitals.o: Orbitals.cpp \
  /home/tmaamaatuai/CdftT/src/lib/Common/Element.h \
  /home/tmaamaatuai/CdftT/src/lib/Common/Descriptors.h \
  /home/tmaamaatuai/CdftT/src/lib/Cube/Grid.h \
- /home/tmaamaatuai/CdftT/src/lib/Cube/Domain.h \
  /home/tmaamaatuai/CdftT/src/lib/Common/Structure.h \
  /home/tmaamaatuai/CdftT/src/lib/Common/Atom.h \
  /home/tmaamaatuai/CdftT/src/lib/Common/Element.h \
  /home/tmaamaatuai/CdftT/src/lib/Utils/LOG.h \
+ /home/tmaamaatuai/CdftT/src/lib/Cube/Domain.h \
  /home/tmaamaatuai/CdftT/src/lib/Cube/GridCP.h \
  /home/tmaamaatuai/CdftT/src/lib/Utils/LM.h

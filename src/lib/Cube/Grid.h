@@ -2,10 +2,9 @@
 #define _CDFTT_GRID_H_INCLUDED
 
 using namespace std;
-#include <Cube/Domain.h>
 #include <Common/Structure.h>
+#include <Cube/Domain.h>
 #include <functional>
-
 
 class Grid
 {
@@ -81,6 +80,9 @@ class Grid
 		/*!
 			Operator + overload using Structure::operator+(g)
 		*/
+	void set_Vijkl(double rho, int i, int j, int k, int l);
+	
+		
 	Grid operator+(const Grid& g);
 	
 		//! addition
@@ -160,8 +162,7 @@ class Grid
 	
 	Grid aim_On_Grid(int nBound);
 	Grid aim_On_Grid_Density();
-	double Grid::density(Orbitals& Orb, double x, double y, double z)
-	
+	vector<double> sizeUpMol(double scale);
 	double value(double x, double y, double z) const;
 };
 

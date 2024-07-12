@@ -8,6 +8,7 @@
 #include <Basis/CGTF.h>
 #include <Common/PeriodicTable.h>
 #include <Common/Descriptors.h>
+#include <Common/Structure.h>
 
 using namespace std;
 
@@ -25,6 +26,7 @@ class Orbitals
 		int _number_of_beta_electrons;
 		int _number_of_atoms;
 		vector<int> _primitive_centers;
+		Structure _struct;
 		vector<int> _atomic_numbers;
 		vector<string> _symbol;
 		vector<vector<double>> _orbital_energy;
@@ -155,6 +157,10 @@ class Orbitals
 				//! An operator member taking two arguments and returning an ostream value.
 				/*! Print all the data of two Orbitals */
 		friend ostream& operator<<(ostream&, Orbitals&);
+		Structure get_struct();
+		Grid MakeGrid(int Nval, int N1, int N2, int N3, double xmax, double ymax, double zmax, vector<vector<double>>& T);
+		double density(double x, double y, double z);
+		double phistarphi(int i, int j, double x, double y, double z, int alpha);
 };
 
 double operator*(const Orbitals& a, const vector<double>& coord);

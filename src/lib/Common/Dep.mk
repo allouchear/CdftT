@@ -19,7 +19,6 @@ Structure.o: Structure.cpp \
 Descriptors.o: Descriptors.cpp \
  /home/tmaamaatuai/CdftT/src/lib/Common/Descriptors.h \
  /home/tmaamaatuai/CdftT/src/lib/Cube/Grid.h \
- /home/tmaamaatuai/CdftT/src/lib/Cube/Domain.h \
  /home/tmaamaatuai/CdftT/src/lib/Common/Structure.h \
  /home/tmaamaatuai/CdftT/src/lib/Common/Atom.h \
  /home/tmaamaatuai/CdftT/src/lib/Common/PeriodicTable.h \
@@ -30,6 +29,7 @@ Descriptors.o: Descriptors.cpp \
  /home/tmaamaatuai/CdftT/src/lib/Utils/FCHK.h \
  /home/tmaamaatuai/CdftT/src/lib/Utils/MOLDENGAB.h \
  /home/tmaamaatuai/CdftT/src/lib/Utils/LOG.h \
+ /home/tmaamaatuai/CdftT/src/lib/Cube/Domain.h \
  /home/tmaamaatuai/CdftT/src/lib/Cube/GridCP.h \
  /home/tmaamaatuai/CdftT/src/lib/Becke/Becke.h \
  /home/tmaamaatuai/CdftT/src/lib/Orbitals/Orbitals.h \

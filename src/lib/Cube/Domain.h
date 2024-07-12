@@ -34,6 +34,7 @@ class Domain
 			Calls read_From_Cube to construct new Domain
 		*/
 	Domain(ifstream& nameFile);
+	Domain(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax, vector<vector<double>> T);
 	
 		//! Constructor
 		/*!

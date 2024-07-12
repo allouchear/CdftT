@@ -7,6 +7,7 @@ using namespace std;
 
 Orbitals::Orbitals()
 {
+	_struct=Structure();
 	_all_f = vector<vector<double>> ();
 	_vcgtf = vector<CGTF> ();
 	_symbol = vector<string> ();
@@ -26,6 +27,7 @@ Orbitals::Orbitals()
 
 Orbitals::Orbitals(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
 {
+	_struct=Structure(wfx, Table);
 	int i,j;
 	_bino=Bin;
 	GTF gtf;
@@ -71,6 +73,7 @@ Orbitals::Orbitals(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
 
 Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 {
+	_struct=Structure(fchk, Table);
 	_numberOfMo=fchk.NumberOfBasisFunctions();
 
 	_bino=Bin;
@@ -233,6 +236,7 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 
 Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Table)
 {
+	_struct=Structure(moldengab, Table);
 	_coefficients=vector<vector<vector<double>>> (2);
 	_coefficients[0]=moldengab.AlphaMOCoefs();
 	_coefficients[1]=moldengab.BetaMOCoefs();
@@ -386,6 +390,7 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 
 Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 {
+	_struct=Structure(log, Table);
 	_coefficients=vector<vector<vector<double>>> (2);
 	_coefficients[0]=log.AlphaMOcoefs();
 	_coefficients[1]=log.BetaMOcoefs();
@@ -816,4 +821,71 @@ ostream& operator<<(ostream& flux, Orbitals& Orb)
 		flux<<left<<Orb.vcgtf()[i]<<endl;
 
 	return flux;
+}
+Structure Orbitals::get_struct()
+{
+	return _struct;
+}
+Grid Orbitals::MakeGrid(int Nval, int N1, int N2, int N3, double xmax, double ymax, double zmax, vector<vector<double>>& T)
+{
+	Grid g;
+	Domain d(Nval, N1, N2, N3, xmax, ymax, zmax, T);
+	g.set_str(_struct);
+	g.reset();
+	g.set_dom(d);
+	for(int i=0;i<d.N1();i++)
+	{
+		for(int j=0;j<d.N2();j++)
+		{
+			for(int k=0;k<d.N3();k++)
+			{
+				double rho=density(d.x(i,j,k), d.y(i,j,k), d.z(i,j,k));
+				g.set_Vijkl(rho,i,j,k,0);
+			}
+		}
+	}
+	return g;
+}
+double Orbitals::density(double x, double y, double z)
+{
+	double rho=0.0;
+	int n;
+
+	if(AlphaAndBeta())
+		n=1;
+	else
+		n=2;
+
+	for(int i=0; i<n; i++)
+	for(int j=0; j<NumberOfMo(); j++)                                         //Il faudra enlever le /2 et le mettre dans orbitals(moldengab) !!!
+	{
+		if(OccupationNumber()[i][j]>1e-10)
+		{
+			rho+=OccupationNumber()[i][j] * phistarphi(j,j,x,y,z,i);
+		}
+	}
+	return rho;
+}
+double Orbitals::phistarphi(int i, int j, double x, double y, double z, int alpha)
+{
+    if(i==j)
+    {
+        double phi=0.0;
+
+        for(size_t k=0; k<_vcgtf.size(); k++)
+            phi+=_coefficients[alpha][i][k]*_vcgtf[k].func(x,y,z);
+        
+        return phi*phi;
+    }
+
+    double phii=0.0;
+    double phij=0.0;
+
+    for(size_t k=0; k<_vcgtf.size(); k++)
+    {
+        phii+=_coefficients[alpha][i][k]*_vcgtf[k].func(x,y,z);
+        phij+=_coefficients[alpha][j][k]*_vcgtf[k].func(x,y,z);
+    }
+
+    return phii*phij;
 }

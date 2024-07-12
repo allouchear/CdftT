@@ -7,6 +7,7 @@ using namespace std;
 #include <cmath>
 #include <iostream>
 #include <sstream>
+#include <Common/Atom.h>
 
 
 Domain::Domain()
@@ -30,6 +31,32 @@ Domain::Domain()
 	_dy=0;
 	_dz=0;
 	_dv=0;
+}
+Domain::Domain(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax, vector<vector<double>> T)
+{
+	_Nval=Nval;
+	_N1=N1;
+	_N2=N2;
+	_N3=N3;
+	_O[0]=-xmax;
+	_O[1]=-ymax;
+	_O[2]=-zmax;
+	_T[0][0]=2*xmax/_N1;
+	_T[1][1]=2*ymax/_N2;
+	_T[2][2]=2*zmax/_N3;
+	for(int i=0; i<3;i++)
+	{
+		_dx += _T[0][i]*_T[0][i];
+		_dy += _T[1][i]*_T[1][i];
+		_dz += _T[2][i]*_T[2][i];
+	}
+	_inv_T.resize(3, vector<double>(3));
+	inverse_T();
+	_dx = sqrt(_dx);
+	_dy = sqrt(_dy);
+	_dz = sqrt(_dz);
+	_dv = _dx*_dy*_dz;
+
 }
 
 void Domain::read_From_Cube(ifstream& nameFile)

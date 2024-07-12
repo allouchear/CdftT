@@ -3,4 +3,5 @@ cd ../..
 source env.sh
 cd -
 make dep
-make -j 10
+#make -j 10
+make 

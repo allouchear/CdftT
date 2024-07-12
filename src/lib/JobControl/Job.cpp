@@ -6,6 +6,7 @@ using namespace std;
 #include <Common/Element.h>
 #include <Common/Descriptors.h>
 #include <Becke/Becke.h>
+#include <Orbitals/Orbitals.h>
 #include <cmath>
 #include <cstring>
 #include <fstream>
@@ -272,7 +273,20 @@ Descriptors Job::computeDescriptors(const string& GridFileName1, const string& G
 	ifstream grid3(GridFileName3);
 	Descriptors D(grid1, grid2, grid3, E, AIMmethod);
 	return D;
-}	
+}
+template<typename T> void Job::createCube(const string& analyticFileName, const string& cubeFileName,int Nval, int N1, int N2, int N3, double xmax, double ymax, double zmax, vector<vector<double>>& t)
+{
+	Factorial fact(100);
+	Binomial bino(100, fact);
+	ifstream analyticFile(analyticFileName);
+	T anaClass(analyticFile);
+	analyticFile.close();
+	Orbitals orb(anaClass, bino, _table);
+	Grid g=orb.MakeGrid(Nval, N1, N2, N3, xmax, ymax, zmax, t);
+	ofstream out(cubeFileName);
+	g.save(out);
+	out.close();
+}
 /******************************************************************************************/
 void Job::run() 
 {
@@ -532,12 +546,18 @@ void Job::run()
 	else if(to_upper(runType) == to_upper("ComputeGridDifference"))
 	{
 		vector<string> GridFileNames;
+		cout<<"yes"<<endl;
 		if(!readListType<string>("Grids", GridFileNames))
 		{
+			cout<<"yes"<<endl;
 			GridFileNames[0]="grid1.cube";
 			GridFileNames[1]="grid2.cube";
 			GridFileNames[2]="grid3.cube";
 		}
 		ComputeGridDifference(GridFileNames[0], GridFileNames[1], GridFileNames[2]);		
+	}
+	else if(to_upper(runType) == to_upper("MakeCube"))
+	{
+
 	}
 }
