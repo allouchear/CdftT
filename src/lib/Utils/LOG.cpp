@@ -63,7 +63,6 @@ void LOG::read_atoms_data(ifstream& f)
 	int n;
 	double d;
 	string p;
-	_coordinates=vector<vector<double>> (3);
 
 	pos=LocaliseDataLogBefore(f, "NAtoms=");
 
@@ -72,7 +71,9 @@ void LOG::read_atoms_data(ifstream& f)
 	stringstream sp(p);
 	sp>>p;
 	sp>>_number_of_atoms;
-	
+
+	_coordinates=vector<vector<double>> (_number_of_atoms);
+
 	pos=LocaliseDataLog(f, "Standard orientation:");
 
 	f.clear();
@@ -101,8 +102,7 @@ void LOG::read_atoms_data(ifstream& f)
 	{
 		getline(f,p);
 		stringstream s(p);
-		s>>n;
-		_num_center.push_back(n);
+		s>>p;
 		s>>n;
 		_atomic_numbers.push_back(n);
 		s>>p;
@@ -119,7 +119,7 @@ void LOG::read_atoms_data(ifstream& f)
 void LOG::read_basis_data(ifstream& f)
 {
 	long int pos, pos2;
-	int n;
+	int n,l;
 	double d,c;
 	string p;
 
@@ -140,6 +140,8 @@ void LOG::read_basis_data(ifstream& f)
 	for(int i=0; i<_number_of_atoms; i++)
 	{
 		getline(f,p);
+		stringstream nc(p);
+		nc>>l;
 		getline(f,p);
 		v=0;
 		do
@@ -154,6 +156,7 @@ void LOG::read_basis_data(ifstream& f)
 			for(int j=0; j<n; j++)
 			{
 				v++;
+				_num_center.push_back(l);
 				_factor_coefficients.push_back(c);
 				getline(f,p);
 
@@ -331,14 +334,13 @@ void LOG::read_MO_data(ifstream& f)
 	long int pos, pos2;
 	int n,m;
 	double d;
-	string p, name;
+	string p,p2,pp, name;
 
 	pos=LocaliseDataLog(f, "Alpha Molecular Orbital Coefficients:");
 
 	if(pos==-1)
 	{
 		_alpha_and_beta=true;
-		name="Density Matrix:";
 		pos=LocaliseDataLog(f, "Molecular Orbital Coefficients:");
 
 		do{
@@ -350,7 +352,6 @@ void LOG::read_MO_data(ifstream& f)
 	else
 	{
 		_alpha_and_beta=false;
-		name="Beta Molecular Orbital Coefficients:";
 		do{
 			pos2=pos;
 			pos=LocaliseNextDataLog(f, "Alpha Molecular Orbital Coefficients:");
@@ -398,20 +399,33 @@ void LOG::read_MO_data(ifstream& f)
 			_alpha_energy.push_back(d);
 		}
 
-		for(int i=0; i<_number_of_MO; i++)
+		for(int i=0; i<_number_of_basis_functions; i++)
 		{
 			getline(f,p);
 			stringstream sss(p);
+
+			sss>>p2;
 
 			if(p.find("1S")!=string::npos || p.find("1s")!=string::npos)
 			{
 				sss>>p;
 				sss>>p;
+				if(n==0)
+					_symbol.push_back(p);
 			}
-
+			
 			sss>>p;
-			sss>>p;
-
+			
+			if(_d_cart_sphe=="sphe" and (p.find("d")!=string::npos or p.find("D")!=string::npos) and (p.size()==2 or p.size()==3))
+			{
+				cout<<"p = "<<p<<endl;
+				sss>>p;	
+			}
+			if(_f_cart_sphe=="sphe" and (p.find("f")!=string::npos or p.find("F")!=string::npos) and (p.size()==2 or p.size()==3))
+			{
+				cout<<"p = "<<p<<endl;
+				sss>>p;
+			}
 			for(int j=0; j<m; j++)
 			{
 				sss>>d;
@@ -420,11 +434,13 @@ void LOG::read_MO_data(ifstream& f)
 		}
 		n+=m;
 		getline(f,p);
-	}while(p.find(name)==string::npos);
+		stringstream nn;
+		nn<<n+1;
+		pp=nn.str();
+	}while(p.find(pp)!=string::npos);
 
 	if(!_alpha_and_beta)
 	{
-		name="Condensed to atoms";
 		f.clear();
 		f.seekg(pos2);
 		pos=LocaliseNextDataLog(f, "Beta Molecular Orbital Coefficients:");
@@ -465,7 +481,7 @@ void LOG::read_MO_data(ifstream& f)
 			for(int i=0; i<m; i++)
 			{
 				ss>>d;
-				_alpha_energy.push_back(d);
+				_beta_energy.push_back(d);
 			}
 
 			for(int i=0; i<_number_of_MO; i++)
@@ -490,7 +506,10 @@ void LOG::read_MO_data(ifstream& f)
 			}
 			n+=m;
 			getline(f,p);
-		}while(p.find(name)==string::npos);
+			stringstream nn;
+			nn<<n+1;
+			pp=nn.str();
+		}while(p.find(pp)!=string::npos);
 	}
 
 	else

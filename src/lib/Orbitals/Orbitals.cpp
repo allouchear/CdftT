@@ -527,6 +527,18 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 		exit(1);
 	}
 
+	if(log.NumberOfBasisFunctions() < _numberOfMo)
+	{
+		for(int i=0; i<_numberOfMo-log.NumberOfBasisFunctions(); i++)
+		{
+			vector<double> v (log.NumberOfBasisFunctions(),0);
+			_coefficients[0].push_back(v);
+			_coefficients[1].push_back(v);
+			_occupation_number[0].push_back(0);
+			_occupation_number[1].push_back(0);
+		}
+	}
+
 	NormaliseAllBasis();
 }
 
@@ -826,13 +838,12 @@ Structure Orbitals::get_struct()
 {
 	return _struct;
 }
-Grid Orbitals::MakeGrid(int Nval, int N1, int N2, int N3, double xmax, double ymax, double zmax, vector<vector<double>>& T)
+Grid Orbitals::makeGrid(const Domain& d)
 {
 	Grid g;
-	Domain d(Nval, N1, N2, N3, xmax, ymax, zmax, T);
 	g.set_str(_struct);
-	g.reset();
 	g.set_dom(d);
+	g.reset();
 	for(int i=0;i<d.N1();i++)
 	{
 		for(int j=0;j<d.N2();j++)
@@ -856,36 +867,65 @@ double Orbitals::density(double x, double y, double z)
 	else
 		n=2;
 
+	vector<double> v(_vcgtf.size());
+        for(size_t k=0; k<_vcgtf.size(); k++)
+		v[k] = _vcgtf[k].func(x,y,z);
+
+#ifdef ENABLE_OMP
+#pragma omp parallel
+#endif
+	for(int j=0; j<NumberOfMo(); j++)
 	for(int i=0; i<n; i++)
-	for(int j=0; j<NumberOfMo(); j++)                                         //Il faudra enlever le /2 et le mettre dans orbitals(moldengab) !!!
 	{
 		if(OccupationNumber()[i][j]>1e-10)
 		{
-			rho+=OccupationNumber()[i][j] * phistarphi(j,j,x,y,z,i);
+			double phi=0;
+        		for(size_t k=0; k<_vcgtf.size(); k++)
+				phi += _coefficients[i][j][k]*v[k];
+			rho+=OccupationNumber()[i][j] * phi*phi;
 		}
 	}
 	return rho;
 }
-double Orbitals::phistarphi(int i, int j, double x, double y, double z, int alpha)
+Grid Orbitals::makeOrbGrid(const Domain& d, const vector<int>& nums, const vector<int>& typesSpin)
 {
-    if(i==j)
-    {
-        double phi=0.0;
-
+	Grid g;
+	g.set_str(_struct);
+	g.set_dom(d);
+	g.reset();
+	for(int i=0;i<d.N1();i++)
+	{
+		for(int j=0;j<d.N2();j++)
+		{
+			for(int k=0;k<d.N3();k++)
+			{
+				vector<double> phy=phis(d.x(i,j,k), d.y(i,j,k), d.z(i,j,k), nums, typesSpin);
+				for(int l=0; l<d.Nval();l++)
+				{
+					g.set_Vijkl(phy[l],i,j,k,l);
+				}
+			}
+		}
+	}
+	return g;
+}
+vector<double> Orbitals::phis(double x, double y, double z, const vector<int>& nums, const vector<int>& typesSpin)
+{
+	vector<double> v(_vcgtf.size());
         for(size_t k=0; k<_vcgtf.size(); k++)
-            phi+=_coefficients[alpha][i][k]*_vcgtf[k].func(x,y,z);
-        
-        return phi*phi;
-    }
-
-    double phii=0.0;
-    double phij=0.0;
-
-    for(size_t k=0; k<_vcgtf.size(); k++)
-    {
-        phii+=_coefficients[alpha][i][k]*_vcgtf[k].func(x,y,z);
-        phij+=_coefficients[alpha][j][k]*_vcgtf[k].func(x,y,z);
-    }
-
-    return phii*phij;
+	{
+		v[k] = _vcgtf[k].func(x,y,z);
+	}
+	vector<double> values(nums.size(),0);
+	for(size_t jj=0; jj<nums.size(); jj++)
+	{
+		int j=nums[jj];
+		int i=typesSpin[jj];
+		values[jj] = 0;
+        	for(size_t k=0; k<_vcgtf.size(); k++)
+		{
+			values[jj] += _coefficients[i][j][k]*v[k];
+		}
+	}
+	return values;
 }

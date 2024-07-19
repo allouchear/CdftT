@@ -1140,7 +1140,14 @@ void Grid::save(ofstream& nameFile)
 	for(int i=0;i<_str.number_of_atoms();i++)
 	{
 		nameFile<<_str.atom(i).atomic_number()<<" ";
-		nameFile<<_str.atom(i).charge()<<" ";
+		if(_str.atom(i).charge()<1)
+		{
+			nameFile<<double(_str.atom(i).atomic_number())<<" ";
+		}
+		else
+		{
+			nameFile<<_str.atom(i).charge()<<" ";
+		}
 		for(int j=0; j<3;j++)
 		{
 			nameFile<<_str.atom(i).coordinates()[j]<<" ";
@@ -2003,35 +2010,6 @@ double Grid::value(double x, double y, double z) const
 	return S;
 }
 
-vector<double> Grid::sizeUpMol(double scale)
-{
-	double Xmax=0;
-	double Ymax=0;
-	double Zmax=0;
-	vector<Atom> atoms=_str.atoms();
-	for(int i=0; i<_str.number_of_atoms(); i++)
-	for(int j=0; j<_str.number_of_atoms(); j++)
-	{
-		if(i==j) continue;
-		double Xtmp= atoms[i].coordinates()[0]-atoms[j].coordinates()[0];
-		if(abs(Xmax-Xtmp)>1e-10)
-		{
-			Xmax=Xtmp;	
-		}
-		double Ytmp= atoms[i].coordinates()[1]-atoms[j].coordinates()[1];
-		if(abs(Ymax-Ytmp)>1e-10)
-		{
-			Ymax=Ytmp;	
-		}
-		double Ztmp= atoms[i].coordinates()[2]-atoms[j].coordinates()[2];
-		if(abs(Zmax-Ztmp)>1e-10)
-		{
-			Zmax=Ztmp;	
-		}
-	}
-	vector<double> size={Xmax,Ymax,Zmax};
-	return size;
-}
 
 
 

@@ -13,9 +13,9 @@ Job.o: Job.cpp /home/tmaamaatuai/CdftT/src/lib/JobControl/Job.h \
  /home/tmaamaatuai/CdftT/src/lib/Utils/LOG.h \
  /home/tmaamaatuai/CdftT/src/lib/Cube/Domain.h \
  /home/tmaamaatuai/CdftT/src/lib/Cube/GridCP.h \
- /home/tmaamaatuai/CdftT/src/lib/Cube/functions.h \
- /home/tmaamaatuai/CdftT/src/lib/Becke/Becke.h \
  /home/tmaamaatuai/CdftT/src/lib/Orbitals/Orbitals.h \
  /home/tmaamaatuai/CdftT/src/lib/Basis/CGTF.h \
  /home/tmaamaatuai/CdftT/src/lib/Basis/GTF.h \
+ /home/tmaamaatuai/CdftT/src/lib/Cube/functions.h \
+ /home/tmaamaatuai/CdftT/src/lib/Becke/Becke.h \
  /home/tmaamaatuai/CdftT/src/lib/Becke/GridPoints.h

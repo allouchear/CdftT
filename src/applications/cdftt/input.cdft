@@ -1,12 +1,21 @@
 # RunType
 #RunType=Help
-Runtype=ComputeIntegrals
+RunType=MakeOrbitalsCube
+#Runtype=ComputeIntegrals
 #RunType=ComputeDescriptorsFromCube
 #RunType=ComputeGridDifference
-# GridFileName
+#GridFileName
 #Grids=/home/tmaamaatuai/tmp/H3COCl_m.cube /home/tmaamaatuai/tmp/H3COCl.cube /home/tmaamaatuai/tmp/fp.cube
 #Grids=/home/tmaamaatuai/tmp/fp.cube /home/tmaamaatuai/tmp/fm.cube /home/tmaamaatuai/tmp/diff.cube
-Grids= /home/tmaamaatuai/tmp/diff.cube
-PartitionMethod=BBS
-Cutoff=0.01
-Energies=0.463, -0.109
+#Grids= /home/tmaamaatuai/tmp/diff.cube
+AnalyticFile=/home/tmaamaatuai/tmp/h2o/h2o.wfx
+Grid=/home/tmaamaatuai/tmp/save.cube
+size=Custom
+CustomSizeData=80, 80, 80, 5.965, 5.965, 5.965, 0.151010, 0, 0, 0, 0.151010, 0, 0, 0, 0.151010 
+OrbType=Homo
+SpinType=alpha,beta
+OrbitalsList=1,3,6,7,15
+SpinList=alpha,beta,alpha,beta
+#PartitionMethod=BBS
+#Cutoff=0.01
+#Energies=0.463, -0.109

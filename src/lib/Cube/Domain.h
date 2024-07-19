@@ -4,7 +4,7 @@
 using namespace std;
 #include <fstream>
 #include <vector>
-
+#include <Common/Structure.h>
 //! Domain class
 /*! This class is used to define the domain in 3D space containing a structure, molecule,...*/
 class Domain
@@ -156,6 +156,8 @@ class Domain
 	int k(double x, double y, double z) const;
 	
 	void inverse_T();
+	double sizeUpMol(const Structure& S, double scale);
+	void set_all(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax, vector<vector<double>> T);
 };
 
 #endif //_CDFTT_DOMAIN_H_INCLUDED

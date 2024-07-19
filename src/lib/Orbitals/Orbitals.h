@@ -86,6 +86,8 @@ class Orbitals
 			/*! \return The table of symbol of atoms. */
 		vector<string> symbol() const {return _symbol;}
 
+		bool alphaAndBeta() const {return _alpha_and_beta;}
+
 		void NormaliseAllBasis();
 
 		double ERIorbitals(Orbitals& q, Orbitals& r, Orbitals& s);
@@ -158,9 +160,10 @@ class Orbitals
 				/*! Print all the data of two Orbitals */
 		friend ostream& operator<<(ostream&, Orbitals&);
 		Structure get_struct();
-		Grid MakeGrid(int Nval, int N1, int N2, int N3, double xmax, double ymax, double zmax, vector<vector<double>>& T);
+		Grid makeGrid(const Domain& d);
 		double density(double x, double y, double z);
-		double phistarphi(int i, int j, double x, double y, double z, int alpha);
+		Grid makeOrbGrid(const Domain& d, const vector<int>& nums, const vector<int>& typesSpin);
+		vector<double> phis(double x, double y, double z, const vector<int>& nums, const vector<int>& typesSpin);
 };
 
 double operator*(const Orbitals& a, const vector<double>& coord);

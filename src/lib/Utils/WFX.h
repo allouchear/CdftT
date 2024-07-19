@@ -467,6 +467,7 @@ class WFX
 			/*! Write all of the parameters in a wfx file */
 
 		void write_file_wfx(ofstream&);
+		void PrintData() {cout<<"LOL"<<endl;}
 };
 
 	//! A function taking three arguments and returning a long int value.
