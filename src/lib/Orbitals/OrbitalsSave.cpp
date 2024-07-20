@@ -1,5 +1,6 @@
 #include<iostream>
 #include<iomanip>
+#include<algorithm>
 #include <Orbitals/Orbitals.h>
 #include <Utils/LM.h>
 
@@ -225,8 +226,10 @@ void Orbitals::Save_molden(string& tag)
 		s<<"\t"<<_vcgtf_non_normalise[k].NumCenter()<<" "<<0<<endl;
 
 		do{
+			cout<<"Loading = "<<k+1<<" / "<<_vcgtf_non_normalise.size()<<endl;
 			if(k==0)	//First shell
 			{
+				cout<<"I'm here 1"<<endl;
 				s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  "<<setprecision(6)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
 
 				for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
@@ -237,12 +240,20 @@ void Orbitals::Save_molden(string& tag)
 
 			else if(k+1<int(_vcgtf_non_normalise.size()))	//Other shell
 			{
-
+				cout<<"I'm here 2"<<endl;
 
 				if(_vcgtf_non_normalise[k].Ltype()==_vcgtf_non_normalise[k+1].Ltype() && _vcgtf_non_normalise[k].gtf()[0].exposant()==_vcgtf_non_normalise[k+1].gtf()[0].exposant())	//Other format
 				{
+					cout<<"Condition 1"<<endl;
 					lt=_vcgtf_non_normalise[k].gtf()[0].l()[0]+_vcgtf_non_normalise[k].gtf()[0].l()[1]+_vcgtf_non_normalise[k].gtf()[0].l()[2];
-					m=(lt+1)*(lt+2)/2;
+
+					if(_vcgtf_non_normalise[k].Lformat()=="Cart")
+						m=(lt+1)*(lt+2)/2;
+					else
+						m=2*lt+1;
+
+					cout<<"L = "<<lt<<endl;
+					cout<<"m = "<<m<<endl;
 
 					s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  "<<setprecision(6)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
 
@@ -254,7 +265,9 @@ void Orbitals::Save_molden(string& tag)
 
 				else if(_vcgtf_non_normalise[k].Ltype()==_vcgtf_non_normalise[k+1].Ltype())   		//WFX
 				{
+					cout<<"Condition 2"<<endl;
 					lt=_vcgtf_non_normalise[k].gtf()[0].l()[0]+_vcgtf_non_normalise[k].gtf()[0].l()[1]+_vcgtf_non_normalise[k].gtf()[0].l()[2];
+					cout<<"L = "<<lt<<endl;
 
 					if(lt!=0)
 					{
@@ -269,9 +282,13 @@ void Orbitals::Save_molden(string& tag)
 								s<<right<<setw(6)<<" "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[q].gtf()[j].exposant()<<"  "<<setprecision(6)<<setw(10)<<_vcgtf_non_normalise[q].coefficients()[j]<<endl;
 
 							q++;
-						}while(_vcgtf_non_normalise[q].gtf()[0].exposant()!=save_alpha);
-						q=q-k+1;
-						k+=q*(m-1)+1;
+						}while(q+1<int(_vcgtf_non_normalise.size()) && _vcgtf_non_normalise[q].gtf()[0].exposant()!=save_alpha);
+						//q=q-k+1;		don't work for h2otest.wfx
+						q=q-k;
+						cout<<"q = "<<q<<endl;
+						cout<<"m = "<<m<<endl;
+						//k+=q*(m-1)+1;      don't work for h2otest.wfx
+						k+=q*m;
 					}
 
 					else
@@ -287,6 +304,7 @@ void Orbitals::Save_molden(string& tag)
 
 				else   			//Other case
 				{
+					cout<<"Condition 3"<<endl;
 					s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  "<<setprecision(6)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
 
 					for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
@@ -297,6 +315,7 @@ void Orbitals::Save_molden(string& tag)
 			}
 			else   			//Last shell
 			{
+				cout<<"I'm here 3"<<endl;
 				s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  "<<setprecision(6)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
 
 				for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
@@ -304,8 +323,6 @@ void Orbitals::Save_molden(string& tag)
 
 				k++;
 			}
-
-			
 		}while(k<int(_vcgtf_non_normalise.size()) && i+1==_vcgtf_non_normalise[k].NumCenter());
 		s<<endl;
 	}
@@ -406,4 +423,69 @@ void Orbitals::Save_gab(string& tag)
 	s<<endl;
 
 	s.close();
+}
+
+void Orbitals::Sorting()
+{
+	int k=0,q=0,pos,lt,m=0;
+
+	if(_number_of_gtf==int(_vcgtf.size()))
+	{
+		for(int i=0; i<_number_of_atoms; i++)
+		{
+			do{
+				if(k+1<int(_vcgtf.size()))
+				{
+					if((_vcgtf[k].Ltype()=="s" || _vcgtf[k].Ltype()=="S") || (_vcgtf[k+1].Ltype()=="s" || _vcgtf[k+1].Ltype()=="S"))
+						q=0;
+
+					else if(_vcgtf[k].Ltype()==_vcgtf[k+1].Ltype())
+					{
+						lt=_vcgtf[k].gtf()[0].l()[0]+_vcgtf[k].gtf()[0].l()[1]+_vcgtf[k].gtf()[0].l()[2];
+						m=(lt+1)*(lt+2)/2;
+						q=k;
+
+						do{
+							q++;
+						}while(_vcgtf[q].Ltype()==_vcgtf[k].Ltype());
+
+						q=q-k;
+						k+=q+1;
+					}
+
+					if(q>m)
+					{
+						pos=k-q-1;
+						q=pos;
+
+						for(int ind=0; ind<m-1; ind++)
+						{
+							q++;
+							swap(_vcgtf[q], _vcgtf[q+m-1]);
+							q+=m;
+						}
+
+						q=pos+m-1;
+
+						swap(_vcgtf[q], _vcgtf[q+m+1]);
+
+						q=0;
+						k++;
+					}
+
+					else
+					{
+						k++;
+						continue;
+					}
+				}
+				else
+				{
+					k++;
+					continue;
+				}
+			}while(k<int(_vcgtf.size()) && i+1==_vcgtf[k].NumCenter());
+		}
+		DenormaliseAllBasis();
+	}
 }

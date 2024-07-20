@@ -447,6 +447,8 @@ void MOLDENGAB::PrintData()
 		cout<<"N at basis "<<i<<" = "<<_n_at_basis[i]<<endl;
 	for(size_t i=0; i<_shell_types.size(); i++)
 		cout<<"Shell type "<<i<<" = "<<_shell_types[i]<<endl;
+	for(size_t i=0; i<_L_types.size(); i++)
+		cout<<"L type "<<i<<" = "<<_L_types[i]<<endl;
 	for(size_t i=0; i<_exposants.size(); i++)
 		cout<<"Exposant "<<i<<" = "<<_exposants[i]<<endl;
 	for(size_t i=0; i<_number_of_gtf.size(); i++)

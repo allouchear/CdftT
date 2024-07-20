@@ -26,16 +26,14 @@ Zlm::Zlm(int L, int M, Binomial& Bin)
 	_bino=Bin;
 	if(L==0 && M == 0)
 		setZlm0();
-	else if(L<0)
+	if(L<0)
 		setZlm0();
-	else if(abs(M)>L)
+	if(abs(M)>L)
 		setZlm0();
-	else
-	{
-		_l = L;
-		_m = M;
-		setCoefZlm();
-	}
+
+	_l = L;
+	_m = M;
+	setCoefZlm();
 }
 
 void Zlm::setZlm0()
@@ -58,8 +56,6 @@ void Zlm::setCoefZlm()
 	int t;
 	int u;
 	int v2;
-	vector<LXYZ> lxyz = _lxyz;
-
 
 	/*Norm = sqrt((2*l+1)/(4*PI))*sqrt(factorial(l+absm)/factorial(l-absm))*factorial(absm)/doubleFactorial(2*absm); */
 	Norm = sqrt((2*l+1)/(4*M_PI))*sqrt(_bino.fact().factorial(l+absm)*_bino.fact().factorial(l-absm))/_bino.fact().factorial(l)/pow(2.0,absm);
@@ -81,8 +77,7 @@ void Zlm::setCoefZlm()
 
 	_numberOfCoefficients = Nc;
 	_lxyz = vector<LXYZ> (Nc);
-	lxyz = _lxyz;
-	Nc=-1;
+	Nc= -1;
 	for (t=0; t <= (l - absm)/2; t++)
 	{
 		for (u=0; u<=t; u++)
@@ -107,8 +102,8 @@ void Zlm::setCoefZlm()
 				vector<int> L (3);
 				L[0] = 2*t + absm - 2*u - v2;
 				L[1] = 2*u + v2;
-				L[2] = l - lxyz[Nc].l()[0] - lxyz[Nc].l()[1];
-				lxyz[Nc] = LXYZ (L, C);
+				L[2] = l - L[0] - L[1];
+				_lxyz[Nc] = LXYZ (L, C);
 			}
 		}
 	}
@@ -159,7 +154,9 @@ void getlTable(int L, vector<int>& nCoefs, vector<vector<double>>& coefs, vector
 	 			for(n=0;n<Stemp.numberOfCoefficients();n++)
 	 			{
 	   				coefs[m][n] = Stemp.lxyz()[n].coef();
-	   				for(c=0;c<3;c++) l[c][m][n] = Stemp.lxyz()[n].l()[c];
+	   				for(c=0;c<3;c++) 
+	   					l[c][m][n] = Stemp.lxyz()[n].l()[c];
+	   				
 	 			}
 				if(L==0)
 					break;
@@ -167,6 +164,7 @@ void getlTable(int L, vector<int>& nCoefs, vector<vector<double>>& coefs, vector
 			if(L==0)
 				break;
 	    }
+
 	    return;
 	}
 	/* Cartesian S,P,D,F,..*/
@@ -176,6 +174,7 @@ void getlTable(int L, vector<int>& nCoefs, vector<vector<double>>& coefs, vector
 		nCoefs[m] = 1;
 		coefs[m][0] = 1.0;
 	}
+
 	switch(L)
 	{
 		case 0 :

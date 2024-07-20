@@ -32,27 +32,27 @@ int main()
 	cout<<Table.factorial(20)/Table.factorial(18)/Table.factorial(2)<<endl;
 	cout<<endl;
 	cout<<Table.double_factorial(10)<<endl<<endl;
-*/
 
+*/
 	ifstream f;
-	f.open("h2o.wfx");
+	f.open("test.wfx");
 	WFX wfx_h2o (f);
 	f.close();
 
 	cout<<endl;
 
 	ifstream g;
-	g.open("h2ominus.wfx");
+	g.open("testminus.wfx");
 	WFX wfx_h2ominus (g);
 	g.close();
 
 	cout<<endl;
 
 	ifstream h;
-	h.open("h2oplus.wfx");
+	h.open("testplus.wfx");
 	WFX wfx_h2oplus (h);
 	h.close();
-
+/*
 	cout<<endl;
 
 	ifstream x;
@@ -98,7 +98,8 @@ int main()
 	w.close();
 	//moldengab_h2oplus.PrintData();
 
-	cout<<endl;
+/*	cout<<endl;
+
 	ifstream l1;
 	l1.open("h2o.log");
 	LOG log_h2o (l1);
@@ -119,47 +120,60 @@ int main()
 	l3.close();
 	//log_h2oplus.PrintData();
 
+													//FMO
+/*	Orbitals Orbwfx (wfx_h2o, Bin, Table);
+	Orbwfx.PrintDescriptors();
+	
+	Orbitals Orbfchk (fchk_h2o, Bin, Table);
+	Orbfchk.PrintDescriptors();
+	
+	Orbitals Orbmoldengab (moldengab_h2o, Bin, Table);
+	Orbmoldengab.PrintDescriptors();
+
+	Orbitals Orblog (log_h2o, Bin, Table);
+	Orblog.PrintDescriptors();
+
 													//WFX
-/*	Becke wh2o (wfx_h2o, Bin, Table);
+*/	Becke wh2o (wfx_h2o, Bin, Table);
 	Becke wh2ominus (wfx_h2ominus, Bin, Table);
 	Becke wh2oplus (wfx_h2oplus, Bin, Table);
-*/
+
 	vector<vector<double>> h2oQE;
 	vector<vector<double>> h2ominusQE;
 	vector<vector<double>> h2oplusQE;
-/*
-	h2oQE=wh2o.PartialChargesAndEnergy(1, 21 ,3);
-	h2ominusQE=wh2ominus.PartialChargesAndEnergy(1, 21 ,3);
-	h2oplusQE=wh2oplus.PartialChargesAndEnergy(1, 21 ,3);
+
+	h2oQE=wh2o.PartialChargesAndEnergy(3, 83, 5);
+	h2ominusQE=wh2ominus.PartialChargesAndEnergy(3, 83, 5);
+	h2oplusQE=wh2oplus.PartialChargesAndEnergy(3, 83, 5);
 
 	double I, A;
 	I=h2oplusQE[0][0]-h2oQE[0][0];
 	A=h2ominusQE[0][0]-h2oQE[0][0];
 	Descriptors test(wh2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
 	cout<<test<<endl;
-
+/*
 													//FCHK
 	Becke fh2o (fchk_h2o, Bin, Table);
 	Becke fh2ominus (fchk_h2ominus, Bin, Table);
 	Becke fh2oplus (fchk_h2oplus, Bin, Table);
 
-	h2oQE=fh2o.PartialChargesAndEnergy(1, 21 ,3);
-	h2ominusQE=fh2ominus.PartialChargesAndEnergy(1, 21 ,3);
-	h2oplusQE=fh2oplus.PartialChargesAndEnergy(1, 21 ,3);
+	h2oQE=fh2o.PartialChargesAndEnergy();
+	h2ominusQE=fh2ominus.PartialChargesAndEnergy();
+	h2oplusQE=fh2oplus.PartialChargesAndEnergy();
 
 	//double I, A;
 	I=h2oplusQE[0][0]-h2oQE[0][0];
 	A=h2ominusQE[0][0]-h2oQE[0][0];
 	Descriptors test2(fh2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
 	cout<<test2<<endl;
-*/													//MOLDENGAB
+													//MOLDENGAB
 	Becke mgh2o (moldengab_h2o, Bin, Table);
 	Becke mgh2ominus (moldengab_h2ominus, Bin, Table);
 	Becke mgh2oplus (moldengab_h2oplus, Bin, Table);
 
-	h2oQE=mgh2o.PartialChargesAndEnergy(1, 21 ,3);
-	h2ominusQE=mgh2ominus.PartialChargesAndEnergy(1, 21 ,3);
-	h2oplusQE=mgh2oplus.PartialChargesAndEnergy(1, 21 ,3);
+	h2oQE=mgh2o.PartialChargesAndEnergy();
+	h2ominusQE=mgh2ominus.PartialChargesAndEnergy();
+	h2oplusQE=mgh2oplus.PartialChargesAndEnergy();
 
 	double I, A;
 	I= -mgh2o.eHOMO();
@@ -172,9 +186,9 @@ int main()
 	Becke lh2ominus (log_h2ominus, Bin, Table);
 	Becke lh2oplus (log_h2oplus, Bin, Table);
 
-	h2oQE=lh2o.PartialChargesAndEnergy(1, 21 ,3);
-	h2ominusQE=lh2ominus.PartialChargesAndEnergy(1, 21 ,3);
-	h2oplusQE=lh2oplus.PartialChargesAndEnergy(1, 21 ,3);
+	h2oQE=lh2o.PartialChargesAndEnergy();
+	h2ominusQE=lh2ominus.PartialChargesAndEnergy();
+	h2oplusQE=lh2oplus.PartialChargesAndEnergy();
 
 	double I, A;
 	I=h2oplusQE[0][0]-h2oQE[0][0];
@@ -332,7 +346,7 @@ int main()
 	cout<<test.Molecular_Orbital_Primitive_Coefficients()[3].Coefficients()[15]<<endl;
 	cout<<"Test 4"<<endl;
 */
-	Orbitals h2owfxtest (wfx_h2o, Bin, Table);
+/*	Orbitals h2owfxtest (wfx_h2o, Bin, Table);
 	cout<<h2owfxtest<<endl;
 	Orbitals h2ominuswfxtest (wfx_h2ominus, Bin, Table);
 	Orbitals h2opluswfxtest (wfx_h2oplus, Bin, Table);
@@ -468,7 +482,11 @@ int main()
 
 	Orbitals h2owfxmoldengab (wfx_moldengab_h2o, Bin, Table);
 	cout<<h2owfxmoldengab<<endl;
-/*	Orbitals h2ominuswfxmoldengab (wfx_moldengab_h2ominus, Bin, Table);
+/*	for(size_t i=0; i<h2owfxmoldengab.NumberOfMo(); i++)
+		for(size_t j=0; j<h2owfxmoldengab.NumberOfMo(); j++)
+			h2owfxmoldengab.PrintOverlap(i,j);
+
+	Orbitals h2ominuswfxmoldengab (wfx_moldengab_h2ominus, Bin, Table);
 	Orbitals h2opluswfxmoldengab (wfx_moldengab_h2oplus, Bin, Table);
 
 	Orbitals h2ofchkmoldengab (fchk_moldengab_h2o, Bin, Table);
@@ -489,7 +507,7 @@ int main()
 	vector<vector<double>> h2ominusQE;
 	vector<vector<double>> h2oplusQE;
 */
-	Becke wfxmoldengabh2o (wfx_moldengab_h2o, Bin, Table);
+/*	Becke wfxmoldengabh2o (wfx_moldengab_h2o, Bin, Table);
 	Becke wfxmoldengabh2ominus (wfx_moldengab_h2ominus, Bin, Table);
 	Becke wfxmoldengabh2oplus (wfx_moldengab_h2oplus, Bin, Table);
 
@@ -543,7 +561,7 @@ int main()
 	A=h2ominusQE[0][0]-h2oQE[0][0];
 	Descriptors testlogmoldengab(logmoldengabh2o.str(), h2oQE[1], h2ominusQE[1], h2oplusQE[1], I, A);
 	cout<<testlogmoldengab<<endl;
-
+*/
 	cout<<"Temps d'execution : "<<time.get()<<" ms"<<endl;
 
 	return 0;

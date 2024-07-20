@@ -89,6 +89,7 @@ class Orbitals
 		vector<string> symbol() const {return _symbol;}
 
 		void NormaliseAllBasis();
+		void DenormaliseAllBasis();
 
 		double ERIorbitals(Orbitals& q, Orbitals& r, Orbitals& s);
 
@@ -163,6 +164,7 @@ class Orbitals
 		void Save_wfx(string&);
 		void Save_molden(string&);
 		void Save_gab(string&);
+		void Sorting();
 };
 
 double operator*(const Orbitals& a, const vector<double>& coord);

@@ -50,6 +50,7 @@ Orbitals::Orbitals(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
 			_vcgtf[j].setFactorCoef(1.0);
 			_vcgtf[j].setNumCenter(wfx.Primitive_Centers()[j]);
 			_vcgtf[j].setLtype(getLType(_vcgtf[j].gtf()[0].l()));
+			_vcgtf[j].setFormat("Cart");
 	}
 
 	_coefficients=vector<vector<vector<double>>> (2);
@@ -116,17 +117,27 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 	_vcgtf = vector<CGTF> (NOrb);
 	int kOrb = 0;
 	int kPrimitive = 0;
+	string format;
 
 	for(int nS = 0;nS<nShells; nS++)
 	{
 		int nM = 0;
 		/* printf("begin primitive nS = %d\n",nS);*/
 		if(shellTypes[nS]<-1)
+		{
 			nM = 2*abs(shellTypes[nS])+1; /* Sperical D, F, G, ...*/
+			format="Sphe";
+		}
 		else if(shellTypes[nS]==-1)
+		{
 			nM = 1; /* This a SP. Make S before */
+			format="Cart";
+		}
 		else
+		{
 			nM = (shellTypes[nS]+1)*(shellTypes[nS]+2)/2;
+			format="Cart";
+		}
 
 		/* printf("nM = %d\n",nM);*/
 		if(shellTypes[nS]==-1)
@@ -141,6 +152,7 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 			_vcgtf[kOrb]= CGTF ();
 			_vcgtf[kOrb].setNumCenter(numAtoms[nS]);
 			_vcgtf[kOrb].setFactorCoef(1.0);
+			_vcgtf[kOrb].setFormat(format);
   			j = -1;
 	 		for(ip=0;ip<nPrimitivesByShell[nS];ip++)
  				for(n=0;n<nCoefs[m];n++)
@@ -171,6 +183,7 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 				_vcgtf[kOrb]= CGTF ();
 				_vcgtf[kOrb].setNumCenter(numAtoms[nS]);
 				_vcgtf[kOrb].setFactorCoef(1.0);
+				_vcgtf[kOrb].setFormat(format);
           			j = -1;
 	 			for(ip=0;ip<nPrimitivesByShell[nS];ip++)
  					for(n=0;n<nCoefs[m];n++)
@@ -349,6 +362,7 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 
 	int NOrb = moldengab.NumberOfMOCoefs();
 	_vcgtf = vector<CGTF> (NOrb);
+	string format;
 
 	int kOrb = 0;
 	int kPrimitive = 0;
@@ -357,16 +371,27 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 		int nM = 0;
 
 		if(Ltypes[nS]<-1)
+		{
 			nM = 2*abs(Ltypes[nS])+1; /* Sperical D, F, G, ...*/
+			format="Sphe";
+		}
 		else if(Ltypes[nS]==-1)
+		{
 			nM = 1; /* This a SP. Make S before */
+			format="Cart";
+		}
 		else
+		{
 			nM = (Ltypes[nS]+1)*(Ltypes[nS]+2)/2;
+			format="Cart";
+		}
 
 		if(Ltypes[nS]==-1)
 			getlTable(0, nCoefs, coefs, l, _bino); /* This a SP. Make S before */
+		
 		else
 			getlTable(Ltypes[nS], nCoefs, coefs, l, _bino); 
+	
 
 		for(int m=0;m<nM;m++)
 		{
@@ -376,6 +401,7 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 			_vcgtf[kOrb].setNumCenter(moldengab.Numcenter()[nS]);
 			_vcgtf[kOrb].setLtype(moldengab.ShellTypes()[nS]);
 			_vcgtf[kOrb].setFactorCoef(FactorCoefs[nS]);
+			_vcgtf[kOrb].setFormat(format);
   			j = -1;
 
 	 		for(ip=0;ip<nPrimitivesByShell[nS];ip++)
@@ -407,6 +433,7 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 				_vcgtf[kOrb].setNumCenter(moldengab.Numcenter()[nS]);
 				_vcgtf[kOrb].setLtype(moldengab.ShellTypes()[nS]);
 				_vcgtf[kOrb].setFactorCoef(FactorCoefs[nS]);
+				_vcgtf[kOrb].setFormat(format);
       			j = -1;
 	 			for(ip=0;ip<nPrimitivesByShell[nS];ip++)
  					for(n=0;n<nCoefs[m];n++)
@@ -448,6 +475,8 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 
 	for(size_t i=0; i<_vcgtf.size(); i++)
 		_number_of_gtf+=_vcgtf[i].numberOfFunctions();
+
+	Sorting();
 }
 
 Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
@@ -517,6 +546,7 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 
 	int NOrb = _numberOfMo;
 	_vcgtf = vector<CGTF> (NOrb);
+	string format;
 
 	int kOrb = 0;
 	int kPrimitive = 0;
@@ -525,11 +555,20 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 		int nM = 0;
 
 		if(Ltypes[nS]<-1)
+		{
 			nM = 2*abs(Ltypes[nS])+1; /* Sperical D, F, G, ...*/
+			format="Sphe";
+		}
 		else if(Ltypes[nS]==-1)
+		{
 			nM = 1; /* This a SP. Make S before */
+			format="Cart";
+		}
 		else
+		{
 			nM = (Ltypes[nS]+1)*(Ltypes[nS]+2)/2;
+			format="Cart";
+		}
 
 		if(Ltypes[nS]==-1)
 			getlTable(0, nCoefs, coefs, l, _bino); /* This a SP. Make S before */
@@ -557,6 +596,7 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 	 				_vcgtf[kOrb].setCoef(FactorCoefs[kPrimitive+ip]*CgtfCoefs[kPrimitive+ip]*coefs[m][n]);
 	 				_vcgtf[kOrb].setNumCenter(log.NumCenter()[kPrimitive+ip]);
 					_vcgtf[kOrb].setLtype(getLType(l_));
+					_vcgtf[kOrb].setFormat(format);
 					_vcgtf[kOrb].setFactorCoef(FactorCoefs[kPrimitive+ip]);
 	 			}
 			kOrb++;
@@ -587,6 +627,7 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 	   				_vcgtf[kOrb].setCoef(FactorCoefs[kOrb]*CgtfSpCoefs[kPrimitive+ip]*coefs[m][n]);
 	   				_vcgtf[kOrb].setNumCenter(log.NumCenter()[kPrimitive+ip]);
 					_vcgtf[kOrb].setLtype(getLType(l_));
+					_vcgtf[kOrb].setFormat(format);
 					_vcgtf[kOrb].setFactorCoef(FactorCoefs[kPrimitive+ip]);
 	 				}
 				kOrb++;
@@ -748,6 +789,14 @@ void Orbitals::NormaliseAllBasis()
 		_vcgtf[k].normaliseCGTF();
 }
 
+void Orbitals::DenormaliseAllBasis()
+{
+	int k;
+
+	for(k=0;k<_numberOfAo;k++)
+		_vcgtf[k].denormaliseCGTF();
+}
+
 double Orbitals::func(double x, double y, double z) const
 {
 	double r=0.0;
@@ -795,7 +844,7 @@ void Orbitals::LUMO()
 vector<vector<double>> Orbitals::get_S()
 {
 	int i,j;
-	vector<vector<double>> S (_numberOfAo, vector<double> (_numberOfAo,0.0));
+	vector<vector<double>> S (_numberOfMo, vector<double> (_numberOfAo,0.0));
 
 #ifdef ENABLE_OMP
 #pragma omp parallel for private(i,j)

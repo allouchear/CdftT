@@ -196,6 +196,17 @@ void GTF::normaliseRadialGTF()
 	_coefficient*=normeGTF(q);
 }
 
+void GTF::denormaliseRadialGTF()
+{
+	int l_bis=_l[0]+_l[1]+_l[2];
+	vector<int> l (3);
+	l[0]=l_bis;
+	l[1]=0;
+	l[2]=0;
+	GTF q(_exposant, _coefficient, _coord, l, _bino);
+	_coefficient/=normeGTF(q);
+}
+
 void GTF::normaliseGTF()
 {
 	_coefficient*=normeGTF();

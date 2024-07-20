@@ -91,6 +91,8 @@ class GTF
 
 		void normaliseRadialGTF();
 
+		void denormaliseRadialGTF();
+
 			//! A normal member taking one argument.
 			/*! This member normalise the GTF. */
 

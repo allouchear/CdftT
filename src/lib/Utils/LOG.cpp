@@ -63,7 +63,6 @@ void LOG::read_atoms_data(ifstream& f)
 	int n;
 	double d;
 	string p;
-	_coordinates=vector<vector<double>> (3);
 
 	pos=LocaliseDataLogBefore(f, "NAtoms=");
 
@@ -72,7 +71,9 @@ void LOG::read_atoms_data(ifstream& f)
 	stringstream sp(p);
 	sp>>p;
 	sp>>_number_of_atoms;
-	
+
+	_coordinates=vector<vector<double>> (_number_of_atoms);
+
 	pos=LocaliseDataLog(f, "Standard orientation:");
 
 	f.clear();

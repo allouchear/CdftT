@@ -16,11 +16,10 @@ class CGTF
 		int _num_center;
 		int _numberOfFunctions;
 		string _l_type;
+		string _l_format;
 		double _factor_coef;
 		vector<double> _coefficients;
 		vector<GTF> _gtf;
-		int _L;
-		int _M;
 		Binomial _bino;
 	public:
 
@@ -43,9 +42,11 @@ class CGTF
 			/*! \return The number of GTF. */
 
 		void setCoef(double);
+		void setFormat(string);
 
 		vector<double> coefficients() {return _coefficients;}
 		string Ltype() {return _l_type;}
+		string Lformat() {return _l_format;}
 		int NumCenter() {return _num_center;}
 		double FactorCoef() {return _factor_coef;}
 
@@ -79,6 +80,8 @@ class CGTF
 			/*! Normalise the CGTF */
 
 		void normaliseCGTF();
+
+		void denormaliseCGTF();
 
 			//! A normal member taking one argument and returning a double value.
 			/*! \return The overlap value between two CGTF. */
