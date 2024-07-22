@@ -374,14 +374,14 @@ void Job::setAllOrb(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, boo
 	{
 		orbnums[i]=i;
 	}
-	if(!o.AlphaAndBeta() and B and !A)
+	if(!o.AlphaAndBeta() and A and !B)
 	{
-		orbspin.resize(N, 1);
+		orbspin.resize(N, 0);
 	}
 	else if(!o.AlphaAndBeta() and AnB)
 	{
-		orbspin.resize(N, 1);
-		orbnums.resize(2*N,0);
+		orbspin.resize(N, 0);
+		orbnums.resize(2*N,1);
 		for(int i=N; i<2*N;i++)
 		{
 			orbnums[i]=i-N;
@@ -389,25 +389,25 @@ void Job::setAllOrb(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, boo
 	}
 	else
 	{
-		orbspin.resize(N,0);
+		orbspin.resize(N,1);
 	}
 }
 void Job::setOccOrb(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, bool A, bool B, bool AnB,const int& N)
 {
 	vector<vector<double>> occ=o.OccupationNumber();
-	if(!o.AlphaAndBeta() and B and !A) 
+	if(!o.AlphaAndBeta() and A and !B) 
 	{
 		int k=0;
 		for(int i=0; i<N;i++)
 		{
-			if(occ[1][i] > 1e-10)
+			if(occ[0][i] > 1e-10)
 			{
 				orbnums[k]=i;
 				k++;
 			}
 		}
 		orbnums.resize(k);
-		orbspin.resize(k,1);
+		orbspin.resize(k,0);
 	}
 	else if(!o.AlphaAndBeta() and AnB) 
 	{
@@ -415,57 +415,57 @@ void Job::setOccOrb(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, boo
 		orbnums.resize(2*N,0);
 		for(int i=0; i<N;i++)
 		{
-			if(occ[1][i] > 1e-10)
+			if(occ[0][i] > 1e-10)
 			{
 				orbnums[k]=i;
 				k++;
 			}
 		}
-		orbspin.resize(k,1);
+		orbspin.resize(k,0);
 		int j=k;
 		for(int i =0;i<N;i++)
 		{
-			if(occ[0][i] > 1e-10)
+			if(occ[1][i] > 1e-10)
 			{
 				orbnums[j]=i;
 				j++;
 			}
 		}
 		orbnums.resize(j);
-		orbspin.resize(j,0);	
+		orbspin.resize(j,1);	
 	}
 	else
 	{
 		int j=0;
 		for(int i=0;i<N;i++)
 		{
-			if(occ[0][i] > 1e-10)
+			if(occ[1][i] > 1e-10)
 			{
 				orbnums[j]=i;
 				j++;
 			}
 		}
 		orbnums.resize(j);
-		orbspin.resize(j,0);
+		orbspin.resize(j,1);
 	}
 
 }
 void Job::setVirtOrb(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, bool A, bool B, bool AnB,const int& N)
 {
 	vector<vector<double>> occ=o.OccupationNumber();
-	if(!o.AlphaAndBeta() and B and !A)
+	if(!o.AlphaAndBeta() and A and !B)
 	{
 		int k=0;
 		for(int i=0; i<N;i++)
 		{
-			if(occ[1][i] < 1e-10)
+			if(occ[0][i] < 1e-10)
 			{
 				orbnums[k]=i;
 				k++;
 			}
 		}
 		orbnums.resize(k);
-		orbspin.resize(k,1);
+		orbspin.resize(k,0);
 	}
 	else if(!o.AlphaAndBeta() and AnB) 
 	{
@@ -473,114 +473,114 @@ void Job::setVirtOrb(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, bo
 		orbnums.resize(2*N,0);
 		for(int i=0; i<N;i++)
 		{
-			if(occ[1][i] < 1e-10)
+			if(occ[0][i] < 1e-10)
 			{
 				orbnums[k]=i;
 				k++;
 			}
 		}
-		orbspin.resize(k,1);
+		orbspin.resize(k,0);
 		int j=k;
 		for(int i =0;i<N;i++)
 		{
-			if(occ[0][i] < 1e-10)
+			if(occ[1][i] < 1e-10)
 			{
 				orbnums[j]=i;
 				j++;
 			}
 		}
 		orbnums.resize(j);
-		orbspin.resize(j,0);	
+		orbspin.resize(j,1);	
 	}
 	else
 	{
 		int j=0;
 		for(int i=0;i<N;i++)
 		{
-			if(occ[0][i] < 1e-10)
+			if(occ[1][i] < 1e-10)
 			{
 				orbnums[j]=i;
 				j++;
 			}
 		}
 		orbnums.resize(j);
-		orbspin.resize(j,0);
+		orbspin.resize(j,1);
 	}
 }
 void Job::setHomo(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, bool A, bool B, bool AnB)
 {
 	int i=0;
 	vector<vector<double>> occ=o.OccupationNumber();
-	if(!o.AlphaAndBeta() and B and !A)
+	if(!o.AlphaAndBeta() and A and !B)
 	{
-		while(occ[1][i] > 1e-10)
+		while(occ[0][i] > 1e-10)
 		{
 			i++;
 		}
 		orbnums={i-1};
-		orbspin={1};
+		orbspin={0};
 	}
 	else if(!o.AlphaAndBeta() and AnB)
 	{
 		int j=0;
-		while(occ[1][i] > 1e-10)
+		while(occ[0][i] > 1e-10)
 		{
 			i++;
 		}
-		while(occ[0][j] >1e-10)
+		while(occ[1][j] >1e-10)
 		{
 			j++;
 		}
 		orbnums={i-1,j-1};
-		orbspin={1, 0};
+		orbspin={0, 1};
 	}
 	else
 	{
 		int j=0;
-		while(occ[0][j] >1e-10)
+		while(occ[1][j] >1e-10)
 		{
 			j++;
 		}
 		orbnums={j-1};
-		orbspin={0};
+		orbspin={1};
 	}
 }
 void Job::setLumo(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, bool A, bool B, bool AnB)
 {
 	int i=0;
 	vector<vector<double>> occ=o.OccupationNumber();
-	if(!o.AlphaAndBeta() and 	B)
+	if(!o.AlphaAndBeta() and A and !B)
 	{
-		while(occ[1][i] > 1e-10)
+		while(occ[0][i] > 1e-10)
 		{
 			i++;
 		}
 		orbnums={i};
-		orbspin={1};
+		orbspin={0};
 	}
 	else if(!o.AlphaAndBeta() and AnB)
 	{
 		int j=0;
-		while(occ[1][i] > 1e-10)
+		while(occ[0][i] > 1e-10)
 		{
 			i++;
 		}
-		while(occ[0][j] >1e-10)
+		while(occ[1][j] >1e-10)
 		{
 			j++;
 		}
 		orbnums={i,j};
-		orbspin={1, 0};
+		orbspin={0, 1};
 	}
 	else
 	{
 		int j=0;
-		while(occ[0][j] >1e-10)
+		while(occ[1][j] >1e-10)
 		{
 			j++;
 		}
 		orbnums={j};
-		orbspin={0};
+		orbspin={1};
 	}
 }
 void Job::setHomoLumo(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, bool A, bool B, bool AnB) 
@@ -589,36 +589,36 @@ void Job::setHomoLumo(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, b
 	vector<vector<double>> occ=o.OccupationNumber();
 	if(!o.AlphaAndBeta() and B and !A)
 	{
-		while(occ[1][i] > 1e-10)
+		while(occ[0][i] > 1e-10)
 		{
 			i++;
 		}		
 		orbnums={i-1, i};
-		orbspin={1,1};
+		orbspin={0,0};
 	}
 	else if(!o.AlphaAndBeta() and AnB)
 	{
 		int j=0;
-		while(occ[1][i] > 1e-10)
+		while(occ[0][i] > 1e-10)
 		{
 			i++;
 		}
-		while(occ[0][j] >1e-10)
+		while(occ[1][j] >1e-10)
 		{
 			j++;
 		}
 		orbnums={i-1,j-1, i,j};
-		orbspin={1, 0, 1, 0};
+		orbspin={0, 1, 0, 1};
 	}
 	else
 	{
 		int j=0;
-		while(occ[0][j] >1e-10)
+		while(occ[1][j] >1e-10)
 		{
 			j++;
 		}
 		orbnums={j-1, j};
-		orbspin={0, 0};
+		orbspin={1, 1};
 	}
 }
 void Job::setCustom(vector<int>& orbnums, vector<int>& orbspin, vector<string>& tmplist) 
