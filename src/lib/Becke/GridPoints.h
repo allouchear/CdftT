@@ -30,6 +30,8 @@ class GridPoints
 			/*! We don't use it. */
 		~GridPoints() {}
 
+			//! A normal member taking no arguments and returning a vector<int> value.
+			/*! \return The Lmax of a grid. */
 		vector<int> Lebedev_Lmax() {return _Lebedev_Lmax;}
 
 			//! A normal member taking no arguments and returning an int value.
