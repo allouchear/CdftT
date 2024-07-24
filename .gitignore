@@ -6,6 +6,7 @@ Documentation/
 # ignore ALL .o files
 */*/*/*.wfx
 */*/*/*.molden
+*/*/*/*.gab
 */*/*/*.log
 */*/*/*.fchk
 */*/*.cube
