@@ -159,6 +159,10 @@ class GTF
 			//! A normal membre taking five arguments and returning a void value.
 			/*! Insert all the data in the GTF. */
 		void push_back(const double&, const double&, const vector<double>&, const vector<int>&, Binomial&);
+		
+			//! Gradient of GTF
+			/*! Get the ith component of the gradient of a GTF*/
+		double grad_GTF(const double& x, const double& y, const double& z, int i);
 
 };
 

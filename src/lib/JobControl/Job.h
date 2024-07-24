@@ -30,7 +30,7 @@ class Job
 		Descriptors computeDescriptors(const string& GridFileName1, const string& GridFileName2, const string& GridFileName3, double I, double A, int AIMmethod);
 		Descriptors computeDescriptors(const string& GridFileName1, const string& GridFileName2, const string& GridFileName3, vector<double>E,  int AIMmethod);
 		template<typename T> Orbitals computeOrbitals(const string& analyticFileName);
-		void createCube(Orbitals& orb, const Domain& d, const string& CubeFileName, bool orbFlag, vector<int>, vector<int>);
+		void createCube(Orbitals& orb, const Domain& d, const string& cubeFileName, int TypeFlag, const string& ELFtype ="", vector<int> nums={0}, vector<int> typesSpin={0});
 		Domain DomainForCube(Orbitals& orb, const string& size,const vector<double>& csizes, const int& Nval);
 		void setAllOrb(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, bool A, bool B, bool AnB, const int& N);
 		void setOccOrb(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, bool A, bool B, bool AnB, const int& N);

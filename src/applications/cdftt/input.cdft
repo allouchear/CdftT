@@ -1,6 +1,7 @@
 # RunType
 #RunType=Help
-RunType=MakeOrbitalsCube
+#RunType=MakeDensityCube
+RunType=MakeELFCube
 #Runtype=ComputeIntegrals
 #RunType=ComputeDescriptorsFromCube
 #RunType=ComputeGridDifference
@@ -11,11 +12,11 @@ RunType=MakeOrbitalsCube
 AnalyticFile=/home/tmaamaatuai/tmp/h2o/h2o.wfx
 Grid=/home/tmaamaatuai/tmp/save.cube
 size=Custom
-CustomSizeData=80, 80, 80, 5.964883, 5.964883, 5.744919, 0.151010, 0, 0, 0, 0.151010, 0, 0, 0, 0.151010 
-OrbType=Homo
-SpinType=alpha,beta
-OrbitalsList=1,3,6,7,15
-SpinList=alpha,beta,alpha,beta
+CustomSizeData=80, 80, 80, 5.964883, 5.964883, 5.964883, 0.151009696202531, 0, 0, 0, 0.151009696202531, 0, 0, 0, 0.151009696202531 
+#OrbType=Homo
+#SpinType=alpha,beta
+#OrbitalsList=1,3,6,7,15
+#SpinList=alpha,beta,alpha,beta
 #PartitionMethod=BBS
 #Cutoff=0.01
 #Energies=0.463, -0.109

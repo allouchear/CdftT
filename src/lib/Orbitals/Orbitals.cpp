@@ -844,6 +844,9 @@ Grid Orbitals::makeGrid(const Domain& d)
 	g.set_str(_struct);
 	g.set_dom(d);
 	g.reset();
+#ifdef ENABLE_OMP
+#pragma omp parallel
+#endif
 	for(int i=0;i<d.N1();i++)
 	{
 		for(int j=0;j<d.N2();j++)
@@ -871,9 +874,6 @@ double Orbitals::density(double x, double y, double z)
         for(size_t k=0; k<_vcgtf.size(); k++)
 		v[k] = _vcgtf[k].func(x,y,z);
 
-#ifdef ENABLE_OMP
-#pragma omp parallel
-#endif
 	for(int j=0; j<NumberOfMo(); j++)
 	for(int i=0; i<n; i++)
 	{
@@ -893,6 +893,9 @@ Grid Orbitals::makeOrbGrid(const Domain& d, const vector<int>& nums, const vecto
 	g.set_str(_struct);
 	g.set_dom(d);
 	g.reset();
+#ifdef ENABLE_OMP
+#pragma omp parallel
+#endif
 	for(int i=0;i<d.N1();i++)
 	{
 		for(int j=0;j<d.N2();j++)
@@ -928,4 +931,82 @@ vector<double> Orbitals::phis(double x, double y, double z, const vector<int>& n
 		}
 	}
 	return values;
+}
+//epsilon=0 for Becke, epsilon =2.87e-5 for Savin. see Can. J. Chem. Vol. 74,1996 page 1088.
+double Orbitals::ELF(const double& x, const double& y, const double& z, double epsilon)
+{
+	double rho=0.0;
+	double sphi=0.0;
+	double cf = 3.0/10.0*pow(3*M_PI*M_PI,2.0/3);
+	int n;
+
+	if(AlphaAndBeta())
+		n=1;
+	else
+		n=2;
+
+	vector<double> v(_vcgtf.size());
+        for(size_t k=0; k<_vcgtf.size(); k++)
+		v[k] = _vcgtf[k].func(x,y,z);
+
+	vector<double> A(_vcgtf.size());
+	vector< vector<double> > vg(3,A);
+	for(size_t k=0;k<_vcgtf.size();k++)
+	{
+		for(int c=0;c<3;c++)
+			vg[c][k]=_vcgtf[k].grad_CGTF(x,y,z,c);
+	}
+
+	double v1[3]={0,0,0};
+	for(int j=0; j<NumberOfMo(); j++)
+	for(int i=0; i<n; i++)
+	{
+		if(OccupationNumber()[i][j]>1e-10)
+		{
+			double phi=0;
+        		for(size_t k=0; k<_vcgtf.size(); k++)
+				phi += _coefficients[i][j][k]*v[k];
+			rho+=OccupationNumber()[i][j] * phi*phi;
+
+			for(int c=0;c<3;c++)
+			{
+				double dp=0;
+				for(size_t k=0; k<_vcgtf.size(); k++)
+					dp += _coefficients[i][j][k]*vg[c][k];
+				sphi += OccupationNumber()[i][j] * dp*dp;
+				v1[c] += OccupationNumber()[i][j] * phi*dp;
+			}
+		}
+	}
+	double  grho2=0;
+        for(int c=0;c<3;c++)
+		grho2 += v1[c]*v1[c]*4;
+	double t = sphi/2 - grho2/8.0/rho;
+	double th = cf*pow(rho,5.0/3.0);
+	double XS2 = (t+epsilon)/th;
+	XS2 = XS2*XS2;
+	return 1.0/(1.0+XS2);
+}
+
+Grid Orbitals::makeELFgrid(const Domain& d,const double& epsilon)
+{
+	Grid g;
+	g.set_str(_struct);
+	g.set_dom(d);
+	g.reset();
+#ifdef ENABLE_OMP
+#pragma omp parallel
+#endif
+	for(int i=0;i<d.N1();i++)
+	{
+		for(int j=0;j<d.N2();j++)
+		{
+			for(int k=0;k<d.N3();k++)
+			{
+				double elf=ELF(d.x(i,j,k), d.y(i,j,k), d.z(i,j,k), epsilon);
+				g.set_Vijkl(elf,i,j,k,0);
+			}
+		}
+	}
+	return g;
 }

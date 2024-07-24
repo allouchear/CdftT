@@ -164,6 +164,8 @@ class Orbitals
 		double density(double x, double y, double z);
 		Grid makeOrbGrid(const Domain& d, const vector<int>& nums, const vector<int>& typesSpin);
 		vector<double> phis(double x, double y, double z, const vector<int>& nums, const vector<int>& typesSpin);
+		double ELF(const double& x, const double& y, const double& z, double epsilon=2.87e-5);
+		Grid makeELFgrid(const Domain& d,const double& epsilon=2.87e-5);
 };
 
 double operator*(const Orbitals& a, const vector<double>& coord);

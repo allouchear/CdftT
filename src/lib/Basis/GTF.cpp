@@ -488,3 +488,15 @@ double operator*(const vector<GTF>& a, const vector<double>& b)
 	
 	return r;
 }
+double GTF::grad_GTF(const double& x, const double& y, const double& z, int i)
+{
+	double xA[3] = {x-_coord[0], y-_coord[1], z-_coord[2]};
+	int k=(i+1)%3;
+	int j=(i+2)%3;
+	double expo =(xA[i]*xA[i]+xA[j]*xA[j]+xA[k]*xA[k])*_exposant;
+	if(expo > 40) return 1e-14;
+	if(_l[i]==0)
+		return -2*_exposant*xA[i]*_coefficient*power(xA[k], _l[k])*power(xA[j], _l[j])*exp(-expo);
+	else
+		return _coefficient*exp(-expo)*power(xA[i], _l[i]-1)*power(xA[k], _l[k])*power(xA[j], _l[j])*(_l[i]-2*_exposant*xA[i]*xA[i]);
+}

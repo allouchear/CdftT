@@ -245,3 +245,12 @@ double operator*(const vector<CGTF>& a, const vector<double>& b)
 	
 	return r;
 }
+double CGTF::grad_CGTF(const double& x, const double& y, const double& z, int i)
+{
+	double v=0;
+	for(size_t j=0; j<_gtf.size(); j++) 
+	{
+		v += _coefficients[j]*_gtf[j].grad_GTF(x,y,z,i);
+	}
+	return v;
+}

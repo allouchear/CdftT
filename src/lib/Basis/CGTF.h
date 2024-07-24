@@ -118,6 +118,7 @@ class CGTF
 		void setNumCenter(int);
 
 		double func(double x, double y, double z) const;
+		double grad_CGTF(const double& x, const double& y, const double& z, int i);
 };
 
 	//! An operator member taking two arguments and returning a bool value.
