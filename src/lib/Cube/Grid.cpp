@@ -2009,10 +2009,3 @@ double Grid::value(double x, double y, double z) const
 		S/= norm;
 	return S;
 }
-
-
-
-
-
-
-

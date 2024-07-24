@@ -8,8 +8,6 @@ CGTF::CGTF()
 	_gtf.resize(0);
 	_numberOfFunctions=0;
 	_coefficients=vector<double> ();
-	_L=0;
-	_M=0;
 	_bino = Binomial();
 }
 
@@ -17,8 +15,6 @@ CGTF::CGTF(vector<GTF> A) : _gtf(A)
 {
 	_numberOfFunctions=_gtf.size();
 	_coefficients=vector<double> (_numberOfFunctions, 1);
-	_L=0;
-	_M=0;
 	_bino=A[0].bino();
 }
 
@@ -68,6 +64,14 @@ void CGTF::normaliseCGTF()
 		cout<<"A Contacted Gaussian Type function is nul"<<endl;
 		exit(1);
 	}
+}
+
+void CGTF::denormaliseCGTF()
+{
+	int n;
+
+	for(n=0 ; n<_numberOfFunctions ; n++)
+		_gtf[n].denormaliseRadialGTF();
 }
 
 double CGTF::overlapCGTF(CGTF& right)
@@ -200,6 +204,21 @@ void CGTF::push_back(GTF& gtf)
 void CGTF::setNumCenter(int nC)
 {
 	_num_center=nC;
+}
+
+void CGTF::setLtype(string s)
+{
+	_l_type=s;
+}
+
+void CGTF::setFactorCoef(double d)
+{
+	_factor_coef=d;
+}
+
+void CGTF::setFormat(string format)
+{
+	_l_format=format;
 }
 
 double CGTF::func(double x, double y, double z) const

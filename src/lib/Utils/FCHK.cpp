@@ -164,6 +164,8 @@ vector<double> FCHK::read_one_block_real(ifstream& f, string b)
 		cout<<b+" : data not found"<<endl;
 		if((b=="Beta Orbital Energies" || b=="Beta MO coefficients") && _ok_alpha==2)
 			return vector<double> ();
+		else if(b=="NPA Charges")
+			return vector<double> ();
 		else
 		{
 			cout<<"Data required, please check your file"<<endl;

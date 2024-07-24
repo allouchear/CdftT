@@ -36,6 +36,10 @@ class Orbitals
 		bool _alpha_and_beta;
 		Binomial _bino;
 		Descriptors _descriptors;
+		vector<CGTF> _vcgtf_non_normalise;
+		int _number_of_gtf;
+		double _energy;
+		vector<double> _coordinates;
 	public:
 
 			//! A default constructor.
@@ -166,6 +170,12 @@ class Orbitals
 		vector<double> phis(double x, double y, double z, const vector<int>& nums, const vector<int>& typesSpin);
 		double ELF(const double& x, const double& y, const double& z, double epsilon=2.87e-5);
 		Grid makeELFgrid(const Domain& d,const double& epsilon=2.87e-5);
+		void Sorting();
+		void DenormaliseAllBasis();
+		void Save(string& tag);
+		void Save_wfx(string& tag);
+		void Save_molden(string& tag);
+		void Save_gab(string& tag);
 };
 
 double operator*(const Orbitals& a, const vector<double>& coord);

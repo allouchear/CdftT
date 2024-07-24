@@ -10,7 +10,6 @@ using namespace std;
 
 	//! A factorial class.
 	/*! This class will be used in the GTF class for the normalisation. */
-
 class Factorial
 {
 	private:
@@ -19,33 +18,27 @@ class Factorial
 
 			//! A default constructor.
 			/*! This constructor create a table without a size (0). */
-
 		Factorial();
 
 			//! A real constructor.
 			/*! This constructor is used to create a table from 0 to n factorial. */
-
 		Factorial(int);
 
 			//! A default desctructor.
 			/*! We don't use it. */
-
 		~Factorial(){}
 
 			//! A normal member taking one argument and returning a double value.
 			/*! \return The n factorial value. */
-
 		double factorial(int);
 
 			//! A normal member taking one argument and returning a double value.
 			/*! \return The n double factorial value. */
-
 		double double_factorial(int);
 };
 
 	//! A binomial class.
 	/*! This class will be used in the GTF class for some calculus. */
-
 class Binomial
 {
 	private:
@@ -53,37 +46,31 @@ class Binomial
 		Factorial _fact;
 	public:
 
-		//! A real constructor.
-		/*! This constructor is used to create a table from 0 to n binomial. */
-
+			//! A real constructor.
+			/*! This constructor is used to create a table from 0 to n binomial. */
 		Binomial(int, Factorial&);
 
-		//! A default constructor.
-		/*! This constructor create a table without a size (0). */
-
+			//! A default constructor.
+			/*! This constructor create a table without a size (0). */
 		Binomial();
 
-		//! A default desctructor.
-		/*! We don't use it. */
-
+			//! A default desctructor.
+			/*! We don't use it. */
 		~Binomial(){}
 
-		//! A normal member taking two arguments and returning a double value.
-		/*! \return The i,j binomial value. */
-
+			//! A normal member taking two arguments and returning a double value.
+			/*! \return The i,j binomial value. */
 		double binomial(int, int);
 
-		//! A normal member taking no arguments and returning a vector<vector<double>> value.
-		/*! \return The binomial table. */
-
+			//! A normal member taking no arguments and returning a vector<vector<double>> value.
+			/*! \return The binomial table. */
 		vector<vector<double>>& tab()
 		{
 			return _tab;
 		}
 
-		//! A normal member taking no arguments and returning a Factorial value.
-		/*! \return The factorial table. */
-
+			//! A normal member taking no arguments and returning a Factorial value.
+			/*! \return The factorial table. */
 		Factorial& fact()
 		{
 			return _fact;
@@ -125,5 +112,13 @@ double F(int,double, Factorial&);
 	//! A method taking three arguments and returning a vector<double> value.
 	/*! \return ???*/
 vector<double> getFTable(int, double, Factorial&);
+
+	//! A method taking one argument and returning an int value.
+	/*! \return The L type (S, Px, Py, ...) in the nomenclatur of .wfx file.*/
+int getwfxType(vector<int>);
+
+	//! A method taking one argument and returning an int value.
+	/*! \return The shell type (S, P, D, ...).*/
+string getLType(vector<int>);
 
 #endif

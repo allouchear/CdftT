@@ -1,4 +1,4 @@
-OBJECTS = Orbitals.o 
+OBJECTS = Orbitals.o OrbitalsSave.o
 
 
 include $(LIBCDFTTDIR)/CONFIG

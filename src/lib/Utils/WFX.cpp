@@ -1,5 +1,6 @@
 #include<iostream>
 #include<iomanip>
+#include<sstream>
 #include <Utils/WFX.h>
 
 using namespace std;
@@ -568,6 +569,16 @@ void WFX::read_file_wfx(ifstream& file)
 			_Molecular_Orbital_Primitive_Coefficients[0].pop_back();
 			nc++;
 		}
+	}
+	for(int i=0; i<_Number_of_Nuclei; i++)
+	{
+		_Nuclear_Names[i].erase(0,1);
+		stringstream s;
+		s<<i+1;
+		string p=s.str();
+		if(_Nuclear_Names[i].find(p)!=string::npos)
+			for(size_t j=0; j<p.size(); j++)
+				_Nuclear_Names[i].pop_back();
 	}
 }
 

@@ -188,12 +188,32 @@ class Descriptors
 			/*! overload of flux operator. Prints out the data in a table*/
 		friend ostream& operator<<(ostream& flux, const Descriptors&);
 
+			//! Constructor
+			/*! Build an object from WFX file*/
 		Descriptors(WFX&, const PeriodicTable&);
+
+			//! Constructor
+			/*! Build an object from FCHK file*/
 		Descriptors(FCHK&, const PeriodicTable&);
+
+			//! Constructor
+			/*! Build an object from MOLDEN or GAB files*/
 		Descriptors(MOLDENGAB&, const PeriodicTable&);
+
+			//! Constructor
+			/*! Build an object from LOG file*/
 		Descriptors(LOG&, const PeriodicTable&);
+
+			//! fukui
+			/*! Calculates and sets the values of the fukui functions*/
 		void compute_fk();
+
+			//! fukui
+			/*! Sets the values of the descriptors functions*/
 		void set_mu_fk_data(vector<vector<double>> f, double eH, double eL);
+
+			//! fukui
+			/*! Sets the values of the descriptors functions*/
 		void set_mu_fk_data(vector<vector<double>> data);
 };
 

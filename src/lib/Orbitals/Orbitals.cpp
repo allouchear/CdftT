@@ -10,6 +10,7 @@ Orbitals::Orbitals()
 	_struct=Structure();
 	_all_f = vector<vector<double>> ();
 	_vcgtf = vector<CGTF> ();
+	_vcgtf_non_normalise = vector<CGTF> ();
 	_symbol = vector<string> ();
 	_orbital_energy = vector<vector<double>> ();
 	_primitive_centers = vector<int> ();
@@ -17,9 +18,11 @@ Orbitals::Orbitals()
 	_numOrb = vector<int> ();
 	_numberOfAo=0;
 	_numberOfMo=0;
+	_number_of_gtf=0;
 	_number_of_alpha_electrons=0;
 	_number_of_beta_electrons=0;
 	_number_of_atoms=0;
+	_energy=0.0;
 	_occupation_number=vector<vector<double>> ();
 	_alpha_and_beta=false;
 	_bino=Binomial ();
@@ -30,8 +33,10 @@ Orbitals::Orbitals(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
 	_struct=Structure(wfx, Table);
 	int i,j;
 	_bino=Bin;
+	_coordinates=wfx.Nuclear_Cartesian_Coordinates();
 	GTF gtf;
 	_vcgtf = vector<CGTF> (wfx.Number_of_Primitives());
+	_vcgtf_non_normalise = vector<CGTF> ();
 	vector<vector<double>> Coord(wfx.Number_of_Nuclei(), vector<double> (0));
 	
 	for(i=0; i<wfx.Number_of_Nuclei(); i++)
@@ -44,6 +49,10 @@ Orbitals::Orbitals(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
 			gtf.push_back(wfx.Primitive_Exponents()[j], 1.0, Coord[wfx.Primitive_Centers()[j]-1], setLxyz(wfx.Primitive_Types()[j]), Bin);
 			_vcgtf[j].push_back(gtf);
 			_vcgtf[j].setCoef(1.0);
+			_vcgtf[j].setFactorCoef(1.0);
+			_vcgtf[j].setNumCenter(wfx.Primitive_Centers()[j]);
+			_vcgtf[j].setLtype(getLType(_vcgtf[j].gtf()[0].l()));
+			_vcgtf[j].setFormat("Cart");
 	}
 
 	_coefficients=vector<vector<vector<double>>> (2);
@@ -57,6 +66,7 @@ Orbitals::Orbitals(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
 	_primitive_centers=wfx.Primitive_Centers();
 	_atomic_numbers=wfx.Atomic_Number();
 	_numberOfMo=wfx.Number_of_Occupied_Molecular_Orbital();
+	_number_of_gtf=wfx.Number_of_Primitives();
 	if(!wfx.AlphaAndBeta())
 		_numberOfMo/=2;
 	_number_of_alpha_electrons=wfx.Number_of_Alpha_Electrons();
@@ -65,18 +75,23 @@ Orbitals::Orbitals(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
 	_orbital_energy=wfx.Molecular_Orbital_Energies();
 	_symbol=wfx.Nuclear_Names();
 	_numOrb=vector<int> (2,0);
+	_energy=wfx.Energy();
 	_occupation_number=wfx.Molecular_Orbital_Occupation_Numbers();
 	_alpha_and_beta=wfx.AlphaAndBeta();
 	_descriptors=Descriptors(wfx, Table);
 	_numberOfAo=_vcgtf.size();
+	_vcgtf_non_normalise=_vcgtf;
 }
 
 Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 {
 	_struct=Structure(fchk, Table);
+	_vcgtf_non_normalise = vector<CGTF> ();
 	_numberOfMo=fchk.NumberOfBasisFunctions();
-
+	_coordinates=fchk.CurrentCartesianCoordinates();
 	_bino=Bin;
+	_number_of_gtf=0;
+	_energy=fchk.TotalEnergy();
 	int lmax = fchk.HighestAngularMomentum();
 	int nShells = fchk.NumberOfContractedShells();
 	int llmax = (lmax+1)*(lmax+2)/2;
@@ -104,16 +119,27 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 	_vcgtf = vector<CGTF> (NOrb);
 	int kOrb = 0;
 	int kPrimitive = 0;
+	string format;
+
 	for(int nS = 0;nS<nShells; nS++)
 	{
 		int nM = 0;
 		/* printf("begin primitive nS = %d\n",nS);*/
 		if(shellTypes[nS]<-1)
+		{
 			nM = 2*abs(shellTypes[nS])+1; /* Sperical D, F, G, ...*/
+			format="Sphe";
+		}
 		else if(shellTypes[nS]==-1)
+		{
 			nM = 1; /* This a SP. Make S before */
+			format="Cart";
+		}
 		else
+		{
 			nM = (shellTypes[nS]+1)*(shellTypes[nS]+2)/2;
+			format="Cart";
+		}
 
 		/* printf("nM = %d\n",nM);*/
 		if(shellTypes[nS]==-1)
@@ -126,7 +152,9 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 			int ip,j,n;
 			/* printf("P : m = %d nCoef = %d nPrim = %d\n",m,nCoefs[m],nPrimitivesByShell[nS]);*/
 			_vcgtf[kOrb]= CGTF ();
-			_vcgtf[kOrb].setNumCenter(numAtoms[nS]-1);
+			_vcgtf[kOrb].setNumCenter(numAtoms[nS]);
+			_vcgtf[kOrb].setFactorCoef(1.0);
+			_vcgtf[kOrb].setFormat(format);
   			j = -1;
 	 		for(ip=0;ip<nPrimitivesByShell[nS];ip++)
  				for(n=0;n<nCoefs[m];n++)
@@ -142,6 +170,7 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 	   				GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
 	   				_vcgtf[kOrb].push_back(gtf);
 	 				_vcgtf[kOrb].setCoef(contractionsCoefs[kPrimitive+ip]*coefs[m][n]);
+	 				_vcgtf[kOrb].setLtype(getLType(l_));
 	 			}
 			kOrb++;
 		}
@@ -154,7 +183,9 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 				int ip,j,n;
 				/* printf("P : m = %d nCoef = %d nPrim = %d\n",m,nCoefs[m],nPrimitivesByShell[nS]);*/
 				_vcgtf[kOrb]= CGTF ();
-				_vcgtf[kOrb].setNumCenter(numAtoms[nS]-1);
+				_vcgtf[kOrb].setNumCenter(numAtoms[nS]);
+				_vcgtf[kOrb].setFactorCoef(1.0);
+				_vcgtf[kOrb].setFormat(format);
           			j = -1;
 	 			for(ip=0;ip<nPrimitivesByShell[nS];ip++)
  					for(n=0;n<nCoefs[m];n++)
@@ -170,6 +201,7 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 	   				GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
 	   				_vcgtf[kOrb].push_back(gtf);
 	   				_vcgtf[kOrb].setCoef(contractionsCoefsSP[kPrimitive+ip]*coefs[m][n]);
+	   				_vcgtf[kOrb].setLtype(getLType(l_));
 	 			}
 				kOrb++;
 			}
@@ -215,6 +247,7 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 		_occupation_number[0]=vector<double> (_numberOfMo);
 		for(int i=0; i<_numberOfMo; i++)
 			_occupation_number[0][i]=fchk.AlphaOccupation()[i]+fchk.BetaOccupation()[i];
+		_occupation_number[1]=_occupation_number[0];
 	}
 	else
 	{
@@ -226,38 +259,71 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 	_symbol=vector<string> (_number_of_atoms);
 	
 	for(int i=0; i<_number_of_atoms; i++)
-		_symbol[i]=Table.element(_atomic_numbers[i]).name();
+		_symbol[i]=Table.element(_atomic_numbers[i]).symbol();
 
 	_numOrb=vector<int> (2,0);
 	_descriptors=Descriptors(fchk, Table);
-	_primitive_centers=vector<int> ();
+
+	for(size_t i=0; i<_vcgtf.size(); i++)
+		for(int j=0; j<_vcgtf[i].numberOfFunctions(); j++)
+			_primitive_centers.push_back(_vcgtf[i].NumCenter());
+
+	_vcgtf_non_normalise=_vcgtf;
+
 	NormaliseAllBasis();
+
+	for(size_t i=0; i<_vcgtf.size(); i++)
+		_number_of_gtf+=_vcgtf[i].numberOfFunctions();
 }
 
 Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Table)
 {
 	_struct=Structure(moldengab, Table);
+	_vcgtf_non_normalise = vector<CGTF> ();
+	_number_of_gtf=0;
+	_energy=0;
 	_coefficients=vector<vector<vector<double>>> (2);
 	_coefficients[0]=moldengab.AlphaMOCoefs();
 	_coefficients[1]=moldengab.BetaMOCoefs();
 
-	_number_of_alpha_electrons=0;
-	_number_of_beta_electrons=0;
-
-	for(size_t i=0; i<moldengab.OccupationNumber().size(); i++)
-	{
-		if(moldengab.SpinTypes()[i]=="Alpha")
-			_number_of_alpha_electrons++;
-		else if(moldengab.SpinTypes()[i]=="Beta")
-			_number_of_beta_electrons++;
-	}
-
 	_number_of_atoms=moldengab.NumberOfAtoms();
+	_coordinates=vector<double> (_number_of_atoms*3);
+	for(int i=0; i<_number_of_atoms; i++)
+	{
+		int k=0;
+		for(int j=i*3; j<(i+1)*3; j++)
+		{
+			_coordinates[j]=moldengab.Coordinates()[i][k];
+			k++;
+		}
+	}
 	_numberOfMo=moldengab.NumberOfMO();
 	_alpha_and_beta=moldengab.AlphaAndBeta();
 
 	if(!_alpha_and_beta)
 		_numberOfMo/=2;
+
+	_number_of_alpha_electrons=0;
+	_number_of_beta_electrons=0;
+
+	if(_alpha_and_beta)
+	{
+		for(size_t i=0; i<moldengab.AlphaOccupation().size(); i++)
+			if(moldengab.AlphaOccupation()[i]==1)
+				_number_of_alpha_electrons++;
+		_number_of_beta_electrons=_number_of_alpha_electrons;
+	}
+
+	else
+	{
+		for(size_t i=0; i<moldengab.AlphaOccupation().size(); i++)
+			if(moldengab.AlphaOccupation()[i]==1)
+				_number_of_alpha_electrons++;
+
+		for(size_t i=0; i<moldengab.BetaOccupation().size(); i++)
+			if(moldengab.BetaOccupation()[i]==1)
+				_number_of_beta_electrons++;
+	}
 
 	_bino=Bin;
 		
@@ -297,8 +363,9 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 	vector<vector<double>> coefs (llmax, vector<double> (llmax));
 	vector<vector<vector<int>>> l (3, vector<vector<int>> (llmax, vector<int> (llmax)));
 
-	int NOrb = _numberOfMo;
+	int NOrb = moldengab.NumberOfMOCoefs();
 	_vcgtf = vector<CGTF> (NOrb);
+	string format;
 
 	int kOrb = 0;
 	int kPrimitive = 0;
@@ -307,22 +374,39 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 		int nM = 0;
 
 		if(Ltypes[nS]<-1)
+		{
 			nM = 2*abs(Ltypes[nS])+1; /* Sperical D, F, G, ...*/
+			format="Sphe";
+		}
 		else if(Ltypes[nS]==-1)
+		{
 			nM = 1; /* This a SP. Make S before */
+			format="Cart";
+		}
 		else
+		{
 			nM = (Ltypes[nS]+1)*(Ltypes[nS]+2)/2;
+			format="Cart";
+		}
 
 		if(Ltypes[nS]==-1)
 			getlTable(0, nCoefs, coefs, l, _bino); /* This a SP. Make S before */
+		
 		else
 			getlTable(Ltypes[nS], nCoefs, coefs, l, _bino); 
+	
 
 		for(int m=0;m<nM;m++)
 		{
+
 			int ip,j,n;
 			_vcgtf[kOrb]= CGTF ();
+			_vcgtf[kOrb].setNumCenter(moldengab.Numcenter()[nS]);
+			_vcgtf[kOrb].setLtype(moldengab.ShellTypes()[nS]);
+			_vcgtf[kOrb].setFactorCoef(FactorCoefs[nS]);
+			_vcgtf[kOrb].setFormat(format);
   			j = -1;
+
 	 		for(ip=0;ip<nPrimitivesByShell[nS];ip++)
  				for(n=0;n<nCoefs[m];n++)
 	 			{
@@ -349,7 +433,11 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 				int ip,j,n;
 
 				_vcgtf[kOrb]= CGTF ();
-          			j = -1;
+				_vcgtf[kOrb].setNumCenter(moldengab.Numcenter()[nS]);
+				_vcgtf[kOrb].setLtype(moldengab.ShellTypes()[nS]);
+				_vcgtf[kOrb].setFactorCoef(FactorCoefs[nS]);
+				_vcgtf[kOrb].setFormat(format);
+      			j = -1;
 	 			for(ip=0;ip<nPrimitivesByShell[nS];ip++)
  					for(n=0;n<nCoefs[m];n++)
 	 				{
@@ -364,7 +452,7 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 	   				GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
 	   				_vcgtf[kOrb].push_back(gtf);
 	   				_vcgtf[kOrb].setCoef(FactorCoefs[kOrb]*CgtfCoefs[kPrimitive+ip]*coefs[m][n]);
-	 			}
+	 				}
 				kOrb++;
 			}
 		}
@@ -373,37 +461,52 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 
 	_numberOfAo=_vcgtf.size();
 
-	if(_numberOfAo != _numberOfMo)
+	if(_numberOfAo != moldengab.NumberOfMOCoefs())
 	{
-		cout<<"Error : Their is "<<_vcgtf.size()<<" CGTF for "<<_numberOfMo<<" basis in file."<<endl;
+		cout<<"Error : Their is "<<_vcgtf.size()<<" CGTF for "<<moldengab.NumberOfMOCoefs()<<" basis in file."<<endl;
 		cout<<"Please check your file."<<endl;
 		exit(1);
 	}
 
-	for(int i=0; i<_numberOfAo; i++)
-	{
-		cout<<_vcgtf[i]<<endl;
-	}
+	_vcgtf_non_normalise=_vcgtf;
+
+	for(size_t i=0; i<_vcgtf.size(); i++)
+		for(int j=0; j<_vcgtf[i].numberOfFunctions(); j++)
+			_primitive_centers.push_back(_vcgtf[i].NumCenter());
 
 	NormaliseAllBasis();
+
+	for(size_t i=0; i<_vcgtf.size(); i++)
+		_number_of_gtf+=_vcgtf[i].numberOfFunctions();
+
+	Sorting();
 }
 
 Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 {
 	_struct=Structure(log, Table);
+	_vcgtf_non_normalise = vector<CGTF> ();
+	_number_of_gtf=0;
 	_coefficients=vector<vector<vector<double>>> (2);
 	_coefficients[0]=log.AlphaMOcoefs();
 	_coefficients[1]=log.BetaMOcoefs();
-
+	_energy=log.Energy();
 	_number_of_alpha_electrons=log.NumberOfAlphaElectrons();
 	_number_of_beta_electrons=log.NumberOfBetaElectrons();
-	
 
 	_number_of_atoms=log.NumberOfAtoms();
+	_coordinates=vector<double> (_number_of_atoms*3);
+	for(int i=0; i<_number_of_atoms; i++)
+	{
+		int k=0;
+		for(int j=i*3; j<(i+1)*3; j++)
+		{
+			_coordinates[j]=log.Coordinates()[i][k];
+			k++;
+		}
+	}
 	_numberOfMo=log.NumberOfMO();
 	_alpha_and_beta=log.AlphaAndBeta();
-
-
 
 	_bino=Bin;
 		
@@ -446,6 +549,7 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 
 	int NOrb = _numberOfMo;
 	_vcgtf = vector<CGTF> (NOrb);
+	string format;
 
 	int kOrb = 0;
 	int kPrimitive = 0;
@@ -454,11 +558,20 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 		int nM = 0;
 
 		if(Ltypes[nS]<-1)
+		{
 			nM = 2*abs(Ltypes[nS])+1; /* Sperical D, F, G, ...*/
+			format="Sphe";
+		}
 		else if(Ltypes[nS]==-1)
+		{
 			nM = 1; /* This a SP. Make S before */
+			format="Cart";
+		}
 		else
+		{
 			nM = (Ltypes[nS]+1)*(Ltypes[nS]+2)/2;
+			format="Cart";
+		}
 
 		if(Ltypes[nS]==-1)
 			getlTable(0, nCoefs, coefs, l, _bino); /* This a SP. Make S before */
@@ -484,6 +597,10 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 	   				GTF gtf (primitiveExponents[kPrimitive+ip], 1.0, coord_, l_, _bino);
 	   				_vcgtf[kOrb].push_back(gtf);
 	 				_vcgtf[kOrb].setCoef(FactorCoefs[kPrimitive+ip]*CgtfCoefs[kPrimitive+ip]*coefs[m][n]);
+	 				_vcgtf[kOrb].setNumCenter(log.NumCenter()[kPrimitive+ip]);
+					_vcgtf[kOrb].setLtype(getLType(l_));
+					_vcgtf[kOrb].setFormat(format);
+					_vcgtf[kOrb].setFactorCoef(FactorCoefs[kPrimitive+ip]);
 	 			}
 			kOrb++;
 		}
@@ -511,7 +628,11 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 	   				GTF gtf (primitiveExponents[kPrimitive+ip], 1.0, coord_, l_, _bino);
 	   				_vcgtf[kOrb].push_back(gtf);
 	   				_vcgtf[kOrb].setCoef(FactorCoefs[kOrb]*CgtfSpCoefs[kPrimitive+ip]*coefs[m][n]);
-	 			}
+	   				_vcgtf[kOrb].setNumCenter(log.NumCenter()[kPrimitive+ip]);
+					_vcgtf[kOrb].setLtype(getLType(l_));
+					_vcgtf[kOrb].setFormat(format);
+					_vcgtf[kOrb].setFactorCoef(FactorCoefs[kPrimitive+ip]);
+	 				}
 				kOrb++;
 			}
 		}
@@ -539,7 +660,16 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 		}
 	}
 
+	_vcgtf_non_normalise=_vcgtf;
+
+	for(size_t i=0; i<_vcgtf.size(); i++)
+		for(int j=0; j<_vcgtf[i].numberOfFunctions(); j++)
+			_primitive_centers.push_back(_vcgtf[i].NumCenter());
+
 	NormaliseAllBasis();
+
+	for(size_t i=0; i<_vcgtf.size(); i++)
+		_number_of_gtf+=_vcgtf[i].numberOfFunctions();
 }
 
 double Orbitals::ERIorbitals(Orbitals& q, Orbitals& r, Orbitals& s)
@@ -672,6 +802,14 @@ void Orbitals::NormaliseAllBasis()
 
 	for(k=0;k<_numberOfAo;k++)
 		_vcgtf[k].normaliseCGTF();
+}
+
+void Orbitals::DenormaliseAllBasis()
+{
+	int k;
+
+	for(k=0;k<_numberOfAo;k++)
+		_vcgtf[k].denormaliseCGTF();
 }
 
 double Orbitals::func(double x, double y, double z) const

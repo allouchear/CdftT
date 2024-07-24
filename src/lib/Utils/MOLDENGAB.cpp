@@ -45,6 +45,7 @@ MOLDENGAB::MOLDENGAB(ifstream& file)
 	_L_types=vector<int> ();
 	_exposants=vector<double> ();
 	_number_of_gtf=vector<int> ();
+	_num_center=vector<int> ();
 	_cgtf_coefs=vector<double> ();
 	_factor_coefs=vector<double> ();
 	_MO_energy=vector<double> ();
@@ -320,10 +321,10 @@ void MOLDENGAB::read_one_basis_data(istream& f)
 	getline(f,p);
 	stringstream k(p);
 	k>>m;
-	m--;
 	getline(f,p);
 	
 	do{
+		_num_center.push_back(m);
 		stringstream s(p);
 		s>>p;
 		_shell_types.push_back(p);
@@ -359,19 +360,19 @@ void MOLDENGAB::read_one_basis_data(istream& f)
 			t.erase(t.find(" "),1);
 
 	}while(!t.empty());
+	m--;
 	_n_at_basis[m]=v;
 }
 
 void MOLDENGAB::read_MO_data(ifstream& f)
 {
-	string p;
+	string p,t;
 	double a;
 	vector<double> aa;
 
 	if(LocaliseDataMolGab(f,"Spin= Beta")!=-1)
 	{
 		_alpha_and_beta=false;
-		_number_of_MO*=2;
 	}
 
 	long int pos=LocaliseDataMolGab(f, "[MO]");
@@ -386,8 +387,7 @@ void MOLDENGAB::read_MO_data(ifstream& f)
 	f.seekg(pos);
 	getline(f,p);
 
-	for(int i=0; i<_number_of_MO; i++)
-	{
+	do{
 		for(int j=0; j<4; j++)
 		{
 			if(j!=0)
@@ -423,9 +423,12 @@ void MOLDENGAB::read_MO_data(ifstream& f)
 		_MO_coefs.push_back(aa);
 		aa=vector<double> ();
 		getline(f,p);
-		if((p.find("Sym")==string::npos) && (p.find("Ene")==string::npos) && (p.find("Spin")==string::npos) && (p.find("Occup")==string::npos))
-			break;
-	}
+		t=p;
+		while(t.find(" ")!=string::npos)
+			t.erase(t.find(" "),1);
+	}while(!t.empty());
+
+	_number_of_MO=_MO_energy.size();
 }
 
 void MOLDENGAB::PrintData()
@@ -438,8 +441,14 @@ void MOLDENGAB::PrintData()
 	for(size_t i=0; i<_coord.size(); i++)
 		for(size_t j=0; j<_coord[i].size(); j++)
 			cout<<"Coordinates "<<j<<" for atom "<<i<<" = "<<_coord[i][j]<<endl;
+	for(size_t i=0; i<_num_center.size(); i++)
+		cout<<"Num center "<<i<<" = "<<_num_center[i]<<endl;
+	for(size_t i=0; i<_n_at_basis.size(); i++)
+		cout<<"N at basis "<<i<<" = "<<_n_at_basis[i]<<endl;
 	for(size_t i=0; i<_shell_types.size(); i++)
 		cout<<"Shell type "<<i<<" = "<<_shell_types[i]<<endl;
+	for(size_t i=0; i<_L_types.size(); i++)
+		cout<<"L type "<<i<<" = "<<_L_types[i]<<endl;
 	for(size_t i=0; i<_exposants.size(); i++)
 		cout<<"Exposant "<<i<<" = "<<_exposants[i]<<endl;
 	for(size_t i=0; i<_number_of_gtf.size(); i++)

@@ -193,3 +193,140 @@ vector<double> getFTable(int mMax, double t, Factorial& Fa)
 		Fmt[m] = (twot * Fmt[m+1] + expt) / (m*2+1);
 	return Fmt;
 }
+int getwfxType(vector<int> l)
+{
+	int iType=0;
+	int shellType=l[0]+l[1]+l[2];
+
+	if(shellType==0) // S
+		iType=1; // S
+
+	else if(shellType==1) // P 
+	{
+		if(l[0]==1)
+			iType=2; // Px
+		else if(l[1]==1)
+			iType=3; // Py
+		else
+			iType=4; //Pz
+	}
+
+	else if(shellType==2) // D
+	{
+		if(l[0]==2)
+			iType=5; // Dxx
+		else if(l[1]==2)
+			iType=6; // Dyy
+		else if(l[2]==2)
+			iType=7; // Dzz
+		else if(l[0]==1 && l[1]==1)
+			iType=8; // Dxy
+		else if(l[0]==1 && l[2]==1)
+			iType=9; // Dxz
+		else
+			iType=10; // Dyz
+	}
+
+	else if(shellType==3) // F 
+	{
+		if(l[0]==3)
+			iType=11; // Fxxx
+		else if(l[1]==3)
+			iType=12; // Fyyy
+		else if(l[2]==3)
+			iType=13; // Fzzz
+		else if(l[0]==2 && l[1]==1)
+			iType=14; // Fxxy
+		else if(l[0]==2 && l[2]==1)
+			iType=15; // Fxxz
+		else if(l[1]==2 && l[2]==1)
+			iType=16; // Fyyz
+		else if(l[0]==1 && l[1]==2)
+			iType=17; // Fxyy
+		else if(l[0]==1 && l[2]==2)
+			iType=18; // Fxzz
+		else if(l[1]==1 && l[2]==2)
+			iType=19; // Fyzz
+		else
+			iType=20; // Fxyz
+	}
+
+	else if(shellType==4) // G
+	{
+		if(l[0]==4)
+			iType=21; // Gxxxx
+		else if(l[1]==4)
+			iType=22; // Gyyyy
+		else if(l[2]==4)
+			iType=23;// Gzzzz
+		else if(l[0]==3 && l[1]==1)
+			iType=24; // Gxxxy
+		else if(l[0]==3 && l[2]==1)
+			iType=25; // Gxxxz
+		else if(l[0]==1 && l[1]==3)
+			iType=26; // Gxyyy
+		else if(l[1]==3 && l[2]==1)
+			iType=27; // Gyyyz
+		else if(l[0]==1 && l[2]==3)
+			iType=28; // Gxzzz
+		else if(l[1]==1 && l[2]==3)
+			iType=29; // Gyzzz
+		else if(l[0]==2 && l[1]==2)
+			iType=30; // Gxxyy
+		else if(l[0]==0 && l[2]==2)
+			iType=31; // Gxxzz
+		else if(l[1]==2 && l[2]==2)
+			iType=32; // Gyyzz
+		else if(l[0]==2 && l[1]==1 && l[2]==1)
+			iType=33; // Gxxyz
+		else if(l[0]==1 && l[1]==2 && l[2]==1)
+			iType=34; // Gxyyz
+		else
+			iType=35; // Gxyzz
+	}
+	
+	else // H and more
+	{
+		iType=35;
+		int L, ix,iy;
+
+		for(L=5;L<=30;L++)
+			for(ix=0;ix<L;ix++)
+				for(iy=0;iy<=L-ix;iy++)
+				{
+					iType++;
+					if(l[0]==ix && l[1]==iy && l[2]==L-ix-iy)
+						return iType;
+				}
+	}
+
+	return iType;
+}
+
+string getLType(vector<int> l)
+{
+	string LType="None";
+	int shellType=l[0]+l[1]+l[2];
+
+	if(shellType==0) // S
+		LType="S"; // S
+
+	else if(shellType==1) // P 
+		LType="P";
+
+	else if(shellType==2) // D
+		LType="D";
+
+	else if(shellType==3) // F 
+		LType="F";
+
+	else if(shellType==4) // G
+		LType="G";
+
+	else // H and more
+	{
+		LType=to_string(shellType+int('H')-5);
+	}
+
+	return LType;
+}

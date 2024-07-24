@@ -1,7 +1,6 @@
 using namespace std;
 #include <JobControl/Job.h>
 #include <Cube/GridCP.h>
-#include <Cube/functions.h>
 #include <Cube/Grid.h>
 #include <Common/Element.h>
 #include <Common/Descriptors.h>
@@ -754,7 +753,6 @@ void Job::run()
 			cerr<<"Warning: too many grids. Proceeding with the first three. "<<endl;
 			cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
 		}
-
 		if(!readOneString("PartitionMethod",Mdef))
 		{
 			Method=0;

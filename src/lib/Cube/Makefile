@@ -1,4 +1,4 @@
-OBJECTS = Domain.o Grid.o functions.o GridCP.o
+OBJECTS = Domain.o Grid.o GridCP.o
 
 
 include $(LIBCDFTTDIR)/CONFIG

@@ -4,10 +4,16 @@
 bin/
 Documentation/
 # ignore ALL .o files
+*/*/*/*.wfx
+*/*/*/*.molden
+*/*/*/*.gab
+*/*/*/*.log
+*/*/*/*.fchk
 */*/*.cube
 */*/*.gcube
 */*/*.chk
 */*/*.txt
+*/*/*/*.txt
 */*/*/*.cube
 */*/*/*.txt
 *.cube
