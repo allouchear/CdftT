@@ -697,33 +697,7 @@ void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
 
 double Becke::density(Orbitals& Orb, double x, double y, double z)
 {
-	double rho=0.0;
-	int n;
-
-	if(Orb.AlphaAndBeta())
-		n=1;
-	else
-		n=2;
-
-	int nAO=Orb.NumberOfAo();
-	vector<double> v(nAO);
-	auto vcgtf = Orb.vcgtf();
-	auto coefs = Orb.coefficients();
-	for(int k=0; k<nAO; k++)
-		v[k] = vcgtf[k].func(x,y,z);
-
-	for(int j=0; j<Orb.NumberOfMo(); j++)
-	for(int i=0; i<n; i++)
-	{
-		if(Orb.OccupationNumber()[i][j]>1e-10)
-		{
-			double phi=0;
-        		for(int k=0; k<nAO; k++)
-				phi += coefs[i][j][k]*v[k];
-			rho+=Orb.OccupationNumber()[i][j] * phi*phi;
-		}
-	}
-	return rho;
+	return Orb.density(x,y,z);
 }
 
 double Becke::prodGTF(const vector<GTF>& p, double x, double y, double z)
