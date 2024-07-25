@@ -697,23 +697,6 @@ void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
 
 double Becke::density(Orbitals& Orb, double x, double y, double z)
 {
-/*
-    double rho=0.0;
-    int n;
-
-    if(Orb.AlphaAndBeta())
-        n=1;
-    else
-        n=2;
-
-    for(int i=0; i<n; i++)
-        for(int j=0; j<Orb.NumberOfMo(); j++)
-            if(Orb.OccupationNumber()[i][j]>1e-10)
-                rho+=Orb.OccupationNumber()[i][j] * phistarphi(Orb,j,j,x,y,z,i);
-
-    return rho;
-*/
-
 	double rho=0.0;
 	int n;
 
