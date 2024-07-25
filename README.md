@@ -22,16 +22,16 @@ Tested with g++. However you can use any recent version of any C++ compiler.
 
 - Compile
 
-	Edit <path_to_CdftT_dir>/CONFIG\
-	Set LIBCDFTTDIR corresponding to your machine.
-	- To compile CdftT under **Linux or MacOS**:\
+		Edit <path_to_CdftT_dir>/CONFIG\
+		Set LIBCDFTTDIR corresponding to your machine.
+	- For **Linux or MacOS**:\
 		Under a terminal, type :
 		```console
 		cd <path_to_CdftT_dir>/src/applications/cdftt
 		./cleancdftt.sh
 		./compcdftt.sh
 		```
-	- To compile CdftT under **Windows**:\
+	- For **Windows**:\
 		Edit <path_to_CdftT_dir>/src/applications/cdftt/Makefile\
 		Set LIBCDFTTDIR corresponding to your machine.\
 		Under a terminal, type :
