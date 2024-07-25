@@ -1,43 +1,40 @@
-Domain.o: Domain.cpp \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Cube/Domain.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Structure.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Atom.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/PeriodicTable.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Element.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Element.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/WFX.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/Utils.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/FCHK.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/MOLDENGAB.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/LOG.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Constants.h
-Grid.o: Grid.cpp \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Cube/Grid.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Structure.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Atom.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/PeriodicTable.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Element.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Element.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/WFX.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/Utils.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/FCHK.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/MOLDENGAB.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/LOG.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Cube/Domain.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Cube/GridCP.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Constants.h
-GridCP.o: GridCP.cpp \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Cube/GridCP.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Cube/Domain.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Structure.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Atom.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/PeriodicTable.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Element.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Element.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/WFX.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/Utils.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/FCHK.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/MOLDENGAB.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/LOG.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Cube/Grid.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Constants.h
+Domain.o: Domain.cpp /home/dbuffat/CdftT/src/lib/Cube/Domain.h \
+ /home/dbuffat/CdftT/src/lib/Common/Structure.h \
+ /home/dbuffat/CdftT/src/lib/Common/Atom.h \
+ /home/dbuffat/CdftT/src/lib/Common/PeriodicTable.h \
+ /home/dbuffat/CdftT/src/lib/Common/Element.h \
+ /home/dbuffat/CdftT/src/lib/Common/Element.h \
+ /home/dbuffat/CdftT/src/lib/Utils/WFX.h \
+ /home/dbuffat/CdftT/src/lib/Utils/Utils.h \
+ /home/dbuffat/CdftT/src/lib/Utils/FCHK.h \
+ /home/dbuffat/CdftT/src/lib/Utils/MOLDENGAB.h \
+ /home/dbuffat/CdftT/src/lib/Utils/LOG.h \
+ /home/dbuffat/CdftT/src/lib/Common/Constants.h
+Grid.o: Grid.cpp /home/dbuffat/CdftT/src/lib/Cube/Grid.h \
+ /home/dbuffat/CdftT/src/lib/Common/Structure.h \
+ /home/dbuffat/CdftT/src/lib/Common/Atom.h \
+ /home/dbuffat/CdftT/src/lib/Common/PeriodicTable.h \
+ /home/dbuffat/CdftT/src/lib/Common/Element.h \
+ /home/dbuffat/CdftT/src/lib/Common/Element.h \
+ /home/dbuffat/CdftT/src/lib/Utils/WFX.h \
+ /home/dbuffat/CdftT/src/lib/Utils/Utils.h \
+ /home/dbuffat/CdftT/src/lib/Utils/FCHK.h \
+ /home/dbuffat/CdftT/src/lib/Utils/MOLDENGAB.h \
+ /home/dbuffat/CdftT/src/lib/Utils/LOG.h \
+ /home/dbuffat/CdftT/src/lib/Cube/Domain.h \
+ /home/dbuffat/CdftT/src/lib/Cube/GridCP.h \
+ /home/dbuffat/CdftT/src/lib/Common/Constants.h
+GridCP.o: GridCP.cpp /home/dbuffat/CdftT/src/lib/Cube/GridCP.h \
+ /home/dbuffat/CdftT/src/lib/Cube/Domain.h \
+ /home/dbuffat/CdftT/src/lib/Common/Structure.h \
+ /home/dbuffat/CdftT/src/lib/Common/Atom.h \
+ /home/dbuffat/CdftT/src/lib/Common/PeriodicTable.h \
+ /home/dbuffat/CdftT/src/lib/Common/Element.h \
+ /home/dbuffat/CdftT/src/lib/Common/Element.h \
+ /home/dbuffat/CdftT/src/lib/Utils/WFX.h \
+ /home/dbuffat/CdftT/src/lib/Utils/Utils.h \
+ /home/dbuffat/CdftT/src/lib/Utils/FCHK.h \
+ /home/dbuffat/CdftT/src/lib/Utils/MOLDENGAB.h \
+ /home/dbuffat/CdftT/src/lib/Utils/LOG.h \
+ /home/dbuffat/CdftT/src/lib/Cube/Grid.h \
+ /home/dbuffat/CdftT/src/lib/Common/Constants.h

@@ -40,6 +40,7 @@ class Orbitals
 		int _number_of_gtf;
 		double _energy;
 		vector<double> _coordinates;
+		bool _mixte;
 	public:
 
 			//! A default constructor.

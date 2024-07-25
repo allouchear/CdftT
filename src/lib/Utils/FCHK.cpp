@@ -37,12 +37,16 @@ FCHK::FCHK()
 
 	_ok_alpha=0;
 	_alpha_and_beta=false;
+	_sp=false;
+	_mixte=false;
 }
 
 FCHK::FCHK(ifstream& file)
 {
 	_ok_alpha=0;
 	_alpha_and_beta=false;
+	_sp=false;
+	_mixte=false;
 	read_file_fchk(file);
 	if(_beta_orbital_energies==vector<double> ())
 		_beta_orbital_energies=_alpha_orbital_energies;
@@ -243,9 +247,28 @@ void FCHK::read_file_fchk(ifstream& file)
 	_npa_charges=read_one_block_real(file, p);
 	_dipole_moment=read_one_block_real(file, q);
 	_shell_types=read_one_block_int(file, r);
+	
+	bool cart=false, sphe=false;
+	for(size_t i=0; i<_shell_types.size(); i++)
+	{
+		if(_shell_types[i]==-1)
+			_sp=true;
+
+		if(_shell_types[i]> 1)
+			cart=true;
+		if(_shell_types[i]< -1)
+			sphe=true;
+	}
+
+	if(cart!=sphe)
+		_mixte=true;
+
 	_shell_to_atom_map=read_one_block_int(file, s);
 	_number_of_primitives_per_shell=read_one_block_int(file, t);
-	_sp_contraction_coefficients=read_one_block_real(file, u);
+	
+	if(_sp)
+		_sp_contraction_coefficients=read_one_block_real(file, u);
+	
 	_coordinates_for_shells=read_one_block_real(file, v);
 	_number_of_atoms=read_one_int(file, w);
 	_number_of_contracted_shells=read_one_int(file, x);

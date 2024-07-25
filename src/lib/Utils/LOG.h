@@ -44,6 +44,7 @@ private:
 	int _number_of_MO_coefs;
 	vector<int> _n_at_basis;
 	bool _alpha_and_beta;
+	bool _mixte;
 
 public:
 
@@ -195,9 +196,13 @@ public:
 		/*! Set all the molecular orbitals data on the value in the file. */
 	void read_MO_data(ifstream&);
 
-		//! A normal member taking one argument and returning a void value.
+		//! A normal member taking no arguments and returning a void value.
 		/*! Print all the data save in the object. */
 	void PrintData();
+
+		//! A normal member taking no arguments and returning a bool value.
+		/*! \return If their is a mixte basis. (Exemple : D is cartisian and F is spherical). */
+	bool Mixte() {return _mixte;}
 };
 
 	//! A function taking two arguments and returning a long int value.

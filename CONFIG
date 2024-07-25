@@ -3,11 +3,11 @@ RM = rm -f
 MAKE = make
 WIN32LIB   = 
 
-LIBCDFTTDIR =/home/allouche/MySoftwares/CdftT/CdftT
+LIBCDFTTDIR =/home/dbuffat/CdftT
 
 #CC = g++ -pg
-CC = g++ -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
-#CC = g++ -g -pg -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
+#CC = g++ -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
+CC = g++ -g -pg -O -fPIC -I $(LIBCDFTTDIR)/src/lib 
 
 use_nvhpc = 0
 ifeq ($(use_nvhpc),1)

@@ -507,6 +507,7 @@ ostream& operator<<(ostream& flux, const Descriptors& desc)
 
 Descriptors::Descriptors(WFX& wfx, const PeriodicTable& Table)
 {
+	_okCharge=false;
 	_str=Structure(wfx, Table);
 	_Deltafk.resize(_str.number_of_atoms());
 	_wkm.resize(_str.number_of_atoms());
@@ -523,6 +524,7 @@ Descriptors::Descriptors(WFX& wfx, const PeriodicTable& Table)
 
 Descriptors::Descriptors(FCHK& fchk, const PeriodicTable& Table)
 {
+	_okCharge=false;
 	_str=Structure(fchk, Table);
 	_Deltafk.resize(_str.number_of_atoms());
 	_wkm.resize(_str.number_of_atoms());
@@ -539,6 +541,7 @@ Descriptors::Descriptors(FCHK& fchk, const PeriodicTable& Table)
 
 Descriptors::Descriptors(MOLDENGAB& moldengab, const PeriodicTable& Table)
 {
+	_okCharge=false;
 	_str=Structure(moldengab, Table);
 	_Deltafk.resize(_str.number_of_atoms());
 	_wkm.resize(_str.number_of_atoms());
@@ -555,6 +558,7 @@ Descriptors::Descriptors(MOLDENGAB& moldengab, const PeriodicTable& Table)
 
 Descriptors::Descriptors(LOG& log, const PeriodicTable& Table)
 {
+	_okCharge=false;
 	_str=Structure(log, Table);
 	_Deltafk.resize(_str.number_of_atoms());
 	_wkm.resize(_str.number_of_atoms());

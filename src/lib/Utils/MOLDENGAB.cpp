@@ -34,6 +34,7 @@ MOLDENGAB::MOLDENGAB()
 	_beta_energies=vector<double> ();
 	_format="None";
 	_cart_sphe="none";
+	_mixte=false;
 }
 
 MOLDENGAB::MOLDENGAB(ifstream& file)
@@ -62,6 +63,7 @@ MOLDENGAB::MOLDENGAB(ifstream& file)
 	_number_of_MO_coefs=0;
 	_number_of_MO=0;
 	_alpha_and_beta=true;
+	_mixte=false;
 
 	file.clear();
 	file.seekg(0,file.beg);
@@ -201,6 +203,9 @@ void MOLDENGAB::read_basis_data(ifstream& f)
 		posd = LocaliseDataMolGab(f, "[5D]");
 		posf = LocaliseDataMolGab(f, "[7F]");
 		posg = LocaliseDataMolGab(f, "[9G]");
+
+		if((posd==-1 && (posf!=-1 || posg!=1)) || (posf==-1 && (posd!=-1 || posg!=1)) || (posg==-1 && (posf!=-1 || posd!=1)))
+			_mixte=true;
 	}
 
 	else if(_format=="gabedit" && _cart_sphe=="sphe")
@@ -261,21 +266,21 @@ void MOLDENGAB::read_basis_data(ifstream& f)
 
 		else if(_format=="molden")
 		{
-			int N=int(toupper(_shell_types[i][0]))-int('D')+2;
+			int N=int(toupper(_shell_types[i][0]))-int('F')+3;
 			_L_types.push_back(-N);
 			_number_of_MO_coefs+= 2*abs(N)+1;
 		}
 
 		else if(_cart_sphe=="sphe")
 		{
-			int N=int(toupper(_shell_types[i][0]))-int('D')+2;
+			int N=int(toupper(_shell_types[i][0]))-int('F')+3;
 			_L_types.push_back(-N);
 			_number_of_MO_coefs+= 2*abs(N)+1;
 		}
 
 		else if(_cart_sphe=="cart")
 		{
-			int N=int(toupper(_shell_types[i][0]))-int('D')+2;
+			int N=int(toupper(_shell_types[i][0]))-int('F')+3;
 			_L_types.push_back(N);
 			_number_of_MO_coefs+= 2*N+1;
 		}
@@ -288,27 +293,7 @@ void MOLDENGAB::read_basis_data(ifstream& f)
 		}
 	}
 
-	for(int i=0; i<m; i++)
-	{
-		if(_shell_types[i]=="s" || _shell_types[i]=="S")
-			_number_of_MO+=1;
-		else if(_shell_types[i]=="p" || _shell_types[i]=="P")
-			_number_of_MO+=3;
-		else if(_shell_types[i]=="d" || _shell_types[i]=="D")
-			_number_of_MO+=5;
-		else if(_shell_types[i]=="f" || _shell_types[i]=="F")
-			_number_of_MO+=7;
-		else if(_shell_types[i]=="g" || _shell_types[i]=="G")
-			_number_of_MO+=9;
-		else if(_shell_types[i]=="h" || _shell_types[i]=="H")
-			_number_of_MO+=11;
-		else
-		{
-			cout<<"Error, shell type no recognize."<<endl;
-			cout<<"Please check your file"<<endl;
-			exit(1);
-		}
-	}
+	_number_of_MO=_number_of_MO_coefs;
 }
 
 void MOLDENGAB::read_one_basis_data(istream& f)

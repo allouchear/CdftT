@@ -81,6 +81,7 @@ Orbitals::Orbitals(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
 	_descriptors=Descriptors(wfx, Table);
 	_numberOfAo=_vcgtf.size();
 	_vcgtf_non_normalise=_vcgtf;
+	_mixte=false;
 }
 
 Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
@@ -105,6 +106,7 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 	vector<double> primitiveExponents = fchk.PrimitiveExponents();
 	vector<vector<double>> coefs (llmax, vector<double> (llmax));
 	vector<vector<vector<int>>> l (3, vector<vector<int>> (llmax, vector<int> (llmax)));
+	_mixte=fchk.Mixte();
 
 	int NOrb = 0;
 	for(int nS=0;nS<nShells;nS++) 
@@ -265,8 +267,7 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 	_descriptors=Descriptors(fchk, Table);
 
 	for(size_t i=0; i<_vcgtf.size(); i++)
-		for(int j=0; j<_vcgtf[i].numberOfFunctions(); j++)
-			_primitive_centers.push_back(_vcgtf[i].NumCenter());
+		_primitive_centers.push_back(_vcgtf[i].NumCenter());
 
 	_vcgtf_non_normalise=_vcgtf;
 
@@ -471,15 +472,16 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
 	_vcgtf_non_normalise=_vcgtf;
 
 	for(size_t i=0; i<_vcgtf.size(); i++)
-		for(int j=0; j<_vcgtf[i].numberOfFunctions(); j++)
-			_primitive_centers.push_back(_vcgtf[i].NumCenter());
+		_primitive_centers.push_back(_vcgtf[i].NumCenter());
 
 	NormaliseAllBasis();
 
 	for(size_t i=0; i<_vcgtf.size(); i++)
 		_number_of_gtf+=_vcgtf[i].numberOfFunctions();
 
-	Sorting();
+	_mixte=moldengab.Mixte();
+
+	//Sorting(); Don't work
 }
 
 Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
@@ -663,13 +665,14 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 	_vcgtf_non_normalise=_vcgtf;
 
 	for(size_t i=0; i<_vcgtf.size(); i++)
-		for(int j=0; j<_vcgtf[i].numberOfFunctions(); j++)
-			_primitive_centers.push_back(_vcgtf[i].NumCenter());
+		_primitive_centers.push_back(_vcgtf[i].NumCenter());
 
 	NormaliseAllBasis();
 
 	for(size_t i=0; i<_vcgtf.size(); i++)
 		_number_of_gtf+=_vcgtf[i].numberOfFunctions();
+
+	_mixte=log.Mixte();
 }
 
 double Orbitals::ERIorbitals(Orbitals& q, Orbitals& r, Orbitals& s)
