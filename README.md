@@ -12,12 +12,12 @@ Tested with g++. However you can use any recent version of any C++ compiler.
 
 ## Installation
 
-Using git,  Type : 
+Using git, under a terminal, type : 
 ```console
 git clone https://github.com/allouchear/CdftT
 
 ```
-You can also download the .zip file of CdftT : Click on Code and Download ZIP
+You can also download the .zip file of CdftT : **Click on Code and Download ZIP**
 
 ## How to use it 
 
