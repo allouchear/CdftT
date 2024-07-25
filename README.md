@@ -32,7 +32,7 @@ cd <path_to_CdftT_dir>/src/applications/cdftt
 To compile CdftT under **Windows**:
 Edit <path_to_CdftT_dir>/src/applications/cdftt/Makefile\
 Set LIBCDFTTDIR corresponding to your machine.\
-Under a terminal, tyape 
+Under a terminal, type :
 ```console
 cd <path_to_CdftT_dir>/src/applications/cdftt
 make
