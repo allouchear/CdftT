@@ -22,7 +22,7 @@ Tested with g++. However you can use any recent version of any C++ compiler.
 
 - Compilation
 
-		Edit <path_to_CdftT_dir>/CONFIG\
+		Edit <path_to_CdftT_dir>/CONFIG
 		Set LIBCDFTTDIR corresponding to your machine.
 	- For **Linux or MacOS**:\
 		Under a terminal, type :
