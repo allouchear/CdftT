@@ -13,12 +13,12 @@ Tested with g++. However you can use any recent version of any C++ compiler.
 ## Installation
 
 - Download
- - Using git, under a terminal, type : 
+	- Using git, under a terminal, type : 
 	```console
 	git clone https://github.com/allouchear/CdftT
 	```
 
- - You can also download the .zip file of CdftT : **Click on Code and Download ZIP**
+	- You can also download the .zip file of CdftT : **Click on Code and Download ZIP**
 
 	Edit <path_to_CdftT_dir>/CONFIG\
 	Set LIBCDFTTDIR corresponding to your machine.
