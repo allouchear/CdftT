@@ -8,7 +8,7 @@ Some tools are already implemented but it is still under developpement. New tool
 ## Requirements
 
 A C++ compiler.\
-Tested with g++. Howeved you can use any recent version of any C++ compiler.
+Tested with g++. However you can use any recent version of any C++ compiler.
 
 ## Installation
 
