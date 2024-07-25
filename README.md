@@ -7,7 +7,8 @@ Some tools are already implemented but it is still under developpement. New tool
 
 ## Requirements
 
-Only a C++ compiler. Tested with g++; Howeved you can use any recent version of any C++ compiler.
+A C++ compiler.\
+Tested with g++. Howeved you can use any recent version of any C++ compiler.
 
 ## Installation
 
@@ -20,7 +21,9 @@ You can also download the .zip file of CdftT : Click on Code and Download ZIP
 
 ## How to use it 
 
-After compilation, type ./cddft. You obtain a list of all implemented method. A input file is requirement to run it.
+After compilation, type ./cddft.\
+You obtain a list of all implemented method.\
+A input file is requirement to run it.\
 See examples/ folder. 
 
 ## Contributors
