@@ -17,20 +17,21 @@ Tested with g++. However you can use any recent version of any C++ compiler.
 		```console
 		git clone https://github.com/allouchear/CdftT
 		```
-	- You can also download the .zip file of CdftT : **Click on Code and Download ZIP**
+	- You can also download the .zip file of CdftT :
+		**Click on Code and Download ZIP**
 
 - Compile
 
 	Edit <path_to_CdftT_dir>/CONFIG\
 	Set LIBCDFTTDIR corresponding to your machine.
-	- To compile CdftT under **Linux or MacOS**:
+	- To compile CdftT under **Linux or MacOS**:\
 		Under a terminal, type :
 		```console
 		cd <path_to_CdftT_dir>/src/applications/cdftt
 		./cleancdftt.sh
 		./compcdftt.sh
 		```
-	- To compile CdftT under **Windows**:
+	- To compile CdftT under **Windows**:\
 		Edit <path_to_CdftT_dir>/src/applications/cdftt/Makefile\
 		Set LIBCDFTTDIR corresponding to your machine.\
 		Under a terminal, type :
