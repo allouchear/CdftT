@@ -44,7 +44,7 @@ Tested with g++. However you can use any recent version of any C++ compiler.
 
 After compilation, type :
 ```console
- ./cddft.
+ ./cddft
 ```
 You obtain a list of all implemented methods.\
 A input file is requirement to run it.\
