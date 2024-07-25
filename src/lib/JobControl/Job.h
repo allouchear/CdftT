@@ -22,6 +22,7 @@ class Job
 		void printCriticalPoints();
 		void ComputeGridDifference(const string& GFN1, const string& GFN2, const string& NameNew);
 		std::vector<double> computePartialCharges(const string& gridfname, int method);
+		vector<double> computePartialChargesAndEnergy(vector<double>& E, const string& ANAFileName);
 		void openInputFile();
 		void printListOfRunTypes();
 		bool readOneString(const string& tag, string& value);
@@ -29,7 +30,9 @@ class Job
 		template<typename T> bool readListType(const string& tag, vector<T>& x);
 		Descriptors computeDescriptors(const string& GridFileName1, const string& GridFileName2, const string& GridFileName3, double I, double A, int AIMmethod);
 		Descriptors computeDescriptors(const string& GridFileName1, const string& GridFileName2, const string& GridFileName3, vector<double>E,  int AIMmethod);
+		Structure returnStruct(const string& ANAFileName);
 		template<typename T> Orbitals computeOrbitals(const string& analyticFileName);
+		template<typename T,typename U> U computeOrbOrBecke(const string& analyticFileName);
 		void createCube(Orbitals& orb, const Domain& d, const string& cubeFileName, int TypeFlag, const string& ELFtype ="", vector<int> nums={0}, vector<int> typesSpin={0});
 		Domain DomainForCube(Orbitals& orb, const string& size,const vector<double>& csizes, const int& Nval);
 		void setAllOrb(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, bool A, bool B, bool AnB, const int& N);
@@ -39,6 +42,8 @@ class Job
 		void setHomo(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, bool A, bool B, bool AnB);
 		void setHomoLumo(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, bool A, bool B, bool AnB);
 		void setCustom(vector<int>& orbnums, vector<int>& orbspin, vector<string>& tmplist);
+		template<typename T> void readFileFormat(T& AnaClass, const string& FileName);
+		void computeDescriptorsFD(const string& ANAFileName1, const string& ANAFileName2, const string& ANAFileName3);
 	public:
 			//!Default constructor
 			/*! set _inputFileName to input.cdft and open it*/

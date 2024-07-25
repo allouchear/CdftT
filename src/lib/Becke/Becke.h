@@ -66,7 +66,7 @@ class Becke
 
 			//! A normal member taking no arguments and returning a Structure value.
 			/*! \return The structure. */
-		Structure str() {return _molecule;}
+		Structure get_struct() {return _molecule;}
 
 			//! A normal member taking one argument and returning an int value.
 			/*! \return The number of radial points for an atomic number. */

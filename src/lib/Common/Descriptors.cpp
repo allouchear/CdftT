@@ -76,61 +76,10 @@ Descriptors::Descriptors(const Structure& S, vector<double> Q1, vector<double> Q
 	_okCharge=true;
 	_str=S;
 	reset();
-	
-	double s1=0;
-	double s2=0;
-	double s3=0;
-	for(size_t i=0; i<Q1.size();i++)
-	{
-		s1+=Q1[i];
-		s2+=Q2[i];
-		s3+=Q3[i];
-	}
-	if(abs(s1-s2)>1e-10 and abs(s1-s3)>1e-10)
-	{
-		if(abs(s2-s3)>1e-10)
-		{
-			_Qp=Q1;
-			_Q0=Q2;
-			_Qm=Q3;
-		}
-		else
-		{
-			_Qp=Q1;
-			_Qm=Q2;
-			_Q0=Q3;
-		}
-	}
-	if(abs(s2-s1)>1e-10 and abs(s2-s3)>1e-10)
-	{
-		if(abs(s1-s3)>1e-10)
-		{
-			_Qp=Q2;
-			_Q0=Q1;
-			_Qm=Q3;
-		}
-		else
-		{
-			_Qp=Q2;
-			_Qm=Q1;
-			_Q0=Q3;
-		}
-	}
-	if(abs(s3-s1)>1e-10 and abs(s3-s2)>1e-10)
-	{
-		if(abs(s1-s2)>1e-10)
-		{
-			_Qp=Q3;
-			_Q0=Q1;
-			_Qm=Q2;
-		}
-		else
-		{
-			_Qp=Q3;
-			_Qm=Q1;
-			_Q0=Q2;
-		}
-	}
+	vector<double> E(3,0);
+	double i=0;
+	double a=0;
+	sortCharges(Q1, Q2, Q3, E, i, a);
 	compute_All_From_Charge(I,A);
 }
 vector<double> Descriptors::compute_Charges_From_Becke(const Grid& grid)
@@ -179,60 +128,10 @@ void Descriptors::compute_All_From_Grid(const Grid& AIM1,const Grid& AIM2,const 
 	vector<double> Q1 = compute_Charges_From_Grid(AIM1, Aimmethod );
 	vector<double> Q2 = compute_Charges_From_Grid(AIM2, Aimmethod );
 	vector<double> Q3 = compute_Charges_From_Grid(AIM3, Aimmethod );
-	double s1=0;
-	double s2=0;
-	double s3=0;
-	for(size_t i=0; i<Q1.size();i++)
-	{
-		s1+=Q1[i];
-		s2+=Q2[i];
-		s3+=Q3[i];
-	}
-	if(abs(s1-s2)>1e-10 and abs(s1-s3)>1e-10)
-	{
-		if(abs(s2-s3)>1e-10)
-		{
-			_Qp=Q1;
-			_Q0=Q2;
-			_Qm=Q3;
-		}
-		else
-		{
-			_Qp=Q1;
-			_Qm=Q2;
-			_Q0=Q3;
-		}
-	}
-	if(abs(s2-s1)>1e-10 and abs(s2-s3)>1e-10)
-	{
-		if(abs(s1-s3)>1e-10)
-		{
-			_Qp=Q2;
-			_Q0=Q1;
-			_Qm=Q3;
-		}
-		else
-		{
-			_Qp=Q2;
-			_Qm=Q1;
-			_Q0=Q3;
-		}
-	}
-	if(abs(s3-s1)>1e-10 and abs(s3-s2)>1e-10)
-	{
-		if(abs(s1-s2)>1e-10)
-		{
-			_Qp=Q3;
-			_Q0=Q1;
-			_Qm=Q2;
-		}
-		else
-		{
-			_Qp=Q3;
-			_Qm=Q1;
-			_Q0=Q2;
-		}
-	}
+	vector<double> E(3,0);
+	double i=0;
+	double a=0;
+	sortCharges(Q1, Q2, Q3, E, i, a);
 	compute_All_From_Charge(I,A);
 }
 
@@ -249,60 +148,10 @@ void Descriptors::compute_All_From_Cube(ifstream& file1, ifstream& file2, ifstre
 	vector<double> Q1 = compute_Charges_From_File(file1, Aimmethod);
 	vector<double> Q2 = compute_Charges_From_File(file2, Aimmethod);
 	vector<double> Q3 = compute_Charges_From_File(file3, Aimmethod);
-	double s1=0;
-	double s2=0;
-	double s3=0;
-	for(size_t i=0; i<Q1.size();i++)
-	{
-		s1+=Q1[i];
-		s2+=Q2[i];
-		s3+=Q3[i];
-	}
-	if(abs(s1-s2)>1e-10 and abs(s1-s3)>1e-10)
-	{
-		if(abs(s2-s3)>1e-10)
-		{
-			_Qp=Q1;
-			_Q0=Q2;
-			_Qm=Q3;
-		}
-		else
-		{
-			_Qp=Q1;
-			_Qm=Q2;
-			_Q0=Q3;
-		}
-	}
-	if(abs(s2-s1)>1e-10 and abs(s2-s3)>1e-10)
-	{
-		if(abs(s1-s3)>1e-10)
-		{
-			_Qp=Q2;
-			_Q0=Q1;
-			_Qm=Q3;
-		}
-		else
-		{
-			_Qp=Q2;
-			_Qm=Q1;
-			_Q0=Q3;
-		}
-	}
-	if(abs(s3-s1)>1e-10 and abs(s3-s2)>1e-10)
-	{
-		if(abs(s1-s2)>1e-10)
-		{
-			_Qp=Q3;
-			_Q0=Q1;
-			_Qm=Q2;
-		}
-		else
-		{
-			_Qp=Q3;
-			_Qm=Q1;
-			_Q0=Q2;
-		}
-	}
+	vector<double> E(3,0);
+	double i=0;
+	double a=0;
+	sortCharges(Q1, Q2, Q3, E, i, a);
 	compute_All_From_Charge(I,A);
 }
 
@@ -507,6 +356,7 @@ ostream& operator<<(ostream& flux, const Descriptors& desc)
 
 Descriptors::Descriptors(WFX& wfx, const PeriodicTable& Table)
 {
+	_okCharge=false;
 	_str=Structure(wfx, Table);
 	_Deltafk.resize(_str.number_of_atoms());
 	_wkm.resize(_str.number_of_atoms());
@@ -523,6 +373,7 @@ Descriptors::Descriptors(WFX& wfx, const PeriodicTable& Table)
 
 Descriptors::Descriptors(FCHK& fchk, const PeriodicTable& Table)
 {
+	_okCharge=false;
 	_str=Structure(fchk, Table);
 	_Deltafk.resize(_str.number_of_atoms());
 	_wkm.resize(_str.number_of_atoms());
@@ -539,6 +390,7 @@ Descriptors::Descriptors(FCHK& fchk, const PeriodicTable& Table)
 
 Descriptors::Descriptors(MOLDENGAB& moldengab, const PeriodicTable& Table)
 {
+	_okCharge=false;
 	_str=Structure(moldengab, Table);
 	_Deltafk.resize(_str.number_of_atoms());
 	_wkm.resize(_str.number_of_atoms());
@@ -555,6 +407,7 @@ Descriptors::Descriptors(MOLDENGAB& moldengab, const PeriodicTable& Table)
 
 Descriptors::Descriptors(LOG& log, const PeriodicTable& Table)
 {
+	_okCharge=false;
 	_str=Structure(log, Table);
 	_Deltafk.resize(_str.number_of_atoms());
 	_wkm.resize(_str.number_of_atoms());
@@ -574,79 +427,63 @@ void Descriptors::compute_All_From_Cube(ifstream& file1, ifstream& file2, ifstre
 	vector<double> Q1 = compute_Charges_From_File(file1, Aimmethod);
 	vector<double> Q2 = compute_Charges_From_File(file2, Aimmethod);
 	vector<double> Q3 = compute_Charges_From_File(file3, Aimmethod);
-	double s1=0;
-	double s2=0;
-	double s3=0;
 	double I=0;
 	double A=0;	
-	for(size_t i=0; i<Q1.size();i++)
-	{
-		s1+=Q1[i];
-		s2+=Q2[i];
-		s3+=Q3[i];
-	}
-	if(abs(s1-s2)>1e-10 and abs(s1-s3)>1e-10)
-	{
-		if(abs(s2-s3)>1e-10)
-		{
-			_Qp=Q1;
-			_Q0=Q2;
-			_Qm=Q3;
-			I=E[0]-E[1];
-			A=E[1]-E[2];
-		}
-		else
-		{
-			_Qp=Q1;
-			_Qm=Q2;
-			_Q0=Q3;
-			I=E[0]-E[2];
-			A=E[2]-E[1];
-		}
-	}
-	if(abs(s2-s1)>1e-10 and abs(s2-s3)>1e-10)
-	{
-		if(abs(s1-s3)>1e-10)
-		{
-			_Qp=Q2;
-			_Q0=Q1;
-			_Qm=Q3;
-			I=E[1]-E[0];
-			A=E[0]-E[2];
-		}
-		else
-		{
-			_Qp=Q2;
-			_Qm=Q1;
-			_Q0=Q3;
-			I=E[1]-E[2];
-			A=E[2]-E[0];
-		}
-	}
-	if(abs(s3-s1)>1e-10 and abs(s3-s2)>1e-10)
-	{
-		if(abs(s1-s2)>1e-10)
-		{
-			_Qp=Q3;
-			_Q0=Q1;
-			_Qm=Q2;
-			I=E[2]-E[0];
-			A=E[0]-E[1];
-		}
-		else
-		{
-			_Qp=Q3;
-			_Qm=Q1;
-			_Q0=Q2;
-			I=E[2]-E[1];
-			A=E[1]-E[0];
-		}
-	}
+	sortCharges(Q1, Q2, Q3, E, I, A);
 	compute_All_From_Charge(I,A);
 }
+void Descriptors::sortCharges(vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E, double& I, double& A)
+{
+	vector<vector<double>> Q(3);
+	Q[0]=Q1;
+	Q[1]=Q2;
+	Q[2]=Q3;
+	vector<double> S(3,0);
+	for(size_t i=0; i<Q1.size();i++)
+		for(size_t c=0; c<3;c++)
+			S[c]+=Q[c][i];
 
+	for(int i=0;i<3;i++)
+	{
+		int k=i;
+		for(int j=i+1;j<3;j++)
+			if(S[j]<S[k]) k=j;
+		if(k!=i)
+		{
+			double s=S[k];
+			S[k] = S[i];
+			S[i] = s;
+			double e=E[k];
+			E[k] = E[i];
+			E[i] = e;
+			vector<double> q=Q[k];
+			Q[k] = Q[i];
+			Q[i] = q;
+		}
+	}
+
+	_Qp=Q[2];
+	_Qm=Q[0];
+	_Q0=Q[1];
+	I=E[2]-E[1];
+	A=E[1]-E[0];
+}
+void Descriptors::compute_All_From_Charges(const Structure& Str,vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E)
+{
+	_okCharge=true;
+	_str=Str;
+	reset();
+	double I=0;
+	double A=0;	
+	sortCharges(Q1, Q2, Q3, E, I, A);
+	compute_All_From_Charge(I,A);
+}
 Descriptors::Descriptors(ifstream& file0, ifstream& fileM, ifstream& fileP, vector<double> E, int Aimmethod)
 {
 	compute_All_From_Cube(file0, fileM, fileP, E, Aimmethod);
 
+}
+Descriptors::Descriptors(const Structure& S, vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E)
+{
+	compute_All_From_Charges(S,Q1,Q2,Q3,E);
 }

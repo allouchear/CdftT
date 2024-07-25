@@ -102,6 +102,7 @@ class Descriptors
 		vector<double> _hardnessk;
 		vector<double> _hardnesskm;
 		vector<double> _hardnesskp;
+		void sortCharges(vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E, double& I, double& A);
 	
 	public:
 			//! reset vectors
@@ -181,6 +182,8 @@ class Descriptors
 		void compute_All_From_Cube(ifstream& file1, ifstream& file2, ifstream& file3, vector<double> E, int Aimmethod );
 		Descriptors(ifstream& file0, ifstream& fileM, ifstream& fileP, vector<double> E, int Aimmethod);
 		vector<double> compute_Charges_From_Becke(const Grid& grid);
+		void compute_All_From_Charges(const Structure& S, vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E);
+		Descriptors(const Structure& S, vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E);
 	
 		/********************************************************************************************/
 		
