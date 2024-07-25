@@ -2,7 +2,7 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-Cddft is set of a library and a program to compute CDFT descriptors. It is written in C++.\
+CdftT is set of a library and a program to compute CDFT descriptors. It is written in C++.\
 It is still under developpement. However,several tools are already implemented. New tools will be implemented soon.
 
 ## Requirements
