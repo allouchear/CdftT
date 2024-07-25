@@ -1,3 +1,0 @@
-git checkout main
-git reset --hard dev
-git push -f origin main
