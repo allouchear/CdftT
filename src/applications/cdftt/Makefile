@@ -1,3 +1,5 @@
+LIBCDFTTDIR =/home/allouche/MySoftwares/CdftT/CdftT
+
 include $(LIBCDFTTDIR)/CONFIG
 
 CFLAGS =  $(COMMONCFLAGS) 

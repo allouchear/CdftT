@@ -17,7 +17,24 @@ Using git, under a terminal, type :
 git clone https://github.com/allouchear/CdftT
 
 ```
-You can also download the .zip file of CdftT : **Click on Code and Download ZIP**
+You can also download the .zip file of CdftT : **Click on Code and Download ZIP**\
+Edit <path_to_CdftT_dir>/CONFIG and set LIBCDFTTDIR corresponding to your machine.\
+To compile CdftT under linux or MacOSUnder, under a terminal, type :
+```console
+cd <path_to_CdftT_dir>/src/applications/cdftt
+./cleancdftt.sh
+./compcdftt.sh
+```
+
+To compile CdftT under Windows :
+Edit <path_to_CdftT_dir>//src/applications/cdftt/Makefile and set LIBCDFTTDIR corresponding to your machine.\
+Under a terminal, tyape 
+```console
+cd <path_to_CdftT_dir>/src/applications/cdftt
+make
+```
+
+
 
 ## How to use it 
 
