@@ -42,7 +42,10 @@ Tested with g++. However you can use any recent version of any C++ compiler.
 
 ## How to use it 
 
-After compilation, type ./cddft.\
+After compilation, type :
+```console
+ ./cddft.
+```
 You obtain a list of all implemented methods.\
 A input file is requirement to run it.\
 See examples/ folder. 
