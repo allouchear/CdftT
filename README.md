@@ -48,7 +48,8 @@ A input file is requirement to run it.\
 See examples/ folder. 
 
 ## knowns bugs
- - Problem with reading of orbitals and basis from Molden/Gabedit/Gaussian log/Gaussian fchk. No problem for WFX file.
+ - Problem with reading of orbitals and basis from Gaussian fchk. No problem for WFX, Gaussian log, Molden, Gabedit files.
+ - Problem saving orbitals if read from a Molden/Gabedit/Gaussian log/Gaussian fchk file.
 
 ## Contributors
  - [Abdul-Rahman ALLOUCHE](https://sites.google.com/site/allouchear/Home)
