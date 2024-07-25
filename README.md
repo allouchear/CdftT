@@ -49,7 +49,6 @@ See examples/ folder.
 
 ## knowns bugs
  - Problem with reading of orbitals and basis from Molden/Gabedit/Gaussian log/Gaussian fchk. No problem for WFX file.
- - Becke charges from orbitals. No problem if calculated from Cube grid file
 
 ## Contributors
  - [Abdul-Rahman ALLOUCHE](https://sites.google.com/site/allouchear/Home)
