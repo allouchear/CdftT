@@ -1237,10 +1237,10 @@ void Job::run()
 			cout<<"Savin ELF chosen by default."<<endl;
 			ELFtype.push_back("Savin");
 		}
-		else if(to_upper(ELFtype[0])!=to_upper("Becke") or to_upper(ELFtype[0])!=to_upper("Savin"))
+		else if(to_upper(ELFtype[0])!=to_upper("Becke") and to_upper(ELFtype[0])!=to_upper("Savin"))
 		{
 			cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-			cerr<<"Sorry,unknown ELF method. Please check input file. "<<endl;
+			cerr<<"Sorry, "<<ELFtype[0]<<" is unknown ELF method. Please check input file. "<<endl;
 			cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
 			exit(1);
 

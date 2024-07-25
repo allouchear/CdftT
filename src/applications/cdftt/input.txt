@@ -1,5 +1,5 @@
 # RunType
-RunType=Help
+#RunType=Help
 #RunType=MakeDensityCube
 #RunType=MakeELFCube
 #Runtype=ComputeIntegrals
@@ -10,9 +10,8 @@ RunType=ConvertOrbitals
 #Grids=/home/tmaamaatuai/tmp/H3COCl_m.cube /home/tmaamaatuai/tmp/H3COCl.cube /home/tmaamaatuai/tmp/fp.cube
 #Grids=/home/tmaamaatuai/tmp/fp.cube /home/tmaamaatuai/tmp/fm.cube /home/tmaamaatuai/tmp/diff.cube
 #Grids= /home/tmaamaatuai/tmp/diff.cube
-IntegrationMethod=FD
-#AnalyticFiles=/home/tmaamaatuai/tmp/h2o/h2o.wfx,/home/tmaamaatuai/tmp/h2o/h2ominus.wfx,/home/tmaamaatuai/tmp/h2o/h2oplus.wfx
-AnalyticFiles=/home/tmaamaatuai/tmp/h2o/h2o.wfx,/home/tmaamaatuai/tmp/h2o/h2ominustest.molden
+#IntegrationMethod=FD
+AnalyticFiles=h2o.molden, h2oConv.wfx
 #AnalyticFile=/home/tmaamaatuai/tmp/H3COCl.log
 #AnalyticFile=/home/tmaamaatuai/tmp/H3COCl.fchk
 #AnalyticFile=/home/tmaamaatuai/tmp/H3COCl.molden
