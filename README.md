@@ -26,6 +26,10 @@ You obtain a list of all implemented method.\
 A input file is requirement to run it.\
 See examples/ folder. 
 
+## knowns bugs
+ - Problem with reading of orbitals and basis from Molden/Gabedit/Gaussian log/Gaussian fchk. No problem for WFX file.
+ - Becke charges from orbitals. No problem if calculated from Cube grid file
+
 ## Contributors
  - [Abdul-Rahman ALLOUCHE](https://sites.google.com/site/allouchear/Home)
  - [Dimiti BUFFAT](https://github.com/dbuffat) (Master 1/Physics Intern, supervised by A.R. Allouche)
