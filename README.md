@@ -14,10 +14,9 @@ Tested with g++. However you can use any recent version of any C++ compiler.
 
 - Download
 	- Using git, under a terminal, type : 
-	```console
-	git clone https://github.com/allouchear/CdftT
-	```
-
+		```console
+		git clone https://github.com/allouchear/CdftT
+		```
 	- You can also download the .zip file of CdftT : **Click on Code and Download ZIP**
 
 - Compile
@@ -30,7 +29,6 @@ Tested with g++. However you can use any recent version of any C++ compiler.
 		./cleancdftt.sh
 		./compcdftt.sh
 		```
-
 	- To compile CdftT under **Windows**:
 		Edit <path_to_CdftT_dir>/src/applications/cdftt/Makefile\
 		Set LIBCDFTTDIR corresponding to your machine.\
