@@ -24,11 +24,11 @@ git clone https://github.com/allouchear/CdftT
 	Set LIBCDFTTDIR corresponding to your machine.
 
 	To compile CdftT under **Linux or MacOS**, under a terminal, type :
-```console
-cd <path_to_CdftT_dir>/src/applications/cdftt
-./cleancdftt.sh
-./compcdftt.sh
-```
+	```console
+	cd <path_to_CdftT_dir>/src/applications/cdftt
+	./cleancdftt.sh
+	./compcdftt.sh
+	```
 
 	To compile CdftT under **Windows**:
 	Edit <path_to_CdftT_dir>/src/applications/cdftt/Makefile\
