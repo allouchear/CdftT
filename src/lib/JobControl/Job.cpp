@@ -168,7 +168,7 @@ void Job::openInputFile()
 	}
 }
 /******************************************************************************************/
-Job::Job():_inputFileName("input.cdft")
+Job::Job():_inputFileName("input.txt")
 {
 	setJobList();
 	openInputFile();
