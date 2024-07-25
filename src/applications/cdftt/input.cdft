@@ -1,7 +1,7 @@
 # RunType
-#RunType=Help
+RunType=Help
 #RunType=MakeDensityCube
-RunType=MakeELFCube
+#RunType=MakeELFCube
 #Runtype=ComputeIntegrals
 #RunType=ComputeDescriptorsFromCube
 #RunType=ComputeGridDifference
