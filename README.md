@@ -55,5 +55,5 @@ See examples folder.
 
 ## Contributors
  - [Abdul-Rahman ALLOUCHE](https://sites.google.com/site/allouchear/Home)
- - [Dimiti BUFFAT](https://github.com/dbuffat) (Master 1/Physics/Univ Lyon 1,Intern supervised by A.R. Allouche)
+ - [Dimiti BUFFAT](https://github.com/dbuffat) (Master 1/Physics/Univ Lyon 1, Intern supervised by A.R. Allouche)
  - [Tetautahi MAAMAATUAIAHUTAPU](https://github.com/tmaamaatua) (Master 1/Physics/Univ Lyon 1, Intern supervised by A.R. Allouche)
