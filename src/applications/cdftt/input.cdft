@@ -1,8 +1,7 @@
-#RunType
-#RunType=Help
+# RunType
+RunType=Help
 #RunType=MakeDensityCube
-RunType=ComputePartialCharges
-PartitionMethod=Becke
+#RunType=MakeELFCube
 #Runtype=ComputeIntegrals
 #RunType=ComputeDescriptorsFromCube
 #RunType=ComputeGridDifference
