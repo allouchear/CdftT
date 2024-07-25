@@ -22,7 +22,7 @@ You can also download the .zip file of CdftT : **Click on Code and Download ZIP*
 ## How to use it 
 
 After compilation, type ./cddft.\
-You obtain a list of all implemented method.\
+You obtain a list of all implemented methods.\
 A input file is requirement to run it.\
 See examples/ folder. 
 
