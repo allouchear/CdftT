@@ -43,6 +43,8 @@ private:
 	string _format;
 	string _cart_sphe;
 
+	bool _mixte;
+
 public:
 		//! A default constructor.
 		/*! This constructor is used to set all of the parameters on 0 or "None" value. */
@@ -191,6 +193,10 @@ public:
 		//! A normal member taking no arguments and returning a vector<int> value.
 		/*! \return The table of number of gtf in each centers. */
 	vector<int> NatBasis() {return _n_at_basis;}
+
+		//! A normal member taking no arguments and returning a bool value.
+		/*! \return If their is a mixte basis. (Exemple : D is cartisian and F is spherical). */
+	bool Mixte() {return _mixte;}
 };
 
 	//! A function taking two arguments and returning a long int value.

@@ -28,6 +28,7 @@ LOG::LOG()
 	_beta_MO_coefs=vector<vector<double>> ();
 	_alpha_energy=vector<double> ();
 	_beta_energy=vector<double> ();
+	_mixte=false;
 }
 
 LOG::LOG(ifstream& file)
@@ -51,6 +52,7 @@ LOG::LOG(ifstream& file)
 	_beta_energy=vector<double> ();
 	_n_at_basis=vector<int> ();
 	_number_of_MO=0;
+	_mixte=false;
 
 	read_atoms_data(file);
 	read_basis_data(file);
@@ -292,41 +294,43 @@ void LOG::read_basis_data(ifstream& f)
 
 		else if((_shell_types[i]=="d" || _shell_types[i]=="D") && _d_cart_sphe=="cart")
 		{
-			int N=int(toupper(_shell_types[i][0]))-int('D')+2;
-			_l_types.push_back(N);
-			_number_of_MO+= 2*N+1;
+			_l_types.push_back(2);
+			_number_of_MO+=6;
 		}
 
 		else if(_shell_types[i]=="d" || _shell_types[i]=="D")
 		{
-			int N=int(toupper(_shell_types[i][0]))-int('D')+2;
-			_l_types.push_back(-N);
-			_number_of_MO+= 2*N+1;
+			_l_types.push_back(-2);
+			_number_of_MO+=5;
 		}
 
 		else if((_shell_types[i]=="f" || _shell_types[i]=="F") && _f_cart_sphe=="cart")
 		{
-			int N=int(toupper(_shell_types[i][0]))-int('D')+2;
-			_l_types.push_back(N);
-			_number_of_MO+= 2*N+1;
+			_l_types.push_back(3);
+			_number_of_MO+=10;
 		}
 
 		else if(_shell_types[i]=="f" || _shell_types[i]=="F")
 		{
-			int N=int(toupper(_shell_types[i][0]))-int('D')+2;
-			_l_types.push_back(-N);
-			_number_of_MO+= 2*N+1;
+			_l_types.push_back(-3);
+			_number_of_MO+=7;
 		}
 
 		else
 		{
-			int N=int(toupper(_shell_types[i][0]))-int('D')+2;
+			int N=int(toupper(_shell_types[i][0]))-int('F')+3;
 			_l_types.push_back(-N);
 			_number_of_MO+= 2*N+1;
+
+			if(_d_cart_sphe=="cart" || _f_cart_sphe=="cart")
+				_mixte=true;
 		}
 	}
 	_number_of_MO_coefs=_number_of_MO;
 	_beta_MO_coefs=_alpha_MO_coefs=vector<vector<double>> (_number_of_MO_coefs);
+
+	if(_d_cart_sphe!=_f_cart_sphe)
+		_mixte=true;
 }
 
 void LOG::read_MO_data(ifstream& f)
@@ -417,15 +421,11 @@ void LOG::read_MO_data(ifstream& f)
 			sss>>p;
 			
 			if(_d_cart_sphe=="sphe" and (p.find("d")!=string::npos or p.find("D")!=string::npos) and (p.size()==2 or p.size()==3))
-			{
-				cout<<"p = "<<p<<endl;
 				sss>>p;	
-			}
+			
 			if(_f_cart_sphe=="sphe" and (p.find("f")!=string::npos or p.find("F")!=string::npos) and (p.size()==2 or p.size()==3))
-			{
-				cout<<"p = "<<p<<endl;
 				sss>>p;
-			}
+			
 			for(int j=0; j<m; j++)
 			{
 				sss>>d;

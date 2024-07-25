@@ -1,5 +1,5 @@
 # RunType
-#RunType=Help
+RunType=Help
 #RunType=MakeDensityCube
 #RunType=MakeELFCube
 #Runtype=ComputeIntegrals
@@ -19,6 +19,8 @@ AnalyticFiles=/home/tmaamaatuai/tmp/h2o/h2o.wfx,/home/tmaamaatuai/tmp/h2o/h2omin
 #AnalyticFile=/home/tmaamaatuai/tmp/H3COCl.gab
 
 #Grid=/home/tmaamaatuai/tmp/save.cube
+#AnalyticFile=/home/tmaamaatuai/tmp/h2o/h2o.wfx
+#Grids=/home/dbuffat/tmp/h2oC2.gcube
 #size=Custom
 #CustomSizeData=80, 80, 80, 5.964883, 5.964883, 5.964883, 0.151009696202531, 0, 0, 0, 0.151009696202531, 0, 0, 0, 0.151009696202531 
 #OrbType=Homo

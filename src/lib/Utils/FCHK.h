@@ -44,6 +44,8 @@ private:
 	int _highest_angular_momentum;
 	int _ok_alpha;
 	bool _alpha_and_beta;
+	bool _sp;
+	bool _mixte;
 
 public:
 		//! A default constructor.
@@ -197,6 +199,10 @@ public:
 		//! A normal member taking one argument and returning a void value.
 		/*! Print all the data save in the object. */
 	void PrintData();
+
+		//! A normal member taking no arguments and returning a bool value.
+		/*! \return If their is a mixte basis. (Exemple : D is cartisian and F is spherical). */
+	bool Mixte() {return _mixte;}
 };
 
 	//! A function taking two arguments and returning a long int value.
