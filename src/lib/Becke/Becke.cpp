@@ -326,7 +326,7 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
     for(int i=0; i<Nat; i++)
         printnpts+=_grid_points[i].size();
 
-    cout<<"Nombre de points = "<<printnpts<<endl<<endl;
+    cout<<"Number of Becke  grid points = "<<printnpts<<endl<<endl;
 }
 
 

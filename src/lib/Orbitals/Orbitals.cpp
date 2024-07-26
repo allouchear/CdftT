@@ -857,6 +857,13 @@ void Orbitals::HOMO()
 void Orbitals::LUMO()
 {
 	_numOrb[1] = _numOrb[0]+1;
+	if(_numOrb[1] +1 >_numberOfMo)
+	{
+		cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+		cerr<<" Lumo is not available in your file orbitals file"<<endl;
+		cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+		exit(1);
+	}
 }
 
 vector<vector<double>> Orbitals::get_S()
@@ -906,15 +913,14 @@ void Orbitals::get_f(int alpha)
 	vector<double> V(_number_of_atoms,0.0);
 	vector<vector<double>> f(_numOrb.size(), V);
 
-#ifdef ENABLE_OMP
-#pragma omp parallel for private(i,j,nu,xi)
-#endif
 	for(i=0; i<_number_of_atoms; i++)
 		for(j=0; j<_numOrb.size(); j++)
 			for(nu=0; nu<_coefficients[alpha][_numOrb[j]].size(); nu++)
 			{
 				if(i+1 == _primitive_centers[nu])
+				{
 					f[j][i]+=_coefficients[alpha][_numOrb[j]][nu]*_coefficients[alpha][_numOrb[j]][nu];
+				}
 
 				for(xi=0; xi<_coefficients[alpha][_numOrb[j]].size(); xi++)
 					if(xi!=nu && i+1 == _primitive_centers[nu])
@@ -939,7 +945,9 @@ void Orbitals::HOMO_LUMO(int i, int j)
 void Orbitals::PrintDescriptors()
 {
 	HOMO_LUMO();
+	cout<<"end HOMOLUMO"<<endl;
 	get_f();
+	cout<<"end get_f"<<endl;
 	_descriptors.set_mu_fk_data(_all_f, eHOMO(), eLUMO());
 	_descriptors.compute_all();
 	cout<<_descriptors<<endl;
@@ -972,6 +980,16 @@ ostream& operator<<(ostream& flux, Orbitals& Orb)
 	<<"Lz"<<setw(20)<<"x"<<setw(20)<<"y"<<setw(20)<<"z"<<endl;
 	for(int i=0; i<Orb.NumberOfAo(); i++)
 		flux<<left<<Orb.vcgtf()[i]<<endl;
+	int n=2;
+	if(Orb.AlphaAndBeta()) n=1;
+	for(int j=0; j<Orb.NumberOfMo(); j++)
+	for(int i=0; i<n; i++)
+	{
+		if(i==0) flux<<"Alpha, Occ= "<<Orb._occupation_number[i][j]<<" num= " <<j<<endl;
+		else flux<<"Beta, Occ= "<<Orb._occupation_number[i][j]<<" num= "<<j<<endl;
+        	for(size_t k=0; k<Orb._vcgtf.size(); k++)
+			flux<<" "<<left<<k<<" "<<Orb.coefficients()[i][j][k]<<endl;
+	}
 
 	return flux;
 }
