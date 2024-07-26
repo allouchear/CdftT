@@ -880,7 +880,7 @@ void Job::run()
 			cout<<"----------------------------------------------------------"<<endl;
 			Orbitals o;
 			readFileFormat<Orbitals>(o, FileNames[0]);
-			cout<<FileNames[0]<<endl;
+			cout<<"End reading file : "<<FileNames[0]<<endl;
 			o.PrintDescriptors();
 			return;
 		}
