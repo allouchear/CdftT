@@ -144,19 +144,41 @@ class Domain
 			Overload of operator ==
 		*/
 	bool operator!=(const Domain& D) const; 
-	
+		
+		//! x
+		/*! returns the x value in space of the point i, j ,k */
 	double x(int i, int j, int k) const;
 	
+		//! y
+		/*! returns the y value in space of the point i, j ,k */
 	double y(int i, int j, int k) const;
 	
+		//! z
+		/*! returns the z value in space of the point i, j ,k */
 	double z(int i, int j, int k) const;
 	
+		//! i
+		/*! returns the i value on grid of a point in space x, y, z. Rounds up*/
 	int i(double x, double y, double z) const;
+	
+		//! j
+		/*! returns the j value on grid of a point in space x, y, z. Rounds up*/
 	int j(double x, double y, double z) const;
+
+		//! k
+		/*! returns the k value on grid of a point in space x, y, z. Rounds up*/
 	int k(double x, double y, double z) const;
 	
+		//! Inverse T
+		/*! Inverts the translation matrix. used to init _invT*/
 	void inverse_T();
+		
+		//! Measure molecule
+		/*! Returns the maximum length betweens the atoms of S. best to use Grid::sizeUpMol()*/
 	double sizeUpMol(const Structure& S, double scale);
+		
+		//! Sets all
+		/*! Sets all the attributes of Domain*/
 	void set_all(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax, vector<vector<double>> T);
 };
 

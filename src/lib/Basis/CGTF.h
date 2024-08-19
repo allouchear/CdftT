@@ -145,6 +145,9 @@ class CGTF
 			//! A normal membre taking three arguments and returning a double value.
 			/*! \return The value of the CGTF at the coordinates x,y,z. */
 		double func(double x, double y, double z) const;
+			
+			//! Gradient of a CGTF
+			/*! Computes the ith component of the gradient of CGTF*/
 		double grad_CGTF(const double& x, const double& y, const double& z, int i);
 };
 

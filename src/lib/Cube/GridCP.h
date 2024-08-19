@@ -123,7 +123,8 @@ class GridCP
 			/*! Assigns the points of the grid to VDD volumes.  Ref : Fonseca Guerra et al. https://doi.org/10.1002/jcc.10351 */
 		void buildVDD();
 
-
+			//! Add surrounding sign points
+			/*! Adds the points surrounding the current point to the domain by sign*/
 		bool addSurroundingSignPoints(int current[], vector<vector<int>>& listOfVisitedPoints, double cutoff);
 
 	public:
@@ -148,6 +149,8 @@ class GridCP
 			/*! prints coordinates, density and nuclear charge of attractors*/
 		void printCriticalPoints();
 
+			//! Return str
+			/*! Returns the structure*/
 		Structure str() const;
 
 			//!Assign grid points

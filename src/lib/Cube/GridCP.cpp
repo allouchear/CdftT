@@ -937,7 +937,7 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
 	initGridCP(grid, 0);
 	if(abs(cutoff)<TOL) cutoff=TOL;
 	cutoff=abs(cutoff);
-	double scal;
+	//double scal;
 	string str ="Assigning points to volumes... Please wait";
 
 	if(!okDomain()) return;
@@ -946,7 +946,7 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
 		_criticalPoints.clear();
 
 	resetKnown();
-	scal = 1.0/(_domain.N1()-1);
+	//scal = 1.0/(_domain.N1()-1);
 	cout<<str<<endl;
 	int numberOfCriticalPoints=0;
 #ifdef ENABLE_OMP
@@ -1159,7 +1159,7 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
 void GridCP::build2BasinSign(const Grid& grid)
 {
 	initGridCP(grid, 0);
-	double scal;
+	//double scal;
 	string str ="Assigning points to volumes... Please wait";
 	int N[3]={_domain.N1(),_domain.N2(), _domain.N3()};
 
@@ -1168,7 +1168,7 @@ void GridCP::build2BasinSign(const Grid& grid)
 	if(_criticalPoints.size()>0)
 		_criticalPoints.clear();
 
-	int nAtoms=_str.number_of_atoms();
+	//int nAtoms=_str.number_of_atoms();
 	//cout<<"nAtoms="<<nAtoms<<endl;
 	CriticalPoint  cp;
 	cp = newCriticalPoint(0,0,0,1);
@@ -1178,7 +1178,7 @@ void GridCP::build2BasinSign(const Grid& grid)
 	cp.value= 0;
 	_criticalPoints.push_back(cp);
 
-	scal = 1.0/(_domain.N1()-1);
+	//scal = 1.0/(_domain.N1()-1);
 	cout<<str<<endl;
 #ifdef ENABLE_OMP
 #pragma omp parallel for

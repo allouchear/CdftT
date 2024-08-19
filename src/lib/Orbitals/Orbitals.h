@@ -220,12 +220,31 @@ class Orbitals
 		friend ostream& operator<<(ostream&, Orbitals&);
 
 
+			//! get function
+			/*! returns the structure attribute*/
 		Structure get_struct();
+			//! Make a grid of electronic density
+			/*! creates a grid of electronic density. Values are calculated with Orbitals::density(x, y, z)*/
 		Grid makeGrid(const Domain& d);
+
+			//! Electronic density
+			/*! Calculates and returns the electronic density from molecular orbitals */
 		double density(double x, double y, double z);
+			
+			//! Make a grid of Molecular orbitals
+			/*! Creates a grid of molecular orbitals. Values are calculated with Orbitals::phis()*/
 		Grid makeOrbGrid(const Domain& d, const vector<int>& nums, const vector<int>& typesSpin);
+
+			//! Electronic density
+			/*! Calculates and returns the electronic density from molecular orbitals */
 		vector<double> phis(double x, double y, double z, const vector<int>& nums, const vector<int>& typesSpin);
+			
+			//! Electron localisation function
+			/*! Calculates and returns the ELF*/
 		double ELF(const double& x, const double& y, const double& z, double epsilon=2.87e-5);
+
+			//! Make ELF grid
+			/*! Make an ELF grid using Orbitals::ELF()*/
 		Grid makeELFgrid(const Domain& d,const double& epsilon=2.87e-5);
 
 

@@ -177,12 +177,32 @@ class Descriptors
 			/*! Calculates and sets the values of the fukui functions*/
 		void compute_fk_From_Charge();
 
+			//! Compute charges
+			/*! Compute and return partial charges given a grid and an integration method*/
 		vector<double> compute_Charges_From_Grid(const Grid& AIM, int Aimmethod);
+
+			//! Compute charges
+			/*! Compute and return partial charges given a cube file and an integration method*/
 		vector<double> compute_Charges_From_File(ifstream& file, int Aimmethod );
+
+			//! Compute all descriptors
+			/*! Calls compute charges to calculate all descriptors from cube files. Requires 3 cube files and a vector containing the energies of each cube files*/
 		void compute_All_From_Cube(ifstream& file1, ifstream& file2, ifstream& file3, vector<double> E, int Aimmethod );
+
+			//! Constructor
+			/*! Construct and computes descriptors calling compute_all_from_grid()*/
 		Descriptors(ifstream& file0, ifstream& fileM, ifstream& fileP, vector<double> E, int Aimmethod);
+
+			//! Compute charges
+			/*! Creates a Becke grid from a cube grid and computes Becke charges*/
 		vector<double> compute_Charges_From_Becke(const Grid& grid);
+			
+			//! Compute all
+			/*! compute all descriptors from 3 vectors of partial charges. Sorts the vector by total charge*/
 		void compute_All_From_Charges(const Structure& S, vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E);
+
+			//! Constructor
+			/*! Construct and computes descriptors calling compute_all_from_charge()*/
 		Descriptors(const Structure& S, vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E);
 	
 		/********************************************************************************************/
