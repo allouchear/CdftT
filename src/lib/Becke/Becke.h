@@ -122,7 +122,8 @@ class Becke
 			/*! \return The value of the product between many GTF at the point (x,y,z). */
 		static double prodGTF(const vector<GTF>& p, double x, double y, double z);
 
-			
+			//! Create Becke grid from density grid
+			/*! Creates a radial Becke grid from a density grid. Interpolates the electronic density if the points of Becke grid dont match the density grid*/	
 		double multicenter_integration(const Grid& g, int kmax=3 , int lebedev_order=41, int radial_grid_factor=5);
 		vector<double> multicenter_sub_integration(const Grid& g, int kmax=3 , int lebedev_order=41, int radial_grid_factor=5);
 		void partial_charge(const Grid& g, int kmax=3 , int lebedev_order=41, int radial_grid_factor=5);

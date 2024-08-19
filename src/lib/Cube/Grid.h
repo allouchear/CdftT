@@ -145,8 +145,13 @@ class Grid
 		//!save
 		/*!save grid onto .cube file*/
 	void save(ofstream& name);
-
+		
+		//! Value on grid
+		/*! returns _V[i][j][k][0]*/
 	double value(int i, int j, int k) const;
+
+		//! Value on grid
+		/*! returns _V[i][j][k][l]*/
 	double value(int i, int j, int k, int l) const;
 	
 		
@@ -162,7 +167,13 @@ class Grid
 	
 	Grid aim_On_Grid(int nBound);
 	Grid aim_On_Grid_Density();
+		
+		//! Measure molecule
+		/*! Measures the size of the molecular structure and returns the largest sizes in the x, y, z directions*/
 	vector<double> sizeUpMol(double scale);
+		
+		//! Value of electronic density
+		/*! Returns the electronic density at a point in space weighted by the distance of the point to those of the grid*/ 
 	double value(double x, double y, double z) const;
 };
 
