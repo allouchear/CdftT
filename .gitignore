@@ -15,7 +15,6 @@ Documentation/
 */*/*.txt
 */*/*/*.txt
 */*/*/*.cube
-*/*/*/*.txt
 *.cube
 *.txt
 *.com
