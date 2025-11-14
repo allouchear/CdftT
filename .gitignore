@@ -12,8 +12,6 @@ Documentation/
 */*/*.cube
 */*/*.gcube
 */*/*.chk
-*/*/*.txt
-*/*/*/*.txt
 */*/*/*.cube
 *.cube
 *.txt
