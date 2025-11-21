@@ -40,6 +40,10 @@ Tested with g++. However you can use any recent version of any C++ compiler.
 		make
 		```
 
+## documentations
+See : [https://cdftt.readthedocs.io/](https://cdftt.readthedocs.io/en/latest/)
+
+
 ## How to use it 
 
 After compilation, type :
@@ -53,12 +57,9 @@ See examples folder.
 ## knowns bugs
 *Nothing yet.*
 
-## documentations
-See : [https://cdftt.readthedocs.io/](https://cdftt.readthedocs.io/en/latest/)
-
 
 ## Contributors
  - [Abdul-Rahman ALLOUCHE](https://sites.google.com/site/allouchear/Home)
  - [Dimitri BUFFAT](https://github.com/dbuffat) (Master 1/Physics/Univ Lyon 1, Intern supervised by A.R. Allouche)
- - [Tetautahi MAAMAATUAIAHUTAPU](https://github.com/tmaamaatua) (Master 1/Physics/Univ Lyon 1, Intern supervised by A.R. Allouche)
  - [Lodovic Gardre](https://github.com/lgardre) (post-doc, supervised by A.R. Allouche)
+ - [Tetautahi MAAMAATUAIAHUTAPU](https://github.com/tmaamaatua) (Master 1/Physics/Univ Lyon 1, Intern supervised by A.R. Allouche)
