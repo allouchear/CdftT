@@ -10,7 +10,7 @@ Available methods:
 Below are the available methods to compute the ELF:
 
 - ``Becke``
-- **``Savin``** (default).
+- ``Savin`` (default).
 
 
 Available Grid sizes
