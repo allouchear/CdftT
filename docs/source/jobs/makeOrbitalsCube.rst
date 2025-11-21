@@ -9,7 +9,7 @@ Available orbital selections
 
 Below are the available options to select which MO values to compute:
 
-- **``all``** (default): all MOs
+- ``all`` (default): all MOs
 - ``Occ``: Occupied MOs
 - ``Virtual``: Virtual MOs
 - ``Homo``: Highest Occupied MO
