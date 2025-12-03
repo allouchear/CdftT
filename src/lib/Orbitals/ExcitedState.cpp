@@ -150,10 +150,10 @@ void ExcitedState::readTransitionsFile(std::string& transitionsFileName, std::ve
     std::ifstream transitionsFile(transitionsFileName);
     if (transitionsFile)
     {
+        std::string line;
         while (!transitionsFile.eof())
         {
             // Read line
-            std::string line;
             std::getline(transitionsFile, line);
             line = trim_whitespaces(line, true, true);
 

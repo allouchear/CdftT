@@ -1,80 +1,103 @@
-#include<iostream>
-#include<sstream>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
 #include <Common/Constants.h>
 #include <Utils/LOG.h>
 
-using namespace std;
 
-LOG::LOG()
+LOG::LOG() :
+    _number_of_atoms(0),
+    _number_of_basis_functions(0),
+    _number_of_cartesian_basis_functions(0),
+    _number_of_primitive_gaussians(0),
+    _number_of_alpha_electrons(0),
+    _number_of_beta_electrons(0),
+    _energy(0.0),
+    _num_center(),
+    _symbol(),
+    _atomic_numbers(),
+    _coordinates(),
+    _mulliken_charges(),
+    _shell_types(),
+    _l_types(),
+    _number_of_gtf(),
+    _exposants(),
+    _cgtf_coefficients(),
+    _cgtf_sp_coefficients(),
+    _factor_coefficients(),
+    _alpha_occupation(),
+    _beta_occupation(),
+    _alpha_MO_coefs(),
+    _beta_MO_coefs(),
+    _alpha_energy(),
+    _beta_energy(),
+    _d_cart_sphe(),
+    _f_cart_sphe(),
+    _number_of_MO(0),
+    _number_of_MO_coefs(0),
+    _n_at_basis(),
+    _alpha_and_beta(false),
+    _mixte(false)
+{ }
+
+LOG::LOG(std::ifstream& file) :
+    _number_of_atoms(0),
+    _number_of_basis_functions(0),
+    _number_of_cartesian_basis_functions(0),
+    _number_of_primitive_gaussians(0),
+    _number_of_alpha_electrons(0),
+    _number_of_beta_electrons(0),
+    _energy(0.0),
+    _num_center(),
+    _symbol(),
+    _atomic_numbers(),
+    _coordinates(),
+    _mulliken_charges(),
+    _shell_types(),
+    _l_types(),
+    _number_of_gtf(),
+    _exposants(),
+    _cgtf_coefficients(),
+    _cgtf_sp_coefficients(),
+    _factor_coefficients(),
+    _alpha_occupation(),
+    _beta_occupation(),
+    _alpha_MO_coefs(),
+    _beta_MO_coefs(),
+    _alpha_energy(),
+    _beta_energy(),
+    _d_cart_sphe(),
+    _f_cart_sphe(),
+    _number_of_MO(0),
+    _number_of_MO_coefs(0),
+    _n_at_basis(),
+    _alpha_and_beta(false),
+    _mixte(false)
 {
-    _number_of_basis_functions=0;
-    _number_of_cartesian_basis_functions=0;
-    _number_of_primitive_gaussians=0;
-    _number_of_alpha_electrons=0;
-    _number_of_beta_electrons=0;
-    _num_center=vector<int> ();
-    _symbol=vector<string> ();
-    _atomic_numbers=vector<int> ();
-    _coordinates=vector<vector<double>> ();
-    _mulliken_charges=vector<double> ();
-    _shell_types=vector<string> ();
-    _l_types=vector<int> ();
-    _exposants=vector<double> ();
-    _cgtf_coefficients=vector<double> ();
-    _factor_coefficients=vector<double> ();
-    _alpha_occupation=vector<double> ();
-    _beta_occupation=vector<double> ();
-    _alpha_MO_coefs=vector<vector<double>> ();
-    _beta_MO_coefs=vector<vector<double>> ();
-    _alpha_energy=vector<double> ();
-    _beta_energy=vector<double> ();
-    _mixte=false;
-}
-
-LOG::LOG(ifstream& file)
-{
-    _num_center=vector<int> ();
-    _symbol=vector<string> ();
-    _atomic_numbers=vector<int> ();
-    _coordinates=vector<vector<double>> ();
-    _mulliken_charges=vector<double> ();
-    _shell_types=vector<string> ();
-    _l_types=vector<int> ();
-    _number_of_gtf=vector<int> ();
-    _exposants=vector<double> ();
-    _cgtf_coefficients=vector<double> ();
-    _factor_coefficients=vector<double> ();
-    _alpha_occupation=vector<double> ();
-    _beta_occupation=vector<double> ();
-    _alpha_MO_coefs=vector<vector<double>> ();
-    _beta_MO_coefs=vector<vector<double>> ();
-    _alpha_energy=vector<double> ();
-    _beta_energy=vector<double> ();
-    _n_at_basis=vector<int> ();
-    _number_of_MO=0;
-    _mixte=false;
-
     read_atoms_data(file);
     read_basis_data(file);
     read_MO_data(file);
 }
 
-void LOG::read_atoms_data(ifstream& f)
+void LOG::read_atoms_data(std::ifstream& f)
 {
     long int pos, pos2;
     int n;
     double d;
-    string p;
+    std::string p;
 
     pos=LocaliseDataLogBefore(f, "NAtoms=");
 
     f.seekg(pos);
     getline(f,p);
-    stringstream sp(p);
+    std::stringstream sp(p);
     sp>>p;
     sp>>_number_of_atoms;
 
-    _coordinates=vector<vector<double>> (_number_of_atoms);
+    _coordinates=std::vector<std::vector<double>> (_number_of_atoms);
 
     pos=LocaliseDataLog(f, "Standard orientation:");
 
@@ -103,7 +126,7 @@ void LOG::read_atoms_data(ifstream& f)
     for(int i=0; i<_number_of_atoms; i++)
     {
         getline(f,p);
-        stringstream s(p);
+        std::stringstream s(p);
         s>>p;
         s>>n;
         _atomic_numbers.push_back(n);
@@ -118,227 +141,270 @@ void LOG::read_atoms_data(ifstream& f)
     }
 }
 
-void LOG::read_basis_data(ifstream& f)
+void LOG::read_basis_data(std::ifstream& f)
 {
-    long int pos, pos2;
-    int n,l;
-    double d,c;
-    string p;
+    long int position, lastPosition;
+    int n, l;
+    double d, c;
+    std::string line;
 
-    pos=LocaliseDataLog(f, "AO basis set in the form of general basis input (overlap normalization):");
+    position = LocaliseDataLog(f, "AO basis set in the form of general basis input (Overlap normalization):");
     
-    do{
-        pos2=pos;
-        pos=LocaliseNextDataLog(f, "AO basis set in the form of general basis input (overlap normalization):");
-    }while(pos!=-1);
+    do
+    {
+        lastPosition = position;
+        position = LocaliseNextDataLog(f, "AO basis set in the form of general basis input (Overlap normalization):");
+    } while (position != -1);
 
     f.clear();
-    f.seekg(pos2);
+    f.seekg(lastPosition);
 
-    _n_at_basis=vector<int> (_number_of_atoms);
-    int m=0;
+    _n_at_basis = std::vector<int>(_number_of_atoms);
+    int m = 0;
     int v;
 
-    for(int i=0; i<_number_of_atoms; i++)
+    for(int i = 0; i < _number_of_atoms; ++i)
     {
-        getline(f,p);
-        stringstream nc(p);
-        nc>>l;
-        getline(f,p);
-        v=0;
+        getline(f, line);
+
+        std::stringstream nc(line);
+        nc >> l;
+        
+        getline(f, line);
+
+        v = 0;
         do
         {
-            stringstream ss(p);
-            ss>>p;
-            _shell_types.push_back(p);
-            ss>>n;
+            std::stringstream ss(line);
+            ss >> line;
+            _shell_types.push_back(line);
+            
+            ss >> n;
             _number_of_gtf.push_back(n);
-            ss>>c;
+            
+            ss >> c;
 
-            for(int j=0; j<n; j++)
+            for(int j = 0; j < n; ++j)
             {
                 v++;
+
                 _num_center.push_back(l);
                 _factor_coefficients.push_back(c);
-                getline(f,p);
 
-                if(p.find("D")!=string::npos)
-                    p.replace(p.find("D"),1,"E");
-                else if(p.find("d")!=string::npos)
-                    p.replace(p.find("d"),1,"e");
+                getline(f, line);
 
-                if(p.find("D")!=string::npos)
-                    p.replace(p.find("D"),1,"E");
-                else if(p.find("d")!=string::npos)
-                    p.replace(p.find("d"),1,"e");
 
-                if(_shell_types[m]=="SP" || _shell_types[m]=="sp")
+                // TODO (lgardre) : remplacer par des regex
+                if (line.find("D") != std::string::npos)
                 {
-                    if(p.find("D")!=string::npos)
-                        p.replace(p.find("D"),1,"E");
-                    else if(p.find("d")!=string::npos)
-                        p.replace(p.find("d"),1,"e");
+                    line.replace(line.find("D"), 1, "E");
+                }
+                else if (line.find("d") != std::string::npos)
+                {
+                    line.replace(line.find("d"), 1, "e");
                 }
 
-                stringstream sss(p);
-                sss>>d;
-                _exposants.push_back(d);
-                sss>>d;
-                _cgtf_coefficients.push_back(d);
-                if(_shell_types[m]=="SP" || _shell_types[m]=="sp")                    //A voir comment on organise les données !!!
+                if (line.find("D") != std::string::npos)
                 {
-                    sss>>d;
+                    line.replace(line.find("D"), 1, "E");
+                }
+                else if (line.find("d") != std::string::npos)
+                {
+                    line.replace(line.find("d"), 1, "e");
+                }
+
+                if(_shell_types[m] == "SP" || _shell_types[m] == "sp")
+                {
+                    if (line.find("D") != std::string::npos)
+                    {
+                        line.replace(line.find("D"), 1, "E");
+                    }
+                    else if (line.find("d") != std::string::npos)
+                    {
+                        line.replace(line.find("d"), 1, "e");
+                    }
+                }
+
+                std::stringstream sss(line);
+                sss >> d;
+                _exposants.push_back(d);
+
+                sss >> d;
+                _cgtf_coefficients.push_back(d);
+
+                if(_shell_types[m] == "SP" || _shell_types[m] == "sp")                    //A voir comment on organise les données !!!
+                {
+                    sss >> d;
                     _cgtf_sp_coefficients.push_back(d);
                 }
                 else
+                {
                     _cgtf_sp_coefficients.push_back(0.0);
+                }
             }
-            getline(f,p);
+
+            getline(f, line);
+
             m++;
-        }while(p.find("*")==string::npos);
-        _n_at_basis[i]=v;
+        } while (line.find("*") == std::string::npos);
+
+        _n_at_basis[i] = v;
     }
 
-    pos=LocaliseNextDataLogBefore(f, "basis functions,");
+    position = LocaliseNextDataLogBefore(f, "basis functions,");
 
     f.clear();
-    f.seekg(pos);
+    f.seekg(position);
 
-    getline(f,p);
+    getline(f, line);
 
-    stringstream ss(p);
-    ss>>_number_of_basis_functions;
-    ss>>p;
-    ss>>p;
-    ss>>_number_of_primitive_gaussians;
-    ss>>p;
-    ss>>p;
-    ss>>_number_of_cartesian_basis_functions;
+    std::stringstream ss(line);
+    ss >> _number_of_basis_functions;
+    ss >> line;
+    ss >> line;
+    ss >> _number_of_primitive_gaussians;
+    ss >> line;
+    ss >> line;
+    ss >> _number_of_cartesian_basis_functions;
 
-    getline(f,p);
+    getline(f, line);
 
-    stringstream sss(p);
-    sss>>_number_of_alpha_electrons;
-    sss>>p;
-    sss>>p;
-    sss>>_number_of_beta_electrons;
+    std::stringstream sss(line);
+    sss >> _number_of_alpha_electrons;
+    sss >> line;
+    sss >> line;
+    sss >> _number_of_beta_electrons;
 
-    do{
-        pos2=pos;
-        pos=LocaliseNextDataLogBefore(f, "E(");
-    }while(pos!=-1);
-
-    f.clear();
-    f.seekg(pos2);
-
-    getline(f,p);
-    stringstream ssss(p);
-    ssss>>p;
-    ssss>>p;
-    ssss>>p;
-    ssss>>p;
-    ssss>>_energy;
-
-    pos=LocaliseDataLogBefore(f, "Standard basis:", "General basis read from cards:");
-
-    if(pos==-1)
+    do
     {
-        _d_cart_sphe="sphe";
-        _f_cart_sphe="sphe";
-    }
-
-    else
-        do{
-            pos2=pos;
-            pos=LocaliseNextDataLogBefore(f, "Standard basis:", "General basis read from cards:");
-        }while(pos!=-1);
+        lastPosition = position;
+        position = LocaliseNextDataLogBefore(f, "E(");
+    } while (position != -1);
 
     f.clear();
-    f.seekg(pos2);
+    f.seekg(lastPosition);
 
-    getline(f,p);
+    getline(f,line);
     
-    if(p.find("5D")!=string::npos || p.find("5d")!=string::npos)
-        _d_cart_sphe="sphe";
-    else if(p.find("6D")!=string::npos || p.find("6d")!=string::npos)
-        _d_cart_sphe="cart";
-    else
-        _d_cart_sphe="sphe";
+    std::stringstream ssss(line);
+    ssss >> line;
+    ssss >> line;
+    ssss >> line;
+    ssss >> line;
+    ssss >> _energy;
 
-    if(p.find("7F")!=string::npos || p.find("7f")!=string::npos)
-        _f_cart_sphe="sphe";
-    else if(p.find("10F")!=string::npos || p.find("10f")!=string::npos)
-        _f_cart_sphe="cart";
-    else
-        _f_cart_sphe="sphe";
+    position = LocaliseDataLogBefore(f, "Standard basis:", "General basis read from cards:");
 
-    for(size_t i=0; i<_shell_types.size(); i++)
+    if(position == -1)
     {
-        if(_shell_types[i]=="s" || _shell_types[i]=="S")
+        _d_cart_sphe = "sphe";
+        _f_cart_sphe = "sphe";
+    }
+    else
+    {
+        do
+        {
+            lastPosition = position;
+            position = LocaliseNextDataLogBefore(f, "Standard basis:", "General basis read from cards:");
+        } while(position != -1);
+    }
+
+    f.clear();
+    f.seekg(lastPosition);
+
+    getline(f, line);
+    
+    if(line.find("5D") != std::string::npos || line.find("5d") != std::string::npos)
+    {
+        _d_cart_sphe = "sphe";
+    }
+    else if(line.find("6D") != std::string::npos || line.find("6d") != std::string::npos)
+    {
+        _d_cart_sphe = "cart";
+    }
+    else
+    {
+        _d_cart_sphe = "sphe";
+    }
+
+    if(line.find("7F") != std::string::npos || line.find("7f") != std::string::npos)
+    {
+        _f_cart_sphe = "sphe";
+    }
+    else if(line.find("10F") != std::string::npos || line.find("10f") != std::string::npos)
+    {
+        _f_cart_sphe = "cart";
+    }
+    else
+    {
+        _f_cart_sphe = "sphe";
+    }
+
+    for(size_t i = 0; i < _shell_types.size(); ++i)
+    {
+        if(_shell_types[i] == "s" || _shell_types[i] == "S")
         {
             _l_types.push_back(0);
-            _number_of_MO+=1;
+            _number_of_MO += 1;
         }
-
-        else if(_shell_types[i]=="p" || _shell_types[i]=="P")
+        else if(_shell_types[i] == "p" || _shell_types[i] == "P")
         {
             _l_types.push_back(1);
-            _number_of_MO+=3;
+            _number_of_MO += 3;
         }
-
-        else if(_shell_types[i]=="sp" || _shell_types[i]=="SP")
+        else if(_shell_types[i] == "sp" || _shell_types[i] == "SP")
         {
             _l_types.push_back(-1);
-            _number_of_MO+=4;
+            _number_of_MO += 4;
         }
-
-        else if((_shell_types[i]=="d" || _shell_types[i]=="D") && _d_cart_sphe=="cart")
+        else if((_shell_types[i] == "d" || _shell_types[i] == "D") && _d_cart_sphe == "cart")
         {
             _l_types.push_back(2);
-            _number_of_MO+=6;
+            _number_of_MO += 6;
         }
-
-        else if(_shell_types[i]=="d" || _shell_types[i]=="D")
+        else if(_shell_types[i] == "d" || _shell_types[i] == "D")
         {
             _l_types.push_back(-2);
-            _number_of_MO+=5;
+            _number_of_MO += 5;
         }
-
-        else if((_shell_types[i]=="f" || _shell_types[i]=="F") && _f_cart_sphe=="cart")
+        else if((_shell_types[i] == "f" || _shell_types[i] == "F") && _f_cart_sphe == "cart")
         {
             _l_types.push_back(3);
-            _number_of_MO+=10;
+            _number_of_MO += 10;
         }
-
-        else if(_shell_types[i]=="f" || _shell_types[i]=="F")
+        else if(_shell_types[i] == "f" || _shell_types[i] == "F")
         {
             _l_types.push_back(-3);
-            _number_of_MO+=7;
+            _number_of_MO += 7;
         }
-
         else
         {
-            int N=int(toupper(_shell_types[i][0]))-int('F')+3;
+            int N = int(toupper(_shell_types[i][0])) - int('F') + 3;
             _l_types.push_back(-N);
-            _number_of_MO+= 2*N+1;
+            _number_of_MO += 2 * N + 1;
 
-            if(_d_cart_sphe=="cart" || _f_cart_sphe=="cart")
-                _mixte=true;
+            if(_d_cart_sphe == "cart" || _f_cart_sphe == "cart")
+            {
+                _mixte = true;
+            }
         }
     }
-    _number_of_MO_coefs=_number_of_MO;
-    _beta_MO_coefs=_alpha_MO_coefs=vector<vector<double>> (_number_of_MO_coefs);
+    
+    _number_of_MO_coefs = _number_of_MO;
+    _beta_MO_coefs = _alpha_MO_coefs = std::vector<std::vector<double>> (_number_of_MO_coefs);
 
-    if(_d_cart_sphe!=_f_cart_sphe)
-        _mixte=true;
+    if(_d_cart_sphe != _f_cart_sphe)
+    {
+        _mixte = true;
+    }
 }
 
-void LOG::read_MO_data(ifstream& f)
+void LOG::read_MO_data(std::ifstream& f)
 {
     long int pos, pos2;
     int n,m;
     double d;
-    string p,p2,pp, name;
+    std::string p,p2,pp, name;
 
     pos=LocaliseDataLog(f, "Alpha Molecular Orbital Coefficients:");
 
@@ -371,29 +437,29 @@ void LOG::read_MO_data(ifstream& f)
 
     do{
         m=0;
-        stringstream t(p);
+        std::stringstream t(p);
         do{
             t>>p;
             m++;
         }while(!t.eof());
 
         getline(f,p);
-        stringstream s(p);
+        std::stringstream s(p);
         
         for(int i=0; i<m; i++)
         {
             s>>p;
 
-            if(p.find("O")!=string::npos && _alpha_and_beta)
+            if(p.find("O")!=std::string::npos && _alpha_and_beta)
                 _alpha_occupation.push_back(2.0);
-            else if(p.find("O")!=string::npos)
+            else if(p.find("O")!=std::string::npos)
                 _alpha_occupation.push_back(1.0);
-            else if(p.find("V")!=string::npos)
+            else if(p.find("V")!=std::string::npos)
                 _alpha_occupation.push_back(0.0);
         }
 
         getline(f,p);
-        stringstream ss(p);
+        std::stringstream ss(p);
         ss>>p;
         ss>>p;
 
@@ -406,11 +472,11 @@ void LOG::read_MO_data(ifstream& f)
         for(int i=0; i<_number_of_basis_functions; i++)
         {
             getline(f,p);
-            stringstream sss(p);
+            std::stringstream sss(p);
 
             sss>>p2;
 
-            if(p.find("1S")!=string::npos || p.find("1s")!=string::npos)
+            if(p.find("1S")!=std::string::npos || p.find("1s")!=std::string::npos)
             {
                 sss>>p;
                 sss>>p;
@@ -420,10 +486,10 @@ void LOG::read_MO_data(ifstream& f)
             
             sss>>p;
             
-            if(_d_cart_sphe=="sphe" and (p.find("d")!=string::npos or p.find("D")!=string::npos) and (p.size()==2 or p.size()==3))
+            if(_d_cart_sphe=="sphe" and (p.find("d")!=std::string::npos or p.find("D")!=std::string::npos) and (p.size()==2 or p.size()==3))
                 sss>>p;    
             
-            if(_f_cart_sphe=="sphe" and (p.find("f")!=string::npos or p.find("F")!=string::npos) and (p.size()==2 or p.size()==3))
+            if(_f_cart_sphe=="sphe" and (p.find("f")!=std::string::npos or p.find("F")!=std::string::npos) and (p.size()==2 or p.size()==3))
                 sss>>p;
             
             for(int j=0; j<m; j++)
@@ -434,10 +500,10 @@ void LOG::read_MO_data(ifstream& f)
         }
         n+=m;
         getline(f,p);
-        stringstream nn;
+        std::stringstream nn;
         nn<<n+1;
         pp=nn.str();
-    }while(p.find(pp)!=string::npos);
+    }while(p.find(pp)!=std::string::npos);
 
     if(!_alpha_and_beta)
     {
@@ -454,27 +520,27 @@ void LOG::read_MO_data(ifstream& f)
 
         do{
             m=0;
-            stringstream t(p);
+            std::stringstream t(p);
             do{
                 t>>p;
                 m++;
             }while(!t.eof());
 
             getline(f,p);
-            stringstream s(p);
+            std::stringstream s(p);
         
             for(int i=0; i<m; i++)
             {
                 s>>p;
 
-                if(p.find("O")!=string::npos)
+                if(p.find("O")!=std::string::npos)
                     _beta_occupation.push_back(1.0);
-                else if(p.find("V")!=string::npos)
+                else if(p.find("V")!=std::string::npos)
                     _beta_occupation.push_back(0.0);
             }
 
             getline(f,p);
-            stringstream ss(p);
+            std::stringstream ss(p);
             ss>>p;
             ss>>p;
 
@@ -487,9 +553,9 @@ void LOG::read_MO_data(ifstream& f)
             for(int i=0; i<_number_of_MO; i++)
             {
                 getline(f,p);
-                stringstream sss(p);
+                std::stringstream sss(p);
 
-                if(p.find("1S")!=string::npos || p.find("1s")!=string::npos)
+                if(p.find("1S")!=std::string::npos || p.find("1s")!=std::string::npos)
                 {
                     sss>>p;
                     sss>>p;
@@ -506,10 +572,10 @@ void LOG::read_MO_data(ifstream& f)
             }
             n+=m;
             getline(f,p);
-            stringstream nn;
+            std::stringstream nn;
             nn<<n+1;
             pp=nn.str();
-        }while(p.find(pp)!=string::npos);
+        }while(p.find(pp)!=std::string::npos);
     }
 
     else
@@ -529,7 +595,7 @@ void LOG::read_MO_data(ifstream& f)
     for(int i=0; i<_number_of_atoms; i++)
     {
         getline(f,p);
-        stringstream mc(p);
+        std::stringstream mc(p);
         mc>>p;
         mc>>p;
         mc>>d;
@@ -539,111 +605,171 @@ void LOG::read_MO_data(ifstream& f)
 
 void LOG::PrintData()
 {
-    cout<<"Number of atoms = "<<_number_of_atoms<<endl;
-    cout<<"Number of basis functions = "<<_number_of_basis_functions<<endl;
-    cout<<"Number of cartesian basis functions = "<<_number_of_cartesian_basis_functions<<endl;
-    cout<<"Number of primitive gaussians = "<<_number_of_primitive_gaussians<<endl;
-    cout<<"Number of alpha electrons = "<<_number_of_alpha_electrons<<endl;
-    cout<<"Number of beta electrons = "<<_number_of_beta_electrons<<endl;
-    cout<<"Energy = "<<_energy<<endl;
+    std::cout << "Number of atoms = " << _number_of_atoms << std::endl;
+    std::cout << "Number of basis functions = " << _number_of_basis_functions << std::endl;
+    std::cout << "Number of cartesian basis functions = " << _number_of_cartesian_basis_functions << std::endl;
+    std::cout << "Number of primitive gaussians = " << _number_of_primitive_gaussians << std::endl;
+    std::cout << "Number of alpha electrons = " << _number_of_alpha_electrons << std::endl;
+    std::cout << "Number of beta electrons = " << _number_of_beta_electrons << std::endl;
+    std::cout << "Energy = " << _energy << std::endl;
 
-    for(size_t i=0; i<_num_center.size(); i++)
-        cout<<"Number center ["<<i<<"] = "<<_num_center[i]<<endl;
-    for(size_t i=0; i<_symbol.size(); i++)
-        cout<<"Symbol ["<<i<<"] = "<<_symbol[i]<<endl;
-    for(size_t i=0; i<_atomic_numbers.size(); i++)
-        cout<<"Atomic number ["<<i<<"] = "<<_atomic_numbers[i]<<endl;
-    for(size_t i=0; i<_coordinates.size(); i++)
+    for(size_t i = 0; i < _num_center.size(); ++i)
     {
-        cout<<"Coordinates atom ["<<i<<"] = ";
-        for(size_t j=0; j<_coordinates[i].size(); j++)
-            cout<<_coordinates[i][j]<<"    ";
-        cout<<endl;
+        std::cout << "Number center [" << i << "] = " << _num_center[i] << std::endl;
     }
 
-    for(size_t i=0; i<_mulliken_charges.size(); i++)
-        cout<<"Mulliken charges "<<i<<" = "<<_mulliken_charges[i]<<endl;
-    for(size_t i=0; i<_shell_types.size(); i++)
-        cout<<"Shell types "<<i<<" = "<<_shell_types[i]<<endl;
-    for(size_t i=0; i<_l_types.size(); i++)
-        cout<<"Ltypes ["<<i<<"] = "<<_l_types[i]<<endl;
-    for(size_t i=0; i<_number_of_gtf.size(); i++)
-        cout<<"Number of GTF in CGTF "<<i<<" = "<<_number_of_gtf[i]<<endl;
-    for(size_t i=0; i<_exposants.size(); i++)
-        cout<<"Exposant "<<i<<" = "<<_exposants[i]<<endl;
-    for(size_t i=0; i<_cgtf_coefficients.size(); i++)
-        cout<<"CGTF coefficient "<<i<<" = "<<_cgtf_coefficients[i]<<endl;
-    for(size_t i=0; i<_cgtf_sp_coefficients.size(); i++)
-        cout<<"CGTF SP coefficient "<<i<<" = "<<_cgtf_sp_coefficients[i]<<endl;
-    for(size_t i=0; i<_factor_coefficients.size(); i++)
-        cout<<"Factor coefficient "<<i<<" = "<<_factor_coefficients[i]<<endl;
+    for(size_t i = 0; i < _symbol.size(); ++i)
+    {
+        std::cout << "Symbol [" << i << "] = " << _symbol[i] << std::endl;
+    }
 
-    for(size_t i=0; i<_alpha_occupation.size(); i++)
-        cout<<"Alpha occupation "<<i<<" = "<<_alpha_occupation[i]<<endl;
-    for(size_t i=0; i<_beta_occupation.size(); i++)
-        cout<<"Beta occupation "<<i<<" = "<<_beta_occupation[i]<<endl;
-    for(size_t i=0; i<_alpha_MO_coefs.size(); i++)
-        for(size_t j=0; j<_alpha_MO_coefs[i].size(); j++)
-            cout<<"Alpha MO coefficients ["<<i<<"]["<<j<<"] = "<<_alpha_MO_coefs[i][j]<<endl;
-    for(size_t i=0; i<_beta_MO_coefs.size(); i++)
-        for(size_t j=0; j<_beta_MO_coefs[i].size(); j++)
-            cout<<"Beta MO coefficients ["<<i<<"]["<<j<<"] = "<<_beta_MO_coefs[i][j]<<endl;
-    for(size_t i=0; i<_alpha_energy.size(); i++)
-        cout<<"Alpha energy "<<i<<" = "<<_alpha_energy[i]<<endl;
-    for(size_t i=0; i<_beta_energy.size(); i++)
-        cout<<"Beta energy "<<i<<" = "<<_beta_energy[i]<<endl;
+    for(size_t i = 0; i < _atomic_numbers.size(); ++i)
+    {
+        std::cout << "Atomic number [" << i << "] = " << _atomic_numbers[i] << std::endl;
+    }
+    
+    for(size_t i = 0; i < _coordinates.size(); ++i)
+    {
+        std::cout << "Coordinates atom [" << i << "] = ";
+        for(size_t j = 0; j < _coordinates[i].size(); ++j)
+        {
+            std::cout << _coordinates[i][j] << "    ";
+        }
+        std::cout << std::endl;
+    }
 
-    cout<<"D cart/sphe = "<<_d_cart_sphe<<endl;
-    cout<<"F cart/sphe = "<<_f_cart_sphe<<endl;
+    for(size_t i = 0; i < _mulliken_charges.size(); ++i)
+    {
+        std::cout << "Mulliken charges " << i << " = " << _mulliken_charges[i] << std::endl;
+    }
 
-    cout<<"Number of MO = "<<_number_of_MO<<endl;
-    cout<<"Number of MO coefficients = "<<_number_of_MO_coefs<<endl;
+    for(size_t i = 0; i < _shell_types.size(); ++i)
+    {
+        std::cout << "Shell types " << i << " = " << _shell_types[i] << std::endl;
+    }
 
-    for(size_t i=0; i<_n_at_basis.size(); i++)
-        cout<<"n in basis "<<i<<" = "<<_n_at_basis[i]<<endl;
+    for(size_t i = 0; i < _l_types.size(); ++i)
+    {
+        std::cout << "Ltypes [" << i << "] = " << _l_types[i] << std::endl;
+    }
+
+    for(size_t i = 0; i < _number_of_gtf.size(); ++i)
+    {
+        std::cout << "Number of GTF in CGTF " << i << " = " << _number_of_gtf[i] << std::endl;
+    }
+
+    for(size_t i = 0; i < _exposants.size(); ++i)
+    {
+        std::cout << "Exposant " << i << " = " << _exposants[i] << std::endl;
+    }
+
+    for(size_t i = 0; i < _cgtf_coefficients.size(); ++i)
+    {
+        std::cout << "CGTF coefficient " << i << " = " << _cgtf_coefficients[i] << std::endl;
+    }
+
+    for(size_t i = 0; i < _cgtf_sp_coefficients.size(); ++i)
+    {
+        std::cout << "CGTF SP coefficient " << i << " = " << _cgtf_sp_coefficients[i] << std::endl;
+    }
+
+    for(size_t i = 0; i < _factor_coefficients.size(); ++i)
+    {
+        std::cout << "Factor coefficient " << i << " = " << _factor_coefficients[i] << std::endl;
+    }
+
+    for(size_t i = 0; i < _alpha_occupation.size(); ++i)
+    {
+        std::cout << "Alpha occupation " << i << " = " << _alpha_occupation[i] << std::endl;
+    }
+
+    for(size_t i = 0; i < _beta_occupation.size(); ++i)
+    {
+        std::cout << "Beta occupation " << i << " = " << _beta_occupation[i] << std::endl;
+    }
+
+    for(size_t i = 0; i < _alpha_MO_coefs.size(); ++i)
+    {
+        for(size_t j = 0; j < _alpha_MO_coefs[i].size(); ++j)
+        {
+            std::cout << "Alpha MO coefficients [" << i << "][" << j << "] = " << _alpha_MO_coefs[i][j] << std::endl;
+        }
+    }
+
+    for(size_t i = 0; i < _beta_MO_coefs.size(); ++i)
+    {
+        for(size_t j = 0; j < _beta_MO_coefs[i].size(); ++j)
+        {
+            std::cout << "Beta MO coefficients [" << i << "][" << j << "] = " << _beta_MO_coefs[i][j] << std::endl;
+        }
+    }
+    
+    for(size_t i = 0; i < _alpha_energy.size(); ++i)
+    {
+        std::cout << "Alpha energy " << i << " = " << _alpha_energy[i] << std::endl;
+    }
+
+    for(size_t i = 0; i < _beta_energy.size(); ++i)
+    {
+        std::cout << "Beta energy " << i << " = " << _beta_energy[i] << std::endl;
+    }
+
+    std::cout << "D cart/sphe = " << _d_cart_sphe << std::endl;
+    std::cout << "F cart/sphe = " << _f_cart_sphe << std::endl;
+
+    std::cout << "Number of MO = " << _number_of_MO << std::endl;
+    std::cout << "Number of MO coefficients = " << _number_of_MO_coefs << std::endl;
+
+    for(size_t i = 0; i < _n_at_basis.size(); ++i)
+    {
+        std::cout << "n in basis " << i << " = " << _n_at_basis[i] << std::endl;
+    }
 
     if(_alpha_and_beta)
-        cout<<"Alpha == Beta"<<endl;
+    {
+        std::cout << "Alpha == Beta" << std::endl;
+    }
     else
-        cout<<"Alpha != Beta"<<endl;
+    {
+        std::cout << "Alpha != Beta" << std::endl;
+    }
 }
 
-long int LocaliseDataLog(ifstream& f, string b)
+long int LocaliseDataLog(std::ifstream& f, std::string b)
 {
-    long int position;
+    bool ok = false;
+    
     f.clear();
-    f.seekg(0,f.beg);
-    string test;
-    bool ok=false;
+    f.seekg(0, f.beg);
+
+    std::string line;
+    long int position;
     while(!f.eof())
     {    
-        getline(f, test);
-        if(test.find(b)!=string::npos)
+        getline(f, line);
+        if(line.find(b) != std::string::npos)
         {
-            position=f.tellg();
-            ok=true;
+            position = f.tellg();
+            ok = true;
             break;
         }
     }
 
-    if(!ok) 
-        return -1;    
-
-    return position;
+    return ok ? position : -1;
 }
 
-long int LocaliseDataLogBefore(ifstream& f, string b1, string b2)
+long int LocaliseDataLogBefore(std::ifstream& f, std::string b1, std::string b2)
 {
     long int position;
     f.clear();
     f.seekg(0,f.beg);
-    string test;
+    std::string test;
     bool ok=false;
     while(!f.eof())
     {    
         position=f.tellg();
         getline(f, test);
-        if(test.find(b1)!=string::npos || test.find(b2)!=string::npos)
+        if(test.find(b1)!=std::string::npos || test.find(b2)!=std::string::npos)
         {    
             ok=true;
             break;
@@ -656,18 +782,18 @@ long int LocaliseDataLogBefore(ifstream& f, string b1, string b2)
     return position;
 }
 
-long int LocaliseDataLogBefore(ifstream& f, string b)
+long int LocaliseDataLogBefore(std::ifstream& f, std::string b)
 {
     long int position;
     f.clear();
     f.seekg(0,f.beg);
-    string test;
+    std::string test;
     bool ok=false;
     while(!f.eof())
     {    
         position=f.tellg();
         getline(f, test);
-        if(test.find(b)!=string::npos)
+        if(test.find(b)!=std::string::npos)
         {
             ok=true;
             break;
@@ -680,40 +806,39 @@ long int LocaliseDataLogBefore(ifstream& f, string b)
     return position;
 }
 
-long int LocaliseNextDataLog(ifstream& f, string b)
+long int LocaliseNextDataLog(std::ifstream& f, std::string b)
 {
-    long int position;
+    bool ok = false;
+
     f.clear();
-    string test;
-    bool ok=false;
+
+    std::string line;
+    long int position;
     while(!f.eof())
     {    
-        getline(f, test);
-        if(test.find(b)!=string::npos)
+        getline(f, line);
+        if(line.find(b) != std::string::npos)
         {
-            position=f.tellg();
-            ok=true;
+            position = f.tellg();
+            ok = true;
             break;
         }
     }
 
-    if(!ok) 
-        return -1;    
-
-    return position;
+    return ok ? position : -1;
 }
 
-long int LocaliseNextDataLogBefore(ifstream& f, string b)
+long int LocaliseNextDataLogBefore(std::ifstream& f, std::string b)
 {
     long int position;
     f.clear();
-    string test;
+    std::string test;
     bool ok=false;
     while(!f.eof())
     {
         position=f.tellg();    
         getline(f, test);
-        if(test.find(b)!=string::npos)
+        if(test.find(b)!=std::string::npos)
         {
             ok=true;
             break;
@@ -726,17 +851,17 @@ long int LocaliseNextDataLogBefore(ifstream& f, string b)
     return position;
 }
 
-long int LocaliseNextDataLogBefore(ifstream& f, string b1, string b2)
+long int LocaliseNextDataLogBefore(std::ifstream& f, std::string b1, std::string b2)
 {
     long int position;
     f.clear();
-    string test;
+    std::string test;
     bool ok=false;
     while(!f.eof())
     {
         position=f.tellg();    
         getline(f, test);
-        if(test.find(b1)!=string::npos || test.find(b2)!=string::npos)
+        if(test.find(b1)!=std::string::npos || test.find(b2)!=std::string::npos)
         {
             ok=true;
             break;

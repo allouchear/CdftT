@@ -17,7 +17,7 @@ static gdouble kb =1.3806505e-23; //1.380 6505(24) x 10^-23 J K-1  from NIST
 #define ANGTOBOHR  (1.0/BOHRTOANG)
 #define RADTODEG   57.29577951308232090712
 #define AUTODEB  2.54158059
-#define AUTOEV  27.21138469                         // TODO: remplacer par HARTREE_TO_EV
+#define AUTOEV  27.21138469                         // TODO (lgardre): remplacer par HARTREE_TO_EV
 #define PI   3.14159265358979323846
 #define AMUTOAU 1822.88848121
 #define AUTOCM1 219474.63633664 
