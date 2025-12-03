@@ -1,166 +1,284 @@
 #ifndef CDFTT_CGTF_H_INCLUDED
 #define CDFTT_CGTF_H_INCLUDED
 
-#include<iostream>
-#include<string>
+#include <ostream>
+#include <string>
+#include <vector>
+
 #include <Basis/GTF.h>
 
-using namespace std;
 
-	//! A CGTF class.
-	/*! This class will be used in the LCAO class. */
-
+/**
+ * @brief Contracted Gaussian-Type Function (CGTF) class.
+ *
+ * This class represents a contracted Gaussian-type function and is used in
+ * LCAO (Linear Combination of Atomic Orbitals) constructions.
+ */
 class CGTF
 {
-	private:
-		int _num_center;
-		int _numberOfFunctions;
-		string _l_type;
-		string _l_format;
-		double _factor_coef;
-		vector<double> _coefficients;
-		vector<GTF> _gtf;
-		Binomial _bino;
-	public:
+    private:
+        /** @brief Number of the center (atom index) associated with this CGTF. */ // ?
+        int _num_center;
 
-			//! A default constructor.
-			/*! This constructor is used to set all of the parameters for one CGTF on 0 or "None" value. */
-		CGTF();
+        /** @brief Number of Gaussian functions composing this CGTF. */
+        int _numberOfFunctions;
 
-			//! A real constructor.
-			/*! This constructor is used to add all of the parameters for one CGTF. */
-		CGTF(vector<GTF>);
+        /** @brief Orbital shell type ("S", "P", "D", ...). */
+        std::string _l_type;
 
-			//! A default desctructor.
-			/*! We don't use it. */
-		~CGTF(){}
+        /** @brief Orbital format ("cartesian" or "spherical"). */
+        std::string _l_format;
 
-			//! A normal member taking one argument.
-			/*! This member insert a coefficient for a GTF. */
-		void setCoef(double);
+        /** @brief Global multiplicative factor for coefficients. */
+        double _factor_coef;
 
-			//! A normal member taking one argument.
-			/*! This member insert a format for the CGTF (cartesian or spherical). */
-		void setFormat(string);
+        /** @brief Primitive GTFs composing the CGTF. */
+        std::vector<GTF> _gtf;
 
-			//! A normal member taking no arguments and returning a vector<double> value.
-			/*! \return the table of coefficients for GTF. */
-		vector<double> coefficients() {return _coefficients;}
+        /** @brief Contraction coefficients for each primitive GTF. */
+        std::vector<double> _coefficients;
 
-			//! A normal member taking no arguments and returning a string value.
-			/*! \return The shell type (S, P,D , ...) for the CGTF. */
-		string Ltype() {return _l_type;}
+        /** @brief Binomial handler class used by primitive GTFs. */
+        Binomial _bino;
 
-			//! A normal member taking no arguments and returning a string value.
-			/*! \return The shell format (cartesian or spherical) for the CGTF. */
-		string Lformat() {return _l_format;}
+    public:
+        /**
+         * @brief Default constructor.
+         *
+         * Sets members to empty / zero values.
+         */
+        CGTF();
 
-			//! A normal member taking no arguments and returning an int value.
-			/*! \return The num center (center of an atom) for the CGTF. */
-		int NumCenter() {return _num_center;}
+        /**
+         * @brief Constructor from a std::vector of primitive GTF.
+         *
+         * @param gtfs std::vector of primitive GTF objects used to form the CGTF.
+         */
+        CGTF(std::vector<GTF> gtfs);
 
-			//! A normal member taking no arguments and returning a double value.
-			/*! \return The factor coefficient for the CGTF. */
-		double FactorCoef() {return _factor_coef;}
+        /**
+         * @brief Default destructor.
+         *
+         * Not used explicitly.
+         */
+        ~CGTF(){}
+        
+        /**
+         * @brief Appends a coefficient for a primitive GTF.
+         *
+         * @param c Coefficient to append.
+         */
+        void setCoef(double);
 
-			//! A normal member taking no arguments and returning an int value.
-			/*! \return The number of GTF. */
-		int numberOfFunctions()
-		{
-			return _numberOfFunctions;
-		}
+        /**
+         * @brief Sets the orbital format for this CGTF.
+         *
+         * @param format Format std::string (either "cartesian" or "spherical").
+         */
+        void setFormat(std::string);
 
-			//! A normal member taking no arguments and returning a vector<GTF> value.
-			/*! \return The table of GTF which compose de CGTF value. */
-		vector<GTF> gtf()
-		{
-			return _gtf;
-		}
+        /**
+         * @brief Returns the contraction coefficients.
+         *
+         * @return std::vector of coefficients for the primitive GTFs.
+         */
+        std::vector<double> coefficients() {return _coefficients;}
 
-			//! A normal member taking no arguments and returning a Binomial value.
-			/*! \return The binomial value. */
-		Binomial bino()
-		{
-			return _bino;
-		}
+        /**
+         * @brief Returns the orbital type ("S", "P", "D", ...).
+         *
+         * @return Orbital type.
+         */
+        std::string Ltype() {return _l_type;}
 
-			//! A normal member taking three arguments and returning a double value.
-			/*! \return The ERI value   ???? */
-		double ERICGTF(CGTF&, CGTF&, CGTF&);
+        /**
+         * @brief Returns the orbital format ("cartesian" or "spherical").
+         *
+         * @return Orbital format.
+         */
+        std::string Lformat() {return _l_format;}
 
-			//! A normal member taking no arguments and returning a void value.
-			/*! Normalise the CGTF */
-		void normaliseCGTF();
+        /**
+         * @brief Returns the center (atom) index of this CGTF.
+         *
+         * @return Index of the center (atom) for this CGTF.
+         */
+        int NumCenter() {return _num_center;}
 
-			//! A normal member taking one argument.
-			/*! This member unnormalise the CGTF. */
-		void denormaliseCGTF();
+        /**
+         * @brief Returns the global multiplicative factor for the coefficients.
+         *
+         * @return Global multiplicative factor for the coefficients.
+         */
+        double FactorCoef() {return _factor_coef;}
 
-			//! A normal member taking one argument and returning a double value.
-			/*! \return The overlap value between two CGTF. */
-		double overlapCGTF(CGTF&);
-		
-			//! A normal member taking two arguments and returning a double value.
-			/*! \return The overlap value between three CGTF. */
-		double overlap3CGTF(CGTF&, CGTF&);
+        /**
+         * @brief Returns the number of primitive GTFs in this CGTF.
+         *
+         * @return Number of primitive GTFs composing the CGTF.
+         */
+        int numberOfFunctions()
+        {
+            return _numberOfFunctions;
+        }
 
-			//! A normal member taking three arguments and returning a double value.
-			/*! \return The overlap value between four CGTF. */
-		double overlap4CGTF(CGTF&, CGTF&, CGTF&);
+        /**
+         * @brief Returns the std::vector holding all primitive GTFs composing this CGTF.
+         *
+         * @return std::vector of primitive GTF objects.
+         */
+        std::vector<GTF> gtf()
+        {
+            return _gtf;
+        }
 
-			//! A normal member taking four arguments and returning a double value.
-			/*! \return ??? */
-		double CGTFxyzCGTF(CGTF&, int, int, int);
+        /**
+         * @brief Returns the Binomial object associated with this CGTF.
+         *
+         * @return Binomial handler class.
+         */
+        Binomial bino()
+        {
+            return _bino;
+        }
 
-			//! A normal member taking one argument and returning a double value.
-			/*! \return The kinetic value ??? */
-		double kineticCGTF(CGTF&);
+        /**
+         * @brief Computes the electron repulsion integral (ERI) involving four CGTFs.
+         *
+         * Computes the ERI (pq|rs) where p is this CGTF and q,r,s are provided.
+         *
+         * @param q Second CGTF.
+         * @param r Third CGTF.
+         * @param s Fourth CGTF.
+         * @return Value of the ERI.
+         */
+        double ERICGTF(CGTF&, CGTF&, CGTF&);
 
-			//! A normal member taking two arguments and returning a double value.
-			/*! \return The ionic potential value ??? */
-		double ionicPotentialCGTF(CGTF&, vector<double>, double);
-		
-			//! A normal member taking one argument and returning a double value.
-			/*! \return ???. */
-		double CGTFstarCGTF(CGTF&);
+        /**
+         * @brief Normalizes the CGTF.
+         *
+         * Normalizes the CGTF. Each primitive radial function is normalized. Contraction coefficients
+         * are then rescaled so that the CGTF has unit norm.
+         */
+        void normaliseCGTF();
 
-		//bool CGTFEqCGTF(CGTF&);
+        /**
+         * @brief Denormalizes the primitive GTFs constituting the CGTF.
+         *
+         * This denormalizes the radial component of the constituent primitive GTFs.
+         */
+        void denormaliseCGTF();
 
-			//! A normal membre taking one argument and returning a void value.
-			/*! Insert all the data in the CGTF. */
-		void push_back(GTF&);
+        /**
+         * @brief Returns the overlap integral between this CGTF and an other CGTF.
+         *
+         * @param right The other CGTF to compute the overlap integral with.
+         * @return Value of the overlap integral between the two CGTFs.
+         */
+        double overlapCGTF(CGTF& right);
 
-			//! A normal membre taking one argument and returning a void value.
-			/*! Insert the num center in the CGTF. */
-		void setNumCenter(int);
+        /**
+         * @brief Returns the overlap integral between this CGTF and two other ones.
+         *
+         * @param midle The middle CGTF.
+         * @param right The right CGTF.
+         * @return Value of the overlap integral between the three CGTFs.
+         */
+        double overlap3CGTF(CGTF& middle, CGTF& right);
 
-			//! A normal membre taking one argument and returning a void value.
-			/*! Insert the shell type (S, P, D, ...) in the CGTF. */
-		void setLtype(string);
+        /**
+         * @brief Returns the overlap integral between this CGTF and two other ones.
+         *
+         * @param midle The middle CGTF.
+         * @param right The right CGTF.
+         * @return Value of the overlap integral between the three CGTFs.
+         */
+        double overlap4CGTF(CGTF&, CGTF&, CGTF&);
 
-			//! A normal membre taking one argument and returning a void value.
-			/*! Insert the factor coefficient in the CGTF. */
-		void setFactorCoef(double);
+        /**
+         * @brief ?
+         *
+         * ?
+         *
+         * @param right The other CGTF.
+         * @param ix ?
+         * @param iy ?
+         * @param iz ?
+         * @return Integral value.
+         */
+        double CGTFxyzCGTF(CGTF&, int, int, int);
 
-			//! A normal membre taking three arguments and returning a double value.
-			/*! \return The value of the CGTF at the coordinates x,y,z. */
-		double func(double x, double y, double z) const;
-			
-			//! Gradient of a CGTF
-			/*! Computes the ith component of the gradient of CGTF*/
-		double grad_CGTF(const double& x, const double& y, const double& z, int i);
+            //! A normal member taking one argument and returning a double value.
+            /*! \return The kinetic value ??? */
+        double kineticCGTF(CGTF&);
+
+            //! A normal member taking two arguments and returning a double value.
+            /*! \return The ionic potential value ??? */
+        double ionicPotentialCGTF(CGTF&, std::vector<double>, double);
+        
+            //! A normal member taking one argument and returning a double value.
+            /*! \return ???. */
+        double CGTFstarCGTF(CGTF&);
+
+        //bool CGTFEqCGTF(CGTF&);
+
+            //! A normal membre taking one argument and returning a void value.
+            /*! Insert all the data in the CGTF. */
+        void push_back(GTF&);
+
+            //! A normal membre taking one argument and returning a void value.
+            /*! Insert the num center in the CGTF. */
+        void setNumCenter(int);
+
+            //! A normal membre taking one argument and returning a void value.
+            /*! Insert the shell type (S, P, D, ...) in the CGTF. */
+        void setLtype(std::string);
+
+            //! A normal membre taking one argument and returning a void value.
+            /*! Insert the factor coefficient in the CGTF. */
+        void setFactorCoef(double);
+
+            //! A normal membre taking three arguments and returning a double value.
+            /*! \return The value of the CGTF at the coordinates x,y,z. */
+        double func(double x, double y, double z) const;
+            
+            //! Gradient of a CGTF
+            /*! Computes the ith component of the gradient of CGTF*/
+        double grad_CGTF(const double& x, const double& y, const double& z, int i);
 };
 
-	//! An operator member taking two arguments and returning a bool value.
-	/*! \return The bool value of an equality between two CGTF. */
-bool operator==(CGTF, CGTF);
+/**
+ * @brief Overloads the equality operator for two CGTF objects.
+ *
+ * Two CGTFs are considered equal if they contain the same set of primitive GTFs, independantly of the order.
+ *
+ * @param a First CGTF.
+ * @param b Second CGTF.
+ * @return True if the two CGTFs are equal, false otherwise.
+ */
+bool operator==(CGTF left, CGTF right);
 
-	//! An operator member taking two arguments and returning an ostream value.
-	/*! Print all the data of one CGTF */
-ostream& operator<<(ostream&, CGTF&);
-	
-	//! An operator member taking two arguments and returning a double value.
-	/*! \return The double value of a product between a vector of CGTF at the coordinates x,y,z*/
-double operator*(const vector<CGTF>&, const vector<double>&);
+/**
+ * @brief Overloads the output stream redirection operator for a CGTF.
+ *
+ * Prints coefficients and primitive GTFs composing the CGTF.
+ *
+ * @param stream Output stream.
+ * @param cgtf CGTF to print.
+ * @return Reference to the output stream.
+ */
+std::ostream& operator<<(std::ostream &stream, CGTF &cgtf);
+
+/**
+ * @brief Computes the product of many CGTFs evaluated at a given point (x,y,z).
+ *
+ * Evaluates each CGTF of the std::vector at the given (x,y,z) coordinates and
+ * returns the product of the evaluations.
+ *
+ * @param cgtfs std::vector of CGTF objects.
+ * @param coords 3-element coordinate std::vector (x,y,z).
+ * @return Product of the CGTFs values at the given coordinates.
+ */
+double operator*(const std::vector<CGTF> &cgtfs, const std::vector<double> &coords);
 
 #endif

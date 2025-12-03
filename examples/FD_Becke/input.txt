@@ -1,0 +1,4 @@
+RunType=computeDescriptors
+AnalyticFiles=h2o.fchk,h2op.fchk,h2om.fchk
+PartitionMethod=FD
+#Energies=0.30075,0.02092

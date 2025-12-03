@@ -1,0 +1,17 @@
+# Base style
+BasedOnStyle: LLVM
+DerivePointerAlignment: false
+
+# Pointers and references
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# Indent
+IndentWidth: 4
+UseTab: Never
+BreakBeforeBraces: Allman
+
+# Long lines
+ColumnLimit: 0
+
+

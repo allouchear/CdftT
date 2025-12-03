@@ -1,5 +1,5 @@
-#ifndef __CDFTT_CONSTANTS_H__
-#define __CDFTT_CONSTANTS_H__
+#ifndef CDFTT_CONSTANTS_H
+#define CDFTT_CONSTANTS_H
 
 /*
 static gdouble hbar = 6.62606891e-34/2/PI;// PRL 1998 NIST
@@ -17,7 +17,7 @@ static gdouble kb =1.3806505e-23; //1.380 6505(24) x 10^-23 J K-1  from NIST
 #define ANGTOBOHR  (1.0/BOHRTOANG)
 #define RADTODEG   57.29577951308232090712
 #define AUTODEB  2.54158059
-#define AUTOEV  27.21138469
+#define AUTOEV  27.21138469                         // TODO: remplacer par HARTREE_TO_EV
 #define PI   3.14159265358979323846
 #define AMUTOAU 1822.88848121
 #define AUTOCM1 219474.63633664 
@@ -37,8 +37,6 @@ static gdouble kb =1.3806505e-23; //1.380 6505(24) x 10^-23 J K-1  from NIST
 /* 6.62606957e-34*1.43932636e+20*0.020454828110640*1e15/(2pi) */
 #define hbar   (6.62606957e-34*1.43932636e20*0.020454828110640*1e15/2.0/PI)
 
-
-
 #define DEGTORAD   0.017453293 
 /* c en m/s */
 #define slight (299792458.0) 
@@ -47,4 +45,19 @@ static gdouble kb =1.3806505e-23; //1.380 6505(24) x 10^-23 J K-1  from NIST
 #define epsilon0 (8.854187817e-12)
 #define PRECISION 1e-10
 
-#endif /* __CDFTT_CONSTANTS_H__ */
+
+
+namespace Constants
+{
+    /** @brief Conversion constant from Hartrees (atomic unit) to electron-volts (eV). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?eqRhrev). */
+    const double HARTREE_TO_EV = 27.211386245981;
+
+    /** @brief Conversion constant from electron-volts (eV) to Hartrees (atomic unit). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?eqRhrev). */
+    const double EV_TO_HARTREE = 3.6749322175665e-2;
+}
+
+
+
+
+
+#endif // CDFTT_CONSTANTS_H

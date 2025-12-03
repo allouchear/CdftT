@@ -1,39 +1,41 @@
-Atom.o: Atom.cpp \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Atom.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/PeriodicTable.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Element.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Element.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Constants.h
+Atom.o: Atom.cpp /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Atom.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/PeriodicTable.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Element.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Constants.h
 Element.o: Element.cpp Element.h
-PeriodicTable.o: PeriodicTable.cpp PeriodicTable.h Element.h
+PeriodicTable.o: PeriodicTable.cpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/PeriodicTable.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Element.h
 Structure.o: Structure.cpp \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Structure.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Atom.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/PeriodicTable.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Element.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Element.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/WFX.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/Utils.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/FCHK.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/MOLDENGAB.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/LOG.h
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Structure.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Atom.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/PeriodicTable.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Element.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/WFX.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/FCHK.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h
 Descriptors.o: Descriptors.cpp \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Descriptors.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Cube/Grid.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Structure.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Atom.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/PeriodicTable.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Element.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Common/Element.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/WFX.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/Utils.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/FCHK.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/MOLDENGAB.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/LOG.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Cube/Domain.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Cube/GridCP.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Becke/Becke.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Orbitals/Orbitals.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Basis/CGTF.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Basis/GTF.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Becke/GridPoints.h
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Descriptors.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Grid.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Structure.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Atom.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/PeriodicTable.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Element.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/WFX.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/FCHK.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Domain.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Enums.hpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Becke/Becke.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Becke/GridPoints.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/Orbitals.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/CGTF.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/GTF.h

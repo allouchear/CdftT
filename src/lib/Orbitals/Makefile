@@ -1,4 +1,4 @@
-OBJECTS = Orbitals.o OrbitalsSave.o
+OBJECTS = ExcitedState.o Orbitals.o OrbitalsSave.o
 
 
 include $(LIBCDFTTDIR)/CONFIG

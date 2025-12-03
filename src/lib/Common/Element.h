@@ -1,178 +1,249 @@
 #ifndef CDFTT_ELEMENT_H_INCLUDED
 #define CDFTT_ELEMENT_H_INCLUDED
-#include<iostream>
-#include<string>
-#include<vector>
 
-using namespace std;
+#include <string>
+#include <vector>
 
-	//! An isotope class.
-	/*! This class will be used in the Element class to complete the data on a element. */
+
+/**
+ * @brief Isotope class.
+ *
+ * This class is used in the Element class to complete the data on an element.
+ */
 class Isotope
 {
-	private:
-		string _symbol;
-		int _int_mass;
-		double _real_mass;
-		double _abundance;
-	public:
+    private:
+        /** @brief Symbol of the isotope (e.g., "H", "D", "T"). */
+        std::string _symbol;
 
-			//! A default constructor.
-			/*! In the case of a problem, this constructor create an isotope with all value on 0 and all string on "None". */
-		Isotope();
+        /** @brief Mass number of the isotope. */
+        int _int_mass;
 
-			//! A real constructor.
-			/*! This constructor is used to add all of the data of one isotope. */
-		Isotope(const string&, const int&, const double&, const double&);
+        /** @brief Exact mass of the isotope in atomic mass units. */
+        double _real_mass;
 
-			//! A default desctructor.
-			/*! We don't use it. */
-		~Isotope();
+        /** @brief Natural abundance (in percent) of the isotope. */
+        double _abundance;
 
-			//! A normal member taking no arguments and returning a string value.
-			/*! \return The isotope's symbol. */
-		string symbol() const
-		{
-			return _symbol;
-		}
 
-			//! A normal member taking no arguments and returning an integer value.
-			/*! \return The approximate mass of an isotope. */
-		int int_mass() const
-		{
-			return _int_mass;
-		}
+    public:
+        /**
+         * @brief Default constructor.
+         *
+         * Sets all numeric attributes to 0 and std::string attributes to "None".
+         */
+        Isotope();
 
-			//! A normal member taking no arguments and returning an double value.
-			/*! \return The real mass of an isotope. */
-		double real_mass() const
-		{
-			return _real_mass;
-		}
+        /**
+         * @brief Constructor.
+         * 
+         * Initializes all data of one isotope.
+         */
+        Isotope(const std::string&, const int&, const double&, const double&);
 
-			//! A normal member taking no arguments and returning a double value.
-			/*! \return The abundace in percent of an isotope. */
-		double abundance() const
-		{
-			return _abundance;
-		}
+        /**
+         * @brief Default destructor.
+         *
+         * Not used explicitly.
+         */
+        ~Isotope();
+
+        /**
+         * @brief Returns the isotope symbol.
+         */
+        std::string symbol() const
+        {
+            return _symbol;
+        }
+
+        /**
+         * @brief Returns the mass number.
+         */
+        int int_mass() const
+        {
+            return _int_mass;
+        }
+
+        /**
+         * @brief Returns the exact mass in atomic mass units.
+         */
+        double real_mass() const
+        {
+            return _real_mass;
+        }
+
+        /**
+         * @brief Returns the natural abundance in percent.
+         */
+        double abundance() const
+        {
+            return _abundance;
+        }
 };
 
-	//! An element class.
-	/*! This class will be use as a dictionnary about all the properties of an element. */
+/**
+ * @brief Element class.
+ *
+ * This class is used as a dictionary containing all the properties of an element.
+ */
 class Element
 {
-	private:
-		string _name;
-		string _symbol;
-		int _atomic_number;
-		double _covalent_radii;
-		double _bond_order_radii;
-		double _van_der_waals_radii;
-		double _radii;
-		int _maximum_bond_valence;
-		double _mass;
-		double _electronegativity;
-		vector<Isotope> _isotope;
-	public:
+    private:
+        /** @brief Full name of the element (e.g., "Hydrogen"). */
+        std::string _name;
 
-			//! A default constructor.
-			/*! In the case of a problem, this constructor create an element with all value on 0 and all string on "None". */
-		Element();
+        /** @brief Chemical symbol of the element (e.g., "H"). */
+        std::string _symbol;
 
-			//! A real constructor.
-			/*! This constructor is used to add all of the data of one element. */
-		Element(const string&, const string&, const int&, const double&, const double&, const double&, const double&, const int&, const double&, const double&);
+        /** @brief Atomic number (Z) of the element. */
+        int _atomic_number;
 
-			//! A default destructor.
-			/*! We don't use it. */
-		~Element();
+        /** @brief Covalent radius of the element (in angstroms or project units). */
+        double _covalent_radii;
 
-			//! A normal member taking no arguments and returning a string value.
-			/*! \return The element's name. */
-		string name() const
-		{
-			return _name;
-		}
+        /** @brief Bond order adjusted radius. */
+        double _bond_order_radii;
 
-			//! A normal member taking no arguments and returning a string value.
-			/*! \return The element's symbol. */
-		string symbol() const
-		{
-			return _symbol;
-		}
+        /** @brief Van der Waals radius. */
+        double _van_der_waals_radii;
 
-			//! A normal member taking no arguments and returning a integer value.
-			/*! \return The atomic number of an element. */
-		int atomic_number() const
-		{
-			return _atomic_number;
-		}
+        /** @brief Generic atomic radius used by the project. */
+        double _radii;
 
-			//! A normal member taking no arguments and returning a double value.
-			/*! \return The covalent radius of an element. */
-		double covalent_radii() const
-		{
-			return _covalent_radii;
-		}
+        /** @brief Maximum number of bonds allowed for this element. */
+        int _maximum_bond_valence;
 
-			//! A normal member taking no arguments and returning a double value.
-			/*! \return The bond order radius of an element. */
-		double bond_order_radii() const
-		{
-			return _bond_order_radii;
-		}
+        /** @brief Atomic mass of the element. */
+        double _mass;
 
-			//! A normal member taking no arguments and returning a double value.
-			/*! \return The Van Der Waals radius of an element. */
-		double van_der_waals_radii() const
-		{
-			return _van_der_waals_radii;
-		}
+        /** @brief Electronegativity (Pauling scale) of the element. */
+        double _electronegativity;
 
-			//! A normal member taking no arguments and returning a double value.
-			/*! \return The radius of an element. */
-		double radii() const
-		{
-			return _radii;
-		}
+        /** @brief List of isotopes associated with the element. */
+        std::vector<Isotope> _isotope;
+    public:
 
-			//! A normal member taking no arguments and returning a double value.
-			/*! \return The maximum bond valence of an element. */
-		int maximum_bond_valence() const
-		{
-			return _maximum_bond_valence;
-		}
+        /**
+         * @brief Default constructor.
+         *
+         * Sets numeric attributes to 0 and std::string attributes to "None".
+         */
+        Element();
 
-			//! A normal member taking no arguments and returning a double value.
-			/*! \return The mass of an element. */
-		double mass() const
-		{
-			return _mass;
-		}
+        /**
+         * @brief Constructor.
+         *
+         * Initializes all data for an element.
+         */
+        Element(const std::string&, const std::string&, const int&, const double&, const double&, const double&, const double&, const int&, const double&, const double&);
 
-			//! A normal member taking no arguments and returning a double value.
-			/*! \return The electronegativity of an element. */
-		double electronegativity() const
-		{
-			return _electronegativity;
-		}
+        /**
+         * @brief Default destructor.
+         *
+         * Not used explicitly.
+         */
+        ~Element();
 
-			//! A normal member taking no arguments and returning an isotope value.
-			/*! \return The isotope i of an element. 
-				\sa Isotope class.
-			*/
-		Isotope isotope(const int& i) const
-		{
-			return _isotope[i-1];
-		}
+        /**
+         * @brief Returns the name.
+         */
+        std::string name() const
+        {
+            return _name;
+        }
 
-			//! A normal member taking no arguments.
-			/*! This add an isotope in the vector _isotope. */
-		void push_isotope(const Isotope& ISO)
-		{
-			_isotope.push_back(ISO);
-		}
+        /**
+         * @brief Returns the symbol.
+         */
+        std::string symbol() const
+        {
+            return _symbol;
+        }
+
+        /**
+         * @brief Returns the atomic number.
+         */
+        int atomic_number() const
+        {
+            return _atomic_number;
+        }
+
+        /**
+         * @brief Returns the covalent radius.
+         */
+        double covalent_radii() const
+        {
+            return _covalent_radii;
+        }
+
+        /**
+         * @brief Returns the bond order radius.
+         */
+        double bond_order_radii() const
+        {
+            return _bond_order_radii;
+        }
+
+        /**
+         * @brief Returns the van der Waals radius.
+         */
+        double van_der_waals_radii() const
+        {
+            return _van_der_waals_radii;
+        }
+
+        /**
+         * @brief Returns the generic radius.
+         */
+        double radii() const
+        {
+            return _radii;
+        }
+
+        /**
+         * @brief Returns the maximum number of bonds allowed for this element.
+         */
+        int maximum_bond_valence() const
+        {
+            return _maximum_bond_valence;
+        }
+
+        /**
+         * @brief Returns the atomic mass in atomic mass units.
+         */
+        double mass() const
+        {
+            return _mass;
+        }
+
+        /**
+         * @brief Returns the electronegativity (Pauling scale).
+         */
+        double electronegativity() const
+        {
+            return _electronegativity;
+        }
+
+        /**
+         * @brief Returns the given isotope of the element.
+         *
+         * @param i Index of the isotope (starting from 1).
+         * @return The requested Isotope object.
+         */
+        Isotope isotope(const int i) const
+        {
+            return _isotope[i - 1];
+        }
+
+        /**
+         * @brief Adds an isotope to the element.
+         *
+         * @param isotope Isotope object to append to the internal isotope list.
+         */
+        void push_isotope(const Isotope& isotope)
+        {
+            _isotope.push_back(isotope);
+        }
 };
 
 

@@ -1,6 +1,7 @@
-GTF.o: GTF.cpp /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Basis/GTF.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/Utils.h
-CGTF.o: CGTF.cpp \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Basis/CGTF.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Basis/GTF.h \
- /home/allouche/MySoftwares/CdftT/CdftT/src/lib/Utils/Utils.h
+GTF.o: GTF.cpp /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/GTF.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp
+CGTF.o: CGTF.cpp /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/CGTF.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/GTF.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp

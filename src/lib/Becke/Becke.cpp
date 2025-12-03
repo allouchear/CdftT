@@ -1,93 +1,98 @@
-#include<iostream>
 #include<cmath>
+#include<cstdlib>
+#include<functional>
+#include<iomanip>
+#include<iostream>
+#include<vector>
+
 #include <Cube/Grid.h>
 #include <Becke/Becke.h>
 
-using namespace std;
+
 
 Becke::Becke()
 {
-	_molecule=Structure();
-	_grid=GridPoints();
-    _orbitals=Orbitals();
-    _grid_points=vector<vector<vector<double>>> ();
-    _grid_weights=vector<vector<double>> ();
-    _grid_volumes=vector<vector<double>> ();
-    _multigrid=false;
+	_molecule = Structure();
+	_grid = GridPoints();
+    _orbitals = Orbitals();
+    _grid_points = std::vector<std::vector<std::vector<double>>> ();
+    _grid_weights = std::vector<std::vector<double>> ();
+    _grid_volumes = std::vector<std::vector<double>> ();
+    _multigrid = false;
     
-    _energy=0.0;
+    _energy = 0.0;
 }
 
 Becke::Becke(const Structure& S)
 {
-	_molecule=S;
-	_grid=GridPoints();
-	_orbitals=Orbitals();
-	_grid_points=vector<vector<vector<double>>> ();
-	_grid_weights=vector<vector<double>> ();
-	_grid_volumes=vector<vector<double>> ();
-	_multigrid=false;
-	_energy=0.0;
+	_molecule = S;
+	_grid = GridPoints();
+	_orbitals = Orbitals();
+	_grid_points = std::vector<std::vector<std::vector<double>>> ();
+	_grid_weights = std::vector<std::vector<double>> ();
+	_grid_volumes = std::vector<std::vector<double>> ();
+	_multigrid = false;
+	_energy = 0.0;
 }
 
 Becke::Becke(const Grid& g)
 {
-	_molecule=g.str();
-	_grid=GridPoints();
-	_orbitals=Orbitals();
-	_grid_points=vector<vector<vector<double>>> ();
-	_grid_weights=vector<vector<double>> ();
-	_grid_volumes=vector<vector<double>> ();
-	_multigrid=false;
-	_energy=0.0;
+	_molecule = g.get_structure();
+	_grid = GridPoints();
+	_orbitals = Orbitals();
+	_grid_points = std::vector<std::vector<std::vector<double>>> ();
+	_grid_weights = std::vector<std::vector<double>> ();
+	_grid_volumes = std::vector<std::vector<double>> ();
+	_multigrid = false;
+	_energy = 0.0;
 }
 
-Becke::Becke(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
+Becke::Becke(WFX& wfx, Binomial& bin, const PeriodicTable& table)
 {
-	_molecule=Structure(wfx, Table);
-	_grid=GridPoints();
-    _orbitals=Orbitals(wfx, Bin, Table);
-    _grid_points=vector<vector<vector<double>>> ();
-    _grid_weights=vector<vector<double>> ();
-    _grid_volumes=vector<vector<double>> ();
-    _multigrid=false;
-    _energy=wfx.Energy();
+	_molecule = Structure(wfx, table);
+	_grid = GridPoints();
+    _orbitals = Orbitals(wfx, bin, table);
+    _grid_points = std::vector<std::vector<std::vector<double>>> ();
+    _grid_weights = std::vector<std::vector<double>> ();
+    _grid_volumes = std::vector<std::vector<double>> ();
+    _multigrid = false;
+    _energy = wfx.Energy();
 }
 
-Becke::Becke(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
+Becke::Becke(FCHK& fchk, Binomial& bin, const PeriodicTable& table)
 {
-    _molecule=Structure(fchk, Table);
-    _grid=GridPoints();
-    _orbitals=Orbitals(fchk, Bin, Table);
-    _grid_points=vector<vector<vector<double>>> ();
-    _grid_weights=vector<vector<double>> ();
-    _grid_volumes=vector<vector<double>> ();
-    _multigrid=false;
-    _energy=fchk.TotalEnergy();
+    _molecule = Structure(fchk, table);
+    _grid = GridPoints();
+    _orbitals = Orbitals(fchk, bin, table);
+    _grid_points = std::vector<std::vector<std::vector<double>>> ();
+    _grid_weights = std::vector<std::vector<double>> ();
+    _grid_volumes = std::vector<std::vector<double>> ();
+    _multigrid = false;
+    _energy = fchk.TotalEnergy();
 }
 
-Becke::Becke(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Table)
+Becke::Becke(MOLDENGAB& moldengab, Binomial& bin, const PeriodicTable& table)
 {
-    _molecule=Structure(moldengab, Table);
-    _grid=GridPoints();
-    _orbitals=Orbitals(moldengab, Bin, Table);
-    _grid_points=vector<vector<vector<double>>> ();
-    _grid_weights=vector<vector<double>> ();
-    _grid_volumes=vector<vector<double>> ();
-    _multigrid=false;
-    _energy=0;
+    _molecule = Structure(moldengab, table);
+    _grid = GridPoints();
+    _orbitals = Orbitals(moldengab, bin, table);
+    _grid_points = std::vector<std::vector<std::vector<double>>> ();
+    _grid_weights = std::vector<std::vector<double>> ();
+    _grid_volumes = std::vector<std::vector<double>> ();
+    _multigrid = false;
+    _energy = 0;
 }
 
-Becke::Becke(LOG& log, Binomial& Bin, const PeriodicTable& Table)
+Becke::Becke(LOG& log, Binomial& bin, const PeriodicTable& table)
 {
-    _molecule=Structure(log, Table);
-    _grid=GridPoints();
-    _orbitals=Orbitals(log, Bin, Table);
-    _grid_points=vector<vector<vector<double>>> ();
-    _grid_weights=vector<vector<double>> ();
-    _grid_volumes=vector<vector<double>> ();
-    _multigrid=false;
-    _energy=log.Energy();
+    _molecule = Structure(log, table);
+    _grid = GridPoints();
+    _orbitals = Orbitals(log, bin, table);
+    _grid_points = std::vector<std::vector<std::vector<double>>> ();
+    _grid_weights = std::vector<std::vector<double>> ();
+    _grid_volumes = std::vector<std::vector<double>> ();
+    _multigrid = false;
+    _energy = log.Energy();
 }
 
 int Becke::number_of_radial_points(int Z)
@@ -117,32 +122,37 @@ int Becke::number_of_radial_points(int Z)
 
 GridPoints Becke::select_angular_grid(int lebedev_order)
 {
-	int n;
-	vector<int> L=_grid.Lebedev_Lmax();
-	for(size_t i=0; i<_grid.Lebedev_Lmax().size(); i++)
-		L[i]=abs(L[i]-lebedev_order);
-    
-    int Ln=L[0];  
-	n=0;
+	std::vector<int> L = _grid.Lebedev_Lmax();
 
-	for(size_t i=1; i<_grid.Lebedev_Lmax().size(); i++)
-		if(Ln>L[i])
+    for(size_t i = 0; i < _grid.Lebedev_Lmax().size(); i++)
+    {
+        L[i] = std::abs(L[i] - lebedev_order);
+    }
+    
+    int n = 0;
+    int Ln = L[0];
+
+	for(size_t i = 1; i < _grid.Lebedev_Lmax().size(); i++)
+    {
+		if(Ln > L[i])
         {
-			Ln=L[i];
-            n=i;
+			Ln = L[i];
+            n = i;
         }
+    }
 
 	int Lmax = _grid.Lebedev_Lmax()[n];
-	if(lebedev_order != Lmax)
-	{
-		cout<<"Error, no grid found."<<endl;
-		exit(1);
-	}
+    if(lebedev_order != Lmax)
+    {
+        std::cout << "Error, no grid found." << std::endl;
+        
+        std::exit(1);
+    }
 
 	return GridPoints(Lmax);
 }
 
-double Becke::s(double mu, int k=3)
+double Becke::s(double mu, int k)
 {
     // for nuclear weight functions
     double f = mu;
@@ -183,12 +193,12 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
     // angular grid
     GridPoints Angular = select_angular_grid(lebedev_order);
     int Nang = Angular.Npts();
-    vector<double> thang (Nang);
-    vector<double> phiang (Nang);
-    vector<double> wang (Nang);
-    vector<double> sc (Nang);
-    vector<double> ss (Nang);
-    vector<double> c (Nang);
+    std::vector<double> thang (Nang);
+    std::vector<double> phiang (Nang);
+    std::vector<double> wang (Nang);
+    std::vector<double> sc (Nang);
+    std::vector<double> ss (Nang);
+    std::vector<double> c (Nang);
 
     for(int i=0; i<Nang; i++)
     {
@@ -196,21 +206,21 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
         phiang[i]=Angular.LebedevGridPoints()[i][1];
         wang[i] = Angular.LebedevGridPoints()[i][2];
 
-    	sc[i] = sin(thang[i])*cos(phiang[i]);
-    	ss[i] = sin(thang[i])*sin(phiang[i]);
-    	c[i]  = cos(thang[i]);
+        sc[i] = std::sin(thang[i]) * std::cos(phiang[i]);
+        ss[i] = std::sin(thang[i]) * std::sin(phiang[i]);
+        c[i]  = std::cos(thang[i]);
     }
 
     // declaration of all variables
     int Nat = _molecule.number_of_atoms();
     double chi, uij, rm, mu, nu;
-    vector<double> wr(Nat, 0.0);
-    vector<vector<double>> R (Nat,vector<double> (Nat,0));     // distances between atoms i and j
-    vector<vector<double>> a (Nat,vector<double> (Nat,0));     // scaling factor used in eqn. A2
-    vector<vector<vector<double>>> list_coord_I (Nat);
-    vector<vector<vector<double>>> grid_points;
-    vector<vector<double>> grid_weights;
-    vector<vector<double>> grid_volumes;
+    std::vector<double> wr(Nat, 0.0);
+    std::vector<std::vector<double>> R (Nat,std::vector<double> (Nat,0));     // distances between atoms i and j
+    std::vector<std::vector<double>> a (Nat,std::vector<double> (Nat,0));     // scaling factor used in eqn. A2
+    std::vector<std::vector<std::vector<double>>> list_coord_I (Nat);
+    std::vector<std::vector<std::vector<double>>> grid_points;
+    std::vector<std::vector<double>> grid_weights;
+    std::vector<std::vector<double>> grid_volumes;
     int Nr, Npts;
 
     //cout<<endl;
@@ -236,27 +246,27 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
         rm = 0.5*_molecule.atom(I).covalent_radii();
         Npts = Nr*Nang;
 
-        vector<double> k (Nr);
-        vector<double> xr (Nr);
-        vector<double> radial_weights (Nr);
-        vector<double> g (Nr);
-        vector<double> r (Nr);
-        vector<double> wr(Npts, 0.0);
-        vector<double> x(Npts), y(Npts) , z(Npts), weights(Npts);
-        vector<double> Ptot(Npts, 0.0);
-        vector<vector<double>> dist (Nat, vector<double> (Npts,0.0));
-        vector<vector<double>> P (Nat, vector<double> (Npts,1.0));
+        std::vector<double> k (Nr);
+        std::vector<double> xr (Nr);
+        std::vector<double> radial_weights (Nr);
+        std::vector<double> g (Nr);
+        std::vector<double> r (Nr);
+        std::vector<double> wr(Npts, 0.0);
+        std::vector<double> x(Npts), y(Npts) , z(Npts), weights(Npts);
+        std::vector<double> Ptot(Npts, 0.0);
+        std::vector<std::vector<double>> dist (Nat, std::vector<double> (Npts,0.0));
+        std::vector<std::vector<double>> P (Nat, std::vector<double> (Npts,1.0));
         double div=0.0;
 
         for(int J=0; J<Nr; J++)
         {
             // grid points on interval [-1,1]
-            xr[J] = cos((J+1)/(Nr+1.0) * M_PI);
+            xr[J] = std::cos((J + 1) / (Nr + 1.0) * M_PI);
             // weights
-            radial_weights[J] = M_PI/(Nr+1.0) * sin((J+1)/(Nr+1.0) * M_PI) * sin((J+1)/(Nr+1.0) * M_PI);
+            radial_weights[J] = M_PI / (Nr + 1.0) * std::sin((J + 1) / (Nr + 1.0) * M_PI) * std::sin((J + 1) / (Nr + 1.0) * M_PI);
             // from variable transformation
             div=(1+xr[J])/((1-xr[J])*(1-xr[J])*(1-xr[J]));
-            g[J] = 2 * rm*rm*rm * sqrt(div*div*div);
+            g[J] = 2 * rm * rm * rm * std::sqrt(div * div * div);
             radial_weights[J] *= g[J];
             // radial grid points on interval [0,infinity]
             r[J] = rm * (1+xr[J])/(1-xr[J]);
@@ -277,7 +287,9 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
         // distance between grid points and atom i
         for (int i=0; i<Nat; i++)
             for(int j=0; j<Npts; j++)
-                dist[i][j] = sqrt((x[j] - _molecule.atom(i).coordinates()[0])*(x[j] - _molecule.atom(i).coordinates()[0]) + (y[j] - _molecule.atom(i).coordinates()[1])*(y[j] - _molecule.atom(i).coordinates()[1]) + (z[j] - _molecule.atom(i).coordinates()[2])*(z[j] - _molecule.atom(i).coordinates()[2]) );
+                dist[i][j] = std::sqrt((x[j] - _molecule.atom(i).coordinates()[0]) * (x[j] - _molecule.atom(i).coordinates()[0])
+                                        + (y[j] - _molecule.atom(i).coordinates()[1]) * (y[j] - _molecule.atom(i).coordinates()[1])
+                                        + (z[j] - _molecule.atom(i).coordinates()[2]) * (z[j] - _molecule.atom(i).coordinates()[2]));
                 
 
         // P_i(r) as defined in eqn. (13)
@@ -304,7 +316,7 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
             wr[i] = P[I][i]/Ptot[i];
         
 
-        vector<vector<double>> coord_i (Npts);
+        std::vector<std::vector<double>> coord_i (Npts);
         for(int i=0; i<Npts; i++)
             coord_i[i]={x[i], y[i], z[i]};
 
@@ -326,11 +338,11 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
     for(int i=0; i<Nat; i++)
         printnpts+=_grid_points[i].size();
 
-    cout<<"Number of Becke  grid points = "<<printnpts<<endl<<endl;
+    std::cout << "Number of Becke  grid points = " << printnpts << std::endl << std::endl;
 }
 
 
-vector<vector<double>> Becke::join_grids()
+std::vector<std::vector<double>> Becke::join_grids()
 {   /*
     combine the multicenter grids into a single grid so that we get
     a quadrature rule for integration
@@ -348,9 +360,9 @@ vector<vector<double>> Becke::join_grids()
     w         :  1d numpy array with weights
     */
     // weights of quadrature rule
-    vector<double> w;
+    std::vector<double> w;
     // sampling points of quadrature rule
-    vector<double> x, y, z;
+    std::vector<double> x, y, z;
     // xI,yI,zI : grid points of spherical grid around atom I
     // wI : weights of spherical grid around atom I
     // vI : volume elements of spherical grid around atom I
@@ -367,7 +379,7 @@ vector<vector<double>> Becke::join_grids()
             w[i]+=_grid_weights[i][j]*_grid_volumes[i][j];
         }
 
-    vector<vector<double>> join_grid;
+    std::vector<std::vector<double>> join_grid;
     join_grid.push_back(x);
     join_grid.push_back(y);
     join_grid.push_back(z);
@@ -376,7 +388,7 @@ vector<vector<double>> Becke::join_grids()
     return join_grid;
 }
 
-double Becke::multicenter_integration(function<double(const vector<GTF>& p, double x, double y, double z)> f, const vector<GTF>& p, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::multicenter_integration(std::function<double(const std::vector<GTF>& p, double x, double y, double z)> f, const std::vector<GTF>& p, int kmax, int lebedev_order, int radial_grid_factor)
 {    /*
     compute the integral
 
@@ -429,7 +441,7 @@ double Becke::multicenter_integration(function<double(const vector<GTF>& p, doub
     return integral;
 }
 
-double Becke::multicenter_integration(function<double(Orbitals&, int i, int j, double x, double y, double z)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::multicenter_integration(std::function<double(Orbitals&, int i, int j, double x, double y, double z)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor)
 {    /*
     compute the integral
 
@@ -481,7 +493,7 @@ double Becke::multicenter_integration(function<double(Orbitals&, int i, int j, d
     return integral;
 }
 
-double Becke::multicenter_integration(function<double(Orbitals& Orb, int i, int j, double x, double y, double z, int alpha)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor, int alpha)
+double Becke::multicenter_integration(std::function<double(Orbitals& Orb, int i, int j, double x, double y, double z, int alpha)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor, int alpha)
 {    /*
     compute the integral
 
@@ -535,7 +547,7 @@ double Becke::multicenter_integration(function<double(Orbitals& Orb, int i, int 
     return integral;
 }
 
-vector<double> Becke::multicenter_sub_integration(function<double(Orbitals& Orb, double x, double y, double z)> f, int kmax, int lebedev_order, int radial_grid_factor)
+std::vector<double> Becke::multicenter_sub_integration(std::function<double(Orbitals& Orb, double x, double y, double z)> f, int kmax, int lebedev_order, int radial_grid_factor)
 {   
     /*
     compute the integral
@@ -573,7 +585,7 @@ vector<double> Becke::multicenter_sub_integration(function<double(Orbitals& Orb,
 
     int Nat = _molecule.number_of_atoms();
 
-    vector<double> sub_integral (Nat, 0.0);
+    std::vector<double> sub_integral (Nat, 0.0);
 
     for(int I=0; I<Nat; I++)
     {
@@ -614,7 +626,7 @@ double Becke::OverlapGTF(const GTF& A, const GTF& B, int kmax, int lebedev_order
     //    return bfA(x,y,z).conjugate() * bfB(x,y,z)
     //                                    
     // 2. integrate density on a multicenter grid
-    vector<GTF> p (2);
+    std::vector<GTF> p (2);
     p[0]=A;
     p[1]=B;
 
@@ -653,7 +665,7 @@ double Becke::OverlapCGTF(int i, int j, int kmax, int lebedev_order, int radial_
     return Sab;
 }
 
-double Becke::Overlap(int i, int j, int kmax, int lebedev_order, int radial_grid_factor, int alpha)
+double Becke::overlap(int i, int j, int kmax, int lebedev_order, int radial_grid_factor, int alpha)
 {
     /*
     overlap between two basis functions
@@ -686,8 +698,8 @@ double Becke::Overlap(int i, int j, int kmax, int lebedev_order, int radial_grid
 void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
 {
     int Nat=_molecule.number_of_atoms();
-    vector<double> qn (Nat);
-    vector<double> In = multicenter_sub_integration(&density, kmax, lebedev_order, radial_grid_factor);
+    std::vector<double> qn (Nat);
+    std::vector<double> In = multicenter_sub_integration(&density, kmax, lebedev_order, radial_grid_factor);
 
     for(int i=0; i<Nat ;i++)
         qn[i]=_molecule.atom(i).atomic_number() - In[i];
@@ -695,14 +707,26 @@ void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
     _partial_charge=qn;
 }
 
+void Becke::partial_charge(const Grid &g, int kmax, int lebedev_order, int radial_grid_factor)
+{
+    int Nat = _molecule.number_of_atoms();
+    std::vector<double> qn(Nat);
+    std::vector<double> In = multicenter_sub_integration(g);
+    for (int i = 0; i < Nat; i++)
+    {
+        qn[i] = _molecule.atom(i).atomic_number() - In[i];
+    }
+    _partial_charge = qn;
+}
+
 double Becke::density(Orbitals& Orb, double x, double y, double z)
 {
 	return Orb.density(x,y,z);
 }
 
-double Becke::prodGTF(const vector<GTF>& p, double x, double y, double z)
+double Becke::prodGTF(const std::vector<GTF>& p, double x, double y, double z)
 {
-    vector<double> c (3);
+    std::vector<double> c (3);
     c[0]=x;
     c[1]=y;
     c[2]=z;
@@ -786,7 +810,7 @@ double Becke::multicenter_integration(const Grid& g, int kmax, int lebedev_order
     return integral;
 }
 
-vector<double> Becke::multicenter_sub_integration(const Grid& g,int kmax , int lebedev_order, int radial_grid_factor)
+std::vector<double> Becke::multicenter_sub_integration(const Grid& g,int kmax , int lebedev_order, int radial_grid_factor)
 {   
 	if(_multigrid==false)
 	{
@@ -794,7 +818,7 @@ vector<double> Becke::multicenter_sub_integration(const Grid& g,int kmax , int l
 		_multigrid=true;
 	}
 	int Nat = _molecule.number_of_atoms();
-	vector<double> sub_integral(Nat,0.0) ;
+	std::vector<double> sub_integral(Nat,0.0) ;
 	for(int I=0; I<Nat; I++)
 	{
 		double integ=0.0;
@@ -810,35 +834,23 @@ vector<double> Becke::multicenter_sub_integration(const Grid& g,int kmax , int l
 	return sub_integral;
 }
 
-void Becke::partial_charge(const Grid& g, int kmax, int lebedev_order, int radial_grid_factor)
-{
-	int Nat=_molecule.number_of_atoms();
-	vector<double> qn (Nat);
-	vector<double> In = multicenter_sub_integration(g);
-	for(int i=0; i<Nat ;i++)
-	{
-		qn[i]=_molecule.atom(i).atomic_number() - In[i];
-	}
-	_partial_charge=qn;
-}
-
-vector<double> Becke::PartialChargeAndEnergy(const Grid& g, int kmax, int lebedev_order, int radial_grid_factor)
+std::vector<double> Becke::PartialChargeAndEnergy(const Grid& g, int kmax, int lebedev_order, int radial_grid_factor)
 {
     partial_charge(g,kmax, lebedev_order, radial_grid_factor);
-    vector<double> c = _partial_charge;
+    std::vector<double> c = _partial_charge;
     c.insert(c.begin(), _energy);
     return c;
 }
-vector<vector<double>> Becke::PartialChargesAndEnergy(int kmax, int lebedev_order, int radial_grid_factor)
+std::vector<std::vector<double>> Becke::PartialChargesAndEnergy(int kmax, int lebedev_order, int radial_grid_factor)
 {
     partial_charge(kmax, lebedev_order, radial_grid_factor);
-    vector<vector<double>> c(2);
+    std::vector<std::vector<double>> c(2);
     c[0].push_back({_energy});
     c[1] = _partial_charge;
     
     return c;
 }
-vector<double> Becke::get_Partial_Charge()
+std::vector<double> Becke::get_Partial_Charge()
 {
 	return _partial_charge;
 }
@@ -848,9 +860,9 @@ double Becke::get_Energy()
 }
 void Becke::printCharges()
 {
-	cout<<"Number of atoms = "<<_molecule.number_of_atoms()<<endl;
-	for(int i=0;i<_molecule.number_of_atoms();i++)
-	{
-		cout<<" Atom = "<<left<<setw(10)<<_molecule.atom(i).symbol()<<", "<<setw(10)<<" value = "<<setw(15)<<_partial_charge[i]<<endl;
-	}
+    std::cout << "Number of atoms = " << _molecule.number_of_atoms() << std::endl;
+    for(int i = 0; i < _molecule.number_of_atoms(); i++)
+    {
+        std::cout << " Atom = " << std::left << std::setw(10) << _molecule.atom(i).symbol() << ", " << std::setw(10) << " value = " << std::setw(15) << _partial_charge[i] << std::endl;
+    }
 }

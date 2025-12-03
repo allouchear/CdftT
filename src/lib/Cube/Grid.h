@@ -1,180 +1,352 @@
 #ifndef _CDFTT_GRID_H_INCLUDED
 #define _CDFTT_GRID_H_INCLUDED
 
-using namespace std;
+#include <fstream>
+#include <vector>
 #include <Common/Structure.h>
 #include <Cube/Domain.h>
-#include <functional>
 
+using std::ifstream;
+using std::ofstream;
+using std::vector;
+
+/**
+ * @brief Grid class.
+ *
+ * This class represents a 3D grid for storing scalar or vector fields, typically used for molecular densities and related quantities.
+ */
 class Grid
 {
-	Domain _dom;
-	Structure _str;
-	vector<vector<vector<vector<double>>>> _V;
-	
-	void next_Density(int i, int j, int k, double& rhocenter, vector<vector<int>>& trajectory);
-	
-	void addSurroundingDensity(int i,int j,int k, vector<vector<int>>& equals, double& rhocenter);
-	
-	//! sets boundary values
-	/*! sets the boundary values to closest value of the interior. Used by gradient and laplacian*/
-	void reset_Boundary(int nBound);
-	
-	public:
-		//! reset
-		/*! resets all values _V to zero and resizes to _dom size*/
-	void reset();
-	
-		//! Default Constructor
-		/*! 
-			Sets all attributes to 0. _Nval=1 by default so V will be 1 value of 0 /point 
-		*/
-	Grid();
-	
-		//! constructor from domain d
-		/*! builds a grid with domain d*/
-	Grid(const Domain& d);
-	
-		//! Constructor
-		/*! 
-			Calls Grid::read_From_Cube(..) to initialize values of grid 
-		*/
-	Grid(ifstream& nameFile, const PeriodicTable& Table);
-	
-		/*! 
-			Initializes Grid using Domain::Domain(ifstream& nameFile) and read_From_Cube(ifstream& nameFile, int Natoms, const PeriodicTable& Table) and assigns the data from .cube to V
-		*/
-	void read_From_Cube(ifstream& nameFile, const PeriodicTable& Table);
-	
-		//! get() function
-		/*!
-			Returns the data contained in a vector<..<vector. We recommend avoiding this method as much as possible as it is very slow.
-		*/
-	vector<vector<vector<vector<double>>>> V() const;
-	
-		//! get() function
-		/*!
-			Returns the domain
-		*/
-	Domain dom() const;
-	
-		//! get() function
-		/*!
-			Returns the molecular/atomic structure on the grid
-		*/
-	Structure str() const;
-	
-		//! Set function
-		/*! Sets _dom*/
-	void set_dom(const Domain& d);
-	
-		//! Set function
-		/*! Sets _str*/
-	void set_str(const Structure& S);
-	
-		//! Set function
-		/*! Sets _V*/
-	void set_V(const vector<vector<vector<vector<double>>>>& U);
-	
-		//! operator +
-		/*!
-			Operator + overload using Structure::operator+(g)
-		*/
-	void set_Vijkl(double rho, int i, int j, int k, int l);
-	
-		
-	Grid operator+(const Grid& g);
-	
-		//! addition
-		/*! adds grid g to this using Structure::add(..)*/
-	Grid add(const Grid& g);
-	
-	
-		//! operator *
-		/*!
-			returns the product _V and g._V point by point. Structure result is that of the LHS.
-		*/
-	Grid operator*(const Grid& g);
-	
-		//! operator -
-		/*!
-			returns the difference of _V and g._V point by point. Struccture result is that of the LHS.
-		*/
-	Grid operator-(const Grid& g);
-		
-		//! Sum
-		/*! sums the values of _V over the domain*/
-	double sum();
-	
-		//!Constructor
-		/*! Creates a Grid with the default structure, the domain of g, and _V=f(x,y,z). fpar contains information on the type of function used*/
-	Grid coulomb_Grid(double q, vector<double> R);
-	
-		//! Integration
-		/*! Interates _V over the domain sum()*dV*/
-	double integrate_Over_Dom();
-	
-		//! Laplacian coefficients
-		/*! Gets the coefficients of the laplcian operator in finite difference*/
-	void coefs_Laplacian(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc) const;
+    private:
+        /** @brief Domain object describing the grid geometry and axes. */
+        Domain _domain;
 
-		//! Laplacian grid
-		/*! returns a grid g where g._V are the laplacian of _V.*/
-		//* Note: the outer layers of thickness nBound of the grid will be zeroes as required by finite diff*/
-	Grid laplacian(int nBound) const;
-	
-		//! Laplacian coefficients
-		/*! Gets the coefficients of the laplcian operator in finite difference*/
-	//void coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc) const; ALLOUCHE NON
-	void coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz) const;
+        /** @brief Structure object describing the molecule/structure on the grid. */
+        Structure _structure;
 
-		//! Gradient grid
-		/*! returns a grid g where g._V are the gradient of _V.*/
-		/*! Note: the outer layers of thickness nBound of the grid will be zeroes as required by finite diff*/
-		/*! Note 2: number of values per point will change to 4*/
-	Grid gradient(int nBound) const;
-	
-		//! fine grid
-		/*! returns the same structure with a finer grid. Intermediate values calculated by cubic interpolation*/
-	Grid finer_Grid();
-	
-		//!coarse grid
-		/*! returns the same structure with a coarser grid. values are meaned across the grid.*/
-	Grid coarser_Grid();
-	
-		//!save
-		/*!save grid onto .cube file*/
-	void save(ofstream& name);
-		
-		//! Value on grid
-		/*! returns _V[i][j][k][0]*/
-	double value(int i, int j, int k) const;
+        /** @brief Values for each grid point. The first three dimensions are spatial dimensions (x,y,z). The fourth dimensions stores the values. */
+        vector<vector<vector<vector<double>>>> _values;
 
-		//! Value on grid
-		/*! returns _V[i][j][k][l]*/
-	double value(int i, int j, int k, int l) const;
-	
-		
-	void next(int i, int j, int k, double& Current, vector<vector<int>>& traj);
-	
-	
-	vector<double> atom_attract_diff(const vector<vector<int>>& attract);
-	
-	
-	void addSurroundingEqualPoints(int i,int j,int k, vector<vector<int>>& equals, double& current);
-	
-		//include reference Tang
-	
-	Grid aim_On_Grid(int nBound);
-	Grid aim_On_Grid_Density();
-		
-		//! Measure molecule
-		/*! Measures the size of the molecular structure and returns the largest sizes in the x, y, z directions*/
-	vector<double> sizeUpMol(double scale);
-		
-		//! Value of electronic density
-		/*! Returns the electronic density at a point in space weighted by the distance of the point to those of the grid*/ 
-	double value(double x, double y, double z) const;
+        /**
+         * @brief Advances the density ascent trajectory to the next point.
+         *
+         * @param i Grid index along the first (x) axis.
+         * @param j Grid index along the second (y) axis.
+         * @param k Grid index along the third (z) axis.
+         * @param rhocenter Reference to current density value. --> or density of center ??
+         * @param trajectory Vector of trajectory points.
+         */
+        void next_Density(int i, int j, int k, double& rhocenter, vector<vector<int>>& trajectory);
+
+        /**
+         * @brief Adds surrounding density points to the trajectory.
+         * 
+         * @param i Grid index along the first (x) axis.
+         * @param j Grid index along the second (y) axis.
+         * @param k Grid index along the third (z) axis.
+         * @param equals Vector of equal points.
+         * @param rhocenter Reference to current density value. --> or density of center ??
+         */
+        void addSurroundingDensity(int i, int j, int k, vector<vector<int>>& equals, double& rhocenter);
+
+        /**
+         * @brief Sets boundary values to the closest interior value. Used by gradient and laplacian.
+         *
+         * @param nBound Thickness of the boundary layer.
+         */
+        void reset_Boundary(int nBound);
+
+
+    public:
+        /**
+         * @brief Resets all grid values to zero and resizes _V to match the domain size.
+         */
+        void reset();
+
+        /**
+         * @brief Default constructor.
+         *
+         * Initializes all attributes to default values (calls default constructor on object members, empty vectors.).
+         */
+        Grid();
+
+        /**
+         * @brief Constructor from a domain.
+         *
+         * Builds a grid with the given domain.
+         * 
+         * @param d Domain reference.
+         */
+        Grid(const Domain& d);
+
+        /**
+         * @brief Constructor from a .cube file.
+         * 
+         * @param nameFile Input file stream opened on a .cube file.
+         * @param Table PeriodicTable reference.
+         */
+        Grid(ifstream& nameFile, const PeriodicTable& Table);
+
+        /**
+         * @brief Initializes grid from a .cube file.
+         *
+         * @param nameFile Input file stream opened on a .cube file.
+         * @param Table PeriodicTable reference.
+         */
+        void read_From_Cube(ifstream& nameFile, const PeriodicTable& Table);
+
+        /**
+         * @brief Returns the grid data as a 4D vector.
+         * 
+         * This method is slow since it copies a 4D vector. Avoid it if possible.
+         */
+        vector<vector<vector<vector<double>>>> get_values() const;
+
+        /**
+         * @brief Returns the domain object.
+         */
+        Domain get_domain() const;
+
+        /**
+         * @brief Returns the molecular/atomic structure on the grid.
+         */
+        Structure get_structure() const;
+
+        /**
+         * @brief Sets the domain.
+         */
+        void set_domain(const Domain& d);
+
+        /**
+         * @brief Sets the molecular/atomic structure on the grid.
+         */
+        void set_structure(const Structure& S);
+
+        /**
+         * @brief Sets the grid data.
+         */
+        void set_values(const vector<vector<vector<vector<double>>>>& U);
+
+        /**
+         * @brief Sets the value at grid indices (i,j,k,l).
+         * 
+         * @param rho Value to set
+         * @param i Grid index i
+         * @param j Grid index j
+         * @param k Grid index k
+         * @param l Value index l
+         */
+        void set_Vijkl(double rho, int i, int j, int k, int l);
+
+        /**
+         * @brief Overloads the addition operator for two grid objects.
+         * 
+         * @param g Grid to add.
+         * @return Sum grid.
+         */
+        Grid operator+(const Grid& g); // ?? Should be a const method. Also: outside of class?
+
+        /**
+         * @brief Adds another grid to this one.
+         * 
+         * @param g Grid to add.
+         */
+        Grid add(const Grid& g); // ?? Should return Grid& ? Refactor: overload operator+= ?
+
+        /**
+         * @brief Overloads the multiplication operator to multiply two grids pointwise.
+         * 
+         * @param g Grid to multiply with.
+         * @return Product grid.
+         */
+        Grid operator*(const Grid& g);
+
+        /**
+         * @brief Overloads the substraction operator to subtract two grids pointwise.
+         
+         * @param g Grid to subtract.
+         * @return Difference grid.
+         */
+        Grid operator-(const Grid& g);
+
+        /**
+         * @brief Returns the sum of all grid values over all points.
+         */
+        double sum();
+
+        /**
+         * @brief Returns a Coulomb potential grid generated by a point charge.
+         * 
+         * @param q Charge value.
+         * @param R Charge position.
+         * @return Coulomb grid.
+         */
+        Grid coulomb_Grid(double q, vector<double> R);
+
+        /**
+         * @brief Integrates the values over the domain.
+         * 
+         * @return Integral value.
+         */
+        double integrate_Over_Dom();
+
+        /**
+         * @brief Computes the coefficients of the Laplacian operator in finite difference.
+         *
+         * @param nBound Boundary thickness.
+         * @param fcx Laplacian component along the first (x) axis.
+         * @param fcy Laplacian component along the second (y) axis.
+         * @param fcz Laplacian component along the third (z) axis.
+         * @param cc Output central coefficient.
+         */
+        void coefs_Laplacian(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc) const;
+
+        /**
+         * @brief Returns a grid which values contain the Laplacian of this grid.
+         * 
+         * Note: the outer layers of thickness nBound will be zeroes as required by finite difference.
+         * 
+         * @param nBound Boundary thickness.
+         * @return Laplacian grid.
+         */
+        Grid laplacian(int nBound) const;
+
+        /**
+         * @brief Computes the coefficients of the gradient operator in finite difference.
+         * @param nBound Boundary thickness.
+         * @param fcx Gradient component along the first (x) axis.
+         * @param fcy Gradient component along the second (y) axis.
+         * @param fcz Gradient component along the third (z) axis.
+         */
+        void coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz) const;
+
+        /**
+         * @brief Returns a grid which values contain the gradient of this grid.
+         * 
+         * Note: the outer layers of thickness nBound will be zeroes as required by finite difference.
+         * Note 2: number of values per point will change to 4.
+         * 
+         * @param nBound Boundary thickness.
+         * @return Gradient grid.
+         */
+        Grid gradient(int nBound) const;
+
+        /**
+         * @brief Returns the same structure with a finer grid.
+         * 
+         * Intermediate values are calculated by cubic interpolation.
+         * 
+         * @return Finer grid.
+         */
+        Grid finer_Grid();
+
+        /**
+         * @brief Returns the same structure with a coarser grid.
+         * 
+         * Values are averaged across the grid.
+         * 
+         * @return Coarser grid.
+         */
+        Grid coarser_Grid();
+
+        /**
+         * @brief Saves the grid to a .cube file.
+         * 
+         * @param name Output file stream opened on a .cube file.
+         */
+        void save(ofstream& name);
+
+        /**
+         * @brief Returns the value at grid indices (i,j,k,0).
+         * 
+         * @param i Grid index i.
+         * @param j Grid index j.
+         * @param k Grid index k.
+         * @return Value at (i,j,k,0).
+         */
+        double value(int i, int j, int k) const;
+
+        /**
+         * @brief Returns the value at grid indices (i,j,k,l).
+         * 
+         * @param i Grid index i.
+         * @param j Grid index j.
+         * @param k Grid index k.
+         * @param l Value index l.
+         * @return Value at (i,j,k,l).
+         */
+        double value(int i, int j, int k, int l) const; //refactor : une seule fonction avec valeur l par defaut à 0 ?
+
+        /**
+         * @brief Advances to the next point in a trajectory.
+         * 
+         * @param i Grid index i.
+         * @param j Grid index j.
+         * @param k Grid index k.
+         * @param Current Reference to current value.
+         * @param traj Trajectory vector.
+         */
+        void next(int i, int j, int k, double& Current, vector<vector<int>>& traj);
+
+        /**
+         * @brief Computes atom-attractor differences for a set of attractor points.
+         * 
+         * @param attract Vector of attractor points.
+         * @return Vector of differences for each atom.
+         */
+        vector<double> atom_attract_diff(const vector<vector<int>>& attract);
+
+        /**
+         * @brief Adds surrounding equal points to the trajectory.
+         * 
+         * @param i Grid index i.
+         * @param j Grid index j.
+         * @param k Grid index k.
+         * @param equals Vector of equal points.
+         * @param current Reference to current value.
+         */
+        void addSurroundingEqualPoints(int i,int j,int k, vector<vector<int>>& equals, double& current);
+
+        /**
+         * @brief Computes Atoms in Molecules (AIM) regions on the grid.
+         *
+         * Ref: A grid-based Bader analysis algorithm without lattice bias.
+         * W. Tang, E. Sanville and G. Henkelman
+         * J. Phys.: Condens. Matter (2009), 21 084204. DOI 10.1088/0953-8984/21/8/084204.
+         *
+         * @param nBound Boundary thickness.
+         * @return AIM grid.
+         */
+        Grid aim_On_Grid(int nBound);
+
+        /**
+         * @brief Computes Atoms in Molecules (AIM) regions based on density.
+         *
+         * Ref: A grid-based Bader analysis algorithm without lattice bias.
+         * W. Tang, E. Sanville and G. Henkelman
+         * J. Phys.: Condens. Matter (2009), 21 084204. DOI 10.1088/0953-8984/21/8/084204.
+         * 
+         * @return Density-based AIM grid.
+         */
+        Grid aim_On_Grid_Density();
+
+        /**
+         * @brief Measures the size of the molecular structure and returns the largest sizes in each direction.
+         * 
+         * @param scale Scale factor.
+         * @return Vector of largest sizes in each direction (x,y,z).
+         */
+        vector<double> sizeUpMol(double scale);
+
+        /**
+         * @brief Returns the electronic density at a point in space, weighted by the distance to grid points.
+         * 
+         * @param x First (x) coordinate.
+         * @param y Second (y) coordinate.
+         * @param z Third (z) coordinate.
+         * @return Weighted electronic density.
+         */
+        double value(double x, double y, double z) const;
 };
 
 

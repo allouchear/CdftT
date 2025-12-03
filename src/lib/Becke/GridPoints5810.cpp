@@ -1,7 +1,4 @@
-#include<iostream>
 #include <Becke/GridPoints.h>
-
-using namespace std;
 
 void GridPoints::GridPoints5810()
 {

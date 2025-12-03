@@ -1,169 +1,418 @@
 #ifndef CDFTT_BECKE_INCLUDED
 #define CDFTT_BECKE_INCLUDED
 
-#include<iostream>
-#include<functional>
-#include <Utils/WFX.h>
-#include <Utils/FCHK.h>
-#include <Utils/MOLDENGAB.h>
-#include <Utils/LOG.h>
-#include <Orbitals/Orbitals.h>
+#include <iostream>
+#include <functional>
+#include <vector>
+
 #include <Becke/GridPoints.h>
 #include <Common/Descriptors.h>
+#include <Common/Structure.h>
+#include <Orbitals/Orbitals.h>
+#include <Utils/FCHK.h>
+#include <Utils/LOG.h>
+#include <Utils/MOLDENGAB.h>
+#include <Utils/WFX.h>
 
-using namespace std;
-
-	//! A LOG class.
-	/*! This class will be use to calculate partial charges. */
+/**
+ * @brief Becke class.
+ *
+ * This class will be used to calculate partial charges.
+ */
 class Becke
 {
-	private:
-		Structure _molecule;
-		Orbitals _orbitals;
-		GridPoints _grid;
-		vector<vector<vector<double>>> _grid_points;
-		vector<vector<double>> _grid_weights;
-		vector<vector<double>> _grid_volumes;
-		vector<double> _partial_charge;
-		double _energy;
-		bool _multigrid;
-	public:
-		double get_Energy();
-		vector<double> get_Partial_Charge();
-		void printCharges();
+    private:
+        /** @brief Structure containing the molecule or the system. */
+        Structure _molecule;
 
-			//! A default constructor.
-			/*! This constructor is used to set all of the parameters on 0 or "None" value. */
-		Becke();
+        /** @brief Orbitals object containing information on the orbitals. */
+        Orbitals _orbitals;
 
-			//! A constructor taking one argument.
-			/*! This constructor is used to setup the structure. */
-		Becke(const Structure& s);
+        /** @brief Selected grid. */
+        GridPoints _grid;
 
-			//! A constructor taking one argument.
-			/*! This constructor is used to setup the grid. */
-		Becke(const Grid& g);
+        /** @brief Storage of grid points for each atom: [atom][point][x,y,z,w]. The weights (w) are the product of the weight function (from fuzzy Voronoi decomposition of space) and the volume element. */
+        std::vector<std::vector<std::vector<double>>> _grid_points;
 
-			//! A constructor taking one argument.
-			/*! This constructor is used to set all of the parameters with a .wfx file. */
-		Becke(WFX&, Binomial&, const PeriodicTable&);
+        /** @brief Weights associated with each grid point. */
+        std::vector<std::vector<double>> _grid_weights;
 
-			//! A constructor taking one argument.
-			/*! This constructor is used to set all of the parameters with a .fchk file. */
-		Becke(FCHK&, Binomial&, const PeriodicTable&);
+        /** @brief Volumes associated with each grid point. */
+        std::vector<std::vector<double>> _grid_volumes;
 
-			//! A constructor taking one argument.
-			/*! This constructor is used to set all of the parameters with a .molden or a .gab file. */
-		Becke(MOLDENGAB&, Binomial&, const PeriodicTable&);
+        /** @brief Partial charges (per atom). */
+        std::vector<double> _partial_charge;
 
-			//! A constructor taking one argument.
-			/*! This constructor is used to set all of the parameters with a .log file. */
-		Becke(LOG&, Binomial&, const PeriodicTable&);
+        /** @brief Total energy. */
+        double _energy;
 
-			//! A default desctructor.
-			/*! We don't use it. */
-		~Becke() {}
-
-			//! A normal member taking no arguments and returning a Structure value.
-			/*! \return The structure. */
-		Structure get_struct() {return _molecule;}
-
-			//! A normal member taking one argument and returning an int value.
-			/*! \return The number of radial points for an atomic number. */
-		int number_of_radial_points(int);
-
-			//! A normal member taking one argument and returning a GridPoints value.
-			/*! \return The select grid for a Lmax. */
-		GridPoints select_angular_grid(int);
-
-			//! A normal member taking three arguments and returning a void value.
-			/*! Construct and actualise _grid_points, _grid_weights, and _grid_volumes. 
-			 * Construct a Becke grid for each atom.*/
-		void multicenter_grids(int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-
-			//! A normal member taking no arguments and returning a vector<vector<double>> value.
-			/*! \return One grid (x,y,z,w).
-			 * Merge all the grid in only one and recaculate the weights for each points. */
-		vector<vector<double>> join_grids();
-
-			//! A normal member taking two arguments and returning a double value.
-			/*! \return The value of cutoff profiles. */
-		double s(double, int);
-
-			//! A normal member taking five arguments and returning a double value.
-			/*! \return The value of an integral for a function like f(vector<GTF>, x, y, z). */
-		double multicenter_integration(function<double(const vector<GTF>&, double,double,double)>, const vector<GTF>&, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-
-			//! A normal member taking six arguments and returning a double value.
-			/*! \return The value of an integral for a function like f(Orbitals, i, j, x, y, z). */
-		double multicenter_integration(function<double(Orbitals&, int, int, double,double,double)>, int, int, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-
-			//! A normal member taking seven arguments and returning a double value.
-			/*! \return The value of an integral for a function like f(Orbitals, i, j, x, y, z, spin). */
-		double multicenter_integration(function<double(Orbitals&, int, int, double, double, double, int)> f, int i, int j, int kmax=3, int lebedev_order=41, int radial_grid_factor=5, int alpha=0);
-
-			//! A normal member taking four arguments and returning a vector<double> value.
-			/*! \return The table of values of an integral for a function like f(Orbitals, x, y, z) on each grid (so on each atom). */
-		vector<double> multicenter_sub_integration(function<double(Orbitals&, double, double, double)> f, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-
-			//! A normal member taking three arguments and returning a void value.
-			/*! Calculate and actualise _partial_charge. */
-		void partial_charge(int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-
-			//! A static member taking four arguments and returning a double value.
-			/*! \return The value of the electronic density at the point (x,y,z). */
-		static double density(Orbitals&, double, double, double);
-
-			//! A normal member taking five arguments and returning a double value.
-			/*! \return The value of an integral to have the overlap between two GTF. */
-		double OverlapGTF(const GTF&, const GTF&, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-
-			//! A static member taking four arguments and returning a double value.
-			/*! \return The value of the product between many GTF at the point (x,y,z). */
-		static double prodGTF(const vector<GTF>& p, double x, double y, double z);
-
-			//! Create Becke grid from density grid
-			/*! Creates a radial Becke grid from a density grid. Interpolates the electronic density if the points of Becke grid dont match the density grid*/	
-		double multicenter_integration(const Grid& g, int kmax=3 , int lebedev_order=41, int radial_grid_factor=5);
-		vector<double> multicenter_sub_integration(const Grid& g, int kmax=3 , int lebedev_order=41, int radial_grid_factor=5);
-		void partial_charge(const Grid& g, int kmax=3 , int lebedev_order=41, int radial_grid_factor=5);
+        /** @brief Indicates whether multigrid mode is active (true) or not (false). */
+        bool _multigrid;
 
 
-			//! A normal member taking five arguments and returning a double value.
-			/*! \return The value of an integral to have the overlap between two CGTF i and j. */
-		double OverlapCGTF(int i, int j, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
+    public:
+        /** 
+         * @brief Returns the total energy.
+         */
+        double get_Energy();
 
-			//! A static member taking six arguments and returning a double value.
-			/*! \return The value of the product between two CGTF at the point (x,y,z). */
-		static double CGTFstarCGTF(Orbitals& Orb, int i, int j, double x, double y, double z);
+        /**
+         * @brief Returns the partial charges (per atom).
+         */
+        std::vector<double> get_Partial_Charge();
 
-			//! A normal member taking six arguments and returning a double value.
-			/*! \return The value of an integral to have the overlap between two Orbitals i and j. */
-		double Overlap(int i, int j, int kmax=3, int lebedev_order=41, int radial_grid_factor=5, int alpha=0);
+        /**
+         * @brief Prints partial charges to standard output.
+         */
+        void printCharges();
 
-			//! A static member taking six arguments and returning a double value.
-			/*! \return The value of the Orbital i at the point (x,y,z). */
-		static double phi(Orbitals& Orb, int i, double x, double y, double z, int alpha=0);
+        /**
+         * @brief Default constructor.
+         *
+         * This constructor is used to set all of the parameters to 0 or "None" value.
+         */
+        Becke();
 
-			//! A static member taking six arguments and returning a double value.
-			/*! \return The value of the product between two Orbitals i and j at the point (x,y,z). */
-		static double phistarphi(Orbitals& Orb, int i, int j, double x, double y, double z, int alpha=0);
+        /**
+         * @brief Constructor that sets up the structure.
+         *
+         * @param s Structure to use for the Becke calculation.
+         */
+        Becke(const Structure& s);
 
-			//! A normal member taking no arguments and returning a double value.
-			/*! \return The HOMO energy. */
-		double eHOMO() {_orbitals.HOMO(); return _orbitals.eHOMO();}
+        /**
+         * @brief Constructor that sets up the grid.
+         *
+         * @param g Grid to use for the Becke calculation.
+         */
+        Becke(const Grid& g);
 
-			//! A normal member taking no arguments and returning a double value.
-			/*! \return The LUMO energy. */
-		double eLUMO() {_orbitals.LUMO(); return _orbitals.eLUMO();}
+        /**
+         * @brief Constructor from a .wfx input.
+         *
+         * This constructor is used to set all parameters using a .wfx file.
+         *
+         * @param wfx WFX reader reference.
+         * @param bin Binomial handler class reference.
+         * @param table Periodic table reference.
+         */
+        Becke(WFX& wfx, Binomial& Bin, const PeriodicTable& Table);
+
+        /**
+         * @brief Constructor from a .fchk input.
+         *
+         * This constructor is used to set all parameters using a .fchk file.
+         *
+         * @param fchk FCHK reader reference.
+         * @param bin Binomial handler class reference.
+         * @param table Periodic table reference.
+         */
+        Becke(FCHK& fchk, Binomial& bin, const PeriodicTable& table);
+
+        /**
+         * @brief Constructor from a .molden or .gab input.
+         *
+         * This constructor is used to set all parameters using a .molden or .gab file.
+         *
+         * @param moldengab MOLDENGAB reader reference.
+         * @param bin Binomial handler class reference.
+         * @param table Periodic table reference.
+         */
+        Becke(MOLDENGAB& moldengab, Binomial& bin, const PeriodicTable& table);
+
+        /**
+         * @brief Constructor from a .log input.
+         *
+         * This constructor is used to set all parameters using a .log file.
+         *
+         * @param log LOG reader reference.
+         * @param bin Binomial handler class reference.
+         * @param table Periodic table reference.
+         */
+        Becke(LOG& log, Binomial& bin, const PeriodicTable& table);
+
+        /**
+         * @brief Default destructor.
+         *
+         * Not used explicitly.
+         */
+        ~Becke() {}
+
+        /**
+         * @brief Returns the Structure (molecule or system).
+         *
+         * @return Structure The molecule or system.
+         */
+        Structure get_struct() {return _molecule;}
+
+        /**
+         * @brief Returns the number of radial points for a given atomic number.
+         *
+         * @param Z Atomic number for which the number of radial points is required.
+         * @return int Number of radial points.
+         */
+        int number_of_radial_points(int Z);
+
+        /**
+         * @brief Returns a grid for a given lebedev order.
+         *
+         * @param lebedev_order Lebedev order for angular quadrature.
+         * @return GridPoints Angular grid.
+         */
+        GridPoints select_angular_grid(int lebedev_order);
+
+        /**
+         * @brief Constructs and updates _grid_points, _grid_weights and _grid_volumes.
+         *
+         * Constructs a Becke grid for each atom.
+         *
+         * @param kmax Indicates how fuzzy the Voronoi polyhedrons should be, with larger kmax values meaning that borders are fuzzier. (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         */
+        void multicenter_grids(int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Merges all atomic grids into a single grid and recompute weights.
+         *
+         * @return Merged grid (columns: x,y,z,w).
+         */
+        std::vector<std::vector<double>> join_grids();
+
+            //! A normal member taking two arguments and returning a double value.
+            /*! \return The value of cutoff profiles. */
+        double s(double mu, int k = 3); // ?
+
+        /**
+         * @brief Multicenter integration for functions of signature: double(const std::vector<GTF>&, double, double, double).
+         *
+         * @param f Function to integrate.
+         * @param p Vector of GTF passed to f.
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @return double Value of the integral.
+         */
+        double multicenter_integration(std::function<double(const std::vector<GTF>&, double,double,double)> f, const std::vector<GTF>& p, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Multicenter integration for functions of signature: double(Orbitals&, int, int, double, double, double).
+         *
+         * @param f Function to integrate.
+         * @param i ?
+         * @param j ?
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @return double Value of the integral.
+         */
+        double multicenter_integration(std::function<double(Orbitals&, int, int, double,double,double)>, int, int, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Multicenter integration for functions of signature: double(Orbitals&, int, int, double, double, double, int).
+         *
+         * @param f Function to integrate.
+         * @param i ?
+         * @param j ?
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @param alpha ?
+         * @return double Value of the integral.
+         */
+        double multicenter_integration(std::function<double(Orbitals&, int, int, double, double, double, int)> f, int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, int alpha = 0);
+
+        /**
+         * @brief Multicenter integration from a density Grid.
+         *
+         * Creates a radial Becke grid from a density grid and interpolates the electronic density if the Becke grid points do not match the density grid points.
+         *
+         * @param g Density grid to use.
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @return double Value of the integral.
+         */
+        //! Create Becke grid from density grid
+        /*! Creates a radial Becke grid from a density grid. Interpolates the electronic density if the points of Becke grid dont match the density grid*/
+        double multicenter_integration(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Returns the table of integral values for a function of signature double(Orbitals&, double, double, double), evaluated on each grid (so on each atom).
+         *
+         * @param f Function to evaluate.
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @return Table of integral values per atom.
+         */
+        std::vector<double> multicenter_sub_integration(std::function<double(Orbitals&, double, double, double)> f, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
+
+        /**
+         * @brief ?
+         *
+         * @param g Density grid to use.
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @return Table of integral values per atom.
+         */
+        std::vector<double> multicenter_sub_integration(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Calculates and updates the partial charge.
+         *
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         */
+        void partial_charge(int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Calculates and updates the partial charge from a density grid.
+         *
+         * @param g Density grid to use.
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         */
+        void partial_charge(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Electronic density value at point (x,y,z).
+         *
+         * @param Orb Orbitals object used to evaluate the density.
+         * @param x X coordinate.
+         * @param y Y coordinate.
+         * @param z Z coordinate.
+         * @return double Electronic density at the given point.
+         */
+        static double density(Orbitals&, double, double, double);
+
+        /**
+         * @brief Returns the overlap integral between two Gaussian-Type Functions (GTFs).
+         *
+         * @param g1 First GTF.
+         * @param g2 Second GTF.
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @return double Value of the overlap integral.
+         */
+        double OverlapGTF(const GTF&, const GTF&, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Returns the product of many Gaussian-Type Functions (GTFs) evaluated at (x,y,z).
+         *
+         * @param p Vector of GTFs.
+         * @param x X coordinate.
+         * @param y Y coordinate.
+         * @param z Z coordinate.
+         * @return double Product value at the given point.
+         */
+        static double prodGTF(const std::vector<GTF>& p, double x, double y, double z);
+
+        /**
+         * @brief Returns the value of the overlap integral between two Contracted Gaussian-Type Functions (CGTFs).
+         *
+         * @param i Index of first CGTF.
+         * @param j Index of second CGTF.
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @return double Value of the overlap integral.
+         */
+        double OverlapCGTF(int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Returns the product of two Contracted Gaussian-Type Functions (CGTFs) evaluated at a point (x,y,z).
+         *
+         * @param Orb Orbitals reference containing the CGTFs.
+         * @param i Index of first CGTF.
+         * @param j Index of second CGTF.
+         * @param x X coordinate.
+         * @param y Y coordinate.
+         * @param z Z coordinate.
+         * @return double Product value of the two CGTFs at (x,y,z).
+         */
+        static double CGTFstarCGTF(Orbitals& Orb, int i, int j, double x, double y, double z);
+
+        /**
+         * @brief Returns the overlap integral between two orbitals of indexes i and j.
+         *
+         * @param i Index of the first orbital.
+         * @param j Index of the second orbital.
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @param alpha ? (default 0).
+         * @return double Value of the overlap integral.
+         */
+        double overlap(int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, int alpha = 0);
+
+        /**
+         * @brief Returns the value of the i-th orbital at point (x,y,z).
+         *
+         * @param Orb Orbitals reference.
+         * @param i Index of the chosen orbital.
+         * @param x X coordinate.
+         * @param y Y coordinate.
+         * @param z Z coordinate.
+         * @param alpha ? (default 0).
+         * @return double Value of the chosen orbital at the point (x,y,z).
+         */
+        static double phi(Orbitals& Orb, int i, double x, double y, double z, int alpha = 0);
+
+        /**
+         * @brief Returns the product of two orbitals of indexes i and j at a point (x,y,z).
+         *
+         * @param Orb Orbitals reference.
+         * @param i Index of the first orbital.
+         * @param j Index of the second orbital.
+         * @param x X coordinate.
+         * @param y Y coordinate.
+         * @param z Z coordinate.
+         * @param alpha ? (default 0).
+         * @return double Product value of the two orbitals at (x,y,z).
+         */
+        static double phistarphi(Orbitals& Orb, int i, int j, double x, double y, double z, int alpha=0);
+
+        /**
+         * @brief Returns the HOMO energy.
+         *
+         * @return double HOMO energy.
+         */
+        double eHOMO() {_orbitals.HOMO(); return _orbitals.eHOMO();}
+
+        /**
+         * @brief Returns the LUMO energy.
+         *
+         * @return double LUMO energy.
+         */
+        double eLUMO() {_orbitals.LUMO(); return _orbitals.eLUMO();}
+
+        /**
+         * @brief Returns partial charges and energy from a Grid.
+         *
+         * @param g Grid reference.
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @return Total energy (index 0) and partial charges (starting from index 1).
+         */
+        std::vector<double> PartialChargeAndEnergy(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
 
-		vector<double> PartialChargeAndEnergy(const Grid& g, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-
-
-			//! A normal member taking five arguments and returning a vector<double> value.
-			/*! \return The energy (index 0) and all the partial charges (index 1). */
-		vector<vector<double>> PartialChargesAndEnergy(int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
+        /**
+         * @brief Returns partial charges and energy from a Grid.
+         *
+         * @param g Grid reference.
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @return Total energy (first column) and partial charges (second column).
+         */
+        std::vector<std::vector<double>> PartialChargesAndEnergy(int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 };
 
 #endif
