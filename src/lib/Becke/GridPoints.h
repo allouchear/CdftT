@@ -29,7 +29,7 @@ class GridPoints
 
             //! A normal member taking no arguments and returning a vector<int> value.
             /*! \return The Lmax of a grid. */
-        std::vector<int> Lebedev_Lmax() {return _Lebedev_Lmax;}
+        const std::vector<int>& Lebedev_Lmax() const {return _Lebedev_Lmax;}
 
             //! A normal member taking no arguments and returning an int value.
             /*! \return The number of points which compose the grid. */

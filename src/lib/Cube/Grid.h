@@ -58,10 +58,9 @@ class Grid
 
 
     public:
-        /**
-         * @brief Resets all grid values to zero and resizes _V to match the domain size.
-         */
-        void reset();
+        //////////////////
+        // CONSTRUCTORS //
+        //////////////////
 
         /**
          * @brief Default constructor.
@@ -83,24 +82,14 @@ class Grid
          * @brief Constructor from a .cube file.
          * 
          * @param nameFile Input file stream opened on a .cube file.
-         * @param Table PeriodicTable reference.
+         * @param table PeriodicTable reference.
          */
-        Grid(ifstream& nameFile, const PeriodicTable& Table);
+        Grid(ifstream& nameFile, const PeriodicTable& table);
 
-        /**
-         * @brief Initializes grid from a .cube file.
-         *
-         * @param nameFile Input file stream opened on a .cube file.
-         * @param Table PeriodicTable reference.
-         */
-        void read_From_Cube(ifstream& nameFile, const PeriodicTable& Table);
 
-        /**
-         * @brief Returns the grid data as a 4D vector.
-         * 
-         * This method is slow since it copies a 4D vector. Avoid it if possible.
-         */
-        vector<vector<vector<vector<double>>>> get_values() const;
+        /////////////
+        // GETTERS //
+        /////////////
 
         /**
          * @brief Returns the domain object.
@@ -111,6 +100,28 @@ class Grid
          * @brief Returns the molecular/atomic structure on the grid.
          */
         Structure get_structure() const;
+
+        /**
+         * @brief Returns the grid data as a 4D vector.
+         * 
+         * This method is slow since it copies a 4D vector. Avoid it if possible.
+         */
+        vector<vector<vector<vector<double>>>> get_values() const;
+
+
+
+        /**
+         * @brief Resets all grid values to zero and resizes _values to match the domain size.
+         */
+        void reset();
+
+        /**
+         * @brief Initializes grid from a .cube file.
+         *
+         * @param nameFile Input file stream opened on a .cube file.
+         * @param table PeriodicTable reference.
+         */
+        void readFromCube(ifstream& nameFile, const PeriodicTable& table);
 
         /**
          * @brief Sets the domain.
@@ -188,7 +199,7 @@ class Grid
          * 
          * @return Integral value.
          */
-        double integrate_Over_Dom();
+        double integrateOverDomain();
 
         /**
          * @brief Computes the coefficients of the Laplacian operator in finite difference.

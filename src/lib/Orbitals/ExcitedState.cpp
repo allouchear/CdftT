@@ -8,6 +8,10 @@
 #include <utility>
 #include <vector>
 
+#ifdef ENABLE_OMP
+#include <omp.h>
+#endif
+
 #include <Common/Constants.h>
 #include <Orbitals/ExcitedState.hpp>
 #include <Utils/Enums.hpp>

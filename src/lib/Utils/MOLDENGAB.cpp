@@ -1,167 +1,188 @@
-#include<iostream>
-#include<sstream>
-#include <Utils/MOLDENGAB.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
+
 #include <Common/Constants.h>
+#include <Utils/MOLDENGAB.h>
 
-using namespace std;
 
-MOLDENGAB::MOLDENGAB()
+MOLDENGAB::MOLDENGAB() :
+    _symbol(),
+    _atomic_number(),
+    _coord(),
+    _shell_types(),
+    _L_types(),
+    _exposants(),
+    _number_of_gtf(),
+    _num_center(),
+    _cgtf_coefs(),
+    _factor_coefs(),
+    _MO_energy(),
+    _MO_coefs(),
+    _occupation(),
+    _spin_types(),
+    _coord_type("None"),
+    _basis_or_gto("None"),
+    _number_of_atoms(0),
+    _number_of_MO_coefs(0),
+    _number_of_MO(0),
+    _alpha_and_beta(true),
+    _n_at_basis(),
+    _alpha_occupation(),
+    _beta_occupation(),
+    _alpha_MO_coefs(),
+    _beta_MO_coefs(),
+    _alpha_energies(),
+    _beta_energies(),
+    _format("None"),
+    _cart_sphe("none"),
+    _mixte(false)
+{ }
+
+MOLDENGAB::MOLDENGAB(std::ifstream& file) :
+    _symbol(),
+    _atomic_number(),
+    _coord(),
+    _shell_types(),
+    _L_types(),
+    _exposants(),
+    _number_of_gtf(),
+    _num_center(),
+    _cgtf_coefs(),
+    _factor_coefs(),
+    _MO_energy(),
+    _MO_coefs(),
+    _occupation(),
+    _spin_types(),
+    _coord_type("None"),
+    _basis_or_gto("None"),
+    _number_of_atoms(0),
+    _number_of_MO_coefs(0),
+    _number_of_MO(0),
+    _alpha_and_beta(true),
+    _n_at_basis(),
+    _alpha_occupation(),
+    _beta_occupation(),
+    _alpha_MO_coefs(),
+    _beta_MO_coefs(),
+    _alpha_energies(),
+    _beta_energies(),
+    _format("None"),
+    _cart_sphe("none"),
+    _mixte(false)
 {
-    _symbol=vector<string> ();
-    _atomic_number=vector<int> ();
-    _coord=vector<vector<double>> ();
-    _shell_types=vector<string> ();
-    _L_types=vector<int> ();
-    _exposants=vector<double> ();
-    _number_of_gtf=vector<int> ();
-    _cgtf_coefs=vector<double> ();
-    _factor_coefs=vector<double> ();
-    _MO_energy=vector<double> ();
-    _MO_coefs=vector<vector<double>> ();
-    _occupation=vector<double> ();
-    _spin_types=vector<string> ();
-    _coord_type="None";
-    _number_of_atoms=0;
-    _number_of_MO_coefs=0;
-    _number_of_MO=0;
-    _alpha_and_beta=true;
-    _basis_or_gto="None";
-    _alpha_occupation=vector<double> ();
-    _beta_occupation=vector<double> ();
-    _alpha_MO_coefs=vector<vector<double>> ();
-    _beta_MO_coefs=vector<vector<double>> ();
-    _alpha_energies=vector<double> ();
-    _beta_energies=vector<double> ();
-    _format="None";
-    _cart_sphe="none";
-    _mixte=false;
-}
-
-MOLDENGAB::MOLDENGAB(ifstream& file)
-{
-    _symbol=vector<string> ();
-    _atomic_number=vector<int> ();
-    _coord=vector<vector<double>> ();
-    _shell_types=vector<string> ();
-    _L_types=vector<int> ();
-    _exposants=vector<double> ();
-    _number_of_gtf=vector<int> ();
-    _num_center=vector<int> ();
-    _cgtf_coefs=vector<double> ();
-    _factor_coefs=vector<double> ();
-    _MO_energy=vector<double> ();
-    _alpha_energies=vector<double> ();
-    _beta_energies=vector<double> ();
-    _MO_coefs=vector<vector<double>> ();
-    _alpha_MO_coefs=vector<vector<double>> ();
-    _beta_MO_coefs=vector<vector<double>> ();
-    _occupation=vector<double> ();
-    _alpha_occupation=vector<double> ();
-    _beta_occupation=vector<double> ();
-    _spin_types=vector<string> ();
-    _coord_type="None";
-    _number_of_MO_coefs=0;
-    _number_of_MO=0;
-    _alpha_and_beta=true;
-    _mixte=false;
 
     file.clear();
     file.seekg(0,file.beg);
-    string p;
+    std::string p;
     getline(file,p);
 
-    if(p.find("[Molden Format]")!=string::npos)
+    if(p.find("[Molden Format]") != std::string::npos)
     {
-        _format="molden";
-        _basis_or_gto="[GTO]";
+        _format = "molden";
+        _basis_or_gto = "[GTO]";
     }
-
-    else if(p.find("[Gabedit Format]")!=string::npos)
+    else if(p.find("[Gabedit Format]") != std::string::npos)
     {
-        _format="gabedit";
-        _basis_or_gto="[Basis]";
-        if(p.find("Sphe")!=string::npos)
-            _cart_sphe="sphe";
-        else if(p.find("Cart")!=string::npos)
-            _cart_sphe="cart";
+        _format = "gabedit";
+        _basis_or_gto = "[Basis]";
+
+        if(p.find("Sphe") != std::string::npos)
+        {
+            _cart_sphe = "sphe";
+        }
+        else if(p.find("Cart") != std::string::npos)
+        {
+            _cart_sphe = "cart";
+        }
         else
         {
-            cout<<"Error, can't recognize data format (sphe/cart)."<<endl;
-            cout<<"Please check your file."<<endl;
+            std::cout << "Error, can't recognize data format (sphe/cart)." << std::endl;
+            std::cout << "Please check your file." << std::endl;
+
             exit(1);
         }
     }
-
     else
     {
-        cout<<"Error, can't recognize file format."<<endl;
-        cout<<"Please check your file."<<endl;
+        std::cout << "Error, can't recognize file format." << std::endl;
+        std::cout << "Please check your file." << std::endl;
+
         exit(1);
     }
 
     read_atom_data(file);
 
-    _number_of_atoms=_atomic_number.size();
-    _n_at_basis=vector<int> (_number_of_atoms);
+    _number_of_atoms = _atomic_number.size();
+    _n_at_basis = std::vector<int>(_number_of_atoms);
     
     read_basis_data(file);
     read_MO_data(file);
 
-    if(_coord_type=="Angs")
-        for(int i=0; i<_number_of_atoms; i++)
-            for(int j=0; j<3; j++)
-                _coord[i][j]*=ANGTOBOHR;
+    if(_coord_type == "Angs")
+    {
+        for(int i = 0; i < _number_of_atoms; ++i)
+        {
+            for(int j = 0; j < 3; ++j)
+            {
+                _coord[i][j] *= Constants::ANGSTROM_TO_BOHR_RADIUS;
+            }
+        }
+    }
 
     if(_alpha_and_beta)
     {
-        _alpha_energies=_beta_energies=_MO_energy;
-        _alpha_occupation=_beta_occupation=_occupation;
-        _alpha_MO_coefs=_beta_MO_coefs=_MO_coefs;
+        _alpha_energies = _beta_energies = _MO_energy;
+        _alpha_occupation = _beta_occupation = _occupation;
+        _alpha_MO_coefs = _beta_MO_coefs = _MO_coefs;
     }
-
     else
-        for(int i=0; i<_number_of_MO; i++)
+    {
+        for(int i = 0; i < _number_of_MO; ++i)
         {
-            if(_spin_types[i]=="Alpha")
+            if(_spin_types[i] == "Alpha")
             {
                 _alpha_energies.push_back(_MO_energy[i]);
                 _alpha_occupation.push_back(_occupation[i]);
                 _alpha_MO_coefs.push_back(_MO_coefs[i]);
             }
             
-            else if(_spin_types[i]=="Beta")
+            else if(_spin_types[i] == "Beta")
             {
                 _beta_energies.push_back(_MO_energy[i]);
                 _beta_occupation.push_back(_occupation[i]);
                 _beta_MO_coefs.push_back(_MO_coefs[i]);
             }
         }
+    }
 }
 
-void MOLDENGAB::read_atom_data(ifstream& f)
+void MOLDENGAB::read_atom_data(std::ifstream& f)
 {
-    string p;
+    std::string p;
     int an;
-    vector<double> c (3);
+    std::vector<double> c (3);
     long int pos=LocaliseDataMolGabBefore(f,"[Atoms]");
 
     if(pos==-1)
     {
-        cout<<"Atoms data not found"<<endl;
-        cout<<"Data required, please check your file"<<endl;
+        std::cout<<"Atoms data not found"<<std::endl;
+        std::cout<<"Data required, please check your file"<<std::endl;
         exit(1);
     }
 
     f.seekg(pos);
     getline(f,p);
-    stringstream t(p);
+    std::stringstream t(p);
     t>>p;
     t>>_coord_type;
     
     getline(f,p);
 
     do{
-        stringstream s(p);
+        std::stringstream s(p);
         s>>p;    
         _symbol.push_back(p);
         s>>p;
@@ -172,19 +193,19 @@ void MOLDENGAB::read_atom_data(ifstream& f)
         s>>c[2];
         _coord.push_back(c);
         getline(f,p);
-    }while(p.find("[")==string::npos);
+    }while(p.find("[")==std::string::npos);
 }
 
-void MOLDENGAB::read_basis_data(ifstream& f)
+void MOLDENGAB::read_basis_data(std::ifstream& f)
 {
-    string p;
+    std::string p;
 
     long int pos=LocaliseDataMolGab(f, _basis_or_gto);
 
     if(pos==-1)
     {
-        cout<<"Basis (GTO) data not found"<<endl;
-        cout<<"Data required, please check your file"<<endl;
+        std::cout<<"Basis (GTO) data not found"<<std::endl;
+        std::cout<<"Data required, please check your file"<<std::endl;
         exit(1);
     }
 
@@ -287,8 +308,8 @@ void MOLDENGAB::read_basis_data(ifstream& f)
 
         else
         {
-            cout<<"Error, shell type no recognize."<<endl;
-            cout<<"Please check your file"<<endl;
+            std::cout<<"Error, shell type no recognize."<<std::endl;
+            std::cout<<"Please check your file"<<std::endl;
             exit(1);
         }
     }
@@ -296,21 +317,21 @@ void MOLDENGAB::read_basis_data(ifstream& f)
     _number_of_MO=_number_of_MO_coefs;
 }
 
-void MOLDENGAB::read_one_basis_data(istream& f)
+void MOLDENGAB::read_one_basis_data(std::istream& f)
 {
-    string p, t;
-    int n,m;
-    int v=0;
-    double pc,c;
+    std::string p, t;
+    int n, m;
+    int v = 0;
+    double pc, c;
 
-    getline(f,p);
-    stringstream k(p);
-    k>>m;
-    getline(f,p);
+    getline(f, p);
+    std::stringstream k(p);
+    k >> m;
+    getline(f, p);
     
     do{
         _num_center.push_back(m);
-        stringstream s(p);
+        std::stringstream s(p);
         s>>p;
         _shell_types.push_back(p);
         s>>n;
@@ -322,17 +343,17 @@ void MOLDENGAB::read_one_basis_data(istream& f)
             v++;
             _factor_coefs.push_back(c);
             getline(f,p);
-            if(p.find("D")!=string::npos)
+            if(p.find("D")!=std::string::npos)
                 p.replace(p.find("D"),1,"E");
-            else if(p.find("d")!=string::npos)
+            else if(p.find("d")!=std::string::npos)
                 p.replace(p.find("d"),1,"e");
 
-            if(p.find("D")!=string::npos)
+            if(p.find("D")!=std::string::npos)
                 p.replace(p.find("D"),1,"E");
-            else if(p.find("d")!=string::npos)
+            else if(p.find("d")!=std::string::npos)
                 p.replace(p.find("d"),1,"e");
 
-            stringstream ss(p);
+            std::stringstream ss(p);
             ss>>pc;
             _exposants.push_back(pc);
             ss>>pc;
@@ -341,7 +362,7 @@ void MOLDENGAB::read_one_basis_data(istream& f)
 
         getline(f,p);
         t=p;
-        while(t.find(" ")!=string::npos)
+        while(t.find(" ")!=std::string::npos)
             t.erase(t.find(" "),1);
 
     }while(!t.empty());
@@ -349,11 +370,11 @@ void MOLDENGAB::read_one_basis_data(istream& f)
     _n_at_basis[m]=v;
 }
 
-void MOLDENGAB::read_MO_data(ifstream& f)
+void MOLDENGAB::read_MO_data(std::ifstream& f)
 {
-    string p,t;
+    std::string p,t;
     double a;
-    vector<double> aa;
+    std::vector<double> aa;
 
     if(LocaliseDataMolGab(f,"Spin= Beta")!=-1)
     {
@@ -364,8 +385,8 @@ void MOLDENGAB::read_MO_data(ifstream& f)
 
     if(pos==-1)
     {
-        cout<<"Basis (GTO) data not found"<<endl;
-        cout<<"Data required, please check your file"<<endl;
+        std::cout<<"Basis (GTO) data not found"<<std::endl;
+        std::cout<<"Data required, please check your file"<<std::endl;
         exit(1);
     }
 
@@ -377,7 +398,7 @@ void MOLDENGAB::read_MO_data(ifstream& f)
         {
             if(j!=0)
                 getline(f,p);
-            stringstream s(p);
+            std::stringstream s(p);
             s>>p;
 
             if(p=="Ene=")
@@ -400,16 +421,16 @@ void MOLDENGAB::read_MO_data(ifstream& f)
         for(int k=0; k<_number_of_MO_coefs; k++)
         {
             getline(f,p);
-            stringstream ss(p);
+            std::stringstream ss(p);
             ss>>p;
             ss>>a;
             aa.push_back(a);
         }
         _MO_coefs.push_back(aa);
-        aa=vector<double> ();
+        aa=std::vector<double> ();
         getline(f,p);
         t=p;
-        while(t.find(" ")!=string::npos)
+        while(t.find(" ")!=std::string::npos)
             t.erase(t.find(" "),1);
     }while(!t.empty());
 
@@ -418,67 +439,67 @@ void MOLDENGAB::read_MO_data(ifstream& f)
 
 void MOLDENGAB::PrintData()
 {
-    cout<<"Number of atoms = "<<_number_of_atoms<<endl;
+    std::cout<<"Number of atoms = "<<_number_of_atoms<<std::endl;
     for(size_t i=0; i<_symbol.size(); i++)
-        cout<<"Symbol "<<i<<" = "<<_symbol[i]<<endl;
+        std::cout<<"Symbol "<<i<<" = "<<_symbol[i]<<std::endl;
     for(size_t i=0; i<_atomic_number.size(); i++)
-        cout<<"Atomic number "<<i<<" = "<<_atomic_number[i]<<endl;
+        std::cout<<"Atomic number "<<i<<" = "<<_atomic_number[i]<<std::endl;
     for(size_t i=0; i<_coord.size(); i++)
         for(size_t j=0; j<_coord[i].size(); j++)
-            cout<<"Coordinates "<<j<<" for atom "<<i<<" = "<<_coord[i][j]<<endl;
+            std::cout<<"Coordinates "<<j<<" for atom "<<i<<" = "<<_coord[i][j]<<std::endl;
     for(size_t i=0; i<_num_center.size(); i++)
-        cout<<"Num center "<<i<<" = "<<_num_center[i]<<endl;
+        std::cout<<"Num center "<<i<<" = "<<_num_center[i]<<std::endl;
     for(size_t i=0; i<_n_at_basis.size(); i++)
-        cout<<"N at basis "<<i<<" = "<<_n_at_basis[i]<<endl;
+        std::cout<<"N at basis "<<i<<" = "<<_n_at_basis[i]<<std::endl;
     for(size_t i=0; i<_shell_types.size(); i++)
-        cout<<"Shell type "<<i<<" = "<<_shell_types[i]<<endl;
+        std::cout<<"Shell type "<<i<<" = "<<_shell_types[i]<<std::endl;
     for(size_t i=0; i<_L_types.size(); i++)
-        cout<<"L type "<<i<<" = "<<_L_types[i]<<endl;
+        std::cout<<"L type "<<i<<" = "<<_L_types[i]<<std::endl;
     for(size_t i=0; i<_exposants.size(); i++)
-        cout<<"Exposant "<<i<<" = "<<_exposants[i]<<endl;
+        std::cout<<"Exposant "<<i<<" = "<<_exposants[i]<<std::endl;
     for(size_t i=0; i<_number_of_gtf.size(); i++)
-        cout<<"Number of GTF "<<i<<" = "<<_number_of_gtf[i]<<endl;
+        std::cout<<"Number of GTF "<<i<<" = "<<_number_of_gtf[i]<<std::endl;
     for(size_t i=0; i<_cgtf_coefs.size(); i++)
-        cout<<"GTF coefficient "<<i<<" = "<<_cgtf_coefs[i]<<endl;
+        std::cout<<"GTF coefficient "<<i<<" = "<<_cgtf_coefs[i]<<std::endl;
     for(size_t i=0; i<_factor_coefs.size(); i++)
-        cout<<"CGTF coefficient "<<i<<" = "<<_factor_coefs[i]<<endl;
+        std::cout<<"CGTF coefficient "<<i<<" = "<<_factor_coefs[i]<<std::endl;
     for(size_t i=0; i<_alpha_energies.size(); i++)
-        cout<<"Alpha MO energy "<<i<<" = "<<_MO_energy[i]<<endl;
+        std::cout<<"Alpha MO energy "<<i<<" = "<<_MO_energy[i]<<std::endl;
     for(size_t i=0; i<_beta_energies.size(); i++)
-        cout<<"Beta MO energy "<<i<<" = "<<_MO_energy[i]<<endl;
+        std::cout<<"Beta MO energy "<<i<<" = "<<_MO_energy[i]<<std::endl;
     for(size_t i=0; i<_alpha_MO_coefs.size(); i++)
         for(size_t j=0; j<_alpha_MO_coefs[i].size(); j++)
-            cout<<"Alpha MO coefficient ["<<i<<"]["<<j<<"] = "<<_alpha_MO_coefs[i][j]<<endl;
+            std::cout<<"Alpha MO coefficient ["<<i<<"]["<<j<<"] = "<<_alpha_MO_coefs[i][j]<<std::endl;
     for(size_t i=0; i<_beta_MO_coefs.size(); i++)
         for(size_t j=0; j<_beta_MO_coefs[i].size(); j++)
-            cout<<"Beta MO coefficient ["<<i<<"]["<<j<<"] = "<<_beta_MO_coefs[i][j]<<endl;
+            std::cout<<"Beta MO coefficient ["<<i<<"]["<<j<<"] = "<<_beta_MO_coefs[i][j]<<std::endl;
     for(size_t i=0; i<_alpha_occupation.size(); i++)
-        cout<<"Alpha Occupation "<<i<<" = "<<_alpha_occupation[i]<<endl;
+        std::cout<<"Alpha Occupation "<<i<<" = "<<_alpha_occupation[i]<<std::endl;
     for(size_t i=0; i<_beta_occupation.size(); i++)
-        cout<<"Beta Occupation "<<i<<" = "<<_beta_occupation[i]<<endl;
+        std::cout<<"Beta Occupation "<<i<<" = "<<_beta_occupation[i]<<std::endl;
     for(size_t i=0; i<_spin_types.size(); i++)
-        cout<<"Spin types "<<i<<" = "<<_spin_types[i]<<endl;
-    cout<<"Coordinates type = "<<_coord_type<<endl;
-    cout<<"Number of MO = "<<_number_of_MO<<endl;
-    cout<<"Number of MO coefficients = "<<_number_of_MO_coefs<<endl;
+        std::cout<<"Spin types "<<i<<" = "<<_spin_types[i]<<std::endl;
+    std::cout<<"Coordinates type = "<<_coord_type<<std::endl;
+    std::cout<<"Number of MO = "<<_number_of_MO<<std::endl;
+    std::cout<<"Number of MO coefficients = "<<_number_of_MO_coefs<<std::endl;
 
     if(_alpha_and_beta)
-        cout<<"Alpha == Beta"<<endl;
+        std::cout<<"Alpha == Beta"<<std::endl;
     else
-        cout<<"Alpha != Beta"<<endl;
+        std::cout<<"Alpha != Beta"<<std::endl;
 }
 
-long int LocaliseDataMolGab(ifstream& f, string b)
+long int LocaliseDataMolGab(std::ifstream& f, std::string b)
 {
     long int position;
     f.clear();
     f.seekg(0,f.beg);
-    string test;
+    std::string test;
     bool ok=false;
     while(!f.eof())
     {    
         getline(f, test);
-        if(test.find(b)!=string::npos)
+        if(test.find(b)!=std::string::npos)
         {
             ok=true;
             position=f.tellg();
@@ -492,18 +513,18 @@ long int LocaliseDataMolGab(ifstream& f, string b)
     return position;
 }
 
-long int LocaliseDataMolGabBefore(ifstream& f, string b)
+long int LocaliseDataMolGabBefore(std::ifstream& f, std::string b)
 {
     long int position;
     f.clear();
     f.seekg(0,f.beg);
-    string test;
+    std::string test;
     bool ok=false;
     while(!f.eof())
     {    
         position=f.tellg();
         getline(f, test);
-        if(test.find(b)!=string::npos)
+        if(test.find(b)!=std::string::npos)
         {
             ok=true;
             break;

@@ -13,11 +13,8 @@ static gdouble kb =1.3806505e-23; //1.380 6505(24) x 10^-23 J K-1  from NIST
 */
 
 #define BSIZE 1024
-#define BOHRTOANG   0.5291772083
-#define ANGTOBOHR  (1.0/BOHRTOANG)
 #define RADTODEG   57.29577951308232090712
 #define AUTODEB  2.54158059
-#define AUTOEV  27.21138469                         // TODO (lgardre): remplacer par HARTREE_TO_EV
 #define PI   3.14159265358979323846
 #define AMUTOAU 1822.88848121
 #define AUTOCM1 219474.63633664 
@@ -38,10 +35,8 @@ static gdouble kb =1.3806505e-23; //1.380 6505(24) x 10^-23 J K-1  from NIST
 #define hbar   (6.62606957e-34*1.43932636e20*0.020454828110640*1e15/2.0/PI)
 
 #define DEGTORAD   0.017453293 
-/* c en m/s */
-#define slight (299792458.0) 
-#define NAvogadro (6.02214129e23)
-#define hPlank (6.6260693e-34)
+
+
 #define epsilon0 (8.854187817e-12)
 #define PRECISION 1e-10
 
@@ -49,11 +44,54 @@ static gdouble kb =1.3806505e-23; //1.380 6505(24) x 10^-23 J K-1  from NIST
 
 namespace Constants
 {
-    /** @brief Conversion constant from Hartrees (atomic unit) to electron-volts (eV). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?eqRhrev). */
+    //----------------------------------------------------------------------------------------------------//
+    // PHYSICS CONSTANTS
+    //----------------------------------------------------------------------------------------------------//
+
+    /** @brief Avogadro constant in reciprocal moles (mol⁻¹). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?na). */
+    const double AVOGADRO_CONSTANT = 6.02214076e23;
+
+    /** @brief Boltzmann constant in joules per kelvin (J/K). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?k). */
+    const double BOLTZMANN_CONSTANT = 1.380649e-23;
+
+    /** @brief Planck constant in joule seconds (J·s). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?h). */
+    const double PLANCK_CONSTANT = 6.62607015e-34;
+
+    /** @brief Speed of light in vacuum in meters per second (m/s). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?c). */
+    const double SPEED_OF_LIGHT = 299792458.0;
+
+    ///////////////
+    // SHORTCUTS
+
+    /** @brief Boltzmann constant in joules per kelvin (J/K). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?k). */
+    const double KB = BOLTZMANN_CONSTANT;
+
+    /** @brief Avogadro constant in reciprocal moles (mol⁻¹). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?na). */
+    const double NA = AVOGADRO_CONSTANT;
+
+
+    //----------------------------------------------------------------------------------------------------//
+    // CONVERSION CONSTANTS
+    //----------------------------------------------------------------------------------------------------//
+
+    //////////////////
+    // ENERGY UNITS
+
+    /** @brief Conversion constant from Hartrees (atomic energy unit) to electron-volts (eV). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?eqRhrev). */
     const double HARTREE_TO_EV = 27.211386245981;
 
-    /** @brief Conversion constant from electron-volts (eV) to Hartrees (atomic unit). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?eqRhrev). */
+    /** @brief Conversion constant from electron-volts (eV) to Hartrees (atomic energy unit). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?evhr). */
     const double EV_TO_HARTREE = 3.6749322175665e-2;
+
+    //////////////////
+    // LENGTH UNITS
+
+    /** @brief Conversion constant from Bohr radius (atomic length unit) to Ångstrom (Å). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?bohrrada0). */
+    const double BOHR_RADIUS_TO_ANGSTROM = 0.529177210544;
+
+    /** @brief Conversion constant from Ångstrom (Å) to Bohr radius (atomic length unit). */
+    const double ANGSTROM_TO_BOHR_RADIUS = 1.0 / BOHR_RADIUS_TO_ANGSTROM;
+
 }
 
 

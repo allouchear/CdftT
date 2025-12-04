@@ -1,219 +1,127 @@
-using namespace std;
-#include <Cube/Domain.h>
-#include <Common/Constants.h>
-#include <string>
-#include <vector>
-#include <fstream>
+#include <array>
 #include <cmath>
-#include <iostream>
+#include <fstream>
+#include <string>
 #include <sstream>
+
 #include <Common/Atom.h>
+#include <Common/Constants.h>
+#include <Cube/Domain.h>
 
 
-Domain::Domain()
+//----------------------------------------------------------------------------------------------------//
+// CONSTRUCTORS
+//----------------------------------------------------------------------------------------------------//
+
+Domain::Domain() :
+    _Nval(1),
+    _N1(0),
+    _N2(0),
+    _N3(0),
+    _origin({ { 0.0, 0.0, 0.0 } }),
+    _T({ { { 0.0, 0.0, 0.0 },
+           { 0.0, 0.0, 0.0 },
+           { 0.0, 0.0, 0.0 } } }),
+    _inv_T({ { { 1.0, 0.0, 0.0 },
+               { 0.0, 1.0, 0.0 },
+               { 0.0, 0.0, 1.0 } } }),
+    _dx(0),
+    _dy(0),
+    _dz(0),
+    _dv(0)
+{ }
+
+Domain::Domain(ifstream& nameFile) :
+    _Nval(1),
+    _N1(0),
+    _N2(0),
+    _N3(0),
+    _origin({ { 0.0, 0.0, 0.0 } }),
+    _T({ { { 0.0, 0.0, 0.0 },
+           { 0.0, 0.0, 0.0 },
+           { 0.0, 0.0, 0.0 } } }),
+    _inv_T({ { { 1.0, 0.0, 0.0 },
+               { 0.0, 1.0, 0.0 },
+               { 0.0, 0.0, 1.0 } } }),
+    _dx(0),
+    _dy(0),
+    _dz(0),
+    _dv(0)
 {
-    _Nval=1;
-    _N1=0;
-    _N2=0;
-    _N3=0;
-    _T.resize(3, vector<double>(3));
-    _inv_T.resize(3, vector<double>(3));
-    for(int i=0;i<3;i++)
-    {
-        _O[i]=0;
-        for(int j=0; j<3;j++)
-        {
-            _T[i][j]=0;
-        }
-    }
+    readFromCube(nameFile);
+}
+
+Domain::Domain(int Nval, int N1, int N2, int N3, double xmax, double ymax, double zmax) :
+    _Nval(Nval),
+    _N1(N1),
+    _N2(N2),
+    _N3(N3),
+    _origin({ { - xmax, - ymax, - zmax } }),
+    _T({ { { 2.0 * xmax / N1, 0.0, 0.0 },
+           { 0.0, 2.0 * ymax / N2, 0.0 },
+           { 0.0, 0.0, 2.0 * zmax / N3 } } }),
+    _inv_T({{{1.0, 0.0, 0.0},
+             {0.0, 1.0, 0.0},
+             {0.0, 0.0, 1.0}}}),
+    _dx(0.0),
+    _dy(0.0),
+    _dz(0.0),
+    _dv(0.0)
+{
     inverse_T();
-    _dx=0;
-    _dy=0;
-    _dz=0;
-    _dv=0;
+    computeInfinitesimalElements();
 }
-Domain::Domain(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax, vector<vector<double>> T)
+
+Domain::Domain(int nVal, int n1, int n2, int n3, const std::array<double, 3>& origin) :
+    _Nval(nVal),
+    _N1(n1),
+    _N2(n2),
+    _N3(n3),
+    _origin(origin),
+    _T({ { { 0.0, 0.0, 0.0 },
+           { 0.0, 0.0, 0.0 },
+           { 0.0, 0.0, 0.0 } } }),
+    _inv_T({ { { 1.0, 0.0, 0.0 },
+               { 0.0, 1.0, 0.0 },
+               { 0.0, 0.0, 1.0 } } }),
+    _dx(0),
+    _dy(0),
+    _dz(0),
+    _dv(0)
 {
-    _Nval=Nval;
-    _N1=N1;
-    _N2=N2;
-    _N3=N3;
-    _O[0]=-xmax;
-    _O[1]=-ymax;
-    _O[2]=-zmax;
-    _T[0][0]=2*xmax/_N1;
-    _T[1][1]=2*ymax/_N2;
-    _T[2][2]=2*zmax/_N3;
-    for(int i=0; i<3;i++)
-    {
-        _dx += _T[0][i]*_T[0][i];
-        _dy += _T[1][i]*_T[1][i];
-        _dz += _T[2][i]*_T[2][i];
-    }
-    _inv_T.resize(3, vector<double>(3));
     inverse_T();
-    _dx = sqrt(_dx);
-    _dy = sqrt(_dy);
-    _dz = sqrt(_dz);
-    _dv = _dx*_dy*_dz;
-
+    computeInfinitesimalElements();
 }
-void Domain::set_all(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax, vector<vector<double>> T)
+
+
+//----------------------------------------------------------------------------------------------------//
+// PRIVATE METHODS
+//----------------------------------------------------------------------------------------------------//
+
+void Domain::computeInfinitesimalElements()
 {
-    _Nval=Nval;
-    _N1=N1;
-    _N2=N2;
-    _N3=N3;
-    _O[0]=-xmax;
-    _O[1]=-ymax;
-    _O[2]=-zmax;
-    _T=T;
-    for(int i=0; i<3;i++)
+    for (int i = 0; i < 3; ++i)
     {
-        _dx += _T[0][i]*_T[0][i];
-        _dy += _T[1][i]*_T[1][i];
-        _dz += _T[2][i]*_T[2][i];
+        _dx += _T[0][i] * _T[0][i];
+        _dy += _T[1][i] * _T[1][i];
+        _dz += _T[2][i] * _T[2][i];
     }
-    _inv_T.resize(3, vector<double>(3));
-    inverse_T();
-    _dx = sqrt(_dx);
-    _dy = sqrt(_dy);
-    _dz = sqrt(_dz);
-    _dv = _dx*_dy*_dz;
+
+    _dx = std::sqrt(_dx);
+    _dy = std::sqrt(_dy);
+    _dz = std::sqrt(_dz);
+
+    _dv = _dx * _dy * _dz;
 }
 
-void Domain::read_From_Cube(ifstream& nameFile)
-{
-    string s;
-    getline(nameFile,s);
-    stringstream ss(s);
-    // Tokenize the input string by comma delimiter
 
-    for(int i=0;i<3;i++)
-    {
-        ss>>_O[i];
-    }
-    _Nval = 1;
-    ss>>_Nval;
-    if(ss.fail()) _Nval=1;    
-    nameFile>>_N1;
-    _T.resize(3, vector<double>(3));
-    if(_N1>0)
-    {
-        for(int i=0; i<3; i++)
-        {
-            nameFile>>_T[0][i];
-        }
-        nameFile>>_N2;
-        for(int i=0; i<3; i++)
-        {
-            nameFile>>_T[1][i];
-        }
-        nameFile>>_N3;
-        for(int i=0; i<3; i++)
-        {
-            nameFile>>_T[2][i];
-        }
-        _N1=abs(_N1);
-    }
-    
-    else
-    {
-        for(int i=0; i<3; i++)
-        {
-            nameFile>>_T[0][i];
-            _T[0][i]=_T[0][i]*ANGTOBOHR;
-        }
-        nameFile>>_N2;
-        for(int i=0; i<3; i++)
-        {
-            nameFile>>_T[1][i];
-            _T[1][i]=_T[1][i]*ANGTOBOHR;
-        }
-        nameFile>>_N3;
-        for(int i=0; i<3; i++)
-        {
-            nameFile>>_T[2][i];
-            _T[2][i]=_T[2][i]*ANGTOBOHR;
-        }
-        for(int i=0;i<3;i++)
-        {
-            _O[i]=_O[i]*ANGTOBOHR;
-        }
-    }
-    for(int i=0; i<3;i++)
-    {
-        _dx += _T[0][i]*_T[0][i];
-        _dy += _T[1][i]*_T[1][i];
-        _dz += _T[2][i]*_T[2][i];
-    }
-    _inv_T.resize(3, vector<double>(3));
-    inverse_T();
-    _dx = sqrt(_dx);
-    _dy = sqrt(_dy);
-    _dz = sqrt(_dz);
-    _dv = _dx*_dy*_dz;
-}
+//----------------------------------------------------------------------------------------------------//
+// GETTERS
+//----------------------------------------------------------------------------------------------------//
 
-Domain::Domain(ifstream& nameFile)
-{
-    read_From_Cube(nameFile);
-}
-
-Domain::Domain(int i, int n, int m, int l, double* O)
-{
-    
-    {
-    set_Nval(i);
-    set_N1(n);
-    set_N2(m);
-    set_N3(l);
-    _T.resize(3, vector<double>(3));
-    if(O==NULL)
-    {
-        for(int i=0;i<3;i++)
-        {
-            _O[i]=0;
-            for(int j=0; j<3;j++)
-            {
-                _T[i][j]=0;
-            }
-        }
-    }
-    else
-    {
-        for(int i=0;i<3;i++)
-        {
-            _O[i]=O[i];
-            for(int j=0; j<3;j++)
-            {
-                _T[i][j]=0;
-            }
-        }
-    }
-    for(int i=0; i<3;i++)
-    {
-        _dx += _T[0][i]*_T[0][i];
-        _dy += _T[1][i]*_T[1][i];
-        _dz += _T[2][i]*_T[2][i];
-    }
-    _inv_T.resize(3, vector<double>(3));
-    inverse_T();
-    _dx = sqrt(_dx);
-    _dy = sqrt(_dy);
-    _dz = sqrt(_dz);
-    _dv = _dx*_dy*_dz;
-    }
-}
-
-int Domain::Nval() const
+int Domain::get_Nval() const
 {
     return _Nval;
-}
-
-void Domain::set_Nval(int N)
-{
-    _Nval=N;
 }
 
 int Domain::get_N1() const
@@ -221,19 +129,9 @@ int Domain::get_N1() const
     return _N1;
 }
 
-void Domain::set_N1(int N)
-{
-    _N1=N;
-}
-
 int Domain::get_N2() const
 {
     return _N2;
-}
-
-void Domain::set_N2(int N)
-{
-    _N2=N;
 }
 
 int Domain::get_N3() const
@@ -241,80 +139,284 @@ int Domain::get_N3() const
     return _N3;
 }
 
-void Domain::set_N3(int N)
+const std::array<double, 3>& Domain::get_origin() const
 {
-    _N3=N;
+    return _origin;
 }
 
-double* Domain::O() const
-{
-    return const_cast<double*>(_O);
-}
-
-vector<vector<double>> Domain::T() const
+const std::array<std::array<double, 3>, 3>& Domain::get_T() const
 {
     return _T;
 }
 
-double Domain::Tij(int i , int j) const
+double Domain::get_Tij(int i , int j) const
 {
     return _T[i][j];
 }
 
-void Domain::set_T(double v, int i, int j)
-{
-    _T[i][j]=v;
-}
-
-double Domain::dx() const
+double Domain::get_dx() const
 {
     return _dx;
 }
 
-double Domain::dy() const
+double Domain::get_dy() const
 {
     return _dy;
 }
 
-double Domain::dz() const
+double Domain::get_dz() const
 {
     return _dz;
-}
-double Domain::x(int i, int j, int k) const
-{
-    return _O[0]+_T[0][0]*i+_T[0][1]*j+_T[0][2]*k;
-}
-double Domain::y(int i, int j, int k) const
-{
-    return _O[1]+_T[1][0]*i+_T[1][1]*j+_T[1][2]*k;
-}
-double Domain::z(int i, int j, int k) const
-{
-    return _O[2]+_T[2][0]*i+_T[2][1]*j+_T[2][2]*k;
-}
-
-int Domain::i(double x, double y, double z) const
-{
-    return floor((x-_O[0])*_inv_T[0][0]+(y-_O[1])*_inv_T[0][1]+(z-_O[2])*_inv_T[0][2]);
-}
-
-int Domain::j(double x, double y, double z) const
-{
-    return floor((x-_O[0])*_inv_T[1][0]+(y-_O[1])*_inv_T[1][1]+(z-_O[2])*_inv_T[1][2]);
-}
-
-int Domain::k(double x, double y, double z) const
-{
-    return floor((x-_O[0])*_inv_T[2][0]+(y-_O[1])*_inv_T[2][1]+(z-_O[2])*_inv_T[2][2]);
 }
 
 double Domain::get_dv() const
 {
     return _dv;
 }
+
+
+//----------------------------------------------------------------------------------------------------//
+// SETTERS
+//----------------------------------------------------------------------------------------------------//
+
+void Domain::set_Nval(int N)
+{
+    _Nval = N;
+}
+
+void Domain::set_N1(int N)
+{
+    _N1 = N;
+}
+
+void Domain::set_N2(int N)
+{
+    _N2 = N;
+}
+
+void Domain::set_N3(int N)
+{
+    _N3 = N;
+}
+
+void Domain::set_Tij(double value, int i, int j)
+{
+    _T[i][j] = value;
+}
+
+void Domain::set_all(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax, const array<array<double, 3>, 3>& T)
+{
+    _Nval = Nval;
+
+    _N1 = N1;
+    _N2 = N2;
+    _N3 = N3;
+
+    _origin = { { - xmax, - ymax, - zmax } };
+    _T = T;
+
+    inverse_T();
+    computeInfinitesimalElements();
+}
+
+
+//----------------------------------------------------------------------------------------------------//
+// OTHER PUBLIC METHODS
+//----------------------------------------------------------------------------------------------------//
+
+double Domain::x(int i, int j, int k) const
+{
+    return _origin[0] + _T[0][0] * i + _T[0][1] * j + _T[0][2] * k;
+}
+
+double Domain::y(int i, int j, int k) const
+{
+    return _origin[1] + _T[1][0] * i + _T[1][1] * j + _T[1][2] * k;
+}
+
+double Domain::z(int i, int j, int k) const
+{
+    return _origin[2] + _T[2][0] * i + _T[2][1] * j + _T[2][2] * k;
+}
+
+int Domain::i(double x, double y, double z) const
+{
+    return floor((x - _origin[0]) * _inv_T[0][0] + (y - _origin[1]) * _inv_T[0][1] + (z - _origin[2]) * _inv_T[0][2]);
+}
+
+int Domain::j(double x, double y, double z) const
+{
+    return floor((x - _origin[0]) * _inv_T[1][0] + (y - _origin[1]) * _inv_T[1][1] + (z - _origin[2]) * _inv_T[1][2]);
+}
+
+int Domain::k(double x, double y, double z) const
+{
+    return floor((x - _origin[0]) * _inv_T[2][0] + (y - _origin[1]) * _inv_T[2][1] + (z - _origin[2]) * _inv_T[2][2]);
+}
+
+void Domain::readFromCube(ifstream& nameFile)
+{
+    std::string s;
+    getline(nameFile,s);
+    std::stringstream ss(s);
+    // Tokenize the input std::string by comma delimiter
+
+    for(int i = 0; i < 3; ++i)
+    {
+        ss >> _origin[i];
+    }
+
+    _Nval = 1;
+    ss >> _Nval;
+    if(ss.fail())
+    {
+        _Nval = 1;
+    }
+
+    nameFile >> _N1;
+
+    if(_N1 > 0)
+    {
+        for(int i = 0; i < 3; ++i)
+        {
+            nameFile >> _T[0][i];
+        }
+
+        nameFile >> _N2;
+
+        for(int i = 0; i < 3; ++i)
+        {
+            nameFile >> _T[1][i];
+        }
+
+        nameFile >> _N3;
+
+        for(int i = 0; i < 3; ++i)
+        {
+            nameFile >> _T[2][i];
+        }
+
+        _N1 = std::abs(_N1);
+    }
+    else
+    {
+        for(int i = 0; i < 3; ++i)
+        {
+            nameFile >> _T[0][i];
+            _T[0][i] = _T[0][i] * Constants::ANGSTROM_TO_BOHR_RADIUS;
+        }
+
+        nameFile >> _N2;
+
+        for(int i = 0; i < 3; ++i)
+        {
+            nameFile >> _T[1][i];
+            _T[1][i] = _T[1][i] * Constants::ANGSTROM_TO_BOHR_RADIUS;
+        }
+
+        nameFile >> _N3;
+
+        for(int i = 0; i < 3; ++i)
+        {
+            nameFile >> _T[2][i];
+            _T[2][i] = _T[2][i] * Constants::ANGSTROM_TO_BOHR_RADIUS;
+        }
+
+        for(int i = 0; i < 3; ++i)
+        {
+            _origin[i] = _origin[i] * Constants::ANGSTROM_TO_BOHR_RADIUS;
+        }
+    }
+
+    inverse_T();
+    computeInfinitesimalElements();
+}
+
+void Domain::inverse_T()
+{
+    double t4, t6, t8, t10, t12, t14, t17;
+
+    t4 = _T[0][0] * _T[1][1];
+    t6 = _T[0][0] * _T[1][2];
+    t8 = _T[0][1] * _T[1][0];
+    t10 = _T[0][2] * _T[1][0];
+    t12 = _T[0][1] * _T[2][0];
+    t14 = _T[0][2] * _T[2][0];
+
+    t17 = (t4 * _T[2][2] - t6 * _T[2][1] - t8 * _T[2][2] + t10 * _T[2][1] + t12 * _T[1][2] - t14 * _T[1][1]);
+
+    if (abs(t17) < 1e-12)
+    {
+        for (int i = 0; i < 3; ++i)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                if (i == j)
+                {
+                    _inv_T[i][j] = 1;
+                }
+                else
+                {
+                    _inv_T[i][j] = 0;
+                }
+            }
+        }
+    }
+    else
+    {
+        t17 = 1 / t17;
+
+        _inv_T[0][0] = (_T[1][1] * _T[2][2] - _T[1][2] * _T[2][1]) * t17;
+        _inv_T[0][1] = -(_T[0][1] * _T[2][2] - _T[0][2] * _T[2][1]) * t17;
+        _inv_T[0][2] = -(-_T[0][1] * _T[1][2] + _T[0][2] * _T[1][1]) * t17;
+
+        _inv_T[1][0] = -(_T[1][0] * _T[2][2] - _T[1][2] * _T[2][0]) * t17;
+        _inv_T[1][1] = (_T[0][0] * _T[2][2] - t14) * t17;
+        _inv_T[1][2] = -(t6 - t10) * t17;
+
+        _inv_T[2][0] = -(-_T[1][0] * _T[2][1] + _T[1][1] * _T[2][0]) * t17;
+        _inv_T[2][1] = -(_T[0][0] * _T[2][1] - t12) * t17;
+        _inv_T[2][2] = (t4 - t8) * t17;
+    }
+}
+
+double Domain::sizeUpMol(const Structure& S, double scale)
+{
+    double dmax = 0;
+
+    std::vector<Atom> atoms = S.atoms();
+    for (int i = 0; i < S.number_of_atoms(); i++)
+    {
+        for (int j = 0; j < S.number_of_atoms(); j++)
+        {
+            if (i == j)
+            {
+                continue;
+            }
+
+            double dtmp = atoms[i].get_distance(atoms[j]);
+            if (dtmp > dmax)
+            {
+                dmax = dtmp;
+            }
+        }
+    }
+
+    return dmax;
+}
+
+
+//----------------------------------------------------------------------------------------------------//
+// OPERATOR OVERLOADS
+//----------------------------------------------------------------------------------------------------//
+
 bool Domain::operator==(const Domain& D) const
 {
-    return (D._Nval == _Nval and D._N1 == _N1 and D._N2 == _N2 and D._N3 == _N3 and D._T == _T);
+    return (D._Nval == _Nval
+            && D._N1 == _N1
+            && D._N2 == _N2
+            && D._N3 == _N3
+            && D._T == _T);
 }
 
 bool Domain::operator!=(const Domain& D) const
@@ -322,61 +424,4 @@ bool Domain::operator!=(const Domain& D) const
     return !(*this == D);
 }
 
-void Domain::inverse_T()
-{
-    double t4,t6,t8,t10,t12,t14,t17;
-    
-    t4 = _T[0][0]*_T[1][1];     
-    t6 = _T[0][0]*_T[1][2];
-    t8 = _T[0][1]*_T[1][0];
-    t10 = _T[0][2]*_T[1][0];
-    t12 = _T[0][1]*_T[2][0];
-    t14 = _T[0][2]*_T[2][0];
-    t17 = (t4*_T[2][2]-t6*_T[2][1]-t8*_T[2][2]+t10*_T[2][1]+t12*_T[1][2]-t14*_T[1][1]);
-    if(abs(t17)<1e-12)
-    {
-        for(int i=0;i<3;i++)
-        {
-            for(int j=0; j<3;j++)
-            {
-                if(i==j)
-                {
-                    _inv_T[i][j]=1;    
-                }
-                else
-                {
-                    _inv_T[i][j]=0;
-                }
-            }
-        }
-    }
-    else
-    {
-        t17 = 1/t17;
-        _inv_T[0][0] = (_T[1][1]*_T[2][2]-_T[1][2]*_T[2][1])*t17;
-        _inv_T[0][1] = -(_T[0][1]*_T[2][2]-_T[0][2]*_T[2][1])*t17;
-        _inv_T[0][2] = -(-_T[0][1]*_T[1][2]+_T[0][2]*_T[1][1])*t17;
-        _inv_T[1][0] = -(_T[1][0]*_T[2][2]-_T[1][2]*_T[2][0])*t17;
-        _inv_T[1][1] = (_T[0][0]*_T[2][2]-t14)*t17;
-        _inv_T[1][2] = -(t6-t10)*t17;
-        _inv_T[2][0] = -(-_T[1][0]*_T[2][1]+_T[1][1]*_T[2][0])*t17;
-        _inv_T[2][1] = -(_T[0][0]*_T[2][1]-t12)*t17;
-        _inv_T[2][2] = (t4-t8)*t17;
-    }
-}
-double Domain::sizeUpMol(const Structure& S, double scale)
-{
-    double dmax=0;
-    vector<Atom> atoms=S.atoms();
-    for(int i=0; i<S.number_of_atoms(); i++)
-    for(int j=0; j<S.number_of_atoms(); j++)
-    {
-        if(i==j) continue;
-        double dtmp=atoms[i].get_distance(atoms[j]);
-        if(dtmp>dmax)
-        {
-            dmax=dtmp;
-        }
-    }
-    return dmax;
-}
+

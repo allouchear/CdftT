@@ -1087,7 +1087,7 @@ Grid Orbitals::makeOrbGrid(const Domain& d, const std::vector<int>& nums, const 
             {
                 std::vector<double> phy = phis(d.x(i,j,k), d.y(i,j,k), d.z(i,j,k), nums, typesSpin);
 
-                for(int l = 0; l < d.Nval(); ++l)
+                for(int l = 0; l < d.get_Nval(); ++l)
                 {
                     g.set_Vijkl(phy[l],i,j,k,l);
                 }

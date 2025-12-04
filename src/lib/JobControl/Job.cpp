@@ -738,25 +738,21 @@ Domain Job::buildDomainForCube(Orbitals& orb, const GridSize gridSize, const Cus
 
     if (gridSize == GridSize::COARSE || gridSize == GridSize::MEDIUM || gridSize == GridSize::FINE)
     {
-        std::vector<double> tx = {2 * xmax / (N1 - 1), 0, 0};
-        std::vector<double> ty = {0, 2 * ymax / (N2 - 1), 0};
-        std::vector<double> tz = {0, 0, 2 * zmax / (N3 - 1)};
+        std::array<double, 3> tx = {2.0 * xmax / (N1 - 1), 0.0, 0.0};
+        std::array<double, 3> ty = {0.0, 2.0 * ymax / (N2 - 1), 0.0};
+        std::array<double, 3> tz = {0.0, 0.0, 2.0 * zmax / (N3 - 1)};
 
-        std::vector<std::vector<double>>  t = {tx, ty, tz};
+        std::array<std::array<double, 3>, 3>  t = {tx, ty, tz};
 
         d.set_all(Nval, N1, N2, N3, xmax, ymax, zmax, t);
     }
     else
     {
-        std::vector<std::vector<double>> t(0);
+        std::array<double, 3> dx = {customSizeData[6], customSizeData[7], customSizeData[8]};
+        std::array<double, 3> dy = {customSizeData[9], customSizeData[10], customSizeData[11]};
+        std::array<double, 3> dz = {customSizeData[12], customSizeData[13], customSizeData[14]};
 
-        std::vector<double> dx = {customSizeData[6], customSizeData[7], customSizeData[8]};
-        std::vector<double> dy = {customSizeData[9], customSizeData[10], customSizeData[11]};
-        std::vector<double> dz = {customSizeData[12], customSizeData[13], customSizeData[14]};
-
-        t.push_back(dx);
-        t.push_back(dy);
-        t.push_back(dz);
+        std::array<std::array<double, 3>, 3>  t = {dx, dy, dz};
 
         d.set_all(Nval, int(customSizeData[0]), int(customSizeData[1]), int(customSizeData[2]), customSizeData[3], customSizeData[4], customSizeData[5], t);
     }

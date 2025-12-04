@@ -82,7 +82,7 @@ bool GridCP::okDomain()
     if (_domain.get_N1()<2) return ok;
     if (_domain.get_N2()<2) return ok;
     if (_domain.get_N3()<2) return ok;
-    if (_domain.Nval()<1) return ok;
+    if (_domain.get_Nval()<1) return ok;
     return true;
 }
 /**************************************************************************/
@@ -413,7 +413,7 @@ void GridCP::computeNumCenters()
         int k = cp.index[2];
         _criticalPoints[ip].numCenter=0;
         for(int c=0; c<3;c++)
-            r[c] = _domain.O()[ c ] + i*_domain.T()[c][0] + j*_domain.T()[c][1] +  k*_domain.T()[c][2]; 
+            r[c] = _domain.get_origin()[ c ] + i*_domain.get_T()[c][0] + j*_domain.get_T()[c][1] +  k*_domain.get_T()[c][2]; 
         for(int ia=0;ia<_str.number_of_atoms();ia++)
         {
             for(int c=0; c<3;c++)
@@ -798,13 +798,13 @@ vector<double> GridCP::computeAIMCharges(const Grid& grid)
         int i = cp.index[0];
         int j = cp.index[1];
         int k = cp.index[2];
-        double x = _domain.x(i,j,k)*BOHRTOANG;
-        double y = _domain.y(i,j,k)*BOHRTOANG;
-        double z = _domain.z(i,j,k)*BOHRTOANG;
+        double x = _domain.x(i, j, k) * Constants::BOHR_RADIUS_TO_ANGSTROM;
+        double y = _domain.y(i, j, k) * Constants::BOHR_RADIUS_TO_ANGSTROM;
+        double z = _domain.z(i, j, k) * Constants::BOHR_RADIUS_TO_ANGSTROM;
         int ia=_criticalPoints[ip].numCenter;
         for(int c=0; c<3;c++)
-            r[c]=_str.atom(ia).coordinates()[c]*BOHRTOANG;
-        
+            r[c] = _str.atom(ia).coordinates()[c] * Constants::BOHR_RADIUS_TO_ANGSTROM;
+
         cout<<" Center = "<<fixed<<setprecision(6)<<right<<setw(10)<<x<<", "<<setw(10)<<y<<", "<<setw(10)<<z;
         cout<<left<<" Atom = "<<right<<setw(10)<<r[0]<<", "<<setw(10)<<r[1]<<", "<<setw(10)<<r[2]<<", "<< setw(10)<<cp.nuclearCharge;
         cout<<left<<" Integral = "<<setw(10)<<cp.integral;

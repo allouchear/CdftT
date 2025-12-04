@@ -135,7 +135,7 @@ void LOG::read_atoms_data(std::ifstream& f)
         for(int j=0; j<3; j++)
         {
             s>>d;
-            d*=ANGTOBOHR;
+            d *= Constants::ANGSTROM_TO_BOHR_RADIUS;
             _coordinates[i].push_back(d);
         }
     }

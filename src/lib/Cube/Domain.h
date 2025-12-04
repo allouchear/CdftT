@@ -1,13 +1,12 @@
 #ifndef CDFTT_DOMAIN_H_INCLUDED
 #define CDFTT_DOMAIN_H_INCLUDED
 
+#include <array>
 #include <fstream>
 #include <vector>
 
 #include <Common/Structure.h>
 
-using std::ifstream;
-using std::vector;
 
 /**
  * @brief Domain class.
@@ -30,13 +29,13 @@ class Domain
         int _N3;
 
         /** @brief Origin coordinates (x,y,z). */
-        double _O[3];
+        std::array<double, 3> _origin;
 
         /** @brief Translation matrix (3x3). Maps grid indices to spatial coordinates. */
-        vector<vector<double>> _T;
+        std::array<std::array<double, 3>, 3> _T;
 
         /** @brief Inverse of the translation matrix. */
-        vector<vector<double>> _inv_T;
+        std::array<std::array<double, 3>, 3> _inv_T;
 
         /** @brief Infinitesimal distance increment along the first (x) axis. */
         double _dx;
@@ -50,8 +49,16 @@ class Domain
         /** @brief Infinitesimal volume increment (equals to _dx * _dy * _dz). */
         double _dv;
 
+
+        /** @brief Computes the infinitesimal distance and volume increments. */
+        void computeInfinitesimalElements();
+
     
     public:
+        //////////////////
+        // CONSTRUCTORS //
+        //////////////////
+        
         /**
          * @brief Default Constructor.
          *
@@ -64,7 +71,7 @@ class Domain
          *
          * @param nameFile Input file stream opened on a .cube file.
          */
-        Domain(ifstream& nameFile);
+        Domain(std::ifstream& nameFile);
 
         /**
          * @brief Constructor with explicit grid sizes and maximum coordinates.
@@ -80,46 +87,96 @@ class Domain
          * @param zmax Maximum coordinate along the third (z) axis.
          * @param T Translation matrix.
          */
-        Domain(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax, vector<vector<double>> T);
+        Domain(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax);
 
         /**
          * @brief Constructor with explicit grid sizes and origin.
          *
          * Sets T to null matrix. If the origin pointer is NULL, sets origin to null vector.
          *
-         * @param i Number of values per grid point.
-         * @param n Number of grid points along the first (x) axis.
-         * @param m Number of grid points along the second (y) axis.
-         * @param l Number of grid points along the third (z) axis.
-         * @param O Pointer to origin coordinates (3-element array) or NULL.
+         * @param nVal Number of values per grid point.
+         * @param n1 Number of grid points along the first (x) axis.
+         * @param n2 Number of grid points along the second (y) axis.
+         * @param n3 Number of grid points along the third (z) axis.
+         * @param origin Reference to origin coordinates (3-element array).
          */
-        Domain(int i, int n, int m, int l, double* O);
-    
-        /**
-         * @brief Loads data from a .cube file.
-         *
-         * Reads from a .cube file and initializes the number of atoms, the geometry, etc.
-         *
-         * @param nameFile Input file stream opened on a .cube file.
-         */
-        void read_From_Cube(ifstream& nameFile);
+        Domain(int nVal, int n1, int n2, int n3, const std::array<double, 3>& origin);
 
+
+        /////////////
+        // GETTERS //
+        /////////////
+        
         /**
          * @brief Returns the number of values per grid point.
          */
-        int Nval() const;
+        int get_Nval() const;
+
+        /**
+         * @brief Returns the number of points along the first (x) axis.
+         */
+        int get_N1() const;
+    
+        /**
+         * @brief Returns the number of points along the second (y) axis.
+         */
+        int get_N2() const;
+
+        /**
+         * @brief Returns the number of points along the third (z) axis.
+         */
+        int get_N3() const;
+    
+        /**
+         * @brief Returns the coordinates of the origin.
+         */
+        const std::array<double, 3>& get_origin() const;
+    
+        /**
+         * @brief Returns the translation matrix.
+         */
+        const std::array<std::array<double, 3>, 3>& get_T() const;
+    
+        /**
+         * @brief Returns a given element of the translation matrix.
+         *
+         * @param i Row index.
+         * @param j Column index.
+         * @return Component Tij of the translation matrix.
+         */
+        double get_Tij(int i, int j) const;
+
+        /**
+         * @brief Returns the infinitesimal distance along the first (x) axis.
+         */
+        double get_dx() const;
+
+        /**
+         * @brief Returns the infinitesimal distance along the second (y) axis.
+         */
+        double get_dy() const;
+
+        /**
+         * @brief Returns the infinitesimal distance along the third (z) axis.
+         */
+        double get_dz() const;
         
+        /**
+         * @brief Returns the infinitesimal volume.
+         */
+        double get_dv() const;
+
+
+        /////////////
+        // SETTERS //
+        /////////////
+
         /**
          * @brief Sets the number of values per grid point.
          *
          * @param N Number to set.
          */
         void set_Nval(int N);
-
-        /**
-         * @brief Returns the number of points along the first (x) axis.
-         */
-        int get_N1() const;
 
         /**
          * @brief Sets the number of points along the first (x) axis.
@@ -129,21 +186,11 @@ class Domain
         void set_N1(int N);
     
         /**
-         * @brief Returns the number of points along the second (y) axis.
-         */
-        int get_N2() const;
-    
-        /**
          * @brief Sets the number of points along the second (y) axis.
          *
          * @param N Number to set.
          */
         void set_N2(int N);
-
-        /**
-         * @brief Returns the number of points along the third (z) axis.
-         */
-        int get_N3() const;
     
         /**
          * @brief Sets the number of points along the third (z) axis.
@@ -151,77 +198,35 @@ class Domain
          * @param N Number to set.
          */
         void set_N3(int N);
-    
-        /**
-         * @brief Returns the coordinates of the origin.
-         */
-        double* O() const;
-    
-        /**
-         * @brief Returns the translation matrix.
-         */
-        vector<vector<double>> T() const;
-    
-        /**
-         * @brief Returns a given element of the translation matrix.
-         *
-         * @param i Row index.
-         * @param j Column index.
-         * @return Component Tij of the translation matrix.
-         */
-        double Tij(int i, int j) const;
         
         /**
          * @brief Sets a given element of the translation matrix.
          *
-         * @param v Value to set.
+         * @param value Value to set.
          * @param i Row index.
          * @param j Column index.
          */
-        void set_T(double v, int i, int j);
+        void set_Tij(double value, int i, int j);
 
         /**
-         * @brief Returns the infinitesimal distance along the first (x) axis.
-         */
-        double dx() const;
-
-        /**
-         * @brief Returns the infinitesimal distance along the second (y) axis.
-         */
-        double dy() const;
-
-        /**
-         * @brief Returns the infinitesimal distance along the third (z) axis.
-         */
-        double dz() const;
-        
-        /**
-         * @brief Returns the infinitesimal volume.
-         */
-        double get_dv() const;
-
-        /**
-         * @brief Overloads the equality operator for two Domain objects.
+         * @brief Sets all the attributes.
          *
-         * Two Domains are considered equal if they have the same number of values per grid point,
-         * the same grid sizes, and identical translation matrices and origins.
-         *
-         * @param D Other Domain to compare this Domain with.
-         * @return True if the two Domains are equal, false otherwise.
+         * @param Nval Number of values per grid point.
+         * @param N1 Number of grid points along the first (x) axis.
+         * @param N2 Number of grid points along the second (y) axis.
+         * @param N3 Number of grid points along the third (z) axis.
+         * @param xmax Maximum coordinate along the first (x) axis.
+         * @param ymax Maximum coordinate along the second (y) axis.
+         * @param zmax Maximum coordinate along the third (z) axis.
+         * @param T Translation matrix.
          */
-        bool operator==(const Domain &D) const;
+        void set_all(int Nval, int N1, int N2, int N3, double xmax, double ymax, double zmax, const std::array<std::array<double, 3>, 3>& T);
 
-        /**
-         * @brief Overloads the inequality operator for two Domain objects.
-         *
-         * Two Domains are considered unequal if they have different numbers of values per grid point,
-         * different grid sizes, or different translation matrices or origins.
-         *
-         * @param D Other Domain to compare this Domain with.
-         * @return True if the two Domains are equal, false otherwise.
-         */
-        bool operator!=(const Domain &D) const; 
-        
+
+        //////////////////////////
+        // OTHER PUBLIC METHODS //
+        //////////////////////////
+
         /**
          * @brief Returns the value along the first (x) axis of the point on indices i, j, k.
          *
@@ -251,7 +256,7 @@ class Domain
          * @return Third (z) coordinate in space.
          */
         double z(int i, int j, int k) const;
-    
+
         /**
          * @brief Returns the closest index along the first (x) axis of the grid, for a given point in 3D space.
          *
@@ -281,15 +286,24 @@ class Domain
          * @return Closest grid index along the third (z) axis.
          */
         int k(double x, double y, double z) const;
-    
+
+        /**
+         * @brief Loads data from a .cube file.
+         *
+         * Reads from a .cube file and initializes the number of atoms, the geometry, etc.
+         *
+         * @param nameFile Input file stream opened on a .cube file.
+         */
+        void readFromCube(std::ifstream& nameFile);
+
         /**
          * @brief Inverts the translation matrix and stores the result in _invT.
          */
         void inverse_T();
-        
+
         /**
          * @brief Returns the maximum length betweens the atoms of a given Structure.
-         * 
+         *
          * Note that it is better to use Grid::sizeUpMol().
          *
          * @param S Structure reference containing atoms.
@@ -298,19 +312,32 @@ class Domain
          */
         double sizeUpMol(const Structure& S, double scale);
 
+
+        ////////////////////////
+        // OPERATOR OVERLOADS //
+        ////////////////////////
+
         /**
-         * @brief Sets all the attributes.
+         * @brief Overloads the equality operator for two Domain objects.
          *
-         * @param Nval Number of values per grid point.
-         * @param N1 Number of grid points along the first (x) axis.
-         * @param N2 Number of grid points along the second (y) axis.
-         * @param N3 Number of grid points along the third (z) axis.
-         * @param xmax Maximum coordinate along the first (x) axis.
-         * @param ymax Maximum coordinate along the second (y) axis.
-         * @param zmax Maximum coordinate along the third (z) axis.
-         * @param T Translation matrix.
+         * Two Domains are considered equal if they have the same number of values per grid point,
+         * the same grid sizes, and identical translation matrices and origins.
+         *
+         * @param D Other Domain to compare this Domain with.
+         * @return True if the two Domains are equal, false otherwise.
          */
-        void set_all(int Nval, int N1, int N2, int N3, double xmax, double ymax, double zmax, vector<vector<double>> T);
+        bool operator==(const Domain &D) const;
+
+        /**
+         * @brief Overloads the inequality operator for two Domain objects.
+         *
+         * Two Domains are considered unequal if they have different numbers of values per grid point,
+         * different grid sizes, or different translation matrices or origins.
+         *
+         * @param D Other Domain to compare this Domain with.
+         * @return True if the two Domains are equal, false otherwise.
+         */
+        bool operator!=(const Domain &D) const;
 };
 
 #endif // CDFTT_DOMAIN_H_INCLUDED

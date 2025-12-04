@@ -1,81 +1,46 @@
-using namespace std;
-#include <Cube/Grid.h>
-#include <Cube/GridCP.h>
-#include <Common/Constants.h>
 #include <cmath>
-#include <list>
+#include <fstream>
+#include <string>
+#include <vector>
+
 #ifdef ENABLE_OMP
 #include <omp.h>
 #endif
 
+#include <Cube/Grid.h>
+#include <Cube/GridCP.h>
+#include <Common/Constants.h>
 
-void Grid::reset()
-{
-    if (_domain.Nval()<1 || _domain.get_N1()<1 || _domain.get_N2()<1 || _domain.get_N3()<1 )
-        _values = vector<vector<vector<vector<double>>>>();
-    else 
-    {
-        vector<double> V(_domain.Nval(),0);
-        vector<vector<double>> M(_domain.get_N3(), V);
-        vector<vector<vector<double>>> A(_domain.get_N2(), M);
-        _values = vector<vector<vector<vector<double>>>>(_domain.get_N1(), A);
-    }
-}
 
-Grid::Grid()
+//----------------------------------------------------------------------------------------------------//
+// CONSTRUCTORS
+//----------------------------------------------------------------------------------------------------//
+
+Grid::Grid() :
+    _domain(),
+    _structure(),
+    _values()
 {
-    Domain d;
-    _domain=d;
-    Structure S;
-    _structure=S;
-    reset();
-}
-Grid::Grid(const Domain& d)
-{
-    _domain=d;
-    Structure S;
-    _structure=S;
     reset();
 }
 
-
-void Grid::read_From_Cube(ifstream& nameFile, const PeriodicTable& Table)
+Grid::Grid(const Domain& d) :
+    _domain(d),
+    _structure(),
+    _values()
 {
-    int Natoms;
-    string bin;
-    getline(nameFile, bin);
-    getline(nameFile, bin);
-    nameFile>>Natoms;
-    Domain d(nameFile);
-    _domain=d;
-    Structure S(nameFile, Natoms, Table);
-    _structure=S;
     reset();
-    for(int i=0; i<_domain.get_N1();i++)
-    {
-        for(int j=0; j<_domain.get_N2();j++)
-        {
-            for(int k=0; k<_domain.get_N3();k++)
-            {
-                for(int l=0; l<_domain.Nval();l++)
-                {
-                nameFile>>_values[i][j][k][l];
-                }
-            }
-        }
-    }
-    cout<<"File has been read... Proceeding "<<endl;
 }
 
-Grid::Grid(ifstream& nameFile, const PeriodicTable& Table)
+Grid::Grid(std::ifstream& nameFile, const PeriodicTable& table)
 {
-    read_From_Cube(nameFile, Table);    
+    readFromCube(nameFile, table);    
 }
 
-vector<vector<vector<vector<double>>>> Grid::get_values() const
-{
-    return _values;
-}
+
+//----------------------------------------------------------------------------------------------------//
+// GETTERS
+//----------------------------------------------------------------------------------------------------//
 
 Domain Grid::get_domain() const
 {
@@ -87,522 +52,653 @@ Structure Grid::get_structure() const
     return _structure;
 }
 
+std::vector<std::vector<std::vector<std::vector<double>>>> Grid::get_values() const
+{
+    return _values;
+}
+
+
+void Grid::reset()
+{
+    if (_domain.get_Nval() < 1 || _domain.get_N1() < 1 || _domain.get_N2() < 1 || _domain.get_N3() < 1)
+    {
+        _values = std::vector<std::vector<std::vector<std::vector<double>>>>();
+    }
+    else 
+    {
+        std::vector<double> values(_domain.get_Nval(), 0);
+        std::vector<std::vector<double>> z(_domain.get_N3(), values);
+        std::vector<std::vector<std::vector<double>>> y(_domain.get_N2(), z);
+        _values = std::vector<std::vector<std::vector<std::vector<double>>>>(_domain.get_N1(), y);
+    }
+}
+
+void Grid::readFromCube(std::ifstream& nameFile, const PeriodicTable& table)
+{
+    std::string line;
+    getline(nameFile, line);
+    getline(nameFile, line);
+
+    int nbAtoms;
+    nameFile >> nbAtoms;
+
+    _domain = Domain(nameFile);
+    _structure = Structure(nameFile, nbAtoms, table);
+
+    reset();
+
+    for(int i = 0; i < _domain.get_N1(); ++i)
+    {
+        for(int j = 0; j < _domain.get_N2(); ++j)
+        {
+            for(int k = 0; k < _domain.get_N3(); ++k)
+            {
+                for(int l = 0; l < _domain.get_Nval(); ++l)
+                {
+                    nameFile >> _values[i][j][k][l];
+                }
+            }
+        }
+    }
+
+    std::cout << "File has been read... Proceeding" << std::endl;
+}
+
+
+
 void Grid::set_domain(const Domain& d)
 {
-    _domain=d;
+    _domain = d;
     reset();
     
 }
 
 void Grid::set_structure(const Structure& S)
 {
-    _structure=S;
+    _structure = S;
 }
 
-void Grid::set_values(const vector<vector<vector<vector<double>>>>& U)
+void Grid::set_values(const std::vector<std::vector<std::vector<std::vector<double>>>>& U)
 {
-    _values=U;
+    _values = U;
 }
 void Grid::set_Vijkl(double rho, int i, int j, int k, int l)
 {
-    _values[i][j][k][l]=rho;
+    _values[i][j][k][l] = rho;
 }
 
 Grid Grid::operator+(const Grid& g)
 {
+    Grid sum(_domain);
+
     try
     {
-        if(g._domain==_domain)
+        if(g._domain == _domain)
         {
-            Grid sum(_domain);
-            sum.set_structure(_structure+g._structure);
-#ifdef ENABLE_OMP
-#pragma omp parallel for shared(sum,g,_values)
-#endif
-#ifdef ENABLE_ACC
-#pragma acc kernels loop
-#endif
-            for(int i=0; i<g._domain.get_N1();i++)
+            sum.set_structure(_structure + g._structure);
+
+            #ifdef ENABLE_OMP
+            #pragma omp parallel for shared(sum,g,_values)
+            #endif
+            #ifdef ENABLE_ACC
+            #pragma acc kernels loop
+            #endif
+            for(int i = 0; i < g._domain.get_N1(); ++i)
             {
-                for(int j=0; j<g._domain.get_N2();j++)
+                for(int j = 0; j < g._domain.get_N2(); ++j)
                 {
-                    for(int k=0; k<g._domain.get_N3();k++)
+                    for(int k = 0; k < g._domain.get_N3(); ++k)
                     {
-                        for(int l=0; l<g._domain.Nval();l++)
+                        for(int l = 0; l < g._domain.get_Nval(); ++l)
                         {
-                        sum._values[i][j][k][l]=_values[i][j][k][l]+g._values[i][j][k][l];
+                            sum._values[i][j][k][l] = _values[i][j][k][l] + g._values[i][j][k][l];
                         }
                     }
                 }
             }
-            return sum;
         }
-        else if(g.get_domain().Nval()!=get_domain().Nval())
+        else if(g.get_domain().get_Nval() != get_domain().get_Nval())
         {
-            throw string("Attribute (grid).(domain)._Nval aren't equal in both grids. This is required for addition");
+            throw std::string("Attribute (grid).(domain)._Nval aren't equal in both grids. This is required for addition");
         }
-        else if (g.get_domain().get_N1()!=get_domain().get_N1())
+        else if (g.get_domain().get_N1() != get_domain().get_N1())
         {
-            throw string("Attributes (grid).(domain)._N1 aren't equal in both grids. This is required for addition");
+            throw std::string("Attributes (grid).(domain)._N1 aren't equal in both grids. This is required for addition");
         }
-        else if (g.get_domain().get_N2()!=get_domain().get_N2())
+        else if (g.get_domain().get_N2() != get_domain().get_N2())
         {
-            throw string("Attributes (grid).(domain)._N2 aren't equal in both grids. This is required for addition");
+            throw std::string("Attributes (grid).(domain)._N2 aren't equal in both grids. This is required for addition");
         }
-        else if(g.get_domain().get_N3()!=get_domain().get_N3())
+        else if(g.get_domain().get_N3() != get_domain().get_N3())
         {
-            throw string("Attributes (grid).(domain)._N3 aren't equal in both grids. This is required for addition");
+            throw std::string("Attributes (grid).(domain)._N3 aren't equal in both grids. This is required for addition");
         }
         else
         {
-            throw string("Attributes (grid).(domain)._T aren't equal in both grids. This is required for addition.");
+            throw std::string("Attributes (grid).(domain)._T aren't equal in both grids. This is required for addition.");
         }
     }
-    catch (string Error)
+    catch (std::string Error)
     {
-        cout<<Error<<endl;
+        std::cerr << Error << std::endl;
+
         exit(1);
     }
+
+    return sum;
 }
 
 Grid Grid::add(const Grid& g)
 {
     try
     {
-        if(g._domain==_domain)
+        if(g._domain == _domain)
         {
             set_domain(_domain);
             _structure.add(g._structure);
             _values.resize(g._domain.get_N1());
-#ifdef ENABLE_OMP
-#pragma omp parallel for
-#endif
-#ifdef ENABLE_ACC
-#pragma acc kernels loop
-#endif
-            for(int i=0; i<g._domain.get_N1();i++)
+            
+            #ifdef ENABLE_OMP
+            #pragma omp parallel for
+            #endif
+            #ifdef ENABLE_ACC
+            #pragma acc kernels loop
+            #endif
+            for(int i = 0; i < g._domain.get_N1(); ++i)
             {    
                 _values[i].resize(g._domain.get_N2());
-                for(int j=0; j<g._domain.get_N2();j++)
+                for(int j = 0; j < g._domain.get_N2(); ++j)
                 {
                     _values[i][j].resize(g._domain.get_N3());
-                    for(int k=0; k<g._domain.get_N3();k++)
+                    for(int k = 0; k < g._domain.get_N3(); ++k)
                     {
-                        _values[i][j][k].resize(g._domain.Nval());
-                        for(int l=0; l<g._domain.Nval();l++)
+                        _values[i][j][k].resize(g._domain.get_Nval());
+                        for(int l = 0; l < g._domain.get_Nval(); ++l)
                         {
-                        _values[i][j][k][l]=_values[i][j][k][l]+g._values[i][j][k][l];
+                            _values[i][j][k][l] = _values[i][j][k][l] + g._values[i][j][k][l];
                         }
                     }
                 }
             }
             return *this;
         }
-        else if(g.get_domain().Nval()!=get_domain().Nval())
+        else if(g.get_domain().get_Nval() != get_domain().get_Nval())
         {
-            throw string("Attribute (grid).(domain)._Nval aren't equal in both grids. This is required for addition");
+            throw std::string("Attribute (grid).(domain)._Nval aren't equal in both grids. This is required for addition");
         }
-        else if (g.get_domain().get_N1()!=get_domain().get_N1())
+        else if (g.get_domain().get_N1() != get_domain().get_N1())
         {
-            throw string("Attributes (grid).(domain)._N1 aren't equal in both grids. This is required for addition");
+            throw std::string("Attributes (grid).(domain)._N1 aren't equal in both grids. This is required for addition");
         }
-        else if (g.get_domain().get_N2()!=get_domain().get_N2())
+        else if (g.get_domain().get_N2() != get_domain().get_N2())
         {
-            throw string("Attributes (grid).(domain)._N2 aren't equal in both grids. This is required for addition");
+            throw std::string("Attributes (grid).(domain)._N2 aren't equal in both grids. This is required for addition");
         }
-        else if(g.get_domain().get_N3()!=get_domain().get_N3())
+        else if(g.get_domain().get_N3() != get_domain().get_N3())
         {
-            throw string("Attributes (grid).(domain)._N3 aren't equal in both grids. This is required for addition");
+            throw std::string("Attributes (grid).(domain)._N3 aren't equal in both grids. This is required for addition");
         }
         else
         {
-            throw string("Attributes (grid).(domain)._T aren't equal in both grids. This is required for addition.");
+            throw std::string("Attributes (grid).(domain)._T aren't equal in both grids. This is required for addition.");
         }
     }
-    catch (string Error)
+    catch (std::string Error)
     {
-        cout<<Error<<endl;
+        std::cerr << Error << std::endl;
+
         exit(1);
     }
 }
 
 Grid Grid::operator*(const Grid& g)
 {
+    Grid product(_domain);
+
     try
     {
-        if(g._domain==_domain)
+        if(g._domain == _domain)
         {
-            Grid prod(_domain);
-            prod.set_structure(_structure);
-#ifdef ENABLE_OMP
-#pragma omp parallel for
-#endif
-#ifdef ENABLE_ACC
-#pragma acc kernels loop
-#endif
-            for(int i=0; i<g._domain.get_N1();i++)
+            product.set_structure(_structure);
+
+            #ifdef ENABLE_OMP
+            #pragma omp parallel for
+            #endif
+            #ifdef ENABLE_ACC
+            #pragma acc kernels loop
+            #endif
+            for(int i = 0; i < g._domain.get_N1(); ++i)
             {
-                for(int j=0; j<g._domain.get_N2();j++)
+                for(int j = 0; j < g._domain.get_N2(); ++j)
                 {
-                    for(int k=0; k<g._domain.get_N3();k++)
+                    for(int k = 0; k < g._domain.get_N3(); ++k)
                     {
-                        for(int l=0; l<g._domain.Nval();l++)
+                        for(int l = 0; l < g._domain.get_Nval(); ++l)
                         {
-                        prod._values[i][j][k][l]=_values[i][j][k][l]*g._values[i][j][k][l];
+                            product._values[i][j][k][l] = _values[i][j][k][l] * g._values[i][j][k][l];
                         }
                     }
                 }
             }
-            return prod;
         }
-        else if(g.get_domain().Nval()!=get_domain().Nval())
+        else if(g.get_domain().get_Nval() != get_domain().get_Nval())
         {
-            throw string("Attribute (grid).(domain)._Nval aren't equal in both grids. This is required for product");
+            throw std::string("Attribute (grid).(domain)._Nval aren't equal in both grids. This is required for product");
         }
-        else if (g.get_domain().get_N1()!=get_domain().get_N1())
+        else if (g.get_domain().get_N1() != get_domain().get_N1())
         {
-            throw string("Attributes (grid).(domain)._N1 aren't equal in both grids. This is required for product");
+            throw std::string("Attributes (grid).(domain)._N1 aren't equal in both grids. This is required for product");
         }
-        else if (g.get_domain().get_N2()!=get_domain().get_N2())
+        else if (g.get_domain().get_N2() != get_domain().get_N2())
         {
-            throw string("Attributes (grid).(domain)._N2 aren't equal in both grids. This is required for product");
+            throw std::string("Attributes (grid).(domain)._N2 aren't equal in both grids. This is required for product");
         }
-        else if(g.get_domain().get_N3()!=get_domain().get_N3())
+        else if(g.get_domain().get_N3() != get_domain().get_N3())
         {
-            throw string("Attributes (grid).(domain)._N3 aren't equal in both grids. This is required for product");
+            throw std::string("Attributes (grid).(domain)._N3 aren't equal in both grids. This is required for product");
         }
         else
         {
-            throw string("Attributes (grid).(domain)._T aren't equal in both grids. This is required for product");
+            throw std::string("Attributes (grid).(domain)._T aren't equal in both grids. This is required for product");
         }
     }
-    catch (string Error)
+    catch (std::string Error)
     {
-        cout<<Error<<endl;
+        std::cerr << Error << std::endl;
+
         exit(1);
     }
+
+    return product;
 }
 
 Grid Grid::operator-(const Grid& g)
 {
+    Grid diff(_domain);
+
     try
     {
-        if(g._domain==_domain)
+        if(g._domain == _domain)
         {
-            Grid diff(_domain);
             diff.set_structure(_structure);
-#ifdef ENABLE_OMP
-#pragma omp parallel for
-#endif
-#ifdef ENABLE_ACC
-#pragma acc kernels loop
-#endif
-            for(int i=0; i<g._domain.get_N1();i++)
+
+            #ifdef ENABLE_OMP
+            #pragma omp parallel for
+            #endif
+            #ifdef ENABLE_ACC
+            #pragma acc kernels loop
+            #endif
+            for(int i = 0; i < g._domain.get_N1(); ++i)
             {
-                for(int j=0; j<g._domain.get_N2();j++)
+                for(int j = 0; j < g._domain.get_N2(); ++j)
                 {
-                    for(int k=0; k<g._domain.get_N3();k++)
+                    for(int k = 0; k < g._domain.get_N3(); ++k)
                     {
-                        for(int l=0; l<g._domain.Nval();l++)
+                        for(int l = 0; l < g._domain.get_Nval(); ++l)
                         {
-                        diff._values[i][j][k][l]=_values[i][j][k][l]-g._values[i][j][k][l];
+                            diff._values[i][j][k][l] = _values[i][j][k][l] - g._values[i][j][k][l];
                         }
                     }
                 }
             }
-            return diff;
         }
-        else if(g.get_domain().Nval()!=get_domain().Nval())
+        else if(g.get_domain().get_Nval() != get_domain().get_Nval())
         {
-            throw string("Attribute (grid).(domain)._Nval aren't equal in both grids. This is required for difference");
+            throw std::string("Attribute (grid).(domain)._Nval aren't equal in both grids. This is required for difference");
         }
-        else if (g.get_domain().get_N1()!=get_domain().get_N1())
+        else if (g.get_domain().get_N1() != get_domain().get_N1())
         {
-            throw string("Attributes (grid).(domain)._N1 aren't equal in both grids. This is required for difference");
+            throw std::string("Attributes (grid).(domain)._N1 aren't equal in both grids. This is required for difference");
         }
-        else if (g.get_domain().get_N2()!=get_domain().get_N2())
+        else if (g.get_domain().get_N2() != get_domain().get_N2())
         {
-            throw string("Attributes (grid).(domain)._N2 aren't equal in both grids. This is required for difference");
+            throw std::string("Attributes (grid).(domain)._N2 aren't equal in both grids. This is required for difference");
         }
-        else if(g.get_domain().get_N3()!=get_domain().get_N3())
+        else if(g.get_domain().get_N3() != get_domain().get_N3())
         {
-            throw string("Attributes (grid).(domain)._N3 aren't equal in both grids. This is required for difference");
+            throw std::string("Attributes (grid).(domain)._N3 aren't equal in both grids. This is required for difference");
         }
         else
         {
-            throw string("Attributes (grid).(domain)._T aren't equal in both grids. This is required for difference");
+            throw std::string("Attributes (grid).(domain)._T aren't equal in both grids. This is required for difference");
         }
     }
-    catch (string Error)
+    catch (std::string Error)
     {
-        cout<<Error<<endl;
+        std::cerr << Error << std::endl;
+
         exit(1);
     }
+
+    return diff;
 }
 
 double Grid::sum()
 {
-    double sum=0;
-#ifdef ENABLE_OMP
-#pragma omp parallel for reduction (+:sum)
-#endif
-#ifdef ENABLE_ACC
-#pragma acc kernels loop reduction(+:sum)
-#endif
-    for(int i=0; i<_domain.get_N1();i++)
+    double sum = 0;
+
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for reduction (+:sum)
+    #endif
+    #ifdef ENABLE_ACC
+    #pragma acc kernels loop reduction(+:sum)
+    #endif
+    for(int i = 0; i < _domain.get_N1(); ++i)
     {    
-        for(int j=0; j<_domain.get_N2();j++)
+        for(int j = 0; j < _domain.get_N2(); ++j)
         {    
-            for(int k=0; k<_domain.get_N3();k++)
+            for(int k = 0; k < _domain.get_N3(); ++k)
             {
-                for(int l=0; l<_domain.Nval();l++)
+                for(int l = 0; l < _domain.get_Nval(); ++l)
                 {
-                    sum+=_values[i][j][k][l];
+                    sum += _values[i][j][k][l];
                 }
             }
         }
     }
+
     return sum;    
 }
 
-double Grid::integrate_Over_Dom()
+double Grid::integrateOverDomain()
 {
-    return sum()*_domain.get_dv();
+    return sum() * _domain.get_dv();
 }
 
 void Grid::reset_Boundary(int nBound)
 {
-    int NV=(_domain.Nval()>1)?1:0;
-    /* left */
-    for(int i=0;i<nBound;i++)
+    int NV = (_domain.get_Nval() > 1) ? 1 : 0;
+
+    // Left
+    for(int i = 0; i < nBound; ++i)
     {
-        for(int j=0;j<_domain.get_N2();j++)
+        for(int j = 0; j < _domain.get_N2() ; ++j)
         {
-            for(int k=0;k<_domain.get_N3();k++)
+            for(int k = 0; k < _domain.get_N3(); ++k)
             {    
-                for(int l=NV; l<_domain.Nval();l++)
+                for(int l = NV; l < _domain.get_Nval(); ++l)
                 {
-                _values[i][j][k][l] = _values[nBound][j][k][l];
+                    _values[i][j][k][l] = _values[nBound][j][k][l];
                 }
             }
         }
     }
-    cout<<"done left"<<endl;
-    /* right */
-    for(int i=_domain.get_N1()-nBound;i<_domain.get_N1();i++)
+
+    std::cout << "done left" << std::endl;
+
+
+    // Right
+    for(int i = _domain.get_N1() - nBound; i < _domain.get_N1(); ++i)
     {    
-        for(int j=0;j<_domain.get_N2();j++)
+        for(int j = 0; j < _domain.get_N2(); ++j)
         {
-            for(int k=0;k<_domain.get_N3();k++)
+            for(int k = 0; k < _domain.get_N3(); ++k)
             {    
-                for(int l=NV; l<_domain.Nval();l++)
+                for(int l = NV; l < _domain.get_Nval(); ++l)
                 {
-                    _values[i][j][k][l] = _values[_domain.get_N1()-nBound-1][j][k][l];
+                    _values[i][j][k][l] = _values[_domain.get_N1() - nBound - 1][j][k][l];
                 }
             }
         }
     }
-    cout<<"done right"<<endl;
-    /* front */
-    for(int j=0;j<nBound;j++)
+    
+    std::cout << "done right" << std::endl;
+
+
+    // Front
+    for(int j = 0; j < nBound; ++j)
     {
-        for(int i=0;i<_domain.get_N1();i++)
+        for(int i = 0; i < _domain.get_N1(); ++i)
         {    
-            for(int k=0;k<_domain.get_N3();k++)
+            for(int k = 0; k < _domain.get_N3(); ++k)
             {    
-                for(int l=NV; l<_domain.Nval();l++)
+                for(int l = NV; l < _domain.get_Nval(); ++l)
                 {
                     _values[i][j][k][l] = _values[i][nBound][k][l];
                 }
             }
         }
     }
-    cout<<"done front"<<endl;
-    /* back */
-    for(int j=_domain.get_N2()-nBound;j<_domain.get_N2();j++)
+
+    std::cout << "done front" << std::endl;
+    
+    
+    // Back
+    for(int j = _domain.get_N2() - nBound; j < _domain.get_N2(); ++j)
     {
-        for(int i=0;i<_domain.get_N1();i++)
+        for(int i = 0; i < _domain.get_N1(); ++i)
         {    
-            for(int k=0;k<_domain.get_N3();k++)
+            for(int k = 0; k < _domain.get_N3(); ++k)
             {
-                for(int l=NV; l<_domain.Nval();l++)
+                for(int l = NV; l < _domain.get_Nval(); ++l)
                 {
-                    _values[i][j][k][l] = _values[i][_domain.get_N2()-nBound-1][k][l];
+                    _values[i][j][k][l] = _values[i][_domain.get_N2() - nBound - 1][k][l];
                 }
             }
         }
     }
-    cout<<"done back"<<endl;
-    /* top */
-    for(int k=0;k<nBound;k++)
+
+    std::cout << "done back" << std::endl;
+    
+    
+    // Top
+    for(int k = 0; k < nBound; ++k)
     {    
-        for(int j=0;j<_domain.get_N2();j++)
+        for(int j = 0; j < _domain.get_N2(); ++j)
         {
-            for(int i=0;i<_domain.get_N1();i++)
+            for(int i = 0; i < _domain.get_N1(); ++i)
             {
-                for(int l=NV; l<_domain.Nval();l++)
+                for(int l = NV; l < _domain.get_Nval(); ++l)
                 {    
                     _values[i][j][k][l] = _values[i][j][nBound][l];
                 }
             }
         }
     }
-    cout<<"done top"<<endl;
 
-    /* bottom */
-    for(int k=_domain.get_N3()-nBound;k<_domain.get_N3();k++)
+    std::cout << "done top" << std::endl;
+
+    
+    // Bottom
+    for(int k = _domain.get_N3() - nBound; k < _domain.get_N3(); ++k)
     {    
-        for(int j=0;j<_domain.get_N2();j++)
+        for(int j = 0; j < _domain.get_N2(); ++j)
         {
-            for(int i=0;i<_domain.get_N1();i++)
+            for(int i = 0; i < _domain.get_N1(); ++i)
             {
-                for(int l=NV; l<_domain.Nval();l++)
+                for(int l = NV; l < _domain.get_Nval(); ++l)
                 {
-                    _values[i][j][k][l] = _values[i][j][_domain.get_N3()-nBound-1][l];
+                    _values[i][j][k][l] = _values[i][j][_domain.get_N3() - nBound - 1][l];
                 }
             }
         }
     }
-    cout<<"done bot"<<endl;
+
+    std::cout << "done bottom" << std::endl;
 }
 
 
-Grid Grid::coulomb_Grid(double q, vector<double> R)
+Grid Grid::coulomb_Grid(double q, std::vector<double> R)
 {
-    Grid V(_domain);
+    Grid coulombGrid(_domain);
+
     double x = 0;
     double y = 0;
     double z = 0;
-    double v = 0;
-#ifdef ENABLE_OMP
-#pragma omp parallel for
-#endif
-#ifdef ENABLE_ACC
-#pragma acc kernels loop
-#endif
-    for(int i=0; i<_domain.get_N1();i++)
+    double value = 0;
+
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for
+    #endif
+    #ifdef ENABLE_ACC
+    #pragma acc kernels loop
+    #endif
+    for(int i = 0; i < _domain.get_N1(); ++i)
     {    
-        for(int j=0; j<_domain.get_N2();j++)
+        for(int j = 0; j < _domain.get_N2(); ++j)
         {        
-            for(int k=0; k<_domain.get_N3();k++)
+            for(int k = 0; k < _domain.get_N3(); ++k)
             {    
-                for(int l=0; l<_domain.Nval();l++)
+                for(int l = 0; l < _domain.get_Nval(); ++l)
                 {
-                    x = _domain.O()[ 0 ] + i*_domain.T()[0][0] + j*_domain.T()[0][1] +  k*_domain.T()[0][2]; 
-                    y = _domain.O()[ 1 ] + i*_domain.T()[1][0] + j*_domain.T()[1][1] +  k*_domain.T()[1][2]; 
-                    z = _domain.O()[ 2 ] + i*_domain.T()[2][0] + j*_domain.T()[2][1] +  k*_domain.T()[2][2];
-                    v = q/sqrt( (x-R[0])*(x-R[0])+(y-R[1])*(y-R[1])+(z-R[2])*(z-R[2]));
-                    if(v<1e-10)
-                    {
-                        v=0;
-                    }
-                    V._values[i][j][k][l]= v;
+                    x = _domain.get_origin()[0] + i * _domain.get_T()[0][0] + j * _domain.get_T()[0][1] +  k * _domain.get_T()[0][2]; 
+                    y = _domain.get_origin()[1] + i * _domain.get_T()[1][0] + j * _domain.get_T()[1][1] +  k * _domain.get_T()[1][2]; 
+                    z = _domain.get_origin()[2] + i * _domain.get_T()[2][0] + j * _domain.get_T()[2][1] +  k * _domain.get_T()[2][2];
+                    
+                    value = q / sqrt( (x - R[0]) * (x - R[0])
+                                      + (y - R[1]) * (y - R[1])
+                                      + (z - R[2]) * (z - R[2]) );
+                    
+                    value = value < 1e-10 ? 0 : value;
+
+                    coulombGrid._values[i][j][k][l] = value;
                 }
             }
         }
     }
-    return V;    
+
+    return coulombGrid;
 }
 
-void Grid::coefs_Laplacian(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc) const
+void Grid::coefs_Laplacian(int nBound, std::vector<double>& fcx, std::vector<double>& fcy, std::vector<double>& fcz, double& cc) const
 {
-    vector<double> coefs(nBound+1);    
-        if(nBound==1)
-        {
-            vector<double> c = {-2.0, 1.0};
-            for(int i=0;i<=nBound;i++)
-                    coefs[i] = c[i];
-        }
-        else if(nBound==2)
-        {
-            double denom = 12.0;
-            vector<double> c = {-30.0, 16.0, -1.0};
-            for(int i=0;i<=2;i++)
-                coefs[i] = c[i]/denom;
-        }
-        else if (nBound==3)
-        {
-            double denom = 180.0;
-            vector<double> c = {-490.0, 270.0,-27.0, 2.0};
-            for(int i=0;i<=3;i++)
-                coefs[i] = c[i]/denom;
-        }
-        else if (nBound==4)
-        {
-            double denom = 5040.0;
-            vector<double> c = {-14350.0, 8064.0, -1008.0, 128.0, -9.0};
-            for(int i=0;i<=4;i++)
-                coefs[i] = c[i]/denom;
-        }
-        else if (nBound==5)
-        {
-            double denom = 25200.0;
-            vector<double> c = {-73766.0, 42000.0, -6000.0, 1000.0, -125.0, 8.0};
-            for(int i=0;i<=5;i++)
-                coefs[i] = c[i]/denom;
-        }
-        else if (nBound==6)
-        {
-            double denom = 831600.0;
-            vector<double> c = {-2480478.0,1425600.0,-222750.0,44000.0,-7425.0,864.0,-50.0};
-            for(int i=0;i<=6;i++)
-                coefs[i] = c[i]/denom;
-        }
-        else if (nBound==7)
-        {
-            double denom = 75675600.0;
-            vector<double> c = {-228812298.0,132432300.0,-22072050.0,4904900.0,-1003275.0, 160524.0,-17150.0,900.0};
-            for(int i=0;i<=7;i++)
-                coefs[i] = c[i]/denom;
-        }
-        else if (nBound==8)
-        {
-            double denom = 302702400.0;
-            vector<double> c = {-924708642.0,538137600.0,-94174080.0,22830080.0,-5350800.0,1053696.0,-156800.0,15360.0,-735.0};
-            for(int i=0;i<=8;i++)
-                coefs[i] = c[i]/denom;
-        }
-        else if (nBound==9)
-        {
-            double denom = 15437822400.0;
-            vector<double> c = {-47541321542.0,+27788080320.0, -5052378240.0,+1309875840.0,-340063920.0,+77728896.0,-14394240.0,+1982880.0,-178605.0,+7840.0};
-            for(int i=0;i<=9;i++)
-                coefs[i] = c[i]/denom;
-        }
-        else if (nBound==10)
-        {
-            double denom = 293318625600.0;
-            vector<double> c = {-909151481810.0,+533306592000.0, -99994986000.0,+27349056000.0,-7691922000.0,+1969132032.0,-427329000.0,+73872000.0,-9426375.0,+784000.0,-31752.0};
-            for(int i=0;i<=10;i++)
-                coefs[i] = c[i]/denom;
-        }
-        else if (nBound==11)
-        {
-            double denom = 3226504881600.0;
-            vector<double> c = {-10053996959110.0,+5915258949600.0,-1137549798000.0,+325014228000.0,-97504268400.0,+27301195152.0,-6691469400.0,+1365606000.0,-220114125.0,+26087600.0,-2012472.0,+75600.0};
-            for(int i=0;i<=11;i++)
-                coefs[i] = c[i]/denom;
-        }
-        else if (nBound==12)
-        {
-            double denom = 74209612276800.0;
-            vector<double> c = {-232272619118930.0,+137002361126400.0,-26911178078400.0,+7973682393600.0,-2522922944850.0,+759845028096.0,-205205061600.0,+47609337600.0,-9112724775.0,+1371462400.0,-151484256.0,+10886400.0,-381150.0};
-            for(int i=0;i<=12;i++)
-                coefs[i] = c[i]/denom;
-        }
-        else
-        {
-            exit(1);
-        }
-        cc = 1/(_domain.dx()*_domain.dx()) + 1/(_domain.dy()*_domain.dy()) + 1/(_domain.dz()*_domain.dz());
-        cc *= coefs[0];
+    std::vector<double> coefs(nBound+1);
 
-        for(int i=0;i<=nBound;i++)
+    if(nBound == 1)
+    {
+        std::vector<double> c = {-2.0, 1.0};
+        for(int i = 0; i <= nBound; ++i)
         {
-            fcx[i] =  coefs[i]/(_domain.dx()*_domain.dx());
-            fcy[i] =  coefs[i]/(_domain.dy()*_domain.dy());
-            fcz[i] =  coefs[i]/(_domain.dz()*_domain.dz());
+            coefs[i] = c[i];
         }
+    }
+    else if(nBound == 2)
+    {
+        double denom = 12.0;
+
+        std::vector<double> c = {-30.0, 16.0, -1.0};
+        for(int i = 0; i <= 2; ++i)
+        {
+            coefs[i] = c[i] / denom;
+        }
+    }
+    else if (nBound == 3)
+    {
+        double denom = 180.0;
+
+        std::vector<double> c = {-490.0, 270.0,-27.0, 2.0};
+        for(int i = 0; i <= 3; ++i)
+        {
+            coefs[i] = c[i] / denom;
+        }
+    }
+    else if (nBound == 4)
+    {
+        double denom = 5040.0;
+
+        std::vector<double> c = {-14350.0, 8064.0, -1008.0, 128.0, -9.0};
+        for(int i = 0; i <= 4; ++i)
+        {
+            coefs[i] = c[i] / denom;
+        }
+    }
+    else if (nBound == 5)
+    {
+        double denom = 25200.0;
+
+        std::vector<double> c = {-73766.0, 42000.0, -6000.0, 1000.0, -125.0, 8.0};
+        for(int i = 0; i <= 5; ++i)
+        {
+            coefs[i] = c[i] / denom;
+        }
+    }
+    else if (nBound == 6)
+    {
+        double denom = 831600.0;
+
+        std::vector<double> c = {-2480478.0,1425600.0,-222750.0,44000.0,-7425.0,864.0,-50.0};
+        for(int i = 0; i <= 6; ++i)
+        {
+            coefs[i] = c[i] / denom;
+        }
+    }
+    else if (nBound == 7)
+    {
+        double denom = 75675600.0;
+
+        std::vector<double> c = {-228812298.0,132432300.0,-22072050.0,4904900.0,-1003275.0, 160524.0,-17150.0,900.0};
+        for(int i = 0; i <= 7; ++i)
+        {
+            coefs[i] = c[i] / denom;
+        }
+    }
+    else if (nBound == 8)
+    {
+        double denom = 302702400.0;
+
+        std::vector<double> c = {-924708642.0,538137600.0,-94174080.0,22830080.0,-5350800.0,1053696.0,-156800.0,15360.0,-735.0};
+        for(int i = 0; i <= 8; ++i)
+        {
+            coefs[i] = c[i] / denom;
+        }
+    }
+    else if (nBound == 9)
+    {
+        double denom = 15437822400.0;
+
+        std::vector<double> c = {-47541321542.0,+27788080320.0, -5052378240.0,+1309875840.0,-340063920.0,+77728896.0,-14394240.0,+1982880.0,-178605.0,+7840.0};
+        for(int i = 0; i <= 9; ++i)
+        {
+            coefs[i] = c[i] / denom;
+        }
+    }
+    else if (nBound == 10)
+    {
+        double denom = 293318625600.0;
+
+        std::vector<double> c = {-909151481810.0,+533306592000.0, -99994986000.0,+27349056000.0,-7691922000.0,+1969132032.0,-427329000.0,+73872000.0,-9426375.0,+784000.0,-31752.0};
+        for(int i = 0; i <= 10; ++i)
+        {
+            coefs[i] = c[i] / denom;
+        }
+    }
+    else if (nBound == 11)
+    {
+        double denom = 3226504881600.0;
+
+        std::vector<double> c = {-10053996959110.0,+5915258949600.0,-1137549798000.0,+325014228000.0,-97504268400.0,+27301195152.0,-6691469400.0,+1365606000.0,-220114125.0,+26087600.0,-2012472.0,+75600.0};
+        for(int i = 0; i <= 11; ++i)
+        {
+            coefs[i] = c[i] / denom;
+        }
+    }
+    else if (nBound == 12)
+    {
+        double denom = 74209612276800.0;
+
+        std::vector<double> c = {-232272619118930.0,+137002361126400.0,-26911178078400.0,+7973682393600.0,-2522922944850.0,+759845028096.0,-205205061600.0,+47609337600.0,-9112724775.0,+1371462400.0,-151484256.0,+10886400.0,-381150.0};
+        for(int i = 0; i <= 12; ++i)
+        {
+            coefs[i] = c[i] / denom;
+        }
+    }
+    else
+    {
+        exit(1);
+    }
+
+    cc = 1 / (_domain.get_dx() *_domain.get_dx())
+         + 1 / (_domain.get_dy()*_domain.get_dy())
+         + 1 / (_domain.get_dz()*_domain.get_dz());
+
+    cc *= coefs[0];
+
+    for(int i = 0; i <= nBound; ++i)
+    {
+        fcx[i] = coefs[i] / (_domain.get_dx() * _domain.get_dx());
+        fcy[i] = coefs[i] / (_domain.get_dy() * _domain.get_dy());
+        fcz[i] = coefs[i] / (_domain.get_dz() * _domain.get_dz());
+    }
 }
 
 Grid Grid::laplacian(int nBound) const
@@ -611,19 +707,19 @@ Grid Grid::laplacian(int nBound) const
     {
         if(nBound<1 or nBound>12)
         {
-            throw string("nBound oustide acceptable precision values");
+            throw std::string("nBound oustide acceptable precision values");
         }
         else
         {
-            vector<double> fcx(nBound);
-            vector<double> fcy(nBound); 
-            vector<double> fcz(nBound);
+            std::vector<double> fcx(nBound);
+            std::vector<double> fcy(nBound); 
+            std::vector<double> fcz(nBound);
             double cc=0;
             Grid g(_domain);
             g.set_structure(_structure);
             coefs_Laplacian(nBound, fcx, fcy, fcz, cc);
 #ifdef ENABLE_OMP
-//cout<<"Number of cores = "<<omp_get_num_procs()<<endl;
+//std::cout<<"Number of cores = "<<omp_get_num_procs()<<std::endl;
 #pragma omp parallel for shared(g,_values,fcx,fcy,fcz,cc,nBound)
 #endif
 #ifdef ENABLE_ACC
@@ -652,69 +748,69 @@ Grid Grid::laplacian(int nBound) const
             return g;
         }
     }
-    catch(string error)
+    catch(std::string error)
     {
-        cout<<error<<endl;
+        std::cout<<error<<std::endl;
         exit(1);
     }                
 }
 
-void Grid::coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz) const
+void Grid::coefs_Gradient(int nBound, std::vector<double>& fcx, std::vector<double>& fcy, std::vector<double>& fcz) const
 {
-    vector<double> coefs(nBound+1);    
+    std::vector<double> coefs(nBound+1);    
         if(nBound==1)
         {
             double denom = 2.0;
-            vector<double> c = {-1.0};
+            std::vector<double> c = {-1.0};
             for(int i=0;i<nBound;i++)
                     coefs[i] = c[i]/denom;
         }
         else if(nBound==2)
         {
             double denom = 12.0;
-            vector<double> c = { 1.0, -8.0};
+            std::vector<double> c = { 1.0, -8.0};
             for(int i=0;i<2;i++)
                 coefs[i] = c[i]/denom;
         }
         else if (nBound==3)
         {
             double denom = 60.0;
-            vector<double> c ={ -1.0, +9.0, -45.0};
+            std::vector<double> c ={ -1.0, +9.0, -45.0};
             for(int i=0;i<3;i++)
                 coefs[i] = c[i]/denom;
         }
         else if (nBound==4)
         {
             double denom = 840.0;
-            vector<double> c = { 3.0, -32.0, +168.0, -672.0};
+            std::vector<double> c = { 3.0, -32.0, +168.0, -672.0};
             for(int i=0;i<4;i++)
                 coefs[i] = c[i]/denom;
         }
         else if (nBound==5)
         {
             double denom = 2520.0;
-            vector<double> c = { -2.0, +25.0, -150.0,+600.0, -2100.0};
+            std::vector<double> c = { -2.0, +25.0, -150.0,+600.0, -2100.0};
             for(int i=0;i<5;i++)
                 coefs[i] = c[i]/denom;
         }
         else if (nBound==6)
         {
             double denom = 27720.0;
-            vector<double> c = { 5.0, -72.0, +495.0, -2200.0, +7425.0, -23760.0};
+            std::vector<double> c = { 5.0, -72.0, +495.0, -2200.0, +7425.0, -23760.0};
             for(int i=0;i<6;i++)
                 coefs[i] = c[i]/denom;
         }
         else if (nBound==7)
         {
             double denom = 360360.0;
-            vector<double> c = { -15.0, +245.0, -1911.0, +9555.0, -35035.0, +105105.0, -315315.0};
+            std::vector<double> c = { -15.0, +245.0, -1911.0, +9555.0, -35035.0, +105105.0, -315315.0};
             for(int i=0;i<7;i++)
                 coefs[i] = c[i]/denom;
         }
         else if (nBound==8)
         {
             double denom = 720720.0;
-            vector<double> c = { 7.0, -128.0, +1120.0, -6272.0, +25480.0, -81536.0, +224224.0, -640640.0};
+            std::vector<double> c = { 7.0, -128.0, +1120.0, -6272.0, +25480.0, -81536.0, +224224.0, -640640.0};
             for(int i=0;i<8;i++)
                 coefs[i] = c[i]/denom;
         }
@@ -725,9 +821,9 @@ void Grid::coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, 
 
         for(int i=0;i<nBound;i++)
         {
-            fcx[i] =  coefs[i]/_domain.dx();
-            fcy[i] =  coefs[i]/_domain.dy();
-            fcz[i] =  coefs[i]/_domain.dz();
+            fcx[i] =  coefs[i]/_domain.get_dx();
+            fcy[i] =  coefs[i]/_domain.get_dy();
+            fcz[i] =  coefs[i]/_domain.get_dz();
         }
 }
 
@@ -738,13 +834,13 @@ Grid Grid::gradient(int nBound) const
     {
         if(nBound<1 or nBound>8)
         {
-            throw string("nBound oustide bounds");
+            throw std::string("nBound oustide bounds");
         }
         else
         {
-            vector<double> fcx(nBound);
-            vector<double> fcy(nBound); 
-            vector<double> fcz(nBound);
+            std::vector<double> fcx(nBound);
+            std::vector<double> fcy(nBound); 
+            std::vector<double> fcz(nBound);
             Domain dg=_domain;
             dg.set_Nval(4);
             Grid g(dg);
@@ -785,9 +881,9 @@ Grid Grid::gradient(int nBound) const
             return g;
         }
     }
-    catch(string error)
+    catch(std::string error)
     {
-        cout<<error<<endl;
+        std::cout<<error<<std::endl;
         exit(1);
     }                
 }
@@ -795,13 +891,13 @@ Grid Grid::gradient(int nBound) const
 
 
 /*
-void bicub_Coef(vector<double> z, vector<double> dzdx, vector<double> dzdy, vector<double> d2zdxdy, double dx, double dy, vector<vector<double>> c)
+void bicub_Coef(std::vector<double> z, std::vector<double> dzdx, std::vector<double> dzdy, std::vector<double> d2zdxdy, double dx, double dy, std::vector<std::vector<double>> c)
 {
-    vector<vector<int>> Ainv[16][16]={
+    std::vector<std::vector<int>> Ainv[16][16]={
         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0},{-3,0,0,3,0,0,0,0,-2,0,0,-1,0,0,0,0}{2,0,0,-2,0,0,0,0,1,0,0,1,0,0,0,0},{0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0},{0,0,0,0,-3,0,0,3,0,0,0,0,-2,0,0,-1},{0,0,0,0,2,0,0,-2,0,0,0,0,1,0,0,1},{-3,3,0,0,-2,-1,0,0,0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0,-3,3,0,0,-2,-1,0,0},{9,-9,9,-9,6,3,-3,-6,6,-6,-3,3,4,2,1,2},{-6,6,-6,6,-4,-2,2,4,-3,3,3,-3,-2,-1,-1,-2},{2,-2,0,0,1,1,0,0,0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0,2,-2,0,0,1,1,0,0},{-6,6,-6,6,-3,-3,3,3,-4,4,2,-2,-2,-2,-1,-1},{4,-4,4,-4,2,2,-2,-2,2,-2,-2,2,1,1,1,1}};
     int i,j,k,l;
     double s, dxdy;
-    vector<double> c1D(16),x(16);
+    std::vector<double> c1D(16),x(16);
     dxdy= dx*dy;
     for (i=0;i<4;i++)
     {
@@ -834,13 +930,13 @@ void bicub_Coef(vector<double> z, vector<double> dzdx, vector<double> dzdy, vect
 
 Grid Grid::finer_Grid()
 {
-    Grid g(Domain(_domain.Nval() ,2*_domain.get_N1()-1,2*_domain.get_N2()-1,2*_domain.get_N3()-1, _domain.O()));
+    Grid g(Domain(_domain.get_Nval() ,2*_domain.get_N1()-1,2*_domain.get_N2()-1,2*_domain.get_N3()-1, _domain.get_origin()));
     g._structure=_structure;
     for(int i=0;i<3;i++)
     {
         for(int j=0;j<3;j++)
         {
-            g._domain.set_T(_domain.Tij(i,j)/2, i, j);
+            g._domain.set_Tij(_domain.get_Tij(i,j)/2, i, j);
         }
     }
     //coarse grid points to fine grid
@@ -875,7 +971,7 @@ Grid Grid::finer_Grid()
         {    
             for(int k=1;k<g._domain.get_N3()-1;k+=2)
             {
-                for(int l=0; l<g._domain.Nval();l++)
+                for(int l=0; l<g._domain.get_Nval();l++)
                 {    
                     g._values[i][j][k][l] = 0.125*g._values[i-1][j-1][k-1][l] + 0.125*g._values[i-1][j-1][k+1][l] + 0.125*g._values[i-1][j+1][k-1][l] + 0.125*g._values[i-1][j+1][k+1][l] + 0.125*g._values[i+1][j-1][k-1][l] + 0.125*g._values[i+1][j-1][k+1][l] + 0.125*g._values[i+1][j+1][k-1][l] + 0.125*g._values[i+1][j+1][k+1][l];
                 }    
@@ -897,7 +993,7 @@ Grid Grid::finer_Grid()
         {    
             for(int k=1;k<g._domain.get_N3()-1;k+=2)
             {
-                for(int l=0; l<g._domain.Nval();l++)
+                for(int l=0; l<g._domain.get_Nval();l++)
                 {
                     g._values[i][j][k][l]= 0.5*g._values[i][j][k-1][l]+0.5*g._values[i][j][k+1][l];
                 }
@@ -917,7 +1013,7 @@ Grid Grid::finer_Grid()
         {    
             for(int k=0;k<_domain.get_N3()-1;k+=2)
             {
-                for(int l=0; l<g._domain.Nval();l++)
+                for(int l=0; l<g._domain.get_Nval();l++)
                 {
                     g._values[i][j][k][l] = 0.5*g._values[i][j-1][k][l]+0.5*g._values[i][j+1][k][l];
                 }
@@ -937,7 +1033,7 @@ Grid Grid::finer_Grid()
         {    
             for(int k=0;k<g._domain.get_N3()-1;k+=2)
             {
-                for(int l=0; l<g._domain.Nval();l++)
+                for(int l=0; l<g._domain.get_Nval();l++)
                 {
                     g._values[i][j][k][l] = 0.5*g._values[i-1][j][k][l]+0.5*g._values[i+1][j][k][l];
                 }
@@ -957,7 +1053,7 @@ Grid Grid::finer_Grid()
         {    
             for(int k=1;k<g._domain.get_N3()-1;k+=2)
             {
-                for(int l=0; l<g._domain.Nval()-1;l++)
+                for(int l=0; l<g._domain.get_Nval()-1;l++)
                 {
                     g._values[i][j][k][l] = 0.25*g._values[i][j-1][k-1][l] + 0.25*g._values[i+1][j-1][k+1][l] + 0.25*g._values[i][j+1][k-1][l] + 0.25*g._values[i][j+1][k+1][l];
                 }
@@ -977,7 +1073,7 @@ Grid Grid::finer_Grid()
         {    
             for(int k=1;k<g._domain.get_N3()-1;k+=2)
             {
-                for(int l=0; l<g._domain.Nval();l++)
+                for(int l=0; l<g._domain.get_Nval();l++)
                 {
                     g._values[i][j][k][l] = 0.25*g._values[i-1][j][k-1][l] + 0.25*g._values[i-1][j][k+1][l] + 0.25*g._values[i+1][j][k-1][l] + 0.25*g._values[i+1][j][k+1][l];
                 }
@@ -997,7 +1093,7 @@ Grid Grid::finer_Grid()
         {    
             for(int k=0;k<g._domain.get_N3()-1;k+=2)
             {
-                for(int l=0; l<g._domain.Nval();l++)
+                for(int l=0; l<g._domain.get_Nval();l++)
                 {
                     g._values[i][j][k][l] = 0.25*g._values[i-1][j-1][k][l] + 0.25*g._values[i+1][j-1][k][l] + 0.25*g._values[i-1][j+1][k][l] + 0.25*g._values[i+1][j+1][k][l];
                 }
@@ -1018,7 +1114,7 @@ Grid Grid::coarser_Grid()
         }
         N[i] =N[i]/2;
     }
-    Grid g(Domain(_domain.Nval(), N[0], N[1], N[2], _domain.O()));
+    Grid g(Domain(_domain.get_Nval(), N[0], N[1], N[2], _domain.get_origin()));
     g._structure=_structure;
     double scale = 1.0 / 64.0;
     
@@ -1056,7 +1152,7 @@ Grid Grid::coarser_Grid()
                 z0 = 2 * k;
                 zp = z0 + 1;
                 zm = z0 - 1;
-                for(int l=0;l<_domain.Nval(); l++)
+                for(int l=0;l<_domain.get_Nval(); l++)
                 {     
                     double face, corner, edge;
                     
@@ -1077,66 +1173,66 @@ Grid Grid::coarser_Grid()
 void Grid::save(ofstream& nameFile)
 {
     nameFile.precision(14);
-    if(_domain.Nval()==1)
+    if(_domain.get_Nval()==1)
     {
-        nameFile<<"Grid generated by CdftT "<<endl;
-        nameFile<<"Density"<<endl;
+        nameFile<<"Grid generated by CdftT "<<std::endl;
+        nameFile<<"Density"<<std::endl;
     }
-    else if(_domain.Nval()==4)
+    else if(_domain.get_Nval()==4)
     {
-        nameFile<<"Grid generated by CdftT "<<endl;
-        nameFile<<"Gradient"<<endl;
+        nameFile<<"Grid generated by CdftT "<<std::endl;
+        nameFile<<"Gradient"<<std::endl;
     }
     else
     {
-        nameFile<<"Grid generated by CdftT "<<endl;
-        nameFile<<"Orbitals"<<endl;
+        nameFile<<"Grid generated by CdftT "<<std::endl;
+        nameFile<<"Orbitals"<<std::endl;
     }
     nameFile<<scientific;
     nameFile<<_structure.number_of_atoms()<<" ";
     for(int i=0;i<3;i++)
     {
-        nameFile<<_domain.O()[i]<<" ";
+        nameFile<<_domain.get_origin()[i]<<" ";
     }
-    nameFile<<_domain.Nval()<<" ";
-    nameFile<<endl<<_domain.get_N1()<<" ";
+    nameFile<<_domain.get_Nval()<<" ";
+    nameFile<<std::endl<<_domain.get_N1()<<" ";
     if(_domain.get_N1()>0)
     {
         for(int i=0;i<3;i++)
         {
-            nameFile<<_domain.Tij(0,i)<<" ";
+            nameFile<<_domain.get_Tij(0,i)<<" ";
         }
-        nameFile<<endl;
+        nameFile<<std::endl;
         nameFile<<_domain.get_N2()<<" ";
         for(int i=0;i<3;i++)
         {
-            nameFile<<_domain.Tij(1,i)<<" ";
+            nameFile<<_domain.get_Tij(1,i)<<" ";
         }
-        nameFile<<endl<<_domain.get_N3()<<" ";
+        nameFile<<std::endl<<_domain.get_N3()<<" ";
         for(int i=0;i<3;i++)
         {
-            nameFile<<_domain.Tij(2,i)<<" ";
+            nameFile<<_domain.get_Tij(2,i)<<" ";
         }
     }
     else
     {
         for(int i=0;i<3;i++)
         {
-            nameFile<<_domain.Tij(0,i)*BOHRTOANG<<" ";
+            nameFile << _domain.get_Tij(0, i) * Constants::BOHR_RADIUS_TO_ANGSTROM << " ";
         }
-        nameFile<<endl;
+        nameFile<<std::endl;
         nameFile<<_domain.get_N2()<<" ";
         for(int i=0;i<3;i++)
         {
-            nameFile<<_domain.Tij(1,i)*BOHRTOANG<<" ";
+            nameFile << _domain.get_Tij(1, i) * Constants::BOHR_RADIUS_TO_ANGSTROM << " ";
         }
-        nameFile<<endl<<_domain.get_N3()<<" ";
+        nameFile<<std::endl<<_domain.get_N3()<<" ";
         for(int i=0;i<3;i++)
         {
-            nameFile<<_domain.Tij(2,i)*BOHRTOANG<<" ";
+            nameFile << _domain.get_Tij(2, i) * Constants::BOHR_RADIUS_TO_ANGSTROM << " ";
         }
     }
-    nameFile<<endl;
+    nameFile<<std::endl;
     for(int i=0;i<_structure.number_of_atoms();i++)
     {
         nameFile<<_structure.atom(i).atomic_number()<<" ";
@@ -1152,7 +1248,7 @@ void Grid::save(ofstream& nameFile)
         {
             nameFile<<_structure.atom(i).coordinates()[j]<<" ";
         }
-        nameFile<<endl;
+        nameFile<<std::endl;
     }
     for(int i=0; i<_domain.get_N1();i++)
     {    
@@ -1162,19 +1258,19 @@ void Grid::save(ofstream& nameFile)
             int R=0;
             for(int k=0; k<_domain.get_N3();k++)
             {
-                for(int l=0; l<_domain.Nval();l++)
+                for(int l=0; l<_domain.get_Nval();l++)
                 {
                     nameFile<<_values[i][j][k][l]<<" ";
                     R++;
                     if(R%6==0)
                     {
-                        nameFile<<endl;
+                        nameFile<<std::endl;
                     }
                 }
             }
             if(R%6!=0)
             {
-                nameFile<<endl;
+                nameFile<<std::endl;
             }
         }
     }
@@ -1188,9 +1284,9 @@ double Grid::value(int i, int j, int k, int l) const
     return _values[i][j][k][l];
 }
 
-void Grid::next(int i, int j, int k, double& current, vector<vector<int>>& trajectory)
+void Grid::next(int i, int j, int k, double& current, std::vector<std::vector<int>>& trajectory)
 {
-    vector<int> v=trajectory.back();
+    std::vector<int> v=trajectory.back();
     int I[3];
     int i2 =i-1;
     int i1 =i+1;
@@ -1225,10 +1321,10 @@ void Grid::next(int i, int j, int k, double& current, vector<vector<int>>& traje
             for(int kc=0;kc<3;kc++)
             {
                 if(ic==1 and jc==1 and kc==1) continue;
-                vector<double> ds(3);
-                ds[0]=(I[ic]-I[1])*_domain.dx();
-                ds[1]=(J[jc]-J[1])*_domain.dy();
-                ds[2]=(K[kc]-K[1])*_domain.dz();
+                std::vector<double> ds(3);
+                ds[0]=(I[ic]-I[1])*_domain.get_dx();
+                ds[1]=(J[jc]-J[1])*_domain.get_dy();
+                ds[2]=(K[kc]-K[1])*_domain.get_dz();
                 double grad =0;
                 double normds=sqrt(ds[0]*ds[0]+ds[1]*ds[1]+ds[2]*ds[2]);
                 for(int m=1;m<=3;m++)
@@ -1250,15 +1346,15 @@ void Grid::next(int i, int j, int k, double& current, vector<vector<int>>& traje
     trajectory.push_back(v);
 }
 
-vector<double> Grid::atom_attract_diff(const vector<vector<int>>& attract)
+std::vector<double> Grid::atom_attract_diff(const std::vector<std::vector<int>>& attract)
 {
-    vector<double> v(_structure.number_of_atoms());
+    std::vector<double> v(_structure.number_of_atoms());
     double distance=0;
     double d1=100;
-    vector<double> ds(3);
-    ds[0]=_domain.dx();
-    ds[1]=_domain.dy();
-    ds[2]=_domain.dz();
+    std::vector<double> ds(3);
+    ds[0]=_domain.get_dx();
+    ds[1]=_domain.get_dy();
+    ds[2]=_domain.get_dz();
     for(int j=0; j<_structure.number_of_atoms();j++)
     {
         for(int n=0;n<int(attract.size()); n++)
@@ -1280,9 +1376,9 @@ vector<double> Grid::atom_attract_diff(const vector<vector<int>>& attract)
 }
 
 
-void Grid::addSurroundingEqualPoints(int i,int j,int k, vector<vector<int>>& equals, double& current)
+void Grid::addSurroundingEqualPoints(int i,int j,int k, std::vector<std::vector<int>>& equals, double& current)
 {
-    vector<int> v(3);
+    std::vector<int> v(3);
     int I[3];
     int i2 =i-1;
     int i1 =i+1;
@@ -1316,10 +1412,10 @@ void Grid::addSurroundingEqualPoints(int i,int j,int k, vector<vector<int>>& equ
                 if(j1>_domain.get_N2()-1) j1 = j;
                 if(k2<0) k2 = k;
                 if(k1>_domain.get_N3()-1) k1 = k;
-                vector<double> ds(3);
-                ds[0]=(I[ic]-I[1])*_domain.dx();
-                ds[1]=(J[jc]-J[1])*_domain.dy();
-                ds[2]=(K[kc]-K[1])*_domain.dz();
+                std::vector<double> ds(3);
+                ds[0]=(I[ic]-I[1])*_domain.get_dx();
+                ds[1]=(J[jc]-J[1])*_domain.get_dy();
+                ds[2]=(K[kc]-K[1])*_domain.get_dz();
                 double grad=0;
                 double normds=sqrt((ds[0]*ds[0])+(ds[1]*ds[1])+(ds[2]*ds[2]));
                 for(int m=1;m<3;m++)
@@ -1342,21 +1438,21 @@ Grid Grid::aim_On_Grid(int nBound)
 {
     try
     {
-        if(_domain.Nval()==4)
+        if(_domain.get_Nval()==4)
         {
-            Grid g(Domain(1,_domain.get_N1(), _domain.get_N2(), _domain.get_N3(), _domain.O()));
+            Grid g(Domain(1,_domain.get_N1(), _domain.get_N2(), _domain.get_N3(), _domain.get_origin()));
             for(int i=0;i<3;i++)
             {
                 for(int j=0;j<3;j++)
                 {
-                    g._domain.set_T(_domain.Tij(i,j), i, j);
+                    g._domain.set_Tij(_domain.get_Tij(i,j), i, j);
                 }
             }
             g._structure=_structure;
             //make list instead
-            vector<vector<int>> attractors(0, vector<int>(3));
-            cout<<_values[36][29][32][2]<<endl;
-            cout<<_values[36][30][32][2]<<endl;
+            std::vector<std::vector<int>> attractors(0, std::vector<int>(3));
+            std::cout<<_values[36][29][32][2]<<std::endl;
+            std::cout<<_values[36][30][32][2]<<std::endl;
             for(int i=nBound;i<_domain.get_N1()-nBound;i++)
             {
                 for(int j=nBound;j<_domain.get_N2()-nBound;j++)
@@ -1371,8 +1467,8 @@ Grid Grid::aim_On_Grid(int nBound)
                         {    
                             double current=0;
                             bool KnownPt=false;
-                            vector<vector<int>> trajectory={{i,j,k}};
-                            vector<vector<int>> equals(0, vector<int>(3));
+                            std::vector<std::vector<int>> trajectory={{i,j,k}};
+                            std::vector<std::vector<int>> equals(0, std::vector<int>(3));
                             do
                             {
                                 current=0;
@@ -1382,9 +1478,9 @@ Grid Grid::aim_On_Grid(int nBound)
                                 next(I,J,K,current,trajectory);
                                 
                                 
-                                cout<<trajectory.back()[0]<<endl;
-                                cout<<trajectory.back()[1]<<endl;
-                                cout<<trajectory.back()[2]<<endl;
+                                std::cout<<trajectory.back()[0]<<std::endl;
+                                std::cout<<trajectory.back()[1]<<std::endl;
+                                std::cout<<trajectory.back()[2]<<std::endl;
                                 if(g._values[trajectory.back()[0]][trajectory.back()[1]][trajectory.back()[2]][0]>PRECISION)
                                 {
                                     KnownPt=true;
@@ -1403,14 +1499,14 @@ Grid Grid::aim_On_Grid(int nBound)
                             //if point has been already indexed exit loop: new point
                             if(KnownPt)
                             {
-                                cout<<"gone"<<endl;
+                                std::cout<<"gone"<<std::endl;
                                 continue;    
                             }
                             
                             //Do we know max?
                             bool WhoIsMax=true;
                             //compare max to list
-                            cout<<i<<endl;
+                            std::cout<<i<<std::endl;
                             
                             for(int m=0;m<int(attractors.size());m++)
                             {
@@ -1444,9 +1540,9 @@ Grid Grid::aim_On_Grid(int nBound)
                                 }
                                 attractors.push_back(trajectory.back());
                                 //index all points from trajectory
-                                cout<<"traj size "<<trajectory.size()<<endl;
-                                cout<<-_values[36][29][32][2]<<endl;
-                                cout<<"attract size "<<attractors.size()<<endl;
+                                std::cout<<"traj size "<<trajectory.size()<<std::endl;
+                                std::cout<<-_values[36][29][32][2]<<std::endl;
+                                std::cout<<"attract size "<<attractors.size()<<std::endl;
                                 for(int p=0;p<int(equals.size());p++)
                                 {
                                     g._values[equals[p][0]][equals[p][1]][equals[p][2]][0]=g._values[trajectory.back()[0]][trajectory.back()[1]][trajectory.back()[2]][0];        
@@ -1462,7 +1558,7 @@ Grid Grid::aim_On_Grid(int nBound)
                 }
             }
             /*
-            vector<vector<int>> vpos(0,vector<int>(3));
+            std::vector<std::vector<int>> vpos(0,std::vector<int>(3));
             for(int p=0;p<int(attractors.size()); p++)
             {
                 for(int m=0;m<int(attractors.size());m++)
@@ -1483,7 +1579,7 @@ Grid Grid::aim_On_Grid(int nBound)
                                     {
                                         if(g._values[l][j][k][0]==m)
                                         {
-                                            cout<<"okay"<<endl;
+                                            std::cout<<"okay"<<std::endl;
                                             g._values[l][j][k][0]=p;
                                             
                                         }
@@ -1502,7 +1598,7 @@ Grid Grid::aim_On_Grid(int nBound)
                                     {
                                         if(g._values[l][j][k][0]==m)
                                         {
-                                            cout<<"okay"<<endl;
+                                            std::cout<<"okay"<<std::endl;
                                             g._values[l][j][k][0]=p;
                                             
                                         }
@@ -1521,7 +1617,7 @@ Grid Grid::aim_On_Grid(int nBound)
                                     {
                                         if(g._values[l][j][k][0]==m)
                                         {
-                                            cout<<"okay"<<endl;
+                                            std::cout<<"okay"<<std::endl;
                                             g._values[l][j][k][0]=p;
                                             
                                         }
@@ -1542,20 +1638,20 @@ Grid Grid::aim_On_Grid(int nBound)
             }*/
             for(int m=0; m<int(attractors.size());m++)
             {
-                vector<double> ds(3);
-                ds[0]=_domain.dx();
-                ds[1]=_domain.dy();
-                ds[2]=_domain.dz();
-                cout<<"attractor "<<m<<endl;
+                std::vector<double> ds(3);
+                ds[0]=_domain.get_dx();
+                ds[1]=_domain.get_dy();
+                ds[2]=_domain.get_dz();
+                std::cout<<"attractor "<<m<<std::endl;
                 for(int a=0;a<3;a++)
                 {
-                    cout<<(attractors[m][a]*ds[a] + _domain.O()[a])*BOHRTOANG<<endl;
+                    std::cout << (attractors[m][a] * ds[a] + _domain.get_origin()[a]) * Constants::BOHR_RADIUS_TO_ANGSTROM << std::endl;
                 }
             }
             for(int m=0; m<_structure.number_of_atoms();m++)
             {
-                cout<<atom_attract_diff(attractors)[m]<<endl;
-                cout<<atom_attract_diff(attractors).size()<<endl;
+                std::cout<<atom_attract_diff(attractors)[m]<<std::endl;
+                std::cout<<atom_attract_diff(attractors).size()<<std::endl;
             }
             
             
@@ -1565,21 +1661,21 @@ Grid Grid::aim_On_Grid(int nBound)
         }
         else
         {
-            throw string("Gradient grid must be used for AIM");
+            throw std::string("Gradient grid must be used for AIM");
         }
     }
     
-    catch(string error)
+    catch(std::string error)
     {
-        cout<<error<<endl;
+        std::cout<<error<<std::endl;
         exit(1);
     }
 }
 
-void Grid::next_Density(int i, int j, int k, double& rhocenter, vector<vector<int>>& trajectory)
+void Grid::next_Density(int i, int j, int k, double& rhocenter, std::vector<std::vector<int>>& trajectory)
 {
     //coordinates on grid of the latest point
-    vector<int> v=trajectory.back();
+    std::vector<int> v=trajectory.back();
     
     // Initialize indices for neighboring points
     int I[3] = { max(0, i-1), i, min(i+1, _domain.get_N1()-1) };
@@ -1587,7 +1683,7 @@ void Grid::next_Density(int i, int j, int k, double& rhocenter, vector<vector<in
     int K[3] = { max(0, k-1), k, min(k+1, _domain.get_N3()-1) };
     
     double drhomax=0;
-    vector<double> ds(3);
+    std::vector<double> ds(3);
     
     // Iterate through neighboring cells
     for(int ic=0;ic<3;ic++)
@@ -1601,11 +1697,11 @@ void Grid::next_Density(int i, int j, int k, double& rhocenter, vector<vector<in
                 if(ic==1 and jc==1 and kc==1) continue;
                 
                 // Calculate distances
-                ds[0]=(I[ic]-I[1])*_domain.dx();
-                ds[1]=(J[jc]-J[1])*_domain.dy();
-                ds[2]=(K[kc]-K[1])*_domain.dz();
+                ds[0]=(I[ic]-I[1])*_domain.get_dx();
+                ds[1]=(J[jc]-J[1])*_domain.get_dy();
+                ds[2]=(K[kc]-K[1])*_domain.get_dz();
                 
-                // Calculate the norm of the distance vector
+                // Calculate the norm of the distance std::vector
                 double normds=sqrt(ds[0]*ds[0]+ds[1]*ds[1]+ds[2]*ds[2]);
                 
                 // Get the density at the neighboring point
@@ -1633,10 +1729,10 @@ void Grid::next_Density(int i, int j, int k, double& rhocenter, vector<vector<in
     trajectory.push_back(v);
 }
 
-void Grid::addSurroundingDensity(int i,int j,int k, vector<vector<int>>& equals, double& rhocenter)
+void Grid::addSurroundingDensity(int i,int j,int k, std::vector<std::vector<int>>& equals, double& rhocenter)
 {
     //coordinates on grid of the latest point
-    vector<int> v(3);
+    std::vector<int> v(3);
     
     // Initialize indices for neighboring points
     int I[3] = { max(0, i-1), i, min(i+1, _domain.get_N1()-1) };
@@ -1656,10 +1752,10 @@ void Grid::addSurroundingDensity(int i,int j,int k, vector<vector<int>>& equals,
                 }
                 
                 // Calculate distances
-                vector<double> ds(3);
-                ds[0]=(I[ic]-I[1])*_domain.dx();
-                ds[1]=(J[jc]-J[1])*_domain.dy();
-                ds[2]=(K[kc]-K[1])*_domain.dz();
+                std::vector<double> ds(3);
+                ds[0]=(I[ic]-I[1])*_domain.get_dx();
+                ds[1]=(J[jc]-J[1])*_domain.get_dy();
+                ds[2]=(K[kc]-K[1])*_domain.get_dz();
                 double normds=sqrt((ds[0]*ds[0])+(ds[1]*ds[1])+(ds[2]*ds[2]));
                 
                 // Get the density at the neighboring point
@@ -1688,21 +1784,21 @@ Grid Grid::aim_On_Grid_Density()
 
     try
     {
-        if(_domain.Nval()==1)
+        if(_domain.get_Nval()==1)
         {
             // Initialise new grid for indices
-            Grid g(Domain(1,_domain.get_N1(), _domain.get_N2(), _domain.get_N3(), _domain.O()));
+            Grid g(Domain(1,_domain.get_N1(), _domain.get_N2(), _domain.get_N3(), _domain.get_origin()));
             for(int i=0;i<3;i++)
             {
                 for(int j=0;j<3;j++)
                 {
-                    g._domain.set_T(_domain.Tij(i,j), i, j);
+                    g._domain.set_Tij(_domain.get_Tij(i,j), i, j);
                 }
             }
             g._structure=_structure;
             //make list instead
             // Create a list of the attractors' coordinates
-            vector<vector<int>> attractors(0, vector<int>(3));
+            std::vector<std::vector<int>> attractors(0, std::vector<int>(3));
             for(int i=0;i<_domain.get_N1();i++)
             {
                 for(int j=0;j<_domain.get_N2();j++)
@@ -1712,7 +1808,7 @@ Grid Grid::aim_On_Grid_Density()
                         // Check if the point has already been indexed
                         if(g._values[i][j][k][0]>PRECISION)
                         {
-                            cout<<"already indexed"<<endl;
+                            std::cout<<"already indexed"<<std::endl;
                             continue;
                         }
                         else
@@ -1722,8 +1818,8 @@ Grid Grid::aim_On_Grid_Density()
                             bool KnownPt=false;
                             
                             // Initialise ascent trajectory and equal density neighbours
-                            vector<vector<int>> trajectory={{i,j,k}};
-                            vector<vector<int>> equals(0, vector<int>(3));
+                            std::vector<std::vector<int>> trajectory={{i,j,k}};
+                            std::vector<std::vector<int>> equals(0, std::vector<int>(3));
                             
                             
                             // Start the loop to find the path of highest density gradient
@@ -1740,15 +1836,15 @@ Grid Grid::aim_On_Grid_Density()
                                 int newI = trajectory.back()[0];
                                 int newJ = trajectory.back()[1];
                                 int newK = trajectory.back()[2];
-                                cout<<newI<<endl;
-                                cout<<newJ<<endl;
-                                cout<<newK<<endl;
-                                cout<<rhocenter<<endl;
+                                std::cout<<newI<<std::endl;
+                                std::cout<<newJ<<std::endl;
+                                std::cout<<newK<<std::endl;
+                                std::cout<<rhocenter<<std::endl;
                                 
                                 // Check if a new point was added to the trajectory
                                 if(I==newI and J==newJ and K==newK)
                                 {
-                                    cout<<"no new point found"<<endl;
+                                    std::cout<<"no new point found"<<std::endl;
                                     break;
                                 }
                                 
@@ -1771,7 +1867,7 @@ Grid Grid::aim_On_Grid_Density()
                             addSurroundingDensity(trajectory.back()[0],trajectory.back()[1],trajectory.back()[2],equals,rhocenter);
                             
                             
-                            // Iterate through the equal points and set the index value of each point in the the vector to the index of the associated maximum 
+                            // Iterate through the equal points and set the index value of each point in the the std::vector to the index of the associated maximum 
                             for(int p=0;p<int(equals.size());p++)
                             {
                                 g._values[equals[p][0]][equals[p][1]][equals[p][2]][0]=g._values[trajectory.back()[0]][trajectory.back()[1]][trajectory.back()[2]][0];    
@@ -1781,7 +1877,7 @@ Grid Grid::aim_On_Grid_Density()
                             // If the point has been already indexed move on to a new point
                             if(KnownPt)
                             {
-                                cout<<"gone"<<endl;
+                                std::cout<<"gone"<<std::endl;
                                 continue;    
                             }
                             
@@ -1827,8 +1923,8 @@ Grid Grid::aim_On_Grid_Density()
                                 attractors.push_back(trajectory.back());
                                 
                                 
-                                cout<<"traj size "<<trajectory.size()<<endl;
-                                cout<<"attract size "<<attractors.size()<<endl;
+                                std::cout<<"traj size "<<trajectory.size()<<std::endl;
+                                std::cout<<"attract size "<<attractors.size()<<std::endl;
                                 
                                 // Index all points from trajectory and equals
                                 for(int p=0;p<int(equals.size());p++)
@@ -1846,7 +1942,7 @@ Grid Grid::aim_On_Grid_Density()
                 }
             }
             /*
-            vector<vector<int>> vpos(0,vector<int>(3));
+            std::vector<std::vector<int>> vpos(0,std::vector<int>(3));
             for(int p=0;p<int(attractors.size()); p++)
             {
                 for(int m=0;m<int(attractors.size());m++)
@@ -1867,7 +1963,7 @@ Grid Grid::aim_On_Grid_Density()
                                     {
                                         if(g._values[l][j][k][0]==m)
                                         {
-                                            cout<<"okay"<<endl;
+                                            std::cout<<"okay"<<std::endl;
                                             g._values[l][j][k][0]=p;
                                             
                                         }
@@ -1886,7 +1982,7 @@ Grid Grid::aim_On_Grid_Density()
                                     {
                                         if(g._values[l][j][k][0]==m)
                                         {
-                                            cout<<"okay"<<endl;
+                                            std::cout<<"okay"<<std::endl;
                                             g._values[l][j][k][0]=p;
                                             
                                         }
@@ -1905,7 +2001,7 @@ Grid Grid::aim_On_Grid_Density()
                                     {
                                         if(g._values[l][j][k][0]==m)
                                         {
-                                            cout<<"okay"<<endl;
+                                            std::cout<<"okay"<<std::endl;
                                             g._values[l][j][k][0]=p;
                                             
                                         }
@@ -1926,25 +2022,25 @@ Grid Grid::aim_On_Grid_Density()
             }*/
             for(int m=0; m<int(attractors.size());m++)
             {
-                vector<double> ds(3);
-                ds[0]=_domain.dx();
-                ds[1]=_domain.dy();
-                ds[2]=_domain.dz();
-                cout<<"attractor "<<m<<endl;
+                std::vector<double> ds(3);
+                ds[0]=_domain.get_dx();
+                ds[1]=_domain.get_dy();
+                ds[2]=_domain.get_dz();
+                std::cout<<"attractor "<<m<<std::endl;
                 for(int a=0;a<3;a++)
                 {
-                    cout<<(attractors[m][a]*ds[a]+_domain.O()[a])*BOHRTOANG<<endl;
-                    cout<<attractors[m][a]<<endl;
+                    std::cout << (attractors[m][a] * ds[a] + _domain.get_origin()[a]) * Constants::BOHR_RADIUS_TO_ANGSTROM << std::endl;
+                    std::cout<<attractors[m][a]<<std::endl;
                 }
             }
             for(int m=0; m<_structure.number_of_atoms();m++)
             {
-                cout<<atom_attract_diff(attractors)[m]<<endl;
-                cout<<atom_attract_diff(attractors).size()<<endl;
+                std::cout<<atom_attract_diff(attractors)[m]<<std::endl;
+                std::cout<<atom_attract_diff(attractors).size()<<std::endl;
             }
             //int nbrofindices=0;
             double value=0;
-            cout<<"V0000"<<g._values[0][0][0][0]<<endl;
+            std::cout<<"V0000"<<g._values[0][0][0][0]<<std::endl;
             for(int i=0;i<_domain.get_N1();i++)
             {
                 for(int j=0;j<_domain.get_N2();j++)
@@ -1958,20 +2054,20 @@ Grid Grid::aim_On_Grid_Density()
                     }
                 }
             }
-            cout<<"number of of idices "<<int(value)<<endl;
+            std::cout<<"number of of idices "<<int(value)<<std::endl;
             return g;
         
         
         }
         else
         {
-            throw string("Gradient grid must be used for AIM");
+            throw std::string("Gradient grid must be used for AIM");
         }
     }
     
-    catch(string error)
+    catch(std::string error)
     {
-        cout<<error<<endl;
+        std::cout<<error<<std::endl;
         exit(1);
     }
 }
