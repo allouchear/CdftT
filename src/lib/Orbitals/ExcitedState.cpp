@@ -71,6 +71,9 @@ void ExcitedState::printLambdaDiagnostic(const Grid& grid) const
         double sum_phiInitialTimesPhiFinal = 0.0; // Overlap integral < phi_initial | phi_final >
         double sum_phiInitialAbsTimesPhiFinalAbs = 0.0; // Integral < |phi_initial| | |phi_final| >
 
+        #ifdef ENABLE_OMP
+        #pragma omp parallel for reduction(+:sum_phiInitialTimesPhiInitial, sum_phiFinalTimesPhiFinal, sum_phiInitialTimesPhiFinal, sum_phiInitialAbsTimesPhiFinalAbs)
+        #endif
         for (int i = 0; i < grid.get_domain().get_N1(); ++i)
         {
             for (int j = 0; j < grid.get_domain().get_N2(); ++j)
