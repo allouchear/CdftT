@@ -193,6 +193,18 @@ void Job::readOrbitalsSpins(std::vector<SpinType>& orbitalsSpins)
             std::exit(1);
         }
 
+        // Handle forbidden ALPHA_BETA spin type in the orbitals spin list.
+        if (spin == SpinType::ALPHA_BETA)
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error: Spin type \"Alpha-Beta\" cannot be used in a custom spin list." << std::endl;
+            errorMessage << "Please check the documentation and the \"OrbitalsSpins\" parameter values in the provided input file (" << _inputFileName << ").";
+
+            print_error(errorMessage.str());
+
+            std::exit(1);
+        }
+
         orbitalsSpins.push_back(spin);
     }
 }
@@ -529,28 +541,28 @@ void Job::computeLocalIntegrals(GridCP& gcp, const std::vector<std::string>& Gri
         gcp.printCriticalPoints();
     }
 }
-void Job::ComputeGridDifference(const std::string& GFN1, const std::string& GFN2 , const std::string& NameNew)
+
+void Job::ComputeGridDifference(const std::string& minuendGridFilename, const std::string& subtrahendGridFilename, const std::string& outputGridFilename)
 {
-    std::ifstream in1(GFN1);
-    Grid g(in1, _table);
+    std::ifstream minuendFile(minuendGridFilename);
+    Grid minuendGrid(minuendFile, _table);
 
-    std::ifstream in2(GFN2);
-    Grid h(in2, _table);
+    std::ifstream subtrahendFile(subtrahendGridFilename);
+    Grid subtrahendGrid(subtrahendFile, _table);
 
-    Grid diff = g-h;
-    
-    in1.close();
-    in2.close();
+    Grid diff = minuendGrid - subtrahendGrid;
 
-    std::ofstream out(NameNew, std::ios::out);
+    minuendFile.close();
+    subtrahendFile.close();
 
+    std::ofstream out(outputGridFilename, std::ios::out);
     if (out.fail())
     {
-        std::cout << "Failed to write to file " << NameNew << "..." << std::endl;
+        std::cout << "Failed to write to file " << outputGridFilename << "..." << std::endl;
     }
 
     diff.save(out);
-    std::cout <<"Grid has been saved to : " << NameNew << std::endl;
+    std::cout << "Grid has been saved to : " << outputGridFilename << std::endl;
 }
 
 void Job::printCriticalPoints()
@@ -558,28 +570,24 @@ void Job::printCriticalPoints()
     std::cerr << "Function Job::printCriticalPoints() not implemented yet." << std::endl;
 }
 
-std::vector<double> Job::computePartialCharges(const std::string &gridfname, PartitionMethod partitionMethod)
+std::vector<double> Job::computePartialCharges(const std::string& gridFilename, PartitionMethod partitionMethod)
 {
-    std::vector<double> charges(3);
+    std::vector<double> charges;
+
+    std::ifstream gridFile(gridFilename);
+    Grid grid(gridFile, _table);
 
     if (partitionMethod == PartitionMethod::BECKE)
     {
-        Factorial fact(100);
-        Binomial bino (100, fact);
-        std::ifstream gridf(gridfname);
-        Grid grid(gridf, _table);
-
         Becke B(grid);
         B.partial_charge(grid);
-        charges = B.get_Partial_Charge();
         B.printCharges();
+
+        charges = B.get_Partial_Charge();
     }
     else
     {
-        std::ifstream gridf(gridfname);
-        Grid grid(gridf, _table);
         GridCP gridcp;
-
         gridcp.buildBasins(grid, partitionMethod);
         gridcp.computeIntegrals(grid);
         gridcp.printCriticalPoints();
@@ -589,11 +597,11 @@ std::vector<double> Job::computePartialCharges(const std::string &gridfname, Par
 
     return charges;
 }
-std::vector<double> Job::computePartialChargesAndEnergy(std::vector<double>& E, const std::string& ANAFileName)
+std::vector<double> Job::computePartialChargesAndEnergy(std::vector<double>& energies, const std::string& analyticFileName)
 {
     Becke B;
-    readFileFormat<Becke>(B, ANAFileName);
-    E.push_back(B.PartialChargesAndEnergy()[0][0]);
+    readFileFormat<Becke>(B, analyticFileName);
+    energies.push_back(B.PartialChargesAndEnergy()[0][0]);
     return B.PartialChargesAndEnergy()[1];
 }
 Structure Job::returnStruct(const std::string& ANAFileName)

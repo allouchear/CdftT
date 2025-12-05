@@ -17,7 +17,7 @@ Here is an example input file for this job:
     :linenos:
 
     #RunType=Help
-    RunType=ComputeDescriptorsFromCubes
+    RunType=ComputeDescriptors
     #GridFileName
     Grids=grid1.cube, grid2.cube, grid3.cube
     PartitionMethod=on-grid

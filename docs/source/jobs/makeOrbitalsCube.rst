@@ -15,7 +15,9 @@ Below are the available options to select which MO values to compute:
 - ``Homo``: Highest Occupied MO
 - ``Lumo``: Lowest Unoccupied MO
 - ``Homo-Lumo``: HOMO and LUMO
-- ``Custom``: user-selected MOs. In this case, the ``OrbitalsList`` parameter must be provided in the input file, with a comma-separated list of MO indices (starting from 1).
+- ``Custom``: user-selected MOs. In this case, two parameters must be provided:
+    - ``OrbitalsList``: comma-separated list of MO indices (starting from 1)
+    - ``OrbitalsSpins``: comma-separated list of spin types (``Alpha`` or ``Beta``)
 
 
 Available spin types
@@ -25,7 +27,7 @@ Below are the available options to select which spin type to compute:
 
 - ``Alpha``
 - ``Beta``
-- ``Alpha-Beta``: spin alpha and beta.
+- ``Alpha-Beta``: both alpha and beta.
 
 
 Available Grid sizes
