@@ -39,7 +39,7 @@ class Isotope
          * 
          * Initializes all data of one isotope.
          */
-        Isotope(const std::string&, const int&, const double&, const double&);
+        Isotope(const std::string&, const int, const double, const double);
 
         /**
          * @brief Default destructor.
@@ -121,8 +121,9 @@ class Element
 
         /** @brief List of isotopes associated with the element. */
         std::vector<Isotope> _isotope;
-    public:
 
+
+    public:
         /**
          * @brief Default constructor.
          *
@@ -135,7 +136,7 @@ class Element
          *
          * Initializes all data for an element.
          */
-        Element(const std::string&, const std::string&, const int&, const double&, const double&, const double&, const double&, const int&, const double&, const double&);
+        Element(const std::string& name, const std::string& symbol, const int atomicNumber, const double covalentRadii, const double bondOrderRadii, const double vanDerWaalsRadii, const double radii, const int maximumBondValence, const double mass, const double electronegativity);
 
         /**
          * @brief Default destructor.

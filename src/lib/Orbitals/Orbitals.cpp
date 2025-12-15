@@ -16,83 +16,119 @@
 #include <Utils/Utils.h>
 #include <Utils/WFX.h>
 
-Orbitals::Orbitals()
-{
-    _struct=Structure();
-    _all_f = std::vector<std::vector<double>> ();
-    _vcgtf = std::vector<CGTF> ();
-    _vcgtf_non_normalise = std::vector<CGTF> ();
-    _symbol = std::vector<std::string> ();
-    _orbital_energy = std::vector<std::vector<double>> ();
-    _primitive_centers = std::vector<int> ();
-    _atomic_numbers = std::vector<int> ();
-    _numOrb = std::vector<int> ();
-    _numberOfAo=0;
-    _numberOfMo=0;
-    _number_of_gtf=0;
-    _number_of_alpha_electrons=0;
-    _number_of_beta_electrons=0;
-    _number_of_atoms=0;
-    _energy=0.0;
-    _occupation_number=std::vector<std::vector<double>> ();
-    _alpha_and_beta=false;
-    _bino=Binomial ();
-}
+Orbitals::Orbitals():
+    _vcgtf(),
+    _coefficients(),
+    _numberOfAo(0),
+    _numberOfMo(0),
+    _number_of_alpha_electrons(0),
+    _number_of_beta_electrons(0),
+    _number_of_atoms(0),
+    _primitive_centers(),
+    _struct(),
+    _atomic_numbers(),
+    _symbol(),
+    _orbital_energy(),
+    _all_f(),
+    _numOrb(),
+    _occupation_number(),
+    _alpha_and_beta(false),
+    _bino(),
+    _descriptors(),
+    _vcgtf_non_normalise(),
+    _number_of_gtf(0),
+    _energy(0.0),
+    _coordinates(),
+    _mixte(false)
+{ }
 
-Orbitals::Orbitals(WFX& wfx, Binomial& Bin, const PeriodicTable& Table)
+Orbitals::Orbitals(WFX& wfxParser, Binomial& bino, const PeriodicTable& periodicTable):
+    _vcgtf(),
+    _coefficients(2),
+    _numberOfAo(0),
+    _numberOfMo(0),
+    _number_of_alpha_electrons(0),
+    _number_of_beta_electrons(0),
+    _number_of_atoms(0),
+    _primitive_centers(),
+    _struct(wfxParser, periodicTable),
+    _atomic_numbers(),
+    _symbol(),
+    _orbital_energy(),
+    _all_f(),
+    _numOrb(),
+    _occupation_number(),
+    _alpha_and_beta(false),
+    _bino(bino),
+    _descriptors(),
+    _vcgtf_non_normalise(),
+    _number_of_gtf(0),
+    _energy(0.0),
+    _coordinates(),
+    _mixte(false)
 {
-    _struct=Structure(wfx, Table);
-    int i,j;
-    _bino=Bin;
-    _coordinates=wfx.Nuclear_Cartesian_Coordinates();
-    GTF gtf;
-    _vcgtf = std::vector<CGTF> (wfx.Number_of_Primitives());
-    _vcgtf_non_normalise = std::vector<CGTF> ();
-    std::vector<std::vector<double>> Coord(wfx.Number_of_Nuclei(), std::vector<double> (0));
+    _coordinates = wfxParser.Nuclear_Cartesian_Coordinates();
+
+    _vcgtf = std::vector<CGTF> (wfxParser.Number_of_Primitives());
+
+    std::vector<std::vector<double>> coord(wfxParser.Number_of_Nuclei(), std::vector<double>(0));
     
-    for(i=0; i<wfx.Number_of_Nuclei(); i++)
-        for(j=i*3; j<3*(1+i); j++)
-            Coord[i].push_back(wfx.Nuclear_Cartesian_Coordinates()[j]);
+    for(int i = 0; i < wfxParser.Number_of_Nuclei(); ++i)
+    {
+        for(int j = i * 3; j < 3 * (1 + i); ++j)
+        {
+            coord[i].push_back(wfxParser.Nuclear_Cartesian_Coordinates()[j]);
+        }
+    }
 
-    gtf=GTF();
-    for(j=0; j<wfx.Number_of_Primitives(); j++)
+    GTF gtf;
+    for(int j = 0; j < wfxParser.Number_of_Primitives(); ++j)
     {            
-            gtf.push_back(wfx.Primitive_Exponents()[j], 1.0, Coord[wfx.Primitive_Centers()[j]-1], setLxyz(wfx.Primitive_Types()[j]), Bin);
+            gtf.push_back(wfxParser.Primitive_Exponents()[j], 1.0, coord[wfxParser.Primitive_Centers()[j] - 1], setLxyz(wfxParser.Primitive_Types()[j]), bino);
             _vcgtf[j].push_back(gtf);
             _vcgtf[j].setCoef(1.0);
             _vcgtf[j].setFactorCoef(1.0);
-            _vcgtf[j].setNumCenter(wfx.Primitive_Centers()[j]);
+            _vcgtf[j].setNumCenter(wfxParser.Primitive_Centers()[j]);
             _vcgtf[j].setLtype(getLType(_vcgtf[j].gtf()[0].l()));
             _vcgtf[j].setFormat("Cart");
     }
 
-    _coefficients=std::vector<std::vector<std::vector<double>>> (2);
-    _coefficients[0]=std::vector<std::vector<double>> (wfx.Molecular_Orbital_Primitive_Coefficients()[0].size());
-    _coefficients[1]=std::vector<std::vector<double>> (wfx.Molecular_Orbital_Primitive_Coefficients()[1].size());
-    for(size_t i=0; i<wfx.Molecular_Orbital_Primitive_Coefficients()[0].size(); i++)
-        _coefficients[0][i]=wfx.Molecular_Orbital_Primitive_Coefficients()[0][i].Coefficients();
-    for(size_t i=0; i<wfx.Molecular_Orbital_Primitive_Coefficients()[1].size(); i++)
-        _coefficients[1][i]=wfx.Molecular_Orbital_Primitive_Coefficients()[1][i].Coefficients();
+    //_coefficients=std::vector<std::vector<std::vector<double>>> (2);
+    _coefficients[0] = std::vector<std::vector<double>>(wfxParser.Molecular_Orbital_Primitive_Coefficients()[0].size());
+    _coefficients[1] = std::vector<std::vector<double>>(wfxParser.Molecular_Orbital_Primitive_Coefficients()[1].size());
 
-    _primitive_centers=wfx.Primitive_Centers();
-    _atomic_numbers=wfx.Atomic_Number();
-    _numberOfMo=wfx.Number_of_Occupied_Molecular_Orbital();
-    _number_of_gtf=wfx.Number_of_Primitives();
-    if(!wfx.AlphaAndBeta())
-        _numberOfMo/=2;
-    _number_of_alpha_electrons=wfx.Number_of_Alpha_Electrons();
-    _number_of_beta_electrons=wfx.Number_of_Beta_Electrons();
-    _number_of_atoms=wfx.Number_of_Nuclei();
-    _orbital_energy=wfx.Molecular_Orbital_Energies();
-    _symbol=wfx.Nuclear_Names();
-    _numOrb=std::vector<int> (2,0);
-    _energy=wfx.Energy();
-    _occupation_number=wfx.Molecular_Orbital_Occupation_Numbers();
-    _alpha_and_beta=wfx.AlphaAndBeta();
-    _descriptors=Descriptors(wfx, Table);
-    _numberOfAo=_vcgtf.size();
-    _vcgtf_non_normalise=_vcgtf;
-    _mixte=false;
+    for(size_t i = 0; i < wfxParser.Molecular_Orbital_Primitive_Coefficients()[0].size(); ++i)
+    {
+        _coefficients[0][i] = wfxParser.Molecular_Orbital_Primitive_Coefficients()[0][i].Coefficients();
+    }
+    for(size_t i = 0; i < wfxParser.Molecular_Orbital_Primitive_Coefficients()[1].size(); ++i)
+    {
+        _coefficients[1][i] = wfxParser.Molecular_Orbital_Primitive_Coefficients()[1][i].Coefficients();
+    }
+
+    _primitive_centers = wfxParser.Primitive_Centers();
+    _atomic_numbers = wfxParser.Atomic_Number();
+    _numberOfMo = wfxParser.Number_of_Occupied_Molecular_Orbital();
+
+    _number_of_gtf = wfxParser.Number_of_Primitives();
+    if(!wfxParser.AlphaAndBeta())
+    {
+        _numberOfMo /= 2;
+    }
+
+    _number_of_alpha_electrons = wfxParser.Number_of_Alpha_Electrons();
+    _number_of_beta_electrons = wfxParser.Number_of_Beta_Electrons();
+
+    _number_of_atoms = wfxParser.Number_of_Nuclei();
+    _orbital_energy = wfxParser.Molecular_Orbital_Energies();
+    _symbol = wfxParser.Nuclear_Names();
+    _numOrb = std::vector<int> (2,0);
+    _energy = wfxParser.Energy();
+    _occupation_number = wfxParser.Molecular_Orbital_Occupation_Numbers();
+    _alpha_and_beta = wfxParser.AlphaAndBeta();
+    _descriptors = Descriptors(wfxParser, periodicTable);
+    _numberOfAo = _vcgtf.size();
+    _vcgtf_non_normalise = _vcgtf;
 }
 
 Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
@@ -495,70 +531,101 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
     //Sorting(); Don't work
 }
 
-Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
+Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodicTable):
+    _vcgtf(),
+    _coefficients(2),
+    _numberOfAo(0),
+    _numberOfMo(0),
+    _number_of_alpha_electrons(0),
+    _number_of_beta_electrons(0),
+    _number_of_atoms(0),
+    _primitive_centers(),
+    _struct(logParser, periodicTable),
+    _atomic_numbers(),
+    _symbol(),
+    _orbital_energy(),
+    _all_f(),
+    _numOrb(),
+    _occupation_number(),
+    _alpha_and_beta(false),
+    _bino(bino),
+    _descriptors(),
+    _vcgtf_non_normalise(),
+    _number_of_gtf(0),
+    _energy(0.0),
+    _coordinates(),
+    _mixte(false)
 {
-    _struct=Structure(log, Table);
+    _struct = Structure(logParser, periodicTable);
     _vcgtf_non_normalise = std::vector<CGTF> ();
-    _number_of_gtf=0;
-    _coefficients=std::vector<std::vector<std::vector<double>>> (2);
-    _coefficients[0]=log.AlphaMOcoefs();
-    _coefficients[1]=log.BetaMOcoefs();
-    _energy=log.Energy();
-    _number_of_alpha_electrons=log.NumberOfAlphaElectrons();
-    _number_of_beta_electrons=log.NumberOfBetaElectrons();
-
-    _number_of_atoms=log.NumberOfAtoms();
-    _coordinates=std::vector<double> (_number_of_atoms*3);
-    for(int i=0; i<_number_of_atoms; i++)
+    _number_of_gtf = 0;
+    _coefficients = std::vector<std::vector<std::vector<double>>> (2);
+    _coefficients[0] = logParser.AlphaMOcoefs();
+    _coefficients[1] = logParser.BetaMOcoefs();
+    _energy = logParser.Energy();
+    _number_of_alpha_electrons = logParser.NumberOfAlphaElectrons();
+    _number_of_beta_electrons = logParser.NumberOfBetaElectrons();
+    _number_of_atoms = logParser.NumberOfAtoms();
+    _coordinates = std::vector<double> (_number_of_atoms*3);
+    for(int i = 0; i < _number_of_atoms; ++i)
     {
-        int k=0;
-        for(int j=i*3; j<(i+1)*3; j++)
+        int k = 0;
+        for(int j = i * 3; j < (i +1) * 3; ++j)
         {
-            _coordinates[j]=log.Coordinates()[i][k];
+            _coordinates[j] = logParser.Coordinates()[i][k];
             k++;
         }
     }
-    _numberOfMo=log.NumberOfMO();
-    _alpha_and_beta=log.AlphaAndBeta();
 
-    _bino=Bin;
+    _numberOfMo = logParser.NumberOfMO();
+    _alpha_and_beta = logParser.AlphaAndBeta();
+
+    _bino = bino;
         
-    _atomic_numbers=log.AtomicNumbers();
-    _symbol=log.Symbol();
-    _orbital_energy=std::vector<std::vector<double>> (2);
-    _orbital_energy[0]=log.AlphaEnergy();
-    _orbital_energy[1]=log.BetaEnergy();    
-    _numOrb=std::vector<int> (2,0);
-    _occupation_number=std::vector<std::vector<double>> (2);
-    _occupation_number[0]=log.AlphaOccupation();
-    _occupation_number[1]=log.BetaOccupation();
-    _descriptors=Descriptors(log, Table);
+    _atomic_numbers = logParser.AtomicNumbers();
+    _symbol = logParser.Symbol();
+    _orbital_energy = std::vector<std::vector<double>> (2);
+    _orbital_energy[0] = logParser.AlphaEnergy();
+    _orbital_energy[1] = logParser.BetaEnergy();    
+    _numOrb = std::vector<int> (2,0);
+    _occupation_number = std::vector<std::vector<double>> (2);
+    _occupation_number[0] = logParser.AlphaOccupation();
+    _occupation_number[1] = logParser.BetaOccupation();
+    _descriptors = Descriptors(logParser, periodicTable);
 
-    std::vector<int> Ltypes = log.Ltypes();
+    std::vector<int> Ltypes = logParser.Ltypes();
     int nShells = Ltypes.size();
 
-    int lmax=0;
-    for(int i=0; i<nShells; i++)
-        if(lmax<abs(Ltypes[i]))
-            lmax=abs(Ltypes[i]);
+    int lmax = 0;
+    for(int i = 0; i < nShells; ++i)
+    {
+        if(lmax < abs(Ltypes[i]))
+        {
+            lmax = abs(Ltypes[i]);
+        }
+    }
 
-    int llmax = (lmax+1)*(lmax+2)/2;
-    std::vector<int> nPrimitivesByShell = log.NumberOfGtf();
-    std::vector<int> nCoefs (llmax);
+    int llmax = (lmax + 1) * (lmax + 2) / 2;
+    std::vector<int> nPrimitivesByShell = logParser.NumberOfGtf();
+    std::vector<int> nCoefs(llmax);
     
-    std::vector<double> FactorCoefs = log.FactorCoefficients();
-    std::vector<double> CgtfCoefs = log.CgtfCoefficients();
-    std::vector<double> CgtfSpCoefs = log.CgtfSpCoefficients();
+    std::vector<double> FactorCoefs = logParser.FactorCoefficients();
+    std::vector<double> CgtfCoefs = logParser.CgtfCoefficients();
+    std::vector<double> CgtfSpCoefs = logParser.CgtfSpCoefficients();
     std::vector<std::vector<double>> coordinatesForShells;
-    std::vector<int> NatBasis = log.NatBasis();
+    std::vector<int> NatBasis = logParser.NatBasis();
 
-    for(int i=0; i<_number_of_atoms; i++)
-        for(int j=0; j<NatBasis[i]; j++)
-            coordinatesForShells.push_back(log.Coordinates()[i]);
+    for(int i = 0; i < _number_of_atoms; ++i)
+    {
+        for(int j = 0; j < NatBasis[i]; ++j)
+        {
+            coordinatesForShells.push_back(logParser.Coordinates()[i]);
+        }
+    }
 
-    std::vector<double> primitiveExponents = log.Exposants();
-    std::vector<std::vector<double>> coefs (llmax, std::vector<double> (llmax));
-    std::vector<std::vector<std::vector<int>>> l (3, std::vector<std::vector<int>> (llmax, std::vector<int> (llmax)));
+    std::vector<double> primitiveExponents = logParser.Exposants();
+    std::vector<std::vector<double>> coefs(llmax, std::vector<double> (llmax));
+    std::vector<std::vector<std::vector<int>>> l(3, std::vector<std::vector<int>>(llmax, std::vector<int>(llmax)));
 
     int NOrb = _numberOfMo;
     _vcgtf = std::vector<CGTF> (NOrb);
@@ -566,106 +633,125 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
 
     int kOrb = 0;
     int kPrimitive = 0;
-    for(int nS = 0;nS<nShells; nS++)
+    for(int nS = 0; nS < nShells; ++nS)
     {
         int nM = 0;
 
-        if(Ltypes[nS]<-1)
+        if(Ltypes[nS] < -1)
         {
-            nM = 2*abs(Ltypes[nS])+1; /* Sperical D, F, G, ...*/
-            format="Sphe";
+            nM = 2 * abs(Ltypes[nS]) + 1; /* Sperical D, F, G, ...*/
+            format = "Sphe";
         }
-        else if(Ltypes[nS]==-1)
+        else if(Ltypes[nS] == -1)
         {
             nM = 1; /* This a SP. Make S before */
-            format="Cart";
+            format = "Cart";
         }
         else
         {
-            nM = (Ltypes[nS]+1)*(Ltypes[nS]+2)/2;
-            format="Cart";
+            nM = (Ltypes[nS] + 1) * (Ltypes[nS] + 2) / 2;
+            format = "Cart";
         }
 
-        if(Ltypes[nS]==-1)
-            getlTable(0, nCoefs, coefs, l, _bino); /* This a SP. Make S before */
+        if(Ltypes[nS] == -1) // This a SP. Make S before
+        {
+            getlTable(0, nCoefs, coefs, l, _bino);
+        } 
         else
-            getlTable(Ltypes[nS], nCoefs, coefs, l, _bino); 
+        {
+            getlTable(Ltypes[nS], nCoefs, coefs, l, _bino);
+        } 
 
-        for(int m=0;m<nM;m++)
+        for(int m = 0; m < nM; ++m)
         {
             int ip,j,n;
             _vcgtf[kOrb]= CGTF ();
-              j = -1;
-             for(ip=0;ip<nPrimitivesByShell[nS];ip++)
-                 for(n=0;n<nCoefs[m];n++)
-                 {
-                        j++;
-                       std::vector<double> coord_ (3);
-                       std::vector<int> l_ (3);
-                       for(int c=0;c<3;c++)
-                       {
-                           coord_[c] = coordinatesForShells[kPrimitive+ip][c];
+            j = -1;
+            
+            for(ip = 0; ip < nPrimitivesByShell[nS]; ++ip)
+            {
+                for(n = 0; n < nCoefs[m]; ++n)
+                {
+                    j++;
+                    std::vector<double> coord_(3);
+                    std::vector<int> l_(3);
+                    
+                    for(int c = 0; c < 3; ++c)
+                    {
+                        coord_[c] = coordinatesForShells[kPrimitive + ip][c];
                         l_[c] = l[c][m][n];
-                       }
-                       GTF gtf (primitiveExponents[kPrimitive+ip], 1.0, coord_, l_, _bino);
-                       _vcgtf[kOrb].push_back(gtf);
-                     _vcgtf[kOrb].setCoef(FactorCoefs[kPrimitive+ip]*CgtfCoefs[kPrimitive+ip]*coefs[m][n]);
-                     _vcgtf[kOrb].setNumCenter(log.NumCenter()[kPrimitive+ip]);
+                    }
+
+                    GTF gtf(primitiveExponents[kPrimitive + ip], 1.0, coord_, l_, _bino);
+                    _vcgtf[kOrb].push_back(gtf);
+                    _vcgtf[kOrb].setCoef(FactorCoefs[kPrimitive + ip] * CgtfCoefs[kPrimitive + ip] * coefs[m][n]);
+                    _vcgtf[kOrb].setNumCenter(logParser.NumCenter()[kPrimitive + ip]);
                     _vcgtf[kOrb].setLtype(getLType(l_));
                     _vcgtf[kOrb].setFormat(format);
-                    _vcgtf[kOrb].setFactorCoef(FactorCoefs[kPrimitive+ip]);
-                 }
+                    _vcgtf[kOrb].setFactorCoef(FactorCoefs[kPrimitive + ip]);
+                }
+            }
+
             kOrb++;
         }
-        if(Ltypes[nS]==-1) /* This a SP. Now make P*/
+
+        if(Ltypes[nS] == -1) /* This a SP. Now make P*/
         {
             getlTable(-1, nCoefs, coefs, l, _bino);
             nM = 3;
-            for(int m=0;m<nM;m++)
+
+            for(int m = 0; m < nM; ++m)
             {
                 int ip,j,n;
 
                 _vcgtf[kOrb]= CGTF ();
-                      j = -1;
-                 for(ip=0;ip<nPrimitivesByShell[nS];ip++)
-                     for(n=0;n<nCoefs[m];n++)
-                     {
-                            j++;
-                           std::vector<double> coord_ (3);
-                           std::vector<int> l_ (3);
-                           for(int c=0;c<3;c++)
-                           {
-                               coord_[c] = coordinatesForShells[nS][c];
-                               l_[c] = l[c][m][n];
-                           }
-                       GTF gtf (primitiveExponents[kPrimitive+ip], 1.0, coord_, l_, _bino);
-                       _vcgtf[kOrb].push_back(gtf);
-                       _vcgtf[kOrb].setCoef(FactorCoefs[kOrb]*CgtfSpCoefs[kPrimitive+ip]*coefs[m][n]);
-                       _vcgtf[kOrb].setNumCenter(log.NumCenter()[kPrimitive+ip]);
-                    _vcgtf[kOrb].setLtype(getLType(l_));
-                    _vcgtf[kOrb].setFormat(format);
-                    _vcgtf[kOrb].setFactorCoef(FactorCoefs[kPrimitive+ip]);
-                     }
+                j = -1;
+                for(ip = 0; ip < nPrimitivesByShell[nS]; ++ip)
+                {
+                    for(n = 0; n < nCoefs[m]; ++n)
+                    {
+                        j++;
+                        std::vector<double> coord_(3);
+                        std::vector<int> l_(3);
+
+                        for(int c = 0; c < 3; ++c)
+                        {
+                            coord_[c] = coordinatesForShells[nS][c];
+                            l_[c] = l[c][m][n];
+                        }
+
+                        GTF gtf(primitiveExponents[kPrimitive + ip], 1.0, coord_, l_, _bino);
+                        _vcgtf[kOrb].push_back(gtf);
+                        _vcgtf[kOrb].setCoef(FactorCoefs[kOrb] * CgtfSpCoefs[kPrimitive + ip] * coefs[m][n]);
+                        _vcgtf[kOrb].setNumCenter(logParser.NumCenter()[kPrimitive + ip]);
+                        _vcgtf[kOrb].setLtype(getLType(l_));
+                        _vcgtf[kOrb].setFormat(format);
+                        _vcgtf[kOrb].setFactorCoef(FactorCoefs[kPrimitive + ip]);
+                    }
+                }
+
                 kOrb++;
             }
         }
+
         kPrimitive += nPrimitivesByShell[nS];
     }
 
-    _numberOfAo=_vcgtf.size();
+    _numberOfAo = _vcgtf.size();
 
     if(_numberOfAo != _numberOfMo)
     {
-        cout<<"Error : Their is "<<_vcgtf.size()<<" CGTF for "<<_numberOfMo<<" basis in file."<<endl;
-        cout<<"Please check your file."<<endl;
+        cout << "Error : There are " << _vcgtf.size() << " CGTFs for " << _numberOfMo << " basis in file." << endl;
+        cout << "Please check your file." << endl;
+
         exit(1);
     }
 
-    if(log.NumberOfBasisFunctions() < _numberOfMo)
+    if(logParser.NumberOfBasisFunctions() < _numberOfMo)
     {
-        for(int i=0; i<_numberOfMo-log.NumberOfBasisFunctions(); i++)
+        for(int i = 0; i < _numberOfMo - logParser.NumberOfBasisFunctions(); ++i)
         {
-            std::vector<double> v (log.NumberOfBasisFunctions(),0);
+            std::vector<double> v(logParser.NumberOfBasisFunctions(), 0);
             _coefficients[0].push_back(v);
             _coefficients[1].push_back(v);
             _occupation_number[0].push_back(0);
@@ -673,18 +759,58 @@ Orbitals::Orbitals(LOG& log, Binomial& Bin, const PeriodicTable& Table)
         }
     }
 
-    _vcgtf_non_normalise=_vcgtf;
+    _vcgtf_non_normalise = _vcgtf;
 
-    for(size_t i=0; i<_vcgtf.size(); i++)
+    for(size_t i = 0; i < _vcgtf.size(); ++i)
+    {
         _primitive_centers.push_back(_vcgtf[i].NumCenter());
+    }
 
     NormaliseAllBasis();
 
-    for(size_t i=0; i<_vcgtf.size(); i++)
-        _number_of_gtf+=_vcgtf[i].numberOfFunctions();
+    for(size_t i = 0; i < _vcgtf.size(); ++i)
+    {
+        _number_of_gtf += _vcgtf[i].numberOfFunctions();
+    }
 
-    _mixte=log.Mixte();
+    _mixte = logParser.Mixte();
 }
+
+
+
+void Orbitals::computeSlaterDeterminant(std::array<std::vector<int>, 2>& slaterDeterminant) const
+{
+    // Set an empty Slater determinant
+    slaterDeterminant[0] = std::vector<int>(_numberOfMo, 0);
+    slaterDeterminant[1] = std::vector<int>(_numberOfMo, 0);
+
+
+    // Populate the Slater determinant based on occupation numbers
+    for (int i = 0; i < _numberOfMo; ++i)
+    {
+        // Alpha spin
+        if (_occupation_number[0][i] == 1)
+        {
+            slaterDeterminant[0][i] = 1;
+        }
+        else if (_occupation_number[0][i] == 2) // Case where _alpha_and_beta = true
+        {
+            slaterDeterminant[0][i] = 1; // Alpha spin
+            slaterDeterminant[1][i] = 1; // Beta spin
+        }
+
+        // Beta spin
+        if (_occupation_number[1][i] == 1)
+        {
+            slaterDeterminant[1][i] = 1;
+        }
+    }
+}
+
+
+
+
+
 
 double Orbitals::ERIorbitals(Orbitals& q, Orbitals& r, Orbitals& s)
 {

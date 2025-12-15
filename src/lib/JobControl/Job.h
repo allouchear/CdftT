@@ -158,14 +158,20 @@ class Job
         void run_help();
 
         /**
-         * @brief Runs the job associated with the "ComputePartialCharges" runtype.
-         */
-        void run_computePartialCharges();
-
-        /**
          * @brief Runs the job associated with the "ComputeDescriptors" runtype.
          */
         void run_computeDescriptors();
+
+        /**
+         * @brief Runs the job associated with the "ComputeEnergyWithPointCharge" runtype.
+         */
+        void run_computeEnergyWithPointCharge();
+
+        /**
+         * @brief Runs the job associated with the "ComputeGridDifference" runtype.
+         */
+
+        void run_computeGridDifference();
 
         /**
          * @brief Runs the job associated with the "ComputeIntegrals" runtype.
@@ -173,9 +179,9 @@ class Job
         void run_computeIntegrals();
 
         /**
-         * @brief Runs the job associated with the "ComputeGridDifference" runtype.
+         * @brief Runs the job associated with the "ComputePartialCharges" runtype.
          */
-        void run_computeGridDifference();
+        void run_computePartialCharges();
 
         /**
          * @brief Runs the job associated with the "LambdaDiagnostic" runtype.
@@ -263,10 +269,7 @@ class Job
         std::vector<double> computePartialChargesAndEnergy(std::vector<double>& energies, const std::string& analyticFileName);
             
         /**
-         * @brief Opens the configured input file (`_inputFileName`).
-         *
-         * The function opens `_inputFileName` and initialises `_inputFile`.
-         * The program exits with an error if the file cannot be opened.
+         * @brief Opens the configured input file.
          */
         void openInputFile();
             
@@ -275,93 +278,81 @@ class Job
          */
         void printListOfRunTypes();
 
-            //! Read a line of input file
-            /*! Reads one line of the input file and identifies the tag (eg: RunType) and reads the value of the tag following it. The value is stored into a string. This removes any preceding or trailing spaces*/
-        //bool readOneString(const string& tag, string& value);
-
-            //! Read one value of type T
-            /*! Calls readOnestring to convert the string value to a value of type T. Removes any separators and replaces them with spaces*/
-        //template<typename T> bool readOneType(const string& tag, T& x);
-
-            //! Read a list of Type T
-            /*! Calls readOnestring to convert the string value to a vector of values of type T. Removes any separators and replaces them with spaces*/
-        //template<typename T> bool readListType(const string& tag, vector<T>& x);
-
         /**
-         * @brief Computes descriptors from three grid files using IP/EA values.
+         * @brief Computes descriptors from three grid files using ionization energy and electron affinity.
          *
-         * @param[in] GridFileName1 Electrophilic grid filename.
-         * @param[in] GridFileName2 Nucleophilic grid filename.
-         * @param[in] GridFileName3 Radical grid filename.
-         * @param[in] I Ionisation potential.
-         * @param[in] A Electron affinity.
-         * @param[in] partitionMethod Integration/partition method.
+         * @param[in] gridFileName1 Name of the electrophilic grid file.
+         * @param[in] gridFileName2 Name of the nucleophilic grid file.
+         * @param[in] gridFileName3 Name of the radical grid file.
+         * @param[in] ionizationEnergy Ionization energy.
+         * @param[in] electronAffinity Electron affinity.
+         * @param[in] partitionMethod Selected partition method.
          * @return Descriptors object containing computed descriptors.
          */
-        Descriptors computeDescriptors(const std::string& GridFileName1, const std::string& GridFileName2, const std::string& GridFileName3, double I, double A, PartitionMethod partitionMethod);
+        Descriptors computeDescriptors(const std::string& gridFileName1, const std::string& gridFileName2, const std::string& gridFileName3, double ionizationEnergy, double electronAffinity, PartitionMethod partitionMethod);
 
-               /**
-                * @brief Computes descriptors from three grid files using file energies.
-                *
-                * @param[in] GridFileName1 First grid filename.
-                * @param[in] GridFileName2 Second grid filename.
-                * @param[in] GridFileName3 Third grid filename.
-                * @param[in] E Vector of energies corresponding to the files.
-                * @param[in] partitionMethod Integration/partition method.
-                * @return Descriptors object containing computed descriptors.
-                */
-               Descriptors computeDescriptors(const std::string &GridFileName1, const std::string &GridFileName2, const std::string &GridFileName3, std::vector<double> E, PartitionMethod partitionMethod);
+        /**
+         * @brief Computes descriptors from three grid files using these file energies.
+         *
+         * @param[in] gridFileName1 Name of the first grid file.
+         * @param[in] gridFileName2 Name of the second grid file.
+         * @param[in] gridFileName3 Name of the third grid file.
+         * @param[in] energies Vector of energies respectively corresponding to the files.
+         * @param[in] partitionMethod Selected partition method.
+         * @return Descriptors object containing computed descriptors.
+         */
+        Descriptors computeDescriptors(const std::string& gridFileName1, const std::string& gridFileName2, const std::string& gridFileName3, const std::vector<double>& energies, PartitionMethod partitionMethod);
 
-              /**
-               * @brief Extracts the molecular structure from an analytic file.
-               *
-               * @param[in] ANAFileName Analytic file path.
-               * @return Parsed `Structure` instance.
-               */
-           Structure returnStruct(const std::string& ANAFileName);
+        /**
+         * @brief Extracts the molecular structure from an analytic file.
+         *
+         * @param[in] analyticFileName Name of the analytic file.
+         * @return Parsed Structure instance.
+         */
+        Structure returnStruct(const std::string& analyticFileName);
 
-              /**
-               * @brief Builds an Orbitals or Becke helper object from an analytic file.
-               *
-               * @tparam T Analytic parser type (WFX, MOLDENGAB, FCHK, LOG, ...).
-               * @tparam U Resulting class type (Orbitals or Becke-like).
-               * @param[in] analyticFileName Path to the analytic file.
-               * @return Constructed `U` instance initialised with analytic data.
-               */
-           template<typename T,typename U> U computeOrbOrBecke(const std::string& analyticFileName);
+        /**
+         * @brief Builds an Orbitals or Becke helper object from an analytic file.
+         *
+         * @tparam T Analytic file parser type (WFX, MOLDENGAB, FCHK, LOG, ...).
+         * @tparam U Resulting class type (Orbitals or Becke).
+         * @param[in] analyticFileName Name of the analytic file.
+         * @return Constructed instance of type U, initialised with analytic data.
+         */
+        template<typename T, typename U> U computeOrbitalsOrBecke(const std::string& analyticFileName);
 
-              /**
-               * @brief Detects the analytic file format and initialises the provided class.
-               *
-               * @tparam T Type to initialise (Orbitals, Becke, ...).
-               * @param[out] AnaClass Reference to the object to initialise.
-               * @param[in] FileName Path to analytic file; detection by extension.
-               */
-           template<typename T> void readFileFormat(T& AnaClass, const std::string& FileName);
+        /**
+         * @brief Detects the analytic file format and initialises an instance of the chosen class.
+         *
+         * @tparam T Resulting class type (Orbitals or Becke).
+         * @param[out] analyticObject Constructed instance of type T, initialised with analytic data.
+         * @param[in] analyticFileName Path to analytic file; detection by extension.
+         */
+        template<typename T> void computeOrbitalsOrBecke(T& analyticObject, const std::string& analyticFileName);
 
-              /**
-               * @brief Creates and saves a grid (cube) from `orb` over domain `d`.
-               *
-               * @param[in] orb Orbitals instance providing densities/orbitals.
-               * @param[in] d Domain describing grid geometry.
-               * @param[in] cubeFileName Output filename for the cube.
-               * @param[in] TypeFlag 0=density, 1=orbitals, else ELF.
-               * @param[in] elfMethod ELF method selection (SAVIN/BECKE) when creating ELF.
-               * @param[in] nums Orbital indices used for orbital grids.
-               * @param[in] typesSpin Spin flags for orbital grids.
-               */
-           void createCube(Orbitals& orb, const Domain& d, const std::string& cubeFileName, int TypeFlag, const ELFMethod elfMethod = ELFMethod::SAVIN, std::vector<int> nums={0}, std::vector<int> typesSpin={0});
+        /**
+         * @brief Creates and saves a grid file (.cube) from the passed Orbitals instance, over a defined domain.
+         *
+         * @param[in] orbitals Orbitals instance providing densities/orbitals.
+         * @param[in] domain Domain describing grid geometry.
+         * @param[in] cubeFileName Output filename for the cube.
+         * @param[in] TypeFlag 0=density, 1=orbitals, else ELF.
+         * @param[in] elfMethod ELF method selection (SAVIN/BECKE) when creating ELF.
+         * @param[in] nums Orbital indices used for orbital grids.
+         * @param[in] typesSpin Spin flags for orbital grids.
+         */
+        void createCube(Orbitals& orbitals, const Domain& domain, const std::string& cubeFileName, int TypeFlag, const ELFMethod elfMethod = ELFMethod::SAVIN, std::vector<int> nums = {0}, std::vector<int> typesSpin = {0});
 
-              /**
-               * @brief Builds a `Domain` suitable for cube creation from `orb` and sizing options.
-               *
-               * @param[in] orb Orbitals instance used to determine molecular extent.
-               * @param[in] gridSize Grid size token (Coarse/Medium/Fine/Custom).
-               * @param[in] customSizeData Custom size parameters (used when `gridSize==CUSTOM`).
-               * @param[in] Nval Number of values per grid point (used by Domain::set_all).
-               * @return Configured `Domain` instance.
-               */
-           Domain buildDomainForCube(Orbitals& orb, const GridSize gridSize,const CustomSizeData& customSizeData, const int& Nval);
+        /**
+         * @brief Builds a `Domain` suitable for cube creation from `orb` and sizing options.
+         *
+         * @param[in] orb Orbitals instance used to determine molecular extent.
+         * @param[in] gridSize Grid size token (Coarse/Medium/Fine/Custom).
+         * @param[in] customSizeData Custom size parameters (used when `gridSize==CUSTOM`).
+         * @param[in] Nval Number of values per grid point (used by Domain::set_all).
+         * @return Configured `Domain` instance.
+         */
+        Domain buildDomainForCube(Orbitals& orb, const GridSize gridSize, const CustomSizeData& customSizeData, const int& Nval);
 
 
         /**
@@ -377,16 +368,16 @@ class Job
          */
         void setOrbitals(Orbitals& o, const int numberOfOrbitals, std::vector<int>& orbitalsNumbers, std::vector<int>& orbitalsSpins, const OrbitalType orbitalType, SpinType spinType, const std::vector<SpinType>& spinList = {});
 
-              /**
-               * @brief Selects all molecular orbitals for the requested spin configuration.
-               *
-               * @param[out] orbnums Output vector of orbital indices.
-               * @param[out] orbspin Output vector of spin flags corresponding to `orbnums`.
-               * @param[in] o Orbitals instance for occupation info.
-               * @param[in] spinType Requested spin selection.
-               * @param[in] numberOfOrbitals Number of MOs available.
-               */
-           void setAllOrb(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType, const int& numberOfOrbitals);
+        /**
+         * @brief Selects all molecular orbitals for the requested spin configuration.
+         *
+         * @param[out] orbnums Output vector of orbital indices.
+         * @param[out] orbspin Output vector of spin flags corresponding to `orbnums`.
+         * @param[in] o Orbitals instance for occupation info.
+         * @param[in] spinType Requested spin selection.
+         * @param[in] numberOfOrbitals Number of MOs available.
+         */
+        void setAllOrb(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType, const int& numberOfOrbitals);
 
               /**
                * @brief Selects occupied molecular orbitals according to occupations and spin selection.
@@ -449,13 +440,14 @@ class Job
                */
            void setCustom(std::vector<int>& orbnums, std::vector<int>& orbspin, const std::vector<SpinType>& spinList);
 
-            /**
-             * @brief Compute descriptors with finite-difference Becke method from analytic files.
-             * @param ANAFileName1 First analytic input file.
-             * @param ANAFileName2 Second analytic input file.
-             * @param ANAFileName3 Third analytic input file.
-             */
-        void computeDescriptorsFD(const std::string& ANAFileName1, const std::string& ANAFileName2, const std::string& ANAFileName3);
+              /**
+               * @brief Computes descriptors with the finite-difference Becke method from analytic files.
+               *
+               * @param[in] ANAFileName1 First analytic input file.
+               * @param[in] ANAFileName2 Second analytic input file.
+               * @param[in] ANAFileName3 Third analytic input file.
+               */
+           void computeDescriptorsFD(const std::string& ANAFileName1, const std::string& ANAFileName2, const std::string& ANAFileName3);
 
 
     public:

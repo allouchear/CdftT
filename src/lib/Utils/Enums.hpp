@@ -54,6 +54,7 @@ enum class PartitionMethod
 enum class RunType
 {
     COMPUTE_DESCRIPTORS,
+    COMPUTE_ENERGY_WITH_POINT_CHARGE,
     COMPUTE_GRID_DIFFERENCE,
     COMPUTE_INTEGRALS,
     COMPUTE_PARTIAL_CHARGES,
@@ -100,6 +101,7 @@ template <typename T> T enum_from_char(const char charValue, const std::unordere
 template<typename T> T enum_from_string(const std::string& strValue, const std::unordered_map<T, std::string>& enumToStringMap, const T& defaultValue);
 
 #include <Utils/Utils_enumConversion.tpp>
+
 
 std::string to_string(ELFMethod method);
 ELFMethod elfMethod_from_string(const std::string& strMethod);

@@ -679,7 +679,7 @@ void GridCP::buildBasins(const Grid& grid, PartitionMethod partitionMethod)
 {
     bool ongrid = (partitionMethod == PartitionMethod::AIM_ON_GRID
                    || partitionMethod == PartitionMethod::VDD
-                      || partitionMethod == PartitionMethod::BECKE);
+                   || partitionMethod == PartitionMethod::BECKE);
     
     initGridCP(grid, ongrid);
 

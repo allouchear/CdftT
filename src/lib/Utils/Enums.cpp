@@ -56,6 +56,7 @@ namespace EnumConversionMaps
     std::unordered_map<RunType, std::string> runType_string =
     {
         { RunType::COMPUTE_DESCRIPTORS, "ComputeDescriptors" },
+        { RunType::COMPUTE_ENERGY_WITH_POINT_CHARGE, "ComputeEnergyWithPointCharge" },
         { RunType::COMPUTE_GRID_DIFFERENCE, "ComputeGridDifference" },
         { RunType::COMPUTE_INTEGRALS, "ComputeIntegrals" },
         { RunType::COMPUTE_PARTIAL_CHARGES, "ComputePartialCharges" },

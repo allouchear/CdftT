@@ -453,7 +453,7 @@ void Job::setJobList()
     
     _jobDescription = { "Details are given for the available jobs run by this program.\nExample input files for each job are also given. In this format, comment lines are specified by # at the start of the line",
                         "Grid-based computations of partial charges of the molecule. We provide 5 ways of computing atomic volumes, the first 3 of which are based on Bader's Atoms in molecule.\n\n **on-grid** : follows Tang's algorithm to find Bader volumes.\n **near-grid** : more precise version of on-grid.\n **near-grid-refinement** : even more precise. Requires more time.\n **VDD** topological method : assigns points to volumes by distance to closest atom.\n **Becke** : uses a regular density grid to interpolate Becke's atomic variable grids.\n\n Example format for input file :\n\n#RunType\n#RunType=Help\nRunType=ComputePartialCharges\n#GridFileName\nGrids=h2o_80_0.gcube \nPartitionMethod=on-grid\n\nW. Tang, E. Sanville, G. Henkelman, A grid-based bader analysis algorithm without lattice bias, Journal of Physics: Condensed Matter 21 (8) (2009) 084204.",
-                        "Computation of chemical descriptors from analytic or cube files using on-grid, near-grid, near-grid-refinement and Becke. Frontier Molecular Orbitals(FMO) and finite difference(FD) are methods also provided for the computation. FMO requires 1 analytic file (.log, .wfx, .molden,...). FD requires 3 analytic files. The other methods require cube files of nucleophilic, electrophilic and radical attacks for the molecule. Energies must also be given by the user:\nif two are given, they are assumed to be the ionisation potential and the electronic affinity. If 3 are given they are assumed to be the total energies of each file. \n\n Example format for input file :\n\n#RunType=Help\n#RunType=ComputeDescriptorsFromCubes\n#GridFileName\nGrids=grid1.cube, grid2.cube, grid3.cube\nPartitionMethod=on-grid\nEnergies=I, A or E1,E2,E3",
+                        "Computation of chemical descriptors from analytic or cube files using on-grid, near-grid, near-grid-refinement and Becke. Frontier Molecular Orbitals(FMO) and finite difference(FD) are methods also provided for the computation. FMO requires 1 analytic file (.log, .wfx, .molden,...). FD requires 3 analytic files. The other methods require cube files of nucleophilic, electrophilic and radical attacks for the molecule. Energies must also be given by the user:\nif two are given, they are assumed to be the ionization energy and the electron affinity. If 3 are given they are assumed to be the total energies of each file. \n\n Example format for input file :\n\n#RunType=Help\n#RunType=ComputeDescriptorsFromCubes\n#GridFileName\nGrids=grid1.cube, grid2.cube, grid3.cube\nPartitionMethod=on-grid\nEnergies=I, A or E1,E2,E3",
                         "Compute local integrals of grids on volumes defined by method of choice. A grid is required to define the volumes.\nThe additional grids provided by the user should contain the quantities to be integrated.\n\n **on-grid** : to define volumes using on-grid AIM. Requires electronic density grid.\n **near-grid** : to define volumes using near-grid AIM. Requires electronic density grid.\n **near-grid-refinement : to define volumes using near-grid-refinement AIM. Requires electronic density grid.\n **VDD** : to define volumes by distance to atoms. Can use any type of density.\n **BBS** : Build Basins By SIGN. Requires a grid of density difference. A job is provided in the program to obtain such a grid. An additional input *Cutoff=* is required for BBS that sets a threshold for insignificant values.\n **B2S** : Build 2 basins by SIGN. Same as BBS but only constructs two volumes.\n\n Example format for input file :\n\n#RunType=Help\n#RunType=ComputeIntegrals\n#GridFileName\nGrids=gridDefiningVolumes.cube, grid1ToBeIntegrated.cube, grid2ToBeIntegrated.cube\nPartitionMethod=BBS\nCutoff=1e-10",
                         "Computes the differences of values of the first two grids provides and assigns them to the third.\n\n Example format for input file : \n\n#Runtype=Help\nRunType=ComputeDifference\n#GridFileName\nGrids=in1.cube, in2.cube, out.cube ",
                         "Create a density grid and save it in .cube format. .wfx , .fchk , .molden , .gab and .log are supported as input files.\nthe user can choose from 3 standard grid sizes:\ncoarse ( 3 pts / Bohr)\nMedium (6 pts / Bohr)\nFine (12 pts / Bohr)\n\nA custom size is also provided in which the user enters the domain data as follows:\nNx, Ny, Nz, Ox, Oy, Oz, T11, T12, T13, T21, T22, T23, T31, T32, T33\nWhere N is the number of points in the ith direction, Oi are the coordinates of the bottom left corner of the cube and Tij are the coeficients of the translation vector.\n\n Example format for input file : \n\n#RunType=Help\nRunType=MakeDensityCube\n#GridFileName\nAnalyticFile=filename.wfx\nSize=Custom\nCustomSizeData=80,80,80,5,5,5,0.15,0,0,0,0.15,0,0,0,0.15\nGrid=save.cube ",
@@ -600,30 +600,32 @@ std::vector<double> Job::computePartialCharges(const std::string& gridFilename, 
 std::vector<double> Job::computePartialChargesAndEnergy(std::vector<double>& energies, const std::string& analyticFileName)
 {
     Becke B;
-    readFileFormat<Becke>(B, analyticFileName);
+    computeOrbitalsOrBecke<Becke>(B, analyticFileName);
     energies.push_back(B.PartialChargesAndEnergy()[0][0]);
     return B.PartialChargesAndEnergy()[1];
 }
-Structure Job::returnStruct(const std::string& ANAFileName)
+
+Structure Job::returnStruct(const std::string& analyticFileName)
 {
     Becke B;
-    readFileFormat<Becke>(B, ANAFileName);
+    computeOrbitalsOrBecke<Becke>(B, analyticFileName);
     return B.get_struct();
 }
-Descriptors Job::computeDescriptors(const std::string &GridFileName1, const std::string &GridFileName2, const std::string &GridFileName3, double I, double A, PartitionMethod partitionMethod)
+
+Descriptors Job::computeDescriptors(const std::string& gridFileName1, const std::string& gridFileName2, const std::string& gridFileName3, double ionizationEnergy, double electronAffinity, PartitionMethod partitionMethod)
 {
-    std::ifstream grid1(GridFileName1);
-    std::ifstream grid2(GridFileName2);
-    std::ifstream grid3(GridFileName3);
-    Descriptors D(grid1, grid2, grid3, I, A, partitionMethod);
+    std::ifstream grid1(gridFileName1);
+    std::ifstream grid2(gridFileName2);
+    std::ifstream grid3(gridFileName3);
+    Descriptors D(grid1, grid2, grid3, ionizationEnergy, electronAffinity, partitionMethod);
     return D;
 }
-Descriptors Job::computeDescriptors(const std::string &GridFileName1, const std::string &GridFileName2, const std::string &GridFileName3, std::vector<double> E, PartitionMethod partitionMethod)
+Descriptors Job::computeDescriptors(const std::string& gridFileName1, const std::string& gridFileName2, const std::string& gridFileName3, const std::vector<double>& energies, PartitionMethod partitionMethod)
 {
-    std::ifstream grid1(GridFileName1);
-    std::ifstream grid2(GridFileName2);
-    std::ifstream grid3(GridFileName3);
-    Descriptors D(grid1, grid2, grid3, E, partitionMethod);
+    std::ifstream grid1(gridFileName1);
+    std::ifstream grid2(gridFileName2);
+    std::ifstream grid3(gridFileName3);
+    Descriptors D(grid1, grid2, grid3, energies, partitionMethod);
     return D;
 }
 void Job::computeDescriptorsFD(const std::string& ANAFileName1, const std::string& ANAFileName2, const std::string& ANAFileName3)
@@ -638,74 +640,83 @@ void Job::computeDescriptorsFD(const std::string& ANAFileName1, const std::strin
     Descriptors D(s, Q1, Q2, Q3, E);
     std::cout << D;
 }
-template<typename T> void Job::readFileFormat(T& AnaClass, const std::string& ANAFileName)
-{
-    if (ANAFileName.find(".wfx") != std::string::npos)
-    {
-        std::cout << "Reading data from " << ANAFileName << "... Please wait." << std::endl;
-        AnaClass = computeOrbOrBecke<WFX,T>(ANAFileName);
-    }
-    else if (ANAFileName.find(".fchk") != std::string::npos)
-    {
-        std::cout << "Reading data from " << ANAFileName << "... Please wait." << std::endl;
-        AnaClass = computeOrbOrBecke<FCHK,T>(ANAFileName);
-    }
-    else if (ANAFileName.find(".molden") != std::string::npos)
-    {
-        std::cout << "Reading data from " << ANAFileName << "... Please wait." << std::endl;
-        AnaClass = computeOrbOrBecke<MOLDENGAB,T>(ANAFileName);
-    }
-    else if (ANAFileName.find(".gab") != std::string::npos)
-    {
-        std::cout << "Reading data from " << ANAFileName << "... Please wait." << std::endl;
-        AnaClass = computeOrbOrBecke<MOLDENGAB,T>(ANAFileName);
-    }
-    else if (ANAFileName.find(".log") != std::string::npos)
-    {
-        std::cout << "Reading data from " << ANAFileName << "... Please wait." << std::endl;
-        AnaClass = computeOrbOrBecke<LOG,T>(ANAFileName);
-    }
-    else
-    {
-        std::cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-        std::cerr << "Sorry, unknown file format for analytic file. Please check input file. " << std::endl;
-        std::cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-        
-        std::exit(1);
-    }
-}
-template<typename T,typename U> U Job::computeOrbOrBecke(const std::string& analyticFileName)
+
+template<typename T, typename U> U Job::computeOrbitalsOrBecke(const std::string& analyticFileName)
 {
     Factorial fact(100);
     Binomial bino(100, fact);
+
     std::ifstream analyticFile(analyticFileName);
-    T anaClass(analyticFile);
+    T analyticFileParser(analyticFile);
     analyticFile.close();
-    U OrbOrBecke(anaClass, bino, _table);
-    return OrbOrBecke;
+    
+    U analyticObject(analyticFileParser, bino, _table);
+    
+    return analyticObject;
 }
+
+template<typename T> void Job::computeOrbitalsOrBecke(T& analyticObject, const std::string& analyticFileName)
+{
+    if (analyticFileName.find(".wfx") != std::string::npos)
+    {
+        std::cout << "Reading data from " << analyticFileName << "... Please wait." << std::endl;
+        analyticObject = computeOrbitalsOrBecke<WFX, T>(analyticFileName);
+    }
+    else if (analyticFileName.find(".fchk") != std::string::npos)
+    {
+        std::cout << "Reading data from " << analyticFileName << "... Please wait." << std::endl;
+        analyticObject = computeOrbitalsOrBecke<FCHK, T>(analyticFileName);
+    }
+    else if (analyticFileName.find(".molden") != std::string::npos)
+    {
+        std::cout << "Reading data from " << analyticFileName << "... Please wait." << std::endl;
+        analyticObject = computeOrbitalsOrBecke<MOLDENGAB, T>(analyticFileName);
+    }
+    else if (analyticFileName.find(".gab") != std::string::npos)
+    {
+        std::cout << "Reading data from " << analyticFileName << "... Please wait." << std::endl;
+        analyticObject = computeOrbitalsOrBecke<MOLDENGAB, T>(analyticFileName);
+    }
+    else if (analyticFileName.find(".log") != std::string::npos)
+    {
+        std::cout << "Reading data from " << analyticFileName << "... Please wait." << std::endl;
+        analyticObject = computeOrbitalsOrBecke<LOG, T>(analyticFileName);
+    }
+    else
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: invalid file format for file \"" << analyticFileName << "\"." << std::endl;
+        errorMessage << "Please check the documentation and the \"AnalyticFiles\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+}
+
+
 //TypeFlag specifies the type of grid you wnat to make. For now there are 3 types available. electronic density, ELF and orbitals. Others can be added in the else ifs. additional parameters shoud be added before the default values.
-void Job::createCube(Orbitals& orb, const Domain& d, const std::string& cubeFileName, int TypeFlag, const ELFMethod elfMethod, std::vector<int> nums, std::vector<int> typesSpin)
+void Job::createCube(Orbitals& orbitals, const Domain& domain, const std::string& cubeFileName, int TypeFlag, const ELFMethod elfMethod, std::vector<int> nums, std::vector<int> typesSpin)
 {
     Grid g;
     if (TypeFlag == 0)
     {
-        g=orb.makeGrid(d);
+        g=orbitals.makeGrid(domain);
 
     }
     else if (TypeFlag == 1)
     {
-        g = orb.makeOrbGrid(d, nums, typesSpin);
+        g = orbitals.makeOrbGrid(domain, nums, typesSpin);
     }
     else
     {
         if (elfMethod == ELFMethod::BECKE)
         {
-            g = orb.makeELFgrid(d, 0);
+            g = orbitals.makeELFgrid(domain, 0);
         }
         else // SAVIN
         {
-            g=orb.makeELFgrid(d); 
+            g=orbitals.makeELFgrid(domain); 
         }
 
     }
@@ -1121,6 +1132,11 @@ void Job::run()
             run_computeDescriptors();
             break;
         }
+        case RunType::COMPUTE_ENERGY_WITH_POINT_CHARGE:
+        {
+            run_computeEnergyWithPointCharge();
+            break;
+        }
         case RunType::COMPUTE_GRID_DIFFERENCE:
         {
             run_computeGridDifference();
@@ -1241,7 +1257,7 @@ void Job::run_computeDescriptors()
 
             // Compute descriptors
             Orbitals o;
-            readFileFormat<Orbitals>(o, analyticFilesNames[0]);
+            computeOrbitalsOrBecke<Orbitals>(o, analyticFilesNames[0]);
             o.PrintDescriptors();
         }
     }
@@ -1270,7 +1286,7 @@ void Job::run_computeDescriptors()
 
         if (energies.size() == 2)
         {
-            std::cout << "Reading Ionisation potential I = " << energies[0] << " and Electronic affinity A = " << energies[1] << std::endl;
+            std::cout << "Reading Ionization potential I = " << energies[0] << " and electron Affinity A = " << energies[1] << std::endl;
             
             // Compute descriptors
             Descriptors D = computeDescriptors(gridFilesNames[0], gridFilesNames[1], gridFilesNames[2], energies[0], energies[1], partitionMethod);
@@ -1293,9 +1309,93 @@ void Job::run_computeDescriptors()
             std::exit(1);
         }
     }
+}
 
+void Job::run_computeEnergyWithPointCharge()
+{
+    //Read analytic file name
+    std::vector<std::string> analyticFilesNames;
+    readAnalyticFilesNames(analyticFilesNames);
+
+
+    // Check number of analytic files names
+    if (analyticFilesNames.size() != 1)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect number of analytic files names (one file expected)." << std::endl;
+        errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+    
+    
+    // Read transitions file
+    std::string transitionsFileName;
+    readTransitionsFileName(transitionsFileName);
+
+
+    // Loading orbitals
+    Orbitals orbitals;
+    computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
+
+
+    // Reading transitions file
+    std::vector<ExcitedState> excitedStates;
+    ExcitedState::readTransitionsFile(transitionsFileName, excitedStates);
+    std::cout << "Number of excited states read: " << excitedStates.size() << std::endl << std::endl;
+
+
+    // Get Ground and Excited States Slater Determinants
+    typedef std::array<std::vector<int>, 2> SlaterDeterminant;
+
+    // Ground state
+    SlaterDeterminant groundStateSlaterDeterminant;
+    orbitals.computeSlaterDeterminant(groundStateSlaterDeterminant);
+
+    // Excited states
+    for (size_t i = 0; i < excitedStates.size(); ++i)
+    {
+        excitedStates[i].computeSlaterDeterminants(orbitals);
+    }
 
     
+    // Compute matrix elements
+    const int nbStates = excitedStates.size() + 1; // +1 for ground state
+    std::vector<std::vector<double>> phi_i_V_phi_j(nbStates, std::vector<double>(nbStates, 0.0));
+
+    for (int i = 0; i < nbStates; ++i)
+    {
+        for (int j = 0; j < nbStates; ++j)
+        {
+            // Get Slater Determinants for states i and j
+            std::vector<SlaterDeterminant> slaterDeterminants_i;
+            std::vector<SlaterDeterminant> slaterDeterminants_j;
+
+            if (i == 0)
+            {
+                slaterDeterminants_i.push_back(groundStateSlaterDeterminant);
+            }
+            else
+            {
+                slaterDeterminants_i = excitedStates[i - 1].get_slaterDeterminants();
+            }
+
+            if (j == 0)
+            {
+                slaterDeterminants_j.push_back(groundStateSlaterDeterminant);
+            }
+            else
+            {
+                slaterDeterminants_j = excitedStates[j - 1].get_slaterDeterminants();
+            }
+
+            // Compute matrix element < phi_i | V | phi_j >
+        }
+    }
+
+
 }
 
 void Job::run_computeGridDifference()
@@ -1447,7 +1547,7 @@ void Job::run_convertOrbitals()
     {
         // Loading orbitals and saving in the new format
         Orbitals o;
-        readFileFormat<Orbitals>(o, analyticFilesNames[0]);
+        computeOrbitalsOrBecke<Orbitals>(o, analyticFilesNames[0]);
         o.Save(analyticFilesNames[1]);
     }
     else
@@ -1463,7 +1563,7 @@ void Job::run_help()
 
 void Job::run_lambdaDiagnostic()
 {
-    //Read analytic file
+    //Read analytic file name
     std::vector<std::string> analyticFilesNames;
     readAnalyticFilesNames(analyticFilesNames);
 
@@ -1494,7 +1594,7 @@ void Job::run_lambdaDiagnostic()
 
     // Loading orbitals
     Orbitals orbitals;
-    readFileFormat<Orbitals>(orbitals, analyticFilesNames[0]);
+    computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
 
 
     // Setting orbitals
@@ -1512,11 +1612,13 @@ void Job::run_lambdaDiagnostic()
     Grid orbitalsGrid = orbitals.makeOrbGrid(domain, orbitalsNumbers, orbitalsSpins);
 
 
-    // Lecture du fichier des transitions
+    // Reading transitions file
     std::vector<ExcitedState> excitedStates;
     ExcitedState::readTransitionsFile(transitionsFileName, excitedStates);
     std::cout << "Number of excited states read: " << excitedStates.size() << std::endl << std::endl;
 
+
+    // Printing lambda diagnostic for each excited state
     for (const ExcitedState& excitedState : excitedStates)
     {
         std::cout << excitedState << std::endl;
@@ -1547,7 +1649,7 @@ void Job::run_makeDensityCube()
     
     // Loading orbitals
     Orbitals o;
-    readFileFormat<Orbitals>(o, analyticFilesNames[0]);
+    computeOrbitalsOrBecke<Orbitals>(o, analyticFilesNames[0]);
     
 
     // Read size
@@ -1644,7 +1746,7 @@ void Job::run_makeOrbitalsCube()
 
     // Loading orbitals
     Orbitals o;
-    readFileFormat<Orbitals>(o, analyticFilesNames[0]);
+    computeOrbitalsOrBecke<Orbitals>(o, analyticFilesNames[0]);
 
 
     // Setting orbitals
@@ -1712,7 +1814,7 @@ void Job::run_makeELFCube()
 
     // Loading orbitals
     Orbitals o;
-    readFileFormat<Orbitals>(o, analyticFilesNames[0]);
+    computeOrbitalsOrBecke<Orbitals>(o, analyticFilesNames[0]);
 
 
     // Read size

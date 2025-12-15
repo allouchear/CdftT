@@ -28,8 +28,41 @@ void print_error(const std::string& errorMessage);
 // FILE PARSING FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
 
-bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string& value);
+/** @brief Searches for the first occurrence of the specified parameter (eg: "RunType") in the input file and reads its value as a string.
+ * 
+ * The position of the input file stream is reset to the beginning of the file before searching.
+ * The resulting value is trimmed of leading and trailing whitespaces.
+ * 
+ * @param[in] inputFile Input file stream to read from.
+ * @param[in] parameter Parameter to search for.
+ * @param[out] value Reference to a string where the read value will be stored.
+ * @return True if the parameter was found and read successfully; false otherwise.
+ */
+bool readOneString(std::ifstream& inputFile, const std::string& parameter, std::string& value);
+
+/** @brief Searches for the first occurrence of the specified parameter (eg: "RunType") in the input file and reads its value as the specified type.
+ *
+ * The position of the input file stream is reset to the beginning of the file before searching.
+ *
+ * @tparam T Type of the value to read (e.g., int, double, ...).
+ * @param[in] inputFile Input file stream to read from.
+ * @param[in] parameter Parameter to search for.
+ * @param[out] value Reference to a type T variable where the read value will be stored.
+ * @return True if the parameter was found and read successfully; false otherwise.
+ */
 template<typename T> bool readOneType(std::ifstream& inputFile, const std::string& tag, T& x);
+
+/** @brief Searches for the first occurrence of the specified parameter (eg: "RunType") in the input file and reads its value as a list of the specified type.
+ *
+ * The position of the input file stream is reset to the beginning of the file before searching.
+ * Accepted separators between list elements are spaces, commas, or semicolons.
+ *
+ * @tparam T Type of the values to read (e.g., int, double, ...).
+ * @param[in] inputFile Input file stream to read from.
+ * @param[in] parameter Parameter to search for.
+ * @param[out] value Reference to a vector of type T where the read values will be stored.
+ * @return True if the parameter was found and read successfully; false otherwise.
+ */
 template<typename T> bool readListType(std::ifstream& inputFile, const std::string& tag, std::vector<T>& x);
 
 #include <Utils/Utils_fileParsing.tpp>

@@ -1,0 +1,3 @@
+RunType=ComputeEnergyWithPointCharge
+AnalyticFiles=tests/CO_TDDFT.log
+TransitionsFile=tests/transitions_CO.txt

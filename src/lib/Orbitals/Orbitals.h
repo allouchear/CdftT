@@ -52,7 +52,7 @@ class Orbitals
 
             //! A real constructor.
             /*! This constructor is used to add all of the parameters for Orbitals with the data in .wfx file. */
-        Orbitals(WFX&, Binomial&, const PeriodicTable&);
+        Orbitals(WFX& wfxParser, Binomial& bino, const PeriodicTable& periodicTable);
 
             //! A real constructor.
             /*! This constructor is used to add all of the parameters for Orbitals with the data in .fchk file. */
@@ -64,14 +64,23 @@ class Orbitals
 
             //! A real constructor.
             /*! This constructor is used to add all of the parameters for Orbitals with the data in .log file. */
-        Orbitals(LOG&, Binomial&, const PeriodicTable&);
+        Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodicTable);
 
             //! A default desctructor.
             /*! We don't use it. */
         ~Orbitals() {}
 
-            //! A normal member taking no arguments and returning a std::vector<CGTF> value.
-            /*! \return The table of CGTF which compose the Orbitals. */
+
+        /**
+         * @brief Computes the Slater determinant of the excited state.
+         *
+         * @param[out] slaterDeterminant Output array of two vectors (alpha and beta) containing occupied orbital indices.
+         */
+        void computeSlaterDeterminant(std::array<std::vector<int>, 2>& slaterDeterminant) const;
+
+
+        //! A normal member taking no arguments and returning a std::vector<CGTF> value.
+        /*! \return The table of CGTF which compose the Orbitals. */
         std::vector<CGTF>& vcgtf() {return _vcgtf;}
 
             //! A normal member taking no arguments and returning a std::vector<std::vector<std::vector<double>>> value.
@@ -85,11 +94,11 @@ class Orbitals
 
             //! A normal member taking no arguments and returning an int value.
             /*! \return The number of atomic orbitals in the Orbitals. */
-        int NumberOfAo() {return _numberOfAo;}
+        int NumberOfAo() const {return _numberOfAo;}
 
             //! A normal member taking no arguments and returning an int value.
             /*! \return The number of molecular orbitals in the Orbitals. */
-        int NumberOfMo() {return _numberOfMo;}
+        int NumberOfMo() const {return _numberOfMo;}
 
             //! A normal member taking no arguments and returning an int value.
             /*! \return The number of atoms. */
@@ -208,7 +217,7 @@ class Orbitals
             //! A normal member taking no arguments and returning a std::vector<std::vector<double>> value.
             /*! OccNum[spinType][nMO]
              *  \return The table of occupation number. */
-        std::vector<std::vector<double>>& OccupationNumber() {return _occupation_number;}
+        const std::vector<std::vector<double>>& OccupationNumber() const {return _occupation_number;}
 
             //! A normal member taking no arguments and returning a Descriptors value.
             /*! \return the Descriptors object. */

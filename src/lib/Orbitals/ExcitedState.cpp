@@ -35,12 +35,17 @@ double ExcitedState::get_energy() const
     return _energy;
 }
 
+const std::vector<ExcitedState::SlaterDeterminant>& ExcitedState::get_slaterDeterminants() const
+{
+    return _slaterDeterminants;
+}
+
 
 //----------------------------------------------------------------------------------------------------//
 // PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-int ExcitedState::numberOfTransitions() const
+int ExcitedState::getNumberOfTransitions() const
 {
     return static_cast<int>(_transitions.size());
 }
@@ -48,6 +53,50 @@ int ExcitedState::numberOfTransitions() const
 void ExcitedState::addTransition(const OrbitalState& initialOrbital, const OrbitalState& finalOrbital, const double coefficient)
 {
     _transitions.push_back(std::make_tuple(initialOrbital, finalOrbital, coefficient));
+}
+
+void ExcitedState::computeSlaterDeterminants(const Orbitals& orbitals)
+{
+    // Get Slater determinant for the ground state
+    SlaterDeterminant slaterDeterminant;
+    orbitals.computeSlaterDeterminant(slaterDeterminant);
+
+
+    // Apply the transitions to the Slater determinant
+    for (const auto& transition : _transitions)
+    {
+        // Copy ground state Slater determinant
+        SlaterDeterminant slaterDeterminantTransition = slaterDeterminant;
+
+        // Unpack transition
+        int initialOrbitalNumber = std::get<0>(transition).first;
+        SpinType initialOrbitalSpin = std::get<0>(transition).second;
+        int finalOrbitalNumber = std::get<1>(transition).first;
+        SpinType finalOrbitalSpin = std::get<1>(transition).second;
+
+        // Remove electron from initial orbital
+        if (initialOrbitalSpin == SpinType::ALPHA)
+        {
+            slaterDeterminantTransition[0][initialOrbitalNumber - 1] = 0;
+        }
+        else if (initialOrbitalSpin == SpinType::BETA)
+        {
+            slaterDeterminantTransition[1][initialOrbitalNumber - 1] = 0;
+        }
+
+        // Add electron to final orbital
+        if (finalOrbitalSpin == SpinType::ALPHA)
+        {
+            slaterDeterminantTransition[0][finalOrbitalNumber - 1] = 1;
+        }
+        else if (finalOrbitalSpin == SpinType::BETA)
+        {
+            slaterDeterminantTransition[1][finalOrbitalNumber - 1] = 1;
+        }
+
+        // Store Slater determinant
+        _slaterDeterminants.push_back(slaterDeterminantTransition);
+    }
 }
 
 void ExcitedState::printLambdaDiagnostic(const Grid& grid) const
@@ -123,34 +172,6 @@ void ExcitedState::printLambdaDiagnostic(const Grid& grid) const
 //----------------------------------------------------------------------------------------------------//
 // STATIC FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
-
-/*
-double ExcitedState::computeLambdaDiagnostic(const std::vector<ExcitedState>& excitedStates, Orbitals& orbitals)
-{
-    double sum_kappaSquaredTimesOverlapIntegral = 0.0;
-    double sum_kappaSquared = 0.0;
-
-    for (const ExcitedState& excitedState : excitedStates)
-    {
-        for (const auto& transition : excitedState._transitions)
-        {
-            // Unpack transition
-            const auto& initialOrbital = std::get<0>(transition);
-            const auto& finalOrbital = std::get<1>(transition);
-            double coefficient = std::get<2>(transition);
-
-            double kappaSquared = coefficient * coefficient;
-            sum_kappaSquared += kappaSquared;
-            
-            double O_ia;
-
-            sum_kappaSquaredTimesOverlapIntegral += kappaSquared * O_ia;
-        }
-    }
-
-    return sum_kappaSquaredTimesOverlapIntegral / sum_kappaSquared;
-}
-*/
 
 void ExcitedState::readTransitionsFile(std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates)
 {
@@ -246,7 +267,7 @@ void ExcitedState::readTransitionsFile(std::string& transitionsFileName, std::ve
                     } while (!transitionsFile.eof() && !line.empty());
 
                     // Check that at least one transition was read
-                    if (excitedState.numberOfTransitions() > 0)
+                    if (excitedState.getNumberOfTransitions() > 0)
                     {
                         // Add excited state to the list
                         excitedStates.push_back(excitedState);
