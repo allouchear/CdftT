@@ -1,0 +1,5 @@
+RunType=MakeDensityCube
+AnalyticFiles=h2o.molden
+Size=Medium
+ELFmethod=Becke
+Grids=Density.cube

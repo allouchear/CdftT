@@ -1,0 +1,4 @@
+RunType=computeDescriptors
+AnalyticFiles=h2o.fchk
+IntegrationMethod=FMO
+Energies=0.30075,0.02092

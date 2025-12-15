@@ -1,0 +1,6 @@
+RunType=MakeELFCube
+AnalyticFiles=h2o.molden
+Size=Medium
+#ELFMethod=Savin
+ELFMethod=Becke
+Grids=ELF.cube
