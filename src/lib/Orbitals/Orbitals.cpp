@@ -16,27 +16,39 @@
 #include <Utils/Utils.h>
 #include <Utils/WFX.h>
 
+
+//----------------------------------------------------------------------------------------------------//
+// STATIC FIELDS
+//----------------------------------------------------------------------------------------------------//
+
+std::vector<std::vector<double>> Orbitals::_s_ionicMatrix_ = std::vector<std::vector<double>>();
+
+
+//----------------------------------------------------------------------------------------------------//
+// CONSTRUCTORS
+//----------------------------------------------------------------------------------------------------//
+
 Orbitals::Orbitals():
     _vcgtf(),
     _coefficients(),
     _numberOfAo(0),
     _numberOfMo(0),
-    _number_of_alpha_electrons(0),
-    _number_of_beta_electrons(0),
-    _number_of_atoms(0),
-    _primitive_centers(),
+    _numberOfAlphaElectrons(0),
+    _numberOfBetaElectrons(0),
+    _numberOfAtoms(0),
+    _primitiveCenters(),
     _struct(),
-    _atomic_numbers(),
+    _atomicNumbers(),
     _symbol(),
-    _orbital_energy(),
+    _orbitalEnergy(),
     _all_f(),
     _numOrb(),
-    _occupation_number(),
-    _alpha_and_beta(false),
+    _occupationNumber(),
+    _alphaAndBeta(false),
     _bino(),
     _descriptors(),
-    _vcgtf_non_normalise(),
-    _number_of_gtf(0),
+    _vcgtfNonNormalise(),
+    _numberOfGtf(0),
     _energy(0.0),
     _coordinates(),
     _mixte(false)
@@ -47,22 +59,22 @@ Orbitals::Orbitals(WFX& wfxParser, Binomial& bino, const PeriodicTable& periodic
     _coefficients(2),
     _numberOfAo(0),
     _numberOfMo(0),
-    _number_of_alpha_electrons(0),
-    _number_of_beta_electrons(0),
-    _number_of_atoms(0),
-    _primitive_centers(),
+    _numberOfAlphaElectrons(0),
+    _numberOfBetaElectrons(0),
+    _numberOfAtoms(0),
+    _primitiveCenters(),
     _struct(wfxParser, periodicTable),
-    _atomic_numbers(),
+    _atomicNumbers(),
     _symbol(),
-    _orbital_energy(),
+    _orbitalEnergy(),
     _all_f(),
     _numOrb(),
-    _occupation_number(),
-    _alpha_and_beta(false),
+    _occupationNumber(),
+    _alphaAndBeta(false),
     _bino(bino),
     _descriptors(),
-    _vcgtf_non_normalise(),
-    _number_of_gtf(0),
+    _vcgtfNonNormalise(),
+    _numberOfGtf(0),
     _energy(0.0),
     _coordinates(),
     _mixte(false)
@@ -106,39 +118,39 @@ Orbitals::Orbitals(WFX& wfxParser, Binomial& bino, const PeriodicTable& periodic
         _coefficients[1][i] = wfxParser.Molecular_Orbital_Primitive_Coefficients()[1][i].Coefficients();
     }
 
-    _primitive_centers = wfxParser.Primitive_Centers();
-    _atomic_numbers = wfxParser.Atomic_Number();
+    _primitiveCenters = wfxParser.Primitive_Centers();
+    _atomicNumbers = wfxParser.Atomic_Number();
     _numberOfMo = wfxParser.Number_of_Occupied_Molecular_Orbital();
 
-    _number_of_gtf = wfxParser.Number_of_Primitives();
+    _numberOfGtf = wfxParser.Number_of_Primitives();
     if(!wfxParser.AlphaAndBeta())
     {
         _numberOfMo /= 2;
     }
 
-    _number_of_alpha_electrons = wfxParser.Number_of_Alpha_Electrons();
-    _number_of_beta_electrons = wfxParser.Number_of_Beta_Electrons();
+    _numberOfAlphaElectrons = wfxParser.Number_of_Alpha_Electrons();
+    _numberOfBetaElectrons = wfxParser.Number_of_Beta_Electrons();
 
-    _number_of_atoms = wfxParser.Number_of_Nuclei();
-    _orbital_energy = wfxParser.Molecular_Orbital_Energies();
+    _numberOfAtoms = wfxParser.Number_of_Nuclei();
+    _orbitalEnergy = wfxParser.Molecular_Orbital_Energies();
     _symbol = wfxParser.Nuclear_Names();
     _numOrb = std::vector<int> (2,0);
     _energy = wfxParser.Energy();
-    _occupation_number = wfxParser.Molecular_Orbital_Occupation_Numbers();
-    _alpha_and_beta = wfxParser.AlphaAndBeta();
+    _occupationNumber = wfxParser.Molecular_Orbital_Occupation_Numbers();
+    _alphaAndBeta = wfxParser.AlphaAndBeta();
     _descriptors = Descriptors(wfxParser, periodicTable);
     _numberOfAo = _vcgtf.size();
-    _vcgtf_non_normalise = _vcgtf;
+    _vcgtfNonNormalise = _vcgtf;
 }
 
 Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
 {
     _struct=Structure(fchk, Table);
-    _vcgtf_non_normalise = std::vector<CGTF> ();
+    _vcgtfNonNormalise = std::vector<CGTF> ();
     _numberOfMo=fchk.NumberOfBasisFunctions();
     _coordinates=fchk.CurrentCartesianCoordinates();
     _bino=Bin;
-    _number_of_gtf=0;
+    _numberOfGtf=0;
     _energy=fchk.TotalEnergy();
     int lmax = fchk.HighestAngularMomentum();
     int nShells = fchk.NumberOfContractedShells();
@@ -268,9 +280,9 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
         exit(1);
     }
 
-    _number_of_alpha_electrons=fchk.NumberOfAlphaElectrons();
-    _number_of_beta_electrons=fchk.NumberOfBetaElectrons();
-    _number_of_atoms=fchk.NumberOfAtoms();
+    _numberOfAlphaElectrons=fchk.NumberOfAlphaElectrons();
+    _numberOfBetaElectrons=fchk.NumberOfBetaElectrons();
+    _numberOfAtoms=fchk.NumberOfAtoms();
     _coefficients=std::vector<std::vector<std::vector<double>>> (2, std::vector<std::vector<double>> ());
     int nOrb_alpha=fchk.AlphaMOCoefficients().size()/fchk.AlphaOrbitalEnergies().size();
     int nOrb_beta=fchk.BetaMOCoefficients().size()/fchk.BetaOrbitalEnergies().size();
@@ -284,59 +296,59 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
     for(int i=0; i<nOrb_beta; i++)
         for(int j=0; j<_numberOfMo; j++)        
             _coefficients[1][i][j]=fchk.BetaMOCoefficients()[i*_numberOfMo+j];
-    _orbital_energy=std::vector<std::vector<double>> (2, std::vector<double> ());
-    _orbital_energy[0]=fchk.AlphaOrbitalEnergies();
-    _orbital_energy[1]=fchk.BetaOrbitalEnergies();
+    _orbitalEnergy=std::vector<std::vector<double>> (2, std::vector<double> ());
+    _orbitalEnergy[0]=fchk.AlphaOrbitalEnergies();
+    _orbitalEnergy[1]=fchk.BetaOrbitalEnergies();
 
-    _occupation_number=std::vector<std::vector<double>> (2);
-    _alpha_and_beta=fchk.AlphaAndBeta();
+    _occupationNumber=std::vector<std::vector<double>> (2);
+    _alphaAndBeta=fchk.AlphaAndBeta();
 
-    if(_alpha_and_beta)
+    if(_alphaAndBeta)
     {
-        _occupation_number[0]=std::vector<double> (_numberOfMo);
+        _occupationNumber[0]=std::vector<double> (_numberOfMo);
         for(int i=0; i<_numberOfMo; i++)
-            _occupation_number[0][i]=fchk.AlphaOccupation()[i]+fchk.BetaOccupation()[i];
-        _occupation_number[1]=_occupation_number[0];
+            _occupationNumber[0][i]=fchk.AlphaOccupation()[i]+fchk.BetaOccupation()[i];
+        _occupationNumber[1]=_occupationNumber[0];
     }
     else
     {
-        _occupation_number[0]=fchk.AlphaOccupation();
-        _occupation_number[1]=fchk.BetaOccupation();
+        _occupationNumber[0]=fchk.AlphaOccupation();
+        _occupationNumber[1]=fchk.BetaOccupation();
     }
 
-    _atomic_numbers=fchk.AtomicNumbers();
-    _symbol=std::vector<std::string> (_number_of_atoms);
+    _atomicNumbers=fchk.AtomicNumbers();
+    _symbol=std::vector<std::string> (_numberOfAtoms);
     
-    for(int i=0; i<_number_of_atoms; i++)
-        _symbol[i]=Table.element(_atomic_numbers[i]).symbol();
+    for(int i=0; i<_numberOfAtoms; i++)
+        _symbol[i]=Table.element(_atomicNumbers[i]).symbol();
 
     _numOrb=std::vector<int> (2,0);
     _descriptors=Descriptors(fchk, Table);
 
     for(size_t i=0; i<_vcgtf.size(); i++)
-        _primitive_centers.push_back(_vcgtf[i].NumCenter());
+        _primitiveCenters.push_back(_vcgtf[i].NumCenter());
 
-    _vcgtf_non_normalise=_vcgtf;
+    _vcgtfNonNormalise=_vcgtf;
 
     NormaliseAllBasis();
 
     for(size_t i=0; i<_vcgtf.size(); i++)
-        _number_of_gtf+=_vcgtf[i].numberOfFunctions();
+        _numberOfGtf+=_vcgtf[i].numberOfFunctions();
 }
 
 Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Table)
 {
     _struct=Structure(moldengab, Table);
-    _vcgtf_non_normalise = std::vector<CGTF> ();
-    _number_of_gtf=0;
+    _vcgtfNonNormalise = std::vector<CGTF> ();
+    _numberOfGtf=0;
     _energy=0;
     _coefficients=std::vector<std::vector<std::vector<double>>> (2);
     _coefficients[0]=moldengab.AlphaMOCoefs();
     _coefficients[1]=moldengab.BetaMOCoefs();
 
-    _number_of_atoms=moldengab.NumberOfAtoms();
-    _coordinates=std::vector<double> (_number_of_atoms*3);
-    for(int i=0; i<_number_of_atoms; i++)
+    _numberOfAtoms=moldengab.NumberOfAtoms();
+    _coordinates=std::vector<double> (_numberOfAtoms*3);
+    for(int i=0; i<_numberOfAtoms; i++)
     {
         int k=0;
         for(int j=i*3; j<(i+1)*3; j++)
@@ -346,44 +358,44 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
         }
     }
     _numberOfMo=moldengab.NumberOfMO();
-    _alpha_and_beta=moldengab.AlphaAndBeta();
+    _alphaAndBeta=moldengab.AlphaAndBeta();
 
-    if(!_alpha_and_beta)
+    if(!_alphaAndBeta)
         _numberOfMo/=2;
 
-    _number_of_alpha_electrons=0;
-    _number_of_beta_electrons=0;
+    _numberOfAlphaElectrons=0;
+    _numberOfBetaElectrons=0;
 
-    if(_alpha_and_beta)
+    if(_alphaAndBeta)
     {
         for(size_t i=0; i<moldengab.AlphaOccupation().size(); i++)
             if(moldengab.AlphaOccupation()[i]==1)
-                _number_of_alpha_electrons++;
-        _number_of_beta_electrons=_number_of_alpha_electrons;
+                _numberOfAlphaElectrons++;
+        _numberOfBetaElectrons=_numberOfAlphaElectrons;
     }
 
     else
     {
         for(size_t i=0; i<moldengab.AlphaOccupation().size(); i++)
             if(moldengab.AlphaOccupation()[i]==1)
-                _number_of_alpha_electrons++;
+                _numberOfAlphaElectrons++;
 
         for(size_t i=0; i<moldengab.BetaOccupation().size(); i++)
             if(moldengab.BetaOccupation()[i]==1)
-                _number_of_beta_electrons++;
+                _numberOfBetaElectrons++;
     }
 
     _bino=Bin;
         
-    _atomic_numbers=moldengab.AtomicNumbers();
+    _atomicNumbers=moldengab.AtomicNumbers();
     _symbol=moldengab.Symbol();
-    _orbital_energy=std::vector<std::vector<double>> (2);
-    _orbital_energy[0]=moldengab.AlphaEnergies();
-    _orbital_energy[1]=moldengab.BetaEnergies();    
+    _orbitalEnergy=std::vector<std::vector<double>> (2);
+    _orbitalEnergy[0]=moldengab.AlphaEnergies();
+    _orbitalEnergy[1]=moldengab.BetaEnergies();    
     _numOrb=std::vector<int> (2,0);
-    _occupation_number=std::vector<std::vector<double>> (2);
-    _occupation_number[0]=moldengab.AlphaOccupation();
-    _occupation_number[1]=moldengab.BetaOccupation();
+    _occupationNumber=std::vector<std::vector<double>> (2);
+    _occupationNumber[0]=moldengab.AlphaOccupation();
+    _occupationNumber[1]=moldengab.BetaOccupation();
     _descriptors=Descriptors(moldengab, Table);
 
     std::vector<int> Ltypes = moldengab.Ltypes();
@@ -403,7 +415,7 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
     std::vector<std::vector<double>> coordinatesForShells;
     std::vector<int> NatBasis = moldengab.NatBasis();
 
-    for(int i=0; i<_number_of_atoms; i++)
+    for(int i=0; i<_numberOfAtoms; i++)
         for(int j=0; j<NatBasis[i]; j++)
             coordinatesForShells.push_back(moldengab.Coordinates()[i]);
 
@@ -516,15 +528,15 @@ Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Tab
         exit(1);
     }
 
-    _vcgtf_non_normalise=_vcgtf;
+    _vcgtfNonNormalise=_vcgtf;
 
     for(size_t i=0; i<_vcgtf.size(); i++)
-        _primitive_centers.push_back(_vcgtf[i].NumCenter());
+        _primitiveCenters.push_back(_vcgtf[i].NumCenter());
 
     NormaliseAllBasis();
 
     for(size_t i=0; i<_vcgtf.size(); i++)
-        _number_of_gtf+=_vcgtf[i].numberOfFunctions();
+        _numberOfGtf+=_vcgtf[i].numberOfFunctions();
 
     _mixte=moldengab.Mixte();
 
@@ -536,38 +548,38 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
     _coefficients(2),
     _numberOfAo(0),
     _numberOfMo(0),
-    _number_of_alpha_electrons(0),
-    _number_of_beta_electrons(0),
-    _number_of_atoms(0),
-    _primitive_centers(),
+    _numberOfAlphaElectrons(0),
+    _numberOfBetaElectrons(0),
+    _numberOfAtoms(0),
+    _primitiveCenters(),
     _struct(logParser, periodicTable),
-    _atomic_numbers(),
+    _atomicNumbers(),
     _symbol(),
-    _orbital_energy(),
+    _orbitalEnergy(),
     _all_f(),
     _numOrb(),
-    _occupation_number(),
-    _alpha_and_beta(false),
+    _occupationNumber(),
+    _alphaAndBeta(false),
     _bino(bino),
     _descriptors(),
-    _vcgtf_non_normalise(),
-    _number_of_gtf(0),
+    _vcgtfNonNormalise(),
+    _numberOfGtf(0),
     _energy(0.0),
     _coordinates(),
     _mixte(false)
 {
     _struct = Structure(logParser, periodicTable);
-    _vcgtf_non_normalise = std::vector<CGTF> ();
-    _number_of_gtf = 0;
+    _vcgtfNonNormalise = std::vector<CGTF> ();
+    _numberOfGtf = 0;
     _coefficients = std::vector<std::vector<std::vector<double>>> (2);
     _coefficients[0] = logParser.AlphaMOcoefs();
     _coefficients[1] = logParser.BetaMOcoefs();
     _energy = logParser.Energy();
-    _number_of_alpha_electrons = logParser.NumberOfAlphaElectrons();
-    _number_of_beta_electrons = logParser.NumberOfBetaElectrons();
-    _number_of_atoms = logParser.NumberOfAtoms();
-    _coordinates = std::vector<double> (_number_of_atoms*3);
-    for(int i = 0; i < _number_of_atoms; ++i)
+    _numberOfAlphaElectrons = logParser.NumberOfAlphaElectrons();
+    _numberOfBetaElectrons = logParser.NumberOfBetaElectrons();
+    _numberOfAtoms = logParser.NumberOfAtoms();
+    _coordinates = std::vector<double> (_numberOfAtoms*3);
+    for(int i = 0; i < _numberOfAtoms; ++i)
     {
         int k = 0;
         for(int j = i * 3; j < (i +1) * 3; ++j)
@@ -578,19 +590,19 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
     }
 
     _numberOfMo = logParser.NumberOfMO();
-    _alpha_and_beta = logParser.AlphaAndBeta();
+    _alphaAndBeta = logParser.AlphaAndBeta();
 
     _bino = bino;
         
-    _atomic_numbers = logParser.AtomicNumbers();
+    _atomicNumbers = logParser.AtomicNumbers();
     _symbol = logParser.Symbol();
-    _orbital_energy = std::vector<std::vector<double>> (2);
-    _orbital_energy[0] = logParser.AlphaEnergy();
-    _orbital_energy[1] = logParser.BetaEnergy();    
+    _orbitalEnergy = std::vector<std::vector<double>> (2);
+    _orbitalEnergy[0] = logParser.AlphaEnergy();
+    _orbitalEnergy[1] = logParser.BetaEnergy();    
     _numOrb = std::vector<int> (2,0);
-    _occupation_number = std::vector<std::vector<double>> (2);
-    _occupation_number[0] = logParser.AlphaOccupation();
-    _occupation_number[1] = logParser.BetaOccupation();
+    _occupationNumber = std::vector<std::vector<double>> (2);
+    _occupationNumber[0] = logParser.AlphaOccupation();
+    _occupationNumber[1] = logParser.BetaOccupation();
     _descriptors = Descriptors(logParser, periodicTable);
 
     std::vector<int> Ltypes = logParser.Ltypes();
@@ -615,7 +627,7 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
     std::vector<std::vector<double>> coordinatesForShells;
     std::vector<int> NatBasis = logParser.NatBasis();
 
-    for(int i = 0; i < _number_of_atoms; ++i)
+    for(int i = 0; i < _numberOfAtoms; ++i)
     {
         for(int j = 0; j < NatBasis[i]; ++j)
         {
@@ -754,29 +766,101 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
             std::vector<double> v(logParser.NumberOfBasisFunctions(), 0);
             _coefficients[0].push_back(v);
             _coefficients[1].push_back(v);
-            _occupation_number[0].push_back(0);
-            _occupation_number[1].push_back(0);
+            _occupationNumber[0].push_back(0);
+            _occupationNumber[1].push_back(0);
         }
     }
 
-    _vcgtf_non_normalise = _vcgtf;
+    _vcgtfNonNormalise = _vcgtf;
 
     for(size_t i = 0; i < _vcgtf.size(); ++i)
     {
-        _primitive_centers.push_back(_vcgtf[i].NumCenter());
+        _primitiveCenters.push_back(_vcgtf[i].NumCenter());
     }
 
     NormaliseAllBasis();
 
     for(size_t i = 0; i < _vcgtf.size(); ++i)
     {
-        _number_of_gtf += _vcgtf[i].numberOfFunctions();
+        _numberOfGtf += _vcgtf[i].numberOfFunctions();
     }
 
     _mixte = logParser.Mixte();
 }
 
 
+//----------------------------------------------------------------------------------------------------//
+// GETTERS
+//----------------------------------------------------------------------------------------------------//
+
+std::vector<CGTF> Orbitals::get_vcgtf() const
+{
+    return _vcgtf;
+}
+
+const std::vector<std::vector<std::vector<double>>>& Orbitals::get_coefficients() const
+{
+    return _coefficients;
+}
+
+int Orbitals::get_numberOfAo() const
+{
+    return _numberOfAo;
+}
+
+int Orbitals::get_numberOfMo() const
+{
+    return _numberOfMo;
+}
+
+int Orbitals::get_numberOfAtoms() const
+{
+    return _numberOfAtoms;
+}
+
+const std::vector<int>& Orbitals::get_primitiveCenters() const
+{
+    return _primitiveCenters;
+}
+
+const Structure& Orbitals::get_struct() const
+{
+    return _struct;
+}
+
+const std::vector<std::string>& Orbitals::get_symbol() const
+{
+    return _symbol;
+}
+
+const std::vector<std::vector<double>>& Orbitals::get_orbitalEnergy() const
+{
+    return _orbitalEnergy;
+}
+
+const std::vector<std::vector<double>>& Orbitals::get_occupationNumber() const
+{
+    return _occupationNumber;
+}
+
+bool Orbitals::get_alphaAndBeta() const
+{
+    return _alphaAndBeta;
+}
+
+const Descriptors& Orbitals::get_descriptors() const
+{
+    return _descriptors;
+}
+
+//----------------------------------------------------------------------------------------------------//
+// OTHER PUBLIC METHODS
+//----------------------------------------------------------------------------------------------------//
+
+int Orbitals::getPrimitiveCenter(int i) const
+{
+    return _primitiveCenters[i];
+}
 
 double Orbitals::ERIorbitals(Orbitals& q, Orbitals& r, Orbitals& s)
 {
@@ -788,7 +872,7 @@ double Orbitals::ERIorbitals(Orbitals& q, Orbitals& r, Orbitals& s)
         for(nq=0;nq<q._numberOfAo;nq++)
             for(nr=0;nr<r._numberOfAo;nr++)
                 for(ns=0;ns<s._numberOfAo;ns++)
-                    sum += _vcgtf[np].ERICGTF(q.vcgtf()[nq],r.vcgtf()[nr],s.vcgtf()[ns]); 
+                    sum += _vcgtf[np].ERICGTF(q.get_vcgtf()[nq],r.get_vcgtf()[nr],s.get_vcgtf()[ns]); 
 
     return sum;
 }
@@ -865,24 +949,46 @@ double Orbitals::kinetic()
     return sum;
 }
 
-double Orbitals::ionicPotential(int i, int j, SpinType spinType, const std::array<double, 3>& position, double Z)
+std::vector<std::vector<double>> Orbitals::ionicPotential(SpinType spinType, const std::array<double, 3>& position, double Z)
 {
     int spin = static_cast<int>(spinType);
-    double sum = 0.0;
+
+    if (_s_ionicMatrix_.size() == 0)
+    {
+        set_s_ionicMatrix_(position, Z);
+    }
+
+    std::vector<std::vector<double>> matrix = std::vector<std::vector<double>>(_numberOfMo, std::vector<double>(_numberOfMo, 0.0));
 
     #ifdef ENABLE_OMP
     #pragma omp parallel for reduction(+: sum)
     #endif
-
-    for (size_t m = 0; m < _coefficients[spin][i].size(); ++m)
+    for (int i = 0; i < _numberOfMo; ++i)
     {
-        for (size_t n = 0; n < _coefficients[spin][j].size(); ++n)
+        for (int j = 0; j <= i; ++j)
         {
-            sum += _coefficients[spin][i][m] * _coefficients[spin][j][n] * _vcgtf[m].ionicPotentialCGTF(_vcgtf[n], position, Z);
+            double sum = 0.0;
+
+            for (size_t m = 0; m < _coefficients[spin][i].size(); ++m)
+            {
+                for (size_t n = 0; n < _coefficients[spin][j].size(); ++n)
+                {
+                    if (n <= m)
+                    {
+                        sum += _coefficients[spin][i][m] * _coefficients[spin][j][n] * _s_ionicMatrix_[m][n];
+                    }
+                    else
+                    {
+                        sum += _coefficients[spin][i][m] * _coefficients[spin][j][n] * _s_ionicMatrix_[n][m];
+                    }
+                }
+            }
+
+            matrix[i][j] = sum;
         }
     }
 
-    return sum;
+    return matrix;
 }
 
 double Orbitals::OrbstarOrb()
@@ -937,7 +1043,7 @@ double Orbitals::func(double x, double y, double z) const
     double r=0.0;
     int n;
 
-    if(_alpha_and_beta)
+    if(_alphaAndBeta)
         n=1;
     else
         n=2;
@@ -965,10 +1071,10 @@ double Orbitals::func(double x, double y, double z) const
 
 void Orbitals::HOMO()
 {
-    if(_number_of_alpha_electrons>=_number_of_beta_electrons)
-        _numOrb[0] = _number_of_alpha_electrons-1;
+    if(_numberOfAlphaElectrons>=_numberOfBetaElectrons)
+        _numOrb[0] = _numberOfAlphaElectrons-1;
     else
-        _numOrb[0] = _number_of_beta_electrons-1;
+        _numOrb[0] = _numberOfBetaElectrons-1;
 }
 
 void Orbitals::LUMO()
@@ -988,14 +1094,35 @@ std::vector<std::vector<double>> Orbitals::get_S()
     int i,j;
     std::vector<std::vector<double>> S (_numberOfAo, std::vector<double> (_numberOfAo,0.0));
 
-#ifdef ENABLE_OMP
-#pragma omp parallel for private(i,j)
-#endif
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for private(i, j)
+    #endif
     for(i=0; i<_numberOfAo; i++)
+    {
         for(j=i; j<_numberOfAo; j++)
+        {
             S[i][j]=S[j][i]=_vcgtf[i].overlapCGTF(_vcgtf[j]);
+        }
+    }
 
     return S;
+}
+
+void Orbitals::set_s_ionicMatrix_(const std::array<double, 3>& position, double Z)
+{
+    _s_ionicMatrix_ = std::vector<std::vector<double>>(_numberOfAo, std::vector<double>(_numberOfAo, 0.0));
+
+    int i, j;
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for private(i, j)
+    #endif
+    for (i = 0; i < _numberOfAo; ++i)
+    {
+        for (j = 0; j < _numberOfAo; ++j)
+        {
+            _s_ionicMatrix_[i][j] = _vcgtf[i].ionicPotentialCGTF(_vcgtf[j], position, Z);
+        }
+    }
 }
 
 std::vector<double> Orbitals::get_f(int orb, int alpha)
@@ -1003,19 +1130,19 @@ std::vector<double> Orbitals::get_f(int orb, int alpha)
     int i;
     std::vector<std::vector<double>> S =get_S();
     size_t nu,xi;
-    std::vector<double> f(_number_of_atoms,0.0);
+    std::vector<double> f(_numberOfAtoms,0.0);
 
 #ifdef ENABLE_OMP
 #pragma omp parallel for private(i,nu,xi)
 #endif
-    for(i=0; i<_number_of_atoms; i++)
+    for(i=0; i<_numberOfAtoms; i++)
         for(nu=0; nu<_coefficients[alpha][orb].size(); nu++)
         {
-            if(i+1 == _primitive_centers[nu])
+            if(i+1 == _primitiveCenters[nu])
                 f[i]+=_coefficients[alpha][orb][nu]*_coefficients[alpha][orb][nu];
 
             for(xi=0; xi<_coefficients[alpha][orb].size(); xi++)
-                if(xi!=nu && i+1 == _primitive_centers[nu])
+                if(xi!=nu && i+1 == _primitiveCenters[nu])
                     f[i]+=_coefficients[alpha][orb][xi]*_coefficients[alpha][orb][nu];
         }
 
@@ -1027,20 +1154,20 @@ void Orbitals::get_f(int alpha)
     std::vector<std::vector<double>> S=get_S();
     int i;
     size_t j,nu,xi;
-    std::vector<double> V(_number_of_atoms,0.0);
+    std::vector<double> V(_numberOfAtoms,0.0);
     std::vector<std::vector<double>> f(_numOrb.size(), V);
 
-    for(i=0; i<_number_of_atoms; i++)
+    for(i=0; i<_numberOfAtoms; i++)
         for(j=0; j<_numOrb.size(); j++)
             for(nu=0; nu<_coefficients[alpha][_numOrb[j]].size(); nu++)
             {
-                if(i+1 == _primitive_centers[nu])
+                if(i+1 == _primitiveCenters[nu])
                 {
                     f[j][i]+=_coefficients[alpha][_numOrb[j]][nu]*_coefficients[alpha][_numOrb[j]][nu];
                 }
 
                 for(xi=0; xi<_coefficients[alpha][_numOrb[j]].size(); xi++)
-                    if(xi!=nu && i+1 == _primitive_centers[nu])
+                    if(xi!=nu && i+1 == _primitiveCenters[nu])
                         f[j][i]+=_coefficients[alpha][_numOrb[j]][xi]*_coefficients[alpha][_numOrb[j]][nu]*S[xi][nu];
             }
 
@@ -1088,32 +1215,55 @@ double operator*(const Orbitals& a, const std::vector<double>& coord)
     return r;
 }
 
-std::ostream& operator<<(std::ostream& flux, Orbitals& Orb)
+std::ostream& operator<<(std::ostream& stream, Orbitals& orbitals)
 {
-    flux<<scientific;
-    flux<<setprecision(10);
-    flux<<setw(20);
-    flux<<left<<setw(20)<<"Coef CGTF"<<setw(20)<<"Coef GTF"<<setw(20)<<"Exp"<<setw(5)<<"Lx"<<setw(5)<<"Ly"<<setw(5)
-    <<"Lz"<<setw(20)<<"x"<<setw(20)<<"y"<<setw(20)<<"z"<<endl;
-    for(int i=0; i<Orb.NumberOfAo(); i++)
-        flux<<left<<Orb.vcgtf()[i]<<endl;
-    int n=2;
-    if(Orb.AlphaAndBeta()) n=1;
-    for(int j=0; j<Orb.NumberOfMo(); j++)
-    for(int i=0; i<n; i++)
+    stream << std::scientific;
+    stream << std::setprecision(10);
+    stream << std::setw(20);
+    stream << std::left << std::setw(20) << "Coef CGTF"
+                   << std::setw(20) << "Coef GTF"
+                   << std::setw(20) << "Exp"
+                   << std::setw(5)  << "Lx"
+                   << std::setw(5)  << "Ly"
+                   << std::setw(5)  << "Lz"
+                   << std::setw(20) << "x"
+                   << std::setw(20) << "y"
+                   << std::setw(20) << "z" << std::endl;
+    
+    for(int i = 0; i < orbitals.get_numberOfAo(); ++i)
     {
-        if(i==0) flux<<"Alpha, Occ= "<<Orb._occupation_number[i][j]<<" num= " <<j<<endl;
-        else flux<<"Beta, Occ= "<<Orb._occupation_number[i][j]<<" num= "<<j<<endl;
-            for(size_t k=0; k<Orb._vcgtf.size(); k++)
-            flux<<" "<<left<<k<<" "<<Orb.coefficients()[i][j][k]<<endl;
+        stream << std::left << orbitals.get_vcgtf()[i] << std::endl;
     }
 
-    return flux;
+    int n = 2;
+    if(orbitals._alphaAndBeta)
+    {
+        n = 1;
+    }
+
+    for(int j = 0; j < orbitals.get_numberOfMo(); ++j)
+    {
+        for(int i = 0; i < n; ++i)
+        {
+            if(i == 0)
+            {
+                stream << "Alpha, Occ= " << orbitals._occupationNumber[i][j] << " num= " << j << std::endl;
+            }
+            else
+            {
+                stream << "Beta, Occ= " << orbitals._occupationNumber[i][j] << " num= " << j << std::endl;
+            }
+
+            for(size_t k = 0; k < orbitals._vcgtf.size(); ++k)
+            {
+                stream << ' ' << std::left << k << ' ' << orbitals.get_coefficients()[i][j][k] << std::endl;
+            }
+        }
+    }
+
+    return stream;
 }
-Structure Orbitals::get_struct()
-{
-    return _struct;
-}
+
 Grid Orbitals::makeGrid(const Domain& d)
 {
     Grid g;
@@ -1139,7 +1289,7 @@ Grid Orbitals::makeGrid(const Domain& d)
 double Orbitals::density(double x, double y, double z)
 {
     double rho = 0.0;
-    int n = AlphaAndBeta() ? 1 : 2;
+    int n = _alphaAndBeta ? 1 : 2;
 
     std::vector<double> v(_vcgtf.size());
     for(size_t k = 0; k < _vcgtf.size(); ++k)
@@ -1147,11 +1297,11 @@ double Orbitals::density(double x, double y, double z)
         v[k] = _vcgtf[k].func(x,y,z);
     }
 
-    for(int j = 0; j < NumberOfMo(); ++j)
+    for(int j = 0; j < get_numberOfMo(); ++j)
     {
         for(int i = 0; i < n; ++i)
         {
-            if(OccupationNumber()[i][j] > 1e-10)
+            if(get_occupationNumber()[i][j] > 1e-10)
             {
                 double phi = 0;
                 
@@ -1160,7 +1310,7 @@ double Orbitals::density(double x, double y, double z)
                     phi += _coefficients[i][j][k] * v[k];
                 }
 
-                rho += OccupationNumber()[i][j] * phi * phi;
+                rho += get_occupationNumber()[i][j] * phi * phi;
             }
         }
     }
@@ -1226,12 +1376,7 @@ double Orbitals::ELF(const double& x, const double& y, const double& z, double e
     double rho = 0.0;
     double sphi = 0.0;
     double cf = 3.0 / 10.0 * std::pow(3 * M_PI * M_PI, 2.0 / 3);
-    int n;
-
-    if(AlphaAndBeta())
-        n=1;
-    else
-        n=2;
+    int n = _alphaAndBeta ? 1 : 2;
 
     std::vector<double> v(_vcgtf.size());
         for(size_t k=0; k<_vcgtf.size(); k++)
@@ -1246,23 +1391,23 @@ double Orbitals::ELF(const double& x, const double& y, const double& z, double e
     }
 
     double v1[3]={0,0,0};
-    for(int j=0; j<NumberOfMo(); j++)
+    for(int j=0; j<get_numberOfMo(); j++)
     for(int i=0; i<n; i++)
     {
-        if(OccupationNumber()[i][j]>1e-10)
+        if(get_occupationNumber()[i][j]>1e-10)
         {
             double phi=0;
                 for(size_t k=0; k<_vcgtf.size(); k++)
                 phi += _coefficients[i][j][k]*v[k];
-            rho+=OccupationNumber()[i][j] * phi*phi;
+            rho+=get_occupationNumber()[i][j] * phi*phi;
 
             for(int c=0;c<3;c++)
             {
                 double dp=0;
                 for(size_t k=0; k<_vcgtf.size(); k++)
                     dp += _coefficients[i][j][k]*vg[c][k];
-                sphi += OccupationNumber()[i][j] * dp*dp;
-                v1[c] += OccupationNumber()[i][j] * phi*dp;
+                sphi += get_occupationNumber()[i][j] * dp*dp;
+                v1[c] += get_occupationNumber()[i][j] * phi*dp;
             }
         }
     }

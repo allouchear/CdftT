@@ -739,12 +739,12 @@ double Becke::CGTFstarCGTF(Orbitals& Orb, int i, int j, double x, double y ,doub
 
     if(i==j)
     {
-        c=Orb.vcgtf()[i].func(x,y,z);
+        c=Orb.get_vcgtf()[i].func(x,y,z);
         return c*c;
     }
 
     else
-        c=Orb.vcgtf()[i].func(x,y,z)*Orb.vcgtf()[j].func(x,y,z);
+        c=Orb.get_vcgtf()[i].func(x,y,z)*Orb.get_vcgtf()[j].func(x,y,z);
 
     return c;
 }
@@ -753,8 +753,8 @@ double Becke::phi(Orbitals& Orb, int i, double x, double y, double z, int alpha)
 {
     double phi=0.0;
     
-    for(size_t j=0; j<Orb.vcgtf().size(); j++)
-        phi+=Orb.coefficients()[alpha][i][j]*Orb.vcgtf()[i].func(x,y,z);
+    for(size_t j=0; j<Orb.get_vcgtf().size(); j++)
+        phi+=Orb.get_coefficients()[alpha][i][j]*Orb.get_vcgtf()[i].func(x,y,z);
 
     return phi;
 }
@@ -765,8 +765,8 @@ double Becke::phistarphi(Orbitals& Orb, int i, int j, double x, double y, double
     {
         double phi=0.0;
 
-        for(size_t k=0; k<Orb.vcgtf().size(); k++)
-            phi+=Orb.coefficients()[alpha][i][k]*Orb.vcgtf()[k].func(x,y,z);
+        for(size_t k=0; k<Orb.get_vcgtf().size(); k++)
+            phi+=Orb.get_coefficients()[alpha][i][k]*Orb.get_vcgtf()[k].func(x,y,z);
         
         return phi*phi;
     }
@@ -774,10 +774,10 @@ double Becke::phistarphi(Orbitals& Orb, int i, int j, double x, double y, double
     double phii=0.0;
     double phij=0.0;
 
-    for(size_t k=0; k<Orb.vcgtf().size(); k++)
+    for(size_t k=0; k<Orb.get_vcgtf().size(); k++)
     {
-        phii+=Orb.coefficients()[alpha][i][k]*Orb.vcgtf()[k].func(x,y,z);
-        phij+=Orb.coefficients()[alpha][j][k]*Orb.vcgtf()[k].func(x,y,z);
+        phii+=Orb.get_coefficients()[alpha][i][k]*Orb.get_vcgtf()[k].func(x,y,z);
+        phij+=Orb.get_coefficients()[alpha][j][k]*Orb.get_vcgtf()[k].func(x,y,z);
     }
 
     return phii*phij;

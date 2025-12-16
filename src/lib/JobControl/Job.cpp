@@ -835,11 +835,11 @@ void Job::setAllOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbita
         orbnums[i] = i;
     }
 
-    if (!o.AlphaAndBeta() and spinType == SpinType::ALPHA)
+    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
     {
         orbspin.resize(N, 0);
     }
-    else if (!o.AlphaAndBeta() and spinType == SpinType::ALPHA_BETA)
+    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
         orbspin.resize(N, 0);
         orbnums.resize(2 * N, 1);
@@ -855,8 +855,8 @@ void Job::setAllOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbita
 }
 void Job::setOccOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType, const int& N)
 {
-    std::vector<std::vector<double>> occ=o.OccupationNumber();
-    if (!o.AlphaAndBeta() and spinType == SpinType::ALPHA) 
+    std::vector<std::vector<double>> occ=o.get_occupationNumber();
+    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA) 
     {
         int k = 0;
         for(int i = 0; i < N; ++i)
@@ -870,7 +870,7 @@ void Job::setOccOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbita
         orbnums.resize(k);
         orbspin.resize(k, 0);
     }
-    else if (!o.AlphaAndBeta() and spinType == SpinType::ALPHA_BETA) 
+    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
         int k = 0;
         orbnums.resize(2 * N, 0);
@@ -913,8 +913,8 @@ void Job::setOccOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbita
 }
 void Job::setVirtOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType, const int& N)
 {
-    std::vector<std::vector<double>> occ=o.OccupationNumber();
-    if (!o.AlphaAndBeta() and spinType == SpinType::ALPHA)
+    std::vector<std::vector<double>> occ=o.get_occupationNumber();
+    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
     {
         int k = 0;
         for(int i = 0; i < N; ++i)
@@ -928,7 +928,7 @@ void Job::setVirtOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbit
         orbnums.resize(k);
         orbspin.resize(k, 0);
     }
-    else if (!o.AlphaAndBeta() and spinType == SpinType::ALPHA_BETA) 
+    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
         int k = 0;
         orbnums.resize(2 * N, 0);
@@ -971,8 +971,8 @@ void Job::setVirtOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbit
 void Job::setHomo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType)
 {
     int i = 0;
-    std::vector<std::vector<double>> occ = o.OccupationNumber();
-    if (!o.AlphaAndBeta() and spinType == SpinType::ALPHA)
+    std::vector<std::vector<double>> occ = o.get_occupationNumber();
+    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
     {
         while(occ[0][i] > 1e-10)
         {
@@ -981,7 +981,7 @@ void Job::setHomo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals
         orbnums = {i - 1};
         orbspin = {0};
     }
-    else if (!o.AlphaAndBeta() and spinType == SpinType::ALPHA_BETA)
+    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
         int j = 0;
         while(occ[0][i] > 1e-10)
@@ -1009,8 +1009,8 @@ void Job::setHomo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals
 void Job::setLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType)
 {
     int i = 0;
-    std::vector<std::vector<double>> occ = o.OccupationNumber();
-    if (!o.AlphaAndBeta() and spinType == SpinType::ALPHA)
+    std::vector<std::vector<double>> occ = o.get_occupationNumber();
+    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
     {
         while(occ[0][i] > 1e-10)
         {
@@ -1019,7 +1019,7 @@ void Job::setLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals
         orbnums = {i};
         orbspin = {0};
     }
-    else if (!o.AlphaAndBeta() and spinType == SpinType::ALPHA_BETA)
+    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
         int j = 0;
         while(occ[0][i] > 1e-10)
@@ -1047,8 +1047,8 @@ void Job::setLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals
 void Job::setHomoLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType) 
 {
     int i = 0;
-    std::vector<std::vector<double>> occ = o.OccupationNumber();
-    if (!o.AlphaAndBeta() and spinType == SpinType::BETA)
+    std::vector<std::vector<double>> occ = o.get_occupationNumber();
+    if (!o.get_alphaAndBeta() and spinType == SpinType::BETA)
     {
         while(occ[0][i] > 1e-10)
         {
@@ -1057,7 +1057,7 @@ void Job::setHomoLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbi
         orbnums = {i - 1, i};
         orbspin = {0, 0};
     }
-    else if (!o.AlphaAndBeta() and spinType == SpinType::ALPHA_BETA)
+    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
         int j = 0;
         while(occ[0][i] > 1e-10)
@@ -1406,9 +1406,9 @@ void Job::run_computeEnergyWithPointCharge()
                 {
                     if (slaterDeterminants_i[m] == slaterDeterminants_j[n])
                     {
-                        for (int p = 0; p < orbitals.NumberOfMo(); ++p)
+                        for (int p = 0; p < orbitals.get_numberOfMo(); ++p)
                         {
-                            for (int q = 0; q < orbitals.NumberOfMo(); ++q)
+                            for (int q = 0; q < orbitals.get_numberOfMo(); ++q)
                             {
                                 if (p == q)
                                 {
@@ -1628,7 +1628,7 @@ void Job::run_lambdaDiagnostic()
 
 
     // Setting orbitals
-    int numberOfOrbitals = orbitals.NumberOfMo();
+    int numberOfOrbitals = orbitals.get_numberOfMo();
     std::vector<int> orbitalsSpins;
     std::vector<int> orbitalsNumbers;
 
@@ -1780,7 +1780,7 @@ void Job::run_makeOrbitalsCube()
 
 
     // Setting orbitals
-    int numberOfOrbitals = o.NumberOfMo();
+    int numberOfOrbitals = o.get_numberOfMo();
     std::vector<int> orbitalsSpins;
     std::vector<int> orbitalsNumbers;
     std::vector<SpinType> spinList;

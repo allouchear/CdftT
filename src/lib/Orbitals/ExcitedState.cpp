@@ -42,7 +42,7 @@ const std::vector<SlaterDeterminant>& ExcitedState::get_slaterDeterminants() con
 
 
 //----------------------------------------------------------------------------------------------------//
-// PUBLIC METHODS
+// OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
 int ExcitedState::getNumberOfTransitions() const
@@ -148,7 +148,7 @@ void ExcitedState::printLambdaDiagnostic(const Grid& grid) const
 
 
 //----------------------------------------------------------------------------------------------------//
-// STATIC FUNCTIONS
+// STATIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
 void ExcitedState::readTransitionsFile(std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates)
@@ -288,7 +288,7 @@ void ExcitedState::readTransitionsFile(std::string& transitionsFileName, std::ve
 
 
 //----------------------------------------------------------------------------------------------------//
-// FRIEND FUNCTIONS
+// OPERATOR OVERLOADS
 //----------------------------------------------------------------------------------------------------//
 
 std::ostream& operator<<(std::ostream& stream, const ExcitedState& excitedState)

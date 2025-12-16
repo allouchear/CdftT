@@ -6,6 +6,17 @@
 #include <Orbitals/SlaterDeterminant.hpp>
 
 
+//----------------------------------------------------------------------------------------------------//
+// STATIC FIELDS
+//----------------------------------------------------------------------------------------------------//
+
+bool SlaterDeterminant::_s_isOrbitalsSet_ = false;
+Orbitals SlaterDeterminant::_s_orbitals_ = Orbitals();
+
+//----------------------------------------------------------------------------------------------------//
+// CONSTRUCTORS
+//----------------------------------------------------------------------------------------------------//
+
 SlaterDeterminant::SlaterDeterminant():
     _alphaOccupation(),
     _betaOccupation()
@@ -16,11 +27,17 @@ SlaterDeterminant::SlaterDeterminant(const Orbitals& orbitals):
     _alphaOccupation(),
     _betaOccupation()
 {
+    if (!_s_isOrbitalsSet_)
+    {
+        _s_orbitals_ = orbitals;
+        _s_isOrbitalsSet_ = true;
+    }
+
     // Get occupation numbers
-    const std::vector<std::vector<double>>& occupationNumbers = orbitals.OccupationNumber();
+    const std::vector<std::vector<double>>& occupationNumbers = orbitals.get_occupationNumber();
 
     // Populate the occupied orbitals and their occupation numbers based on the orbitals object
-    for (int i = 0; i < orbitals.NumberOfMo(); ++i)
+    for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
     {
         // Alpha spin
         if (occupationNumbers[0][i] == 1)
@@ -93,7 +110,29 @@ void SlaterDeterminant::updateFromTransition(int initialOrbitalNumber, SpinType 
 
 
 //----------------------------------------------------------------------------------------------------//
-// FRIEND FUNCTIONS
+// STATIC METHODS
+//----------------------------------------------------------------------------------------------------//
+
+double SlaterDeterminant::ionicPotentialSlaterDeterminant(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::vector<std::vector<double>>& ionicMatrix)
+{
+    double matrixElement = 0.0;
+
+    // Apply Slater-Condon rules
+    if (di == dj)
+    {
+
+    }
+    else
+    {
+
+    }
+
+    return matrixElement;
+}
+
+
+//----------------------------------------------------------------------------------------------------//
+// OPERATOR OVERLOADS
 //----------------------------------------------------------------------------------------------------//
 
 bool operator==(const SlaterDeterminant& lhs, const SlaterDeterminant& rhs)

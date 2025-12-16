@@ -25,28 +25,38 @@ class Orbitals
         std::vector<std::vector<std::vector<double>>> _coefficients;
         int _numberOfAo;
         int _numberOfMo;
-        int _number_of_alpha_electrons;
-        int _number_of_beta_electrons;
-        int _number_of_atoms;
-        std::vector<int> _primitive_centers;
+        int _numberOfAlphaElectrons;
+        int _numberOfBetaElectrons;
+        int _numberOfAtoms;
+        std::vector<int> _primitiveCenters;
         Structure _struct;
-        std::vector<int> _atomic_numbers;
+        std::vector<int> _atomicNumbers;
         std::vector<std::string> _symbol;
-        std::vector<std::vector<double>> _orbital_energy;
+        std::vector<std::vector<double>> _orbitalEnergy;
         std::vector<std::vector<double>> _all_f;
         std::vector<int> _numOrb;
-        std::vector<std::vector<double>> _occupation_number;
-        bool _alpha_and_beta;
+        std::vector<std::vector<double>> _occupationNumber;
+        bool _alphaAndBeta;
         Binomial _bino;
         Descriptors _descriptors;
-        std::vector<CGTF> _vcgtf_non_normalise;
-        int _number_of_gtf;
+        std::vector<CGTF> _vcgtfNonNormalise;
+        int _numberOfGtf;
         double _energy;
         std::vector<double> _coordinates;
         bool _mixte;
 
+        
+        //----------------------------------------------------------------------------------------------------//
+        // STATIC FIELDS
+        //----------------------------------------------------------------------------------------------------//
+
+        static std::vector<std::vector<double>> _s_ionicMatrix_;
+
 
     public:
+        //----------------------------------------------------------------------------------------------------//
+        // CONSTRUCTORS
+        //----------------------------------------------------------------------------------------------------//
 
             //! A default constructor.
             /*! This constructor is used to set all of the parameters for Orbitals on 0 or "None" value. */
@@ -68,51 +78,81 @@ class Orbitals
             /*! This constructor is used to add all of the parameters for Orbitals with the data in .log file. */
         Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodicTable);
 
-            //! A default desctructor.
-            /*! We don't use it. */
-        ~Orbitals() {}
 
-        //! A normal member taking no arguments and returning a std::vector<CGTF> value.
-        /*! \return The table of CGTF which compose the Orbitals. */
-        std::vector<CGTF>& vcgtf() {return _vcgtf;}
+        //----------------------------------------------------------------------------------------------------//
+        // GETTERS
+        //----------------------------------------------------------------------------------------------------//
 
-            //! A normal member taking no arguments and returning a std::vector<std::vector<std::vector<double>>> value.
-            /*! [spinType][nMO][mCGTF]
-             * \return The table of coefficients of all spin-orbitals which compose the Orbitals. */
-        std::vector<std::vector<std::vector<double>>>& coefficients() {return _coefficients;}
+        /**
+         * @brief Returns the table of CGTF which compose the Orbitals.
+         */
+        std::vector<CGTF> get_vcgtf() const;
 
-            //! A normal member taking no arguments and returning a std::vector<std::vector<double>> value.
-            /*! \return The table of molecular orbital energy which compose the Orbitals. */
-        std::vector<std::vector<double>>& Energy()  {return _orbital_energy;}
+        /**
+         * @brief Returns the table of coefficients of all spin-orbitals which compose the Orbitals.
+         */
+        const std::vector<std::vector<std::vector<double>>>& get_coefficients() const;
 
-            //! A normal member taking no arguments and returning an int value.
-            /*! \return The number of atomic orbitals in the Orbitals. */
-        int NumberOfAo() const {return _numberOfAo;}
+        /**
+         * @brief Returns the number of atomic orbitals.
+         */
+        int get_numberOfAo() const;
 
-            //! A normal member taking no arguments and returning an int value.
-            /*! \return The number of molecular orbitals in the Orbitals. */
-        int NumberOfMo() const {return _numberOfMo;}
+        /**
+         * @brief Returns the number of molecular orbitals.
+         */
+        int get_numberOfMo() const;
 
-            //! A normal member taking no arguments and returning an int value.
-            /*! \return The number of atoms. */
-        int NumberOfAtoms() const {return _number_of_atoms;} 
+        /**
+         * @brief Returns the number of atoms.
+         */
+        int get_numberOfAtoms() const;
 
-            //! A normal member taking one argument and returning an int value.
-            /*! \return The primitive center. */
-        int PrimitiveCenter(int i) const {return _primitive_centers[i];}
+        /**
+         * @brief Returns the table of primitive centers.
+         */
+        const std::vector<int>& get_primitiveCenters() const;
 
-            //! A normal member taking no arguments and returning a std::vector<int> value.
-            /*! \return The table of primitive centers. */
-        std::vector<int> PrimitiveCenters() const {return _primitive_centers;}
+        /**
+         * @brief Returns the Structure associated with the Orbitals.
+         */
+        const Structure& get_struct() const;
 
-            //! A normal member taking no arguments and returning a std::vector<std::string> value.
-            /*! \return The table of symbol of atoms. */
-        std::vector<std::string> symbol() const {return _symbol;}
+        /**
+         * @brief Returns the table of atoms' symbols.
+         */
+        const std::vector<std::string>& get_symbol() const;
 
-            //! A normal member taking no arguments and returning a boolean value.
-            /*! \return If alpha and beta are separed in the file or not (true for yes, false for no). */
-        bool alphaAndBeta() const {return _alpha_and_beta;}
+        /**
+         * @brief Returns the table of molecular orbital's energy.
+         */
+        const std::vector<std::vector<double>>& get_orbitalEnergy() const;
 
+        /**
+         * @brief Returns the table of occupation numbers.
+         */
+        const std::vector<std::vector<double>>& get_occupationNumber() const;
+
+        /**
+         * @brief Returns false if alpha and beta spins are treated separately.
+         */
+        bool get_alphaAndBeta() const;
+
+        /**
+         * @brief Returns the Descriptors object associated with the Orbitals.
+         */
+        const Descriptors& get_descriptors() const;
+
+
+        //----------------------------------------------------------------------------------------------------//
+        // OTHER PUBLIC METHODS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Returns the i-th primitive center.
+         */
+        int getPrimitiveCenter(int i) const;
+        
             //! A normal member taking no arguments and returning a void value.
             /*! Normalise all the CGTF which compose the Orbitals. */
         void NormaliseAllBasis();
@@ -144,16 +184,14 @@ class Orbitals
         /**
          * @brief Calculates the ion-electron integral for a given ion : < phi_i | V_ion | phi_j >
          *
-         * @param[in] i The number of the left orbital.
-         * @param[in] j The number of the right orbital.
-         * @param[in] spinType The spin type of the orbitals.
          * @param[in] position The position of the ion.
          * @param[in] Z The charge of the ion.
+         * @return The matrix < phi_i | V_ion | phi_j >
          */
-        double ionicPotential(int i, int j, SpinType spinType, const std::array<double, 3>& position, double Z);
+        std::vector<std::vector<double>> ionicPotential(SpinType spinType, const std::array<double, 3>& position, double Z);
 
-            //! A normal member taking no arguments and returning a double value.
-            /*! \return The value of the integral of Orbitals * Orbitals. */
+        //! A normal member taking no arguments and returning a double value.
+        /*! \return The value of the integral of Orbitals * Orbitals. */
         double OrbstarOrb();
 
             //! A normal member taking three arguments and returning a double value.
@@ -179,18 +217,27 @@ class Orbitals
 
             //! A normal member taking no arguments and returning a double value.
             /*! \return The HOMO's energy. */
-        double eHOMO(int alpha=0) const {return _orbital_energy[alpha][_numOrb[0]];}
+        double eHOMO(int alpha=0) const {return _orbitalEnergy[alpha][_numOrb[0]];}
 
             //! A normal member taking no arguments and returning a double value.
             /*! \return The LUMO's energy. */
-        double eLUMO(int alpha=0) const {return _orbital_energy[alpha][_numOrb[1]];}
+        double eLUMO(int alpha=0) const {return _orbitalEnergy[alpha][_numOrb[1]];}
 
             //! A normal member taking no arguments and returning a std::vector<std::vector<double>> value.
             /*! \return The matrix of overlaps. */
         std::vector<std::vector<double>> get_S();
 
-            //! A normal member taking no arguments and returning a std::vector<double> value.
-            /*! \return The table of f value. */
+        /**
+         * @brief Returns the matrix < xi_i | Z / (r - position) | xi_j >.
+         *
+         * @param[in] position The position of the ion.
+         * @param[in] Z The charge of the ion.
+         * @return The matrix < xi_i | Z / (r - position) | xi_j >.
+         */
+        void set_s_ionicMatrix_(const std::array<double, 3>& position, double Z);
+
+        //! A normal member taking no arguments and returning a std::vector<double> value.
+        /*! \return The table of f value. */
         std::vector<double> get_f(int orb, int alpha=0);
 
             //! A normal member taking one argument and returning a void value.
@@ -214,27 +261,8 @@ class Orbitals
              *  Print all the descriptors with the FMO method. */
         void PrintDescriptors(int i, int j);
 
-            //! A normal member taking no arguments and returning a std::vector<std::vector<double>> value.
-            /*! OccNum[spinType][nMO]
-             *  \return The table of occupation number. */
-        const std::vector<std::vector<double>>& OccupationNumber() const {return _occupation_number;}
 
-            //! A normal member taking no arguments and returning a Descriptors value.
-            /*! \return the Descriptors object. */
-        Descriptors Descripteurs() {return _descriptors;}
-
-            //! A normal member taking no arguments and returning a boolean value.
-            /*! \return If alpha and beta are separed in the file or not (true for yes, false for no). */
-        bool AlphaAndBeta() {return _alpha_and_beta;}
-
-            //! An operator member taking two arguments and returning an std::ostream value.
-            /*! Print all the data of the Orbitals */
-        friend std::ostream& operator<<(std::ostream&, Orbitals&);
-
-
-            //! get function
-            /*! returns the structure attribute*/
-        Structure get_struct();
+        
             //! Make a grid of electronic density
             /*! creates a grid of electronic density. Values are calculated with Orbitals::density(x, y, z)*/
         Grid makeGrid(const Domain& d);
@@ -285,6 +313,22 @@ class Orbitals
             //! A normal member taking one argument and returning a void value.
             /*! Save all the data in Orbitals in a file .gab. */
         void Save_gab(std::string& tag);
+
+
+        //----------------------------------------------------------------------------------------------------//
+        // OPERATOR OVERLOADS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Overloads the output stream redirection operator for an Orbitals.
+         *
+         * Prints all the data of the Orbitals object.
+         *
+         * @param stream Output stream.
+         * @param orbitals Orbitals to print.
+         * @return Reference to the output stream.
+         */
+        friend std::ostream& operator<<(std::ostream& stream, Orbitals& orbitals);
 };
 
     //! An operator member taking two arguments and returning a double value.

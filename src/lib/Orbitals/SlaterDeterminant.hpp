@@ -19,6 +19,17 @@ class SlaterDeterminant
         /** @brief Occupied orbitals and their occupation numbers for the beta spin. */
         std::vector<std::pair<int, double>> _betaOccupation;
 
+        
+        //----------------------------------------------------------------------------------------------------//
+        // STATIC FIELDS
+        //----------------------------------------------------------------------------------------------------//
+
+        /** @brief Static Orbitals instance shared among all SlaterDeterminant objects. */
+        static Orbitals _s_orbitals_;
+
+        /** @brief Flag indicating whether the static Orbitals instance has been set. */
+        static bool _s_isOrbitalsSet_;
+
 
     public:
         //----------------------------------------------------------------------------------------------------//
@@ -56,7 +67,21 @@ class SlaterDeterminant
 
 
         //----------------------------------------------------------------------------------------------------//
-        // FRIEND FUNCTIONS
+        // STATIC METHODS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Computes the ionic potential matrix element between two Slater determinants.
+         * 
+         * @param di First Slater determinant.
+         * @param dj Second Slater determinant.
+         * @param ionicMatrix Precomputed ionic potential matrix.
+         * @return The ionic potential matrix element < Di | V_ion | Dj >.
+         */
+        static double ionicPotentialSlaterDeterminant(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::vector<std::vector<double>>& ionicMatrix);
+
+        //----------------------------------------------------------------------------------------------------//
+        // OPERATOR OVERLOADS
         //----------------------------------------------------------------------------------------------------//
 
         /**

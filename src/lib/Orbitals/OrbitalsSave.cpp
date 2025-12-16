@@ -37,11 +37,11 @@ void Orbitals::Save_wfx(string& tag)
     s<<"</Keywords>"<<endl;
 
     s<<"<Number of Nuclei>"<<endl;
-    s<<" "<<_number_of_atoms<<endl;
+    s<<" "<<_numberOfAtoms<<endl;
     s<<"</Number of Nuclei>"<<endl;
 
     s<<"<Number of Occupied Molecular Orbitals>"<<endl;
-    if(!_alpha_and_beta)
+    if(!_alphaAndBeta)
         nMO=_numberOfMo*2;
     else
         nMO=_numberOfMo;
@@ -57,34 +57,34 @@ void Orbitals::Save_wfx(string& tag)
     s<<"</Net Charge>"<<endl;
 
     s<<"<Number of Electrons>"<<endl;
-    s<<" "<<_number_of_alpha_electrons+_number_of_beta_electrons<<endl;
+    s<<" "<<_numberOfAlphaElectrons+_numberOfBetaElectrons<<endl;
     s<<"</Number of Electrons>"<<endl;
 
     s<<"<Number of Alpha Electrons>"<<endl;
-    s<<" "<<_number_of_alpha_electrons<<endl;
+    s<<" "<<_numberOfAlphaElectrons<<endl;
     s<<"</Number of Alpha Electrons>"<<endl;
 
     s<<"<Number of Beta Electrons>"<<endl;
-    s<<" "<<_number_of_beta_electrons<<endl;
+    s<<" "<<_numberOfBetaElectrons<<endl;
     s<<"</Number of Beta Electrons>"<<endl;
 
     s<<"<Nuclear Names>"<<endl;
-    for(int i=0; i<_number_of_atoms; i++)
+    for(int i=0; i<_numberOfAtoms; i++)
         s<<" "<<_symbol[i]<<i+1<<endl;
     s<<"</Nuclear Names>"<<endl;
 
     s<<"<Atomic Numbers>"<<endl;
-    for(int i=0; i<_number_of_atoms; i++)
-        s<<" "<<_atomic_numbers[i]<<endl;
+    for(int i=0; i<_numberOfAtoms; i++)
+        s<<" "<<_atomicNumbers[i]<<endl;
     s<<"</Atomic Numbers>"<<endl;    
 
     s<<"<Nuclear Charges>"<<endl;
-    for(int i=0; i<_number_of_atoms; i++)
-        s<<right<<scientific<<setprecision(12)<<" "<<setw(20)<<double(_atomic_numbers[i])<<endl;
+    for(int i=0; i<_numberOfAtoms; i++)
+        s<<right<<scientific<<setprecision(12)<<" "<<setw(20)<<double(_atomicNumbers[i])<<endl;
     s<<"</Nuclear Charges>"<<endl;
 
     s<<"<Nuclear Cartesian Coordinates>"<<endl;
-    for(int i=0; i<_number_of_atoms; i++)
+    for(int i=0; i<_numberOfAtoms; i++)
     {
         for(int j=i*3; j<(i+1)*3; j++)
             s<<right<<scientific<<setprecision(12)<<" "<<setw(20)<<_coordinates[j];
@@ -93,15 +93,15 @@ void Orbitals::Save_wfx(string& tag)
     s<<"</Nuclear Cartesian Coordinates>"<<endl;
 
     s<<"<Number of Primitives>"<<endl;
-    s<<" "<<_number_of_gtf<<endl;
+    s<<" "<<_numberOfGtf<<endl;
     s<<"</Number of Primitives>"<<endl;
 
     s<<"<Primitive Centers>"<<endl;
 
-    if(int(_vcgtf_non_normalise.size())==_number_of_gtf)
-        for(int i=0; i<_number_of_gtf; i++)
+    if(int(_vcgtfNonNormalise.size())==_numberOfGtf)
+        for(int i=0; i<_numberOfGtf; i++)
         {
-            s<<"\t"<<_primitive_centers[i];
+            s<<"\t"<<_primitiveCenters[i];
             if((i+1)%5==0)
                 s<<endl;
         }
@@ -112,7 +112,7 @@ void Orbitals::Save_wfx(string& tag)
             for(int j=0; j<_vcgtf[i].numberOfFunctions(); j++)
                 pc.push_back(_vcgtf[i].NumCenter());
 
-        for(int i=0; i<_number_of_gtf; i++)
+        for(int i=0; i<_numberOfGtf; i++)
         {
             s<<"\t"<<pc[i];
             if((i+1)%5==0)
@@ -150,7 +150,7 @@ void Orbitals::Save_wfx(string& tag)
 
     int m;
 
-    if(_alpha_and_beta)
+    if(_alphaAndBeta)
         m=1;
     else
         m=2;
@@ -158,13 +158,13 @@ void Orbitals::Save_wfx(string& tag)
     s<<"<Molecular Orbital Occupation Numbers>"<<endl;
     for(int i=0; i<m; i++)
         for(int j=0; j<_numberOfMo; j++)
-            s<<" "<<_occupation_number[i][j]<<endl;
+            s<<" "<<_occupationNumber[i][j]<<endl;
     s<<"</Molecular Orbital Occupation Numbers>"<<endl;
 
     s<<"<Molecular Orbital Energies>"<<endl;
     for(int i=0; i<m; i++)
-        for(size_t j=0; j<_orbital_energy[i].size(); j++)
-            s<<right<<scientific<<setprecision(12)<<" "<<setw(20)<<_orbital_energy[i][j]<<endl;
+        for(size_t j=0; j<_orbitalEnergy[i].size(); j++)
+            s<<right<<scientific<<setprecision(12)<<" "<<setw(20)<<_orbitalEnergy[i][j]<<endl;
     s<<"</Molecular Orbital Energies>"<<endl;
 
     s<<"<Molecular Orbital Spin Types>"<<endl;
@@ -173,9 +173,9 @@ void Orbitals::Save_wfx(string& tag)
             s<<" "<<"Alpha and Beta"<<endl;
     else
     {
-        for(size_t i=0; i<_orbital_energy[0].size(); i++)
+        for(size_t i=0; i<_orbitalEnergy[0].size(); i++)
             s<<" "<<"Alpha"<<endl;
-        for(size_t i=0; i<_orbital_energy[1].size(); i++)
+        for(size_t i=0; i<_orbitalEnergy[1].size(); i++)
             s<<" "<<"Beta"<<endl;
     }
     s<<"</Molecular Orbital Spin Types>"<<endl;
@@ -218,7 +218,7 @@ void Orbitals::Save_wfx(string& tag)
                                                             // Moldengab faire attention au format sphe/cart !!!!
 void Orbitals::Save_molden(string& tag)    
 {
-    if(int(_vcgtf_non_normalise.size())==_number_of_gtf)
+    if(int(_vcgtfNonNormalise.size())==_numberOfGtf)
     {
         cout<<"This option is nnot implemente."<<endl;
         return;
@@ -230,9 +230,9 @@ void Orbitals::Save_molden(string& tag)
     s<<"[Molden Format]"<<endl;
 
     s<<"[Atoms] AU"<<endl;
-    for(int i=0; i<_number_of_atoms; i++)
+    for(int i=0; i<_numberOfAtoms; i++)
     {
-        s<<_symbol[i]<<" "<<i+1<<" "<<_atomic_numbers[i];
+        s<<_symbol[i]<<" "<<i+1<<" "<<_atomicNumbers[i];
         for(int j=i*3; j<(i+1)*3; j++)
             s<<std::fixed<<setprecision(6)<<right<<"  "<<setw(10)<<_coordinates[j];
         s<<endl;
@@ -242,21 +242,21 @@ void Orbitals::Save_molden(string& tag)
     
     bool d=false, f=false, g=false;
 
-    for(size_t i=0; i<_vcgtf_non_normalise.size(); i++)
+    for(size_t i=0; i<_vcgtfNonNormalise.size(); i++)
     {
-        if(_vcgtf_non_normalise[i].Lformat()=="Sphe")
+        if(_vcgtfNonNormalise[i].Lformat()=="Sphe")
         {
-            if((_vcgtf_non_normalise[i].Ltype()=="D" || _vcgtf_non_normalise[i].Ltype()=="d") && !d)
+            if((_vcgtfNonNormalise[i].Ltype()=="D" || _vcgtfNonNormalise[i].Ltype()=="d") && !d)
             {
                 s<<"[5D] ";
                 d=true;
             }
-            else if((_vcgtf_non_normalise[i].Ltype()=="F" || _vcgtf_non_normalise[i].Ltype()=="f") &&!f)
+            else if((_vcgtfNonNormalise[i].Ltype()=="F" || _vcgtfNonNormalise[i].Ltype()=="f") &&!f)
             {
                 s<<"[7F] ";
                 f=true;
             }
-            else if((_vcgtf_non_normalise[i].Ltype()=="G" || _vcgtf_non_normalise[i].Ltype()=="d") && !g)
+            else if((_vcgtfNonNormalise[i].Ltype()=="G" || _vcgtfNonNormalise[i].Ltype()=="d") && !g)
             {
                 s<<"[9G] ";
                 g=true;
@@ -269,61 +269,61 @@ void Orbitals::Save_molden(string& tag)
     int lt,q,m,k=0;
     double save_alpha;
 
-    for(int i=0; i<_number_of_atoms; i++)
+    for(int i=0; i<_numberOfAtoms; i++)
     {
-        s<<"\t"<<_vcgtf_non_normalise[k].NumCenter()<<" "<<0<<endl;
+        s<<"\t"<<_vcgtfNonNormalise[k].NumCenter()<<" "<<0<<endl;
 
         do{
             if(k==0)    //First shell
             {
-                s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  ";
-                s<<std::fixed<<setprecision(1)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+                s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
+                s<<std::fixed<<setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<endl;
 
-                for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
-                    s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+                for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
+                    s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtfNonNormalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<endl;
 
                 k++;
             }
 
-            else if(k+1<int(_vcgtf_non_normalise.size()))    //Other shell
+            else if(k+1<int(_vcgtfNonNormalise.size()))    //Other shell
             {
-                if(_vcgtf_non_normalise[k].Ltype()==_vcgtf_non_normalise[k+1].Ltype() && _vcgtf_non_normalise[k].gtf()[0].exposant()==_vcgtf_non_normalise[k+1].gtf()[0].exposant())    //Other format
+                if(_vcgtfNonNormalise[k].Ltype()==_vcgtfNonNormalise[k+1].Ltype() && _vcgtfNonNormalise[k].gtf()[0].exposant()==_vcgtfNonNormalise[k+1].gtf()[0].exposant())    //Other format
                 {
-                    lt=_vcgtf_non_normalise[k].gtf()[0].l()[0]+_vcgtf_non_normalise[k].gtf()[0].l()[1]+_vcgtf_non_normalise[k].gtf()[0].l()[2];
+                    lt=_vcgtfNonNormalise[k].gtf()[0].l()[0]+_vcgtfNonNormalise[k].gtf()[0].l()[1]+_vcgtfNonNormalise[k].gtf()[0].l()[2];
 
-                    if(_vcgtf_non_normalise[k].Lformat()=="Cart")
+                    if(_vcgtfNonNormalise[k].Lformat()=="Cart")
                         m=(lt+1)*(lt+2)/2;
                     else
                         m=2*lt+1;
 
-                    s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  ";
-                    s<<std::fixed<<setprecision(1)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+                    s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
+                    s<<std::fixed<<setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<endl;
 
-                    for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
-                        s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+                    for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
+                        s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtfNonNormalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<endl;
 
                     k+=m;
                 }
 
-                else if(_vcgtf_non_normalise[k].Ltype()==_vcgtf_non_normalise[k+1].Ltype())           //WFX
+                else if(_vcgtfNonNormalise[k].Ltype()==_vcgtfNonNormalise[k+1].Ltype())           //WFX
                 {
-                    lt=_vcgtf_non_normalise[k].gtf()[0].l()[0]+_vcgtf_non_normalise[k].gtf()[0].l()[1]+_vcgtf_non_normalise[k].gtf()[0].l()[2];
+                    lt=_vcgtfNonNormalise[k].gtf()[0].l()[0]+_vcgtfNonNormalise[k].gtf()[0].l()[1]+_vcgtfNonNormalise[k].gtf()[0].l()[2];
 
                     if(lt!=0)
                     {
                         m=(lt+1)*(lt+2)/2;
                         q=k;
-                        save_alpha=_vcgtf_non_normalise[k].gtf()[0].exposant();
+                        save_alpha=_vcgtfNonNormalise[k].gtf()[0].exposant();
 
                         do{
-                            s<<" "<<_vcgtf_non_normalise[q].Ltype()<<"\t"<<_vcgtf_non_normalise[q].numberOfFunctions()<<"  ";
-                            s<<std::fixed<<setprecision(1)<<_vcgtf_non_normalise[q].FactorCoef()<<endl;
+                            s<<" "<<_vcgtfNonNormalise[q].Ltype()<<"\t"<<_vcgtfNonNormalise[q].numberOfFunctions()<<"  ";
+                            s<<std::fixed<<setprecision(1)<<_vcgtfNonNormalise[q].FactorCoef()<<endl;
 
-                            for(int j=0; j<_vcgtf_non_normalise[q].numberOfFunctions(); j++)
-                                s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtf_non_normalise[q].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtf_non_normalise[q].coefficients()[j]<<endl;
+                            for(int j=0; j<_vcgtfNonNormalise[q].numberOfFunctions(); j++)
+                                s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtfNonNormalise[q].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtfNonNormalise[q].coefficients()[j]<<endl;
 
                             q++;
-                        }while(q+1<int(_vcgtf_non_normalise.size()) && _vcgtf_non_normalise[q].gtf()[0].exposant()!=save_alpha);
+                        }while(q+1<int(_vcgtfNonNormalise.size()) && _vcgtfNonNormalise[q].gtf()[0].exposant()!=save_alpha);
                         //q=q-k+1;        don't work for h2otest.wfx
                         q=q-k;
                         //k+=q*(m-1)+1;      don't work for h2otest.wfx
@@ -332,11 +332,11 @@ void Orbitals::Save_molden(string& tag)
 
                     else
                     {
-                        s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  ";
-                        s<<std::fixed<<setprecision(1)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+                        s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
+                        s<<std::fixed<<setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<endl;
 
-                        for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
-                            s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+                        for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
+                            s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtfNonNormalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<endl;
 
                         k++;
                     }
@@ -344,26 +344,26 @@ void Orbitals::Save_molden(string& tag)
 
                 else               //Other case
                 {
-                    s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  ";
-                    s<<std::fixed<<setprecision(1)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+                    s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
+                    s<<std::fixed<<setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<endl;
 
-                    for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
-                        s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+                    for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
+                        s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtfNonNormalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<endl;
 
                     k++;
                 }
             }
             else               //Last shell
             {
-                s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  ";
-                s<<std::fixed<<setprecision(1)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+                s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
+                s<<std::fixed<<setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<endl;
 
-                for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
-                    s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+                for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
+                    s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtfNonNormalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<endl;
 
                 k++;
             }
-        }while(k<int(_vcgtf_non_normalise.size()) && i+1==_vcgtf_non_normalise[k].NumCenter());
+        }while(k<int(_vcgtfNonNormalise.size()) && i+1==_vcgtfNonNormalise[k].NumCenter());
         s<<endl;
     }
 
@@ -372,7 +372,7 @@ void Orbitals::Save_molden(string& tag)
     s<<"[MO]"<<endl;
 
     int n;
-    if(_alpha_and_beta)
+    if(_alphaAndBeta)
         n=2;
     else
         n=1;
@@ -380,12 +380,12 @@ void Orbitals::Save_molden(string& tag)
     for(int i=0; i<2; i++)
         for(size_t j=0; j<_coefficients[i].size(); j++)
         {
-            s<<setprecision(6)<<" Ene= "<<_orbital_energy[i][j]<<endl;
+            s<<setprecision(6)<<" Ene= "<<_orbitalEnergy[i][j]<<endl;
             if(i==0)
                 s<<" Spin= Alpha"<<endl;
             else
                 s<<" Spin= Beta"<<endl;
-            s<<setprecision(6)<<" Occup= "<<_occupation_number[i][j]/double(n)<<endl;
+            s<<setprecision(6)<<" Occup= "<<_occupationNumber[i][j]/double(n)<<endl;
             s<<" Sym= unk"<<endl;
 
             for(size_t k=0; k<_coefficients[i][j].size(); k++)
@@ -410,7 +410,7 @@ void Orbitals::Save_gab(string& tag)
         return;
     }
 
-    if(int(_vcgtf_non_normalise.size())==_number_of_gtf)
+    if(int(_vcgtfNonNormalise.size())==_numberOfGtf)
     {
         cout<<"This option is nnot implemente."<<endl;
         return;
@@ -422,9 +422,9 @@ void Orbitals::Save_gab(string& tag)
     s<<"[Gabedit Format] Cart"<<endl;
 
     s<<"[Atoms] AU"<<endl;
-    for(int i=0; i<_number_of_atoms; i++)
+    for(int i=0; i<_numberOfAtoms; i++)
     {
-        s<<_symbol[i]<<" "<<i+1<<" "<<_atomic_numbers[i];
+        s<<_symbol[i]<<" "<<i+1<<" "<<_atomicNumbers[i];
         for(int j=i*3; j<(i+1)*3; j++)
             s<<std::fixed<<setprecision(6)<<right<<"  "<<setw(10)<<_coordinates[j];
         s<<endl;
@@ -435,61 +435,61 @@ void Orbitals::Save_gab(string& tag)
     int lt,q,m,k=0;
     double save_alpha;
 
-    for(int i=0; i<_number_of_atoms; i++)
+    for(int i=0; i<_numberOfAtoms; i++)
     {
-        s<<"\t"<<_vcgtf_non_normalise[k].NumCenter()<<" "<<0<<endl;
+        s<<"\t"<<_vcgtfNonNormalise[k].NumCenter()<<" "<<0<<endl;
 
         do{
             if(k==0)    //First shell
             {
-                s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  ";
-                s<<std::fixed<<setprecision(1)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+                s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
+                s<<std::fixed<<setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<endl;
 
-                for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
-                    s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+                for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
+                    s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtfNonNormalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<endl;
 
                 k++;
             }
 
-            else if(k+1<int(_vcgtf_non_normalise.size()))    //Other shell
+            else if(k+1<int(_vcgtfNonNormalise.size()))    //Other shell
             {
-                if(_vcgtf_non_normalise[k].Ltype()==_vcgtf_non_normalise[k+1].Ltype() && _vcgtf_non_normalise[k].gtf()[0].exposant()==_vcgtf_non_normalise[k+1].gtf()[0].exposant())    //Other format
+                if(_vcgtfNonNormalise[k].Ltype()==_vcgtfNonNormalise[k+1].Ltype() && _vcgtfNonNormalise[k].gtf()[0].exposant()==_vcgtfNonNormalise[k+1].gtf()[0].exposant())    //Other format
                 {
-                    lt=_vcgtf_non_normalise[k].gtf()[0].l()[0]+_vcgtf_non_normalise[k].gtf()[0].l()[1]+_vcgtf_non_normalise[k].gtf()[0].l()[2];
+                    lt=_vcgtfNonNormalise[k].gtf()[0].l()[0]+_vcgtfNonNormalise[k].gtf()[0].l()[1]+_vcgtfNonNormalise[k].gtf()[0].l()[2];
 
-                    if(_vcgtf_non_normalise[k].Lformat()=="Cart")
+                    if(_vcgtfNonNormalise[k].Lformat()=="Cart")
                         m=(lt+1)*(lt+2)/2;
                     else
                         m=2*lt+1;
 
-                    s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  ";
-                    s<<std::fixed<<setprecision(1)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+                    s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
+                    s<<std::fixed<<setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<endl;
 
-                    for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
-                        s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+                    for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
+                        s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtfNonNormalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<endl;
 
                     k+=m;
                 }
 
-                else if(_vcgtf_non_normalise[k].Ltype()==_vcgtf_non_normalise[k+1].Ltype())           //WFX
+                else if(_vcgtfNonNormalise[k].Ltype()==_vcgtfNonNormalise[k+1].Ltype())           //WFX
                 {
-                    lt=_vcgtf_non_normalise[k].gtf()[0].l()[0]+_vcgtf_non_normalise[k].gtf()[0].l()[1]+_vcgtf_non_normalise[k].gtf()[0].l()[2];
+                    lt=_vcgtfNonNormalise[k].gtf()[0].l()[0]+_vcgtfNonNormalise[k].gtf()[0].l()[1]+_vcgtfNonNormalise[k].gtf()[0].l()[2];
 
                     if(lt!=0)
                     {
                         m=(lt+1)*(lt+2)/2;
                         q=k;
-                        save_alpha=_vcgtf_non_normalise[k].gtf()[0].exposant();
+                        save_alpha=_vcgtfNonNormalise[k].gtf()[0].exposant();
 
                         do{
-                            s<<" "<<_vcgtf_non_normalise[q].Ltype()<<"\t"<<_vcgtf_non_normalise[q].numberOfFunctions()<<"  ";
-                            s<<std::fixed<<setprecision(1)<<_vcgtf_non_normalise[q].FactorCoef()<<endl;
+                            s<<" "<<_vcgtfNonNormalise[q].Ltype()<<"\t"<<_vcgtfNonNormalise[q].numberOfFunctions()<<"  ";
+                            s<<std::fixed<<setprecision(1)<<_vcgtfNonNormalise[q].FactorCoef()<<endl;
 
-                            for(int j=0; j<_vcgtf_non_normalise[q].numberOfFunctions(); j++)
-                                s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtf_non_normalise[q].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtf_non_normalise[q].coefficients()[j]<<endl;
+                            for(int j=0; j<_vcgtfNonNormalise[q].numberOfFunctions(); j++)
+                                s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtfNonNormalise[q].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtfNonNormalise[q].coefficients()[j]<<endl;
 
                             q++;
-                        }while(q+1<int(_vcgtf_non_normalise.size()) && _vcgtf_non_normalise[q].gtf()[0].exposant()!=save_alpha);
+                        }while(q+1<int(_vcgtfNonNormalise.size()) && _vcgtfNonNormalise[q].gtf()[0].exposant()!=save_alpha);
                         //q=q-k+1;        don't work for h2otest.wfx
                         q=q-k;
                         //k+=q*(m-1)+1;      don't work for h2otest.wfx
@@ -498,11 +498,11 @@ void Orbitals::Save_gab(string& tag)
 
                     else
                     {
-                        s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  ";
-                        s<<std::fixed<<setprecision(1)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+                        s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
+                        s<<std::fixed<<setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<endl;
 
-                        for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
-                            s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+                        for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
+                            s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtfNonNormalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<endl;
 
                         k++;
                     }
@@ -510,26 +510,26 @@ void Orbitals::Save_gab(string& tag)
 
                 else               //Other case
                 {
-                    s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  ";
-                    s<<std::fixed<<setprecision(1)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+                    s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
+                    s<<std::fixed<<setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<endl;
 
-                    for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
-                        s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+                    for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
+                        s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtfNonNormalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<endl;
 
                     k++;
                 }
             }
             else               //Last shell
             {
-                s<<" "<<_vcgtf_non_normalise[k].Ltype()<<"\t"<<_vcgtf_non_normalise[k].numberOfFunctions()<<"  ";
-                s<<std::fixed<<setprecision(1)<<_vcgtf_non_normalise[k].FactorCoef()<<endl;
+                s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
+                s<<std::fixed<<setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<endl;
 
-                for(int j=0; j<_vcgtf_non_normalise[k].numberOfFunctions(); j++)
-                    s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtf_non_normalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtf_non_normalise[k].coefficients()[j]<<endl;
+                for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
+                    s<<std::fixed<<setprecision(6)<<right<<setw(6)<<" "<<setw(15)<<_vcgtfNonNormalise[k].gtf()[j].exposant()<<"  "<<setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<endl;
 
                 k++;
             }
-        }while(k<int(_vcgtf_non_normalise.size()) && i+1==_vcgtf_non_normalise[k].NumCenter());
+        }while(k<int(_vcgtfNonNormalise.size()) && i+1==_vcgtfNonNormalise[k].NumCenter());
         s<<endl;
     }
 
@@ -538,7 +538,7 @@ void Orbitals::Save_gab(string& tag)
     s<<"[MO]"<<endl;
 
     int n;
-    if(_alpha_and_beta)
+    if(_alphaAndBeta)
         n=2;
     else
         n=1;
@@ -546,12 +546,12 @@ void Orbitals::Save_gab(string& tag)
     for(int i=0; i<2; i++)
         for(size_t j=0; j<_coefficients[i].size(); j++)
         {
-            s<<setprecision(6)<<" Ene= "<<_orbital_energy[i][j]<<endl;
+            s<<setprecision(6)<<" Ene= "<<_orbitalEnergy[i][j]<<endl;
             if(i==0)
                 s<<" Spin= Alpha"<<endl;
             else
                 s<<" Spin= Beta"<<endl;
-            s<<setprecision(6)<<" Occup= "<<_occupation_number[i][j]/double(n)<<endl;
+            s<<setprecision(6)<<" Occup= "<<_occupationNumber[i][j]/double(n)<<endl;
             s<<" Sym= unk"<<endl;
 
             for(size_t k=0; k<_coefficients[i][j].size(); k++)
@@ -572,9 +572,9 @@ void Orbitals::Sorting()
 {
     int k=0,q=0,pos,lt,m=0;
 
-    if(_number_of_gtf==int(_vcgtf.size()))
+    if(_numberOfGtf==int(_vcgtf.size()))
     {
-        for(int i=0; i<_number_of_atoms; i++)
+        for(int i=0; i<_numberOfAtoms; i++)
         {
             do{
                 if(k+1<int(_vcgtf.size()))
