@@ -44,6 +44,8 @@ class Orbitals
         double _energy;
         std::vector<double> _coordinates;
         bool _mixte;
+
+
     public:
 
             //! A default constructor.
@@ -69,15 +71,6 @@ class Orbitals
             //! A default desctructor.
             /*! We don't use it. */
         ~Orbitals() {}
-
-
-        /**
-         * @brief Computes the Slater determinant of the excited state.
-         *
-         * @param[out] slaterDeterminant Output array of two vectors (alpha and beta) containing occupied orbital indices.
-         */
-        void computeSlaterDeterminant(std::array<std::vector<int>, 2>& slaterDeterminant) const;
-
 
         //! A normal member taking no arguments and returning a std::vector<CGTF> value.
         /*! \return The table of CGTF which compose the Orbitals. */
@@ -148,9 +141,16 @@ class Orbitals
             /*! \return The value of the kinetic energy. */
         double kinetic();
 
-            //! A normal member taking two arguments and returning a double value.
-            /*! \return The value of the ionic potential. */
-        double ionicPotential(std::vector<double> C, double Z);
+        /**
+         * @brief Calculates the ion-electron integral for a given ion : < phi_i | V_ion | phi_j >
+         *
+         * @param[in] i The number of the left orbital.
+         * @param[in] j The number of the right orbital.
+         * @param[in] spinType The spin type of the orbitals.
+         * @param[in] position The position of the ion.
+         * @param[in] Z The charge of the ion.
+         */
+        double ionicPotential(int i, int j, SpinType spinType, const std::array<double, 3>& position, double Z);
 
             //! A normal member taking no arguments and returning a double value.
             /*! \return The value of the integral of Orbitals * Orbitals. */

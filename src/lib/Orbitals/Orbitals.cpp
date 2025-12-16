@@ -778,40 +778,6 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
 
 
 
-void Orbitals::computeSlaterDeterminant(std::array<std::vector<int>, 2>& slaterDeterminant) const
-{
-    // Set an empty Slater determinant
-    slaterDeterminant[0] = std::vector<int>(_numberOfMo, 0);
-    slaterDeterminant[1] = std::vector<int>(_numberOfMo, 0);
-
-
-    // Populate the Slater determinant based on occupation numbers
-    for (int i = 0; i < _numberOfMo; ++i)
-    {
-        // Alpha spin
-        if (_occupation_number[0][i] == 1)
-        {
-            slaterDeterminant[0][i] = 1;
-        }
-        else if (_occupation_number[0][i] == 2) // Case where _alpha_and_beta = true
-        {
-            slaterDeterminant[0][i] = 1; // Alpha spin
-            slaterDeterminant[1][i] = 1; // Beta spin
-        }
-
-        // Beta spin
-        if (_occupation_number[1][i] == 1)
-        {
-            slaterDeterminant[1][i] = 1;
-        }
-    }
-}
-
-
-
-
-
-
 double Orbitals::ERIorbitals(Orbitals& q, Orbitals& r, Orbitals& s)
 {
     int np,nq;
@@ -899,15 +865,22 @@ double Orbitals::kinetic()
     return sum;
 }
 
-double Orbitals::ionicPotential(std::vector<double> C, double Z)
+double Orbitals::ionicPotential(int i, int j, SpinType spinType, const std::array<double, 3>& position, double Z)
 {
-    int n;
-    int np;
-    double sum=0.0;
+    int spin = static_cast<int>(spinType);
+    double sum = 0.0;
 
-    for(n=0;n<_numberOfAo;n++)
-        for(np=0;np<_numberOfAo;np++)
-            sum += _vcgtf[n].ionicPotentialCGTF(_vcgtf[np], C, Z); 
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for reduction(+: sum)
+    #endif
+
+    for (size_t m = 0; m < _coefficients[spin][i].size(); ++m)
+    {
+        for (size_t n = 0; n < _coefficients[spin][j].size(); ++n)
+        {
+            sum += _coefficients[spin][i][m] * _coefficients[spin][j][n] * _vcgtf[m].ionicPotentialCGTF(_vcgtf[n], position, Z);
+        }
+    }
 
     return sum;
 }

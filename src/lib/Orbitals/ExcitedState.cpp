@@ -35,7 +35,7 @@ double ExcitedState::get_energy() const
     return _energy;
 }
 
-const std::vector<ExcitedState::SlaterDeterminant>& ExcitedState::get_slaterDeterminants() const
+const std::vector<SlaterDeterminant>& ExcitedState::get_slaterDeterminants() const
 {
     return _slaterDeterminants;
 }
@@ -55,18 +55,13 @@ void ExcitedState::addTransition(const OrbitalState& initialOrbital, const Orbit
     _transitions.push_back(std::make_tuple(initialOrbital, finalOrbital, coefficient));
 }
 
-void ExcitedState::computeSlaterDeterminants(const Orbitals& orbitals)
+void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant)
 {
-    // Get Slater determinant for the ground state
-    SlaterDeterminant slaterDeterminant;
-    orbitals.computeSlaterDeterminant(slaterDeterminant);
-
-
     // Apply the transitions to the Slater determinant
     for (const auto& transition : _transitions)
     {
         // Copy ground state Slater determinant
-        SlaterDeterminant slaterDeterminantTransition = slaterDeterminant;
+        SlaterDeterminant slaterDeterminantTransition(groundStateSlaterDeterminant);
 
         // Unpack transition
         int initialOrbitalNumber = std::get<0>(transition).first;
@@ -74,25 +69,8 @@ void ExcitedState::computeSlaterDeterminants(const Orbitals& orbitals)
         int finalOrbitalNumber = std::get<1>(transition).first;
         SpinType finalOrbitalSpin = std::get<1>(transition).second;
 
-        // Remove electron from initial orbital
-        if (initialOrbitalSpin == SpinType::ALPHA)
-        {
-            slaterDeterminantTransition[0][initialOrbitalNumber - 1] = 0;
-        }
-        else if (initialOrbitalSpin == SpinType::BETA)
-        {
-            slaterDeterminantTransition[1][initialOrbitalNumber - 1] = 0;
-        }
-
-        // Add electron to final orbital
-        if (finalOrbitalSpin == SpinType::ALPHA)
-        {
-            slaterDeterminantTransition[0][finalOrbitalNumber - 1] = 1;
-        }
-        else if (finalOrbitalSpin == SpinType::BETA)
-        {
-            slaterDeterminantTransition[1][finalOrbitalNumber - 1] = 1;
-        }
+        // Update Slater determinant based on the transition
+        slaterDeterminantTransition.updateFromTransition(initialOrbitalNumber, initialOrbitalSpin, finalOrbitalNumber, finalOrbitalSpin);
 
         // Store Slater determinant
         _slaterDeterminants.push_back(slaterDeterminantTransition);
@@ -307,6 +285,7 @@ void ExcitedState::readTransitionsFile(std::string& transitionsFileName, std::ve
         std::exit(1);
     }
 }
+
 
 //----------------------------------------------------------------------------------------------------//
 // FRIEND FUNCTIONS

@@ -1,7 +1,7 @@
 #ifndef CDFTT_GTF_H_INCLUDED
 #define CDFTT_GTF_H_INCLUDED
 
-#include <iostream>
+#include <array>
 #include <vector>
 
 #include <Utils/Utils.h>
@@ -121,7 +121,7 @@ class GTF
         
             //! A normal member taking three arguments and returning a double value.
             /*! \return The ionic potential ???. */
-        double ionicPotentialGTF(GTF&, std::vector<double>, double);
+        double ionicPotentialGTF(GTF&, const std::array<double, 3>&, double);
         
             //! A normal member taking three arguments and returning a double value.
             /*! \return The eri ???. */

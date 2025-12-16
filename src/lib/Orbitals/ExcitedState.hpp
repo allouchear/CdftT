@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <Orbitals/Orbitals.h>
+#include <Orbitals/SlaterDeterminant.hpp>
 #include <Utils/Enums.hpp>
 
 
@@ -19,7 +20,6 @@ class ExcitedState
 {
     private:
         typedef std::pair<int, SpinType> OrbitalState;
-        typedef std::array<std::vector<int>, 2> SlaterDeterminant;
 
         /** @brief Energy of the excited state. */
         double _energy;
@@ -27,7 +27,7 @@ class ExcitedState
         /** @brief Electronic transitions associated with the excited state. */
         std::vector<std::tuple<OrbitalState, OrbitalState, double>> _transitions;
 
-        /** @brief Slater determinants associated with the excited state. */
+        /** @brief Slater determinants associated with the excited state (one for each transition). */
         std::vector<SlaterDeterminant> _slaterDeterminants;
     
 
@@ -66,9 +66,9 @@ class ExcitedState
         /**
          * @brief Computes the Slater determinant of the excited state.
          * 
-         * @param[in] orbitals Orbitals object containing molecular orbitals information.
+         * @param[in]  SlaterDeterminant Reference to the ground state Slater determinant.
          */
-        void computeSlaterDeterminants(const Orbitals& orbitals) ;
+        void computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant);
 
         /** @brief Prints lambda diagnostic for the excited state.
          *

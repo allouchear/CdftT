@@ -1,3 +1,4 @@
+#include <array>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -299,7 +300,7 @@ double GTF::kineticGTF(GTF& right)
     return T*_coefficient*right.coefficient();
 }
 
-double GTF::ionicPotentialGTF(GTF& right, std::vector<double> C, double Z)
+double GTF::ionicPotentialGTF(GTF& right, const std::array<double, 3>& C, double Z)
 {
     int i,r,u;
     int j,s,n;

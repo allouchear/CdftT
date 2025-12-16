@@ -26,6 +26,7 @@
 #include <JobControl/Job.h>
 #include <Orbitals/Orbitals.h>
 #include <Orbitals/ExcitedState.hpp>
+#include <Orbitals/SlaterDeterminant.hpp>
 #include <Utils/Utils.h>
 
 
@@ -1348,39 +1349,46 @@ void Job::run_computeEnergyWithPointCharge()
 
 
     // Get Ground and Excited States Slater Determinants
-    typedef std::array<std::vector<int>, 2> SlaterDeterminant;
+    SlaterDeterminant groundStateSlaterDeterminant(orbitals);
+    std::cout << "Ground State Slater Determinant:" << std::endl;
+    std::cout << groundStateSlaterDeterminant << std::endl << std::endl;
 
-    // Ground state
-    SlaterDeterminant groundStateSlaterDeterminant;
-    orbitals.computeSlaterDeterminant(groundStateSlaterDeterminant);
-
-    // Excited states
     for (size_t i = 0; i < excitedStates.size(); ++i)
     {
-        excitedStates[i].computeSlaterDeterminants(orbitals);
+        excitedStates[i].computeSlaterDeterminants(groundStateSlaterDeterminant);
+
+        const std::vector<SlaterDeterminant>& slaterDeterminantsExcitedState = excitedStates[i].get_slaterDeterminants();
+
+        for (size_t j = 0; j < slaterDeterminantsExcitedState.size(); ++j)
+        {
+            std::cout << "Excited State " << i + 1 << ", Slater Determinant " << j + 1 << ":" << std::endl;
+            std::cout << slaterDeterminantsExcitedState[j] << std::endl << std::endl;
+        }
     }
 
-    
-    // Compute matrix elements
-    const int nbStates = excitedStates.size() + 1; // +1 for ground state
-    std::vector<std::vector<double>> phi_i_V_phi_j(nbStates, std::vector<double>(nbStates, 0.0));
+
+    // Compute < psi_i | V | psi_j >
+    int nbStates = excitedStates.size() + 1; // +1 for ground state
+
+    std::vector<std::vector<double>> matrixElements(nbStates, std::vector<double>(nbStates, 0.0));
 
     for (int i = 0; i < nbStates; ++i)
     {
+        // Get Slater Determinants for state i
+        std::vector<SlaterDeterminant> slaterDeterminants_i;
+        if (i == 0)
+        {
+            slaterDeterminants_i.push_back(groundStateSlaterDeterminant);
+        }
+        else
+        {
+            slaterDeterminants_i = excitedStates[i - 1].get_slaterDeterminants();
+        }
+
         for (int j = 0; j < nbStates; ++j)
         {
-            // Get Slater Determinants for states i and j
-            std::vector<SlaterDeterminant> slaterDeterminants_i;
+            // Get Slater Determinants for state j
             std::vector<SlaterDeterminant> slaterDeterminants_j;
-
-            if (i == 0)
-            {
-                slaterDeterminants_i.push_back(groundStateSlaterDeterminant);
-            }
-            else
-            {
-                slaterDeterminants_i = excitedStates[i - 1].get_slaterDeterminants();
-            }
 
             if (j == 0)
             {
@@ -1391,10 +1399,32 @@ void Job::run_computeEnergyWithPointCharge()
                 slaterDeterminants_j = excitedStates[j - 1].get_slaterDeterminants();
             }
 
-            // Compute matrix element < phi_i | V | phi_j >
+            // Applying Slater-Condon rules
+            for (size_t m = 0; m < slaterDeterminants_i.size(); ++m)
+            {
+                for (size_t n = 0; n < slaterDeterminants_j.size(); ++n)
+                {
+                    if (slaterDeterminants_i[m] == slaterDeterminants_j[n])
+                    {
+                        for (int p = 0; p < orbitals.NumberOfMo(); ++p)
+                        {
+                            for (int q = 0; q < orbitals.NumberOfMo(); ++q)
+                            {
+                                if (p == q)
+                                {
+                                    //matrixElements[i][j] += //...
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //matrixElements[i][j] += //...
+                    }
+                }
+            }
         }
     }
-
 
 }
 

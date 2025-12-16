@@ -21,4 +21,5 @@ Job.o: Job.cpp /usr/home/lgardre-local/Work/CdftT/src/lib/Becke/Becke.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/GTF.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Constants.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Job.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/ExcitedState.hpp
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/ExcitedState.hpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/SlaterDeterminant.hpp

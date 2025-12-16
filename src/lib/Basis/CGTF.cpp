@@ -1,3 +1,4 @@
+#include <array>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -159,7 +160,7 @@ double CGTF::kineticCGTF(CGTF& right)
     return sum;
 }
 
-double CGTF::ionicPotentialCGTF(CGTF& right, std::vector<double> C, double Z)
+double CGTF::ionicPotentialCGTF(CGTF& right, const std::array<double, 3>& C, double Z)
 {
     int n;
     int np;
