@@ -18,13 +18,6 @@
 
 
 //----------------------------------------------------------------------------------------------------//
-// STATIC FIELDS
-//----------------------------------------------------------------------------------------------------//
-
-std::vector<std::vector<double>> Orbitals::_s_ionicMatrix_ = std::vector<std::vector<double>>();
-
-
-//----------------------------------------------------------------------------------------------------//
 // CONSTRUCTORS
 //----------------------------------------------------------------------------------------------------//
 
@@ -949,46 +942,63 @@ double Orbitals::kinetic()
     return sum;
 }
 
-std::vector<std::vector<double>> Orbitals::ionicPotential(SpinType spinType, const std::array<double, 3>& position, double Z)
+std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(const std::array<double, 3>& position, double Z)
 {
-    int spin = static_cast<int>(spinType);
+    // Build ionic potential matrix in AO basis    
+    std::vector<std::vector<double>> ionicMatrixAO = std::vector<std::vector<double>>(_numberOfAo, std::vector<double>());
 
-    if (_s_ionicMatrix_.size() == 0)
-    {
-        set_s_ionicMatrix_(position, Z);
-    }
-
-    std::vector<std::vector<double>> matrix = std::vector<std::vector<double>>(_numberOfMo, std::vector<double>(_numberOfMo, 0.0));
-
+    int i, j;
     #ifdef ENABLE_OMP
-    #pragma omp parallel for reduction(+: sum)
+    #pragma omp parallel for private(i, j)
     #endif
-    for (int i = 0; i < _numberOfMo; ++i)
+    for (i = 0; i < _numberOfAo; ++i)
     {
-        for (int j = 0; j <= i; ++j)
+        for (j = 0; j <= i; ++j)
         {
-            double sum = 0.0;
-
-            for (size_t m = 0; m < _coefficients[spin][i].size(); ++m)
-            {
-                for (size_t n = 0; n < _coefficients[spin][j].size(); ++n)
-                {
-                    if (n <= m)
-                    {
-                        sum += _coefficients[spin][i][m] * _coefficients[spin][j][n] * _s_ionicMatrix_[m][n];
-                    }
-                    else
-                    {
-                        sum += _coefficients[spin][i][m] * _coefficients[spin][j][n] * _s_ionicMatrix_[n][m];
-                    }
-                }
-            }
-
-            matrix[i][j] = sum;
+            ionicMatrixAO[i].push_back(_vcgtf[i].ionicPotentialCGTF(_vcgtf[j], position, Z));
         }
     }
 
-    return matrix;
+
+    // Build ionic potential matrix in MO basis
+    std::vector<std::vector<std::vector<double>>> ionicMatrixMO = std::vector<std::vector<std::vector<double>>>(2, std::vector<std::vector<double>>(_numberOfMo, std::vector<double>()));
+
+    int spin;
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for private(spin, i, j)
+    #endif
+    for (spin = 0; spin < 2; ++spin)
+    {
+        for (i = 0; i < _numberOfMo; ++i)
+        {
+            for (j = 0; j <= i; ++j)
+            {
+                double sum = 0.0;
+
+                #ifdef ENABLE_OMP
+                #pragma omp parallel for reduction(+: sum)
+                #endif
+                for (size_t m = 0; m < _coefficients[spin][i].size(); ++m)
+                {
+                    for (size_t n = 0; n < _coefficients[spin][j].size(); ++n)
+                    {
+                        if (n <= m)
+                        {
+                            sum += _coefficients[spin][i][m] * _coefficients[spin][j][n] * ionicMatrixAO[m][n];
+                        }
+                        else
+                        {
+                            sum += _coefficients[spin][i][m] * _coefficients[spin][j][n] * ionicMatrixAO[n][m];
+                        }
+                    }
+                }
+
+                ionicMatrixMO[spin][i][j] = sum;
+            }
+        }
+    }
+
+    return ionicMatrixMO;
 }
 
 double Orbitals::OrbstarOrb()
@@ -1106,23 +1116,6 @@ std::vector<std::vector<double>> Orbitals::get_S()
     }
 
     return S;
-}
-
-void Orbitals::set_s_ionicMatrix_(const std::array<double, 3>& position, double Z)
-{
-    _s_ionicMatrix_ = std::vector<std::vector<double>>(_numberOfAo, std::vector<double>(_numberOfAo, 0.0));
-
-    int i, j;
-    #ifdef ENABLE_OMP
-    #pragma omp parallel for private(i, j)
-    #endif
-    for (i = 0; i < _numberOfAo; ++i)
-    {
-        for (j = 0; j < _numberOfAo; ++j)
-        {
-            _s_ionicMatrix_[i][j] = _vcgtf[i].ionicPotentialCGTF(_vcgtf[j], position, Z);
-        }
-    }
 }
 
 std::vector<double> Orbitals::get_f(int orb, int alpha)

@@ -10,22 +10,22 @@
 // STATIC FIELDS
 //----------------------------------------------------------------------------------------------------//
 
+std::vector<std::vector<std::vector<double>>> _s_ionicMatrix_ = std::vector<std::vector<std::vector<double>>>();
 bool SlaterDeterminant::_s_isOrbitalsSet_ = false;
 Orbitals SlaterDeterminant::_s_orbitals_ = Orbitals();
+
 
 //----------------------------------------------------------------------------------------------------//
 // CONSTRUCTORS
 //----------------------------------------------------------------------------------------------------//
 
 SlaterDeterminant::SlaterDeterminant():
-    _alphaOccupation(),
-    _betaOccupation()
+    _occupiedOrbitals(2, std::vector<std::pair<int, double>>())
 { }
 
 
 SlaterDeterminant::SlaterDeterminant(const Orbitals& orbitals):
-    _alphaOccupation(),
-    _betaOccupation()
+    _occupiedOrbitals(2, std::vector<std::pair<int, double>>())
 {
     if (!_s_isOrbitalsSet_)
     {
@@ -36,27 +36,31 @@ SlaterDeterminant::SlaterDeterminant(const Orbitals& orbitals):
     // Get occupation numbers
     const std::vector<std::vector<double>>& occupationNumbers = orbitals.get_occupationNumber();
 
+    // Get spin type int values
+    const int ALPHA = static_cast<int>(SpinType::ALPHA);
+    const int BETA = static_cast<int>(SpinType::BETA);
+
     // Populate the occupied orbitals and their occupation numbers based on the orbitals object
     for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
     {
         // Alpha spin
-        if (occupationNumbers[0][i] == 1)
+        if (occupationNumbers[ALPHA][i] == 1)
         {
-            _alphaOccupation.emplace_back(i + 1, 1.0);
+            _occupiedOrbitals[ALPHA].emplace_back(i + 1, 1.0);
         }
-        else if (occupationNumbers[0][i] == 2) // Case where _alpha_and_beta = true
+        else if (occupationNumbers[ALPHA][i] == 2) // Case where _alpha_and_beta = true
         {
             // Alpha spin
-            _alphaOccupation.emplace_back(i + 1, 1.0);
+            _occupiedOrbitals[ALPHA].emplace_back(i + 1, 1.0);
 
             // Beta spin
-            _betaOccupation.emplace_back(i + 1, 1.0);
+            _occupiedOrbitals[BETA].emplace_back(i + 1, 1.0);
         }
 
         // Beta spin
-        if (occupationNumbers[1][i] == 1)
+        if (occupationNumbers[BETA][i] == 1)
         {
-            _betaOccupation.emplace_back(i + 1, 1.0);
+            _occupiedOrbitals[BETA].emplace_back(i + 1, 1.0);
         }
     }
 }
@@ -68,34 +72,32 @@ SlaterDeterminant::SlaterDeterminant(const Orbitals& orbitals):
 
 void SlaterDeterminant::updateFromTransition(int initialOrbitalNumber, SpinType initialSpin, int finalOrbitalNumber, SpinType finalSpin)
 {
+    // Get spin type int values
+    const int ALPHA = static_cast<int>(SpinType::ALPHA);
+    const int BETA = static_cast<int>(SpinType::BETA);
+
     // Update occupied orbitals based on the transition
     if (initialSpin == SpinType::ALPHA && finalSpin == SpinType::ALPHA)
     {
-        for (size_t i = 0; i < _alphaOccupation.size(); ++i)
+        for (size_t i = 0; i < _occupiedOrbitals[ALPHA].size(); ++i)
         {
-            if (_alphaOccupation[i].first == initialOrbitalNumber)
+            if (_occupiedOrbitals[ALPHA][i].first == initialOrbitalNumber)
             {
-                _alphaOccupation[i].first = finalOrbitalNumber;
+                _occupiedOrbitals[ALPHA][i].first = finalOrbitalNumber;
                 break;
             }
         }
-
-        // Sort occupied orbitals to maintain order (facilitates comparison)
-        std::sort(_alphaOccupation.begin(), _alphaOccupation.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
     }
     else if (initialSpin == SpinType::BETA && finalSpin == SpinType::BETA)
     {
-        for (size_t i = 0; i < _betaOccupation.size(); ++i)
+        for (size_t i = 0; i < _occupiedOrbitals[BETA].size(); ++i)
         {
-            if (_betaOccupation[i].first == initialOrbitalNumber)
+            if (_occupiedOrbitals[BETA][i].first == initialOrbitalNumber)
             {
-                _betaOccupation[i].first = finalOrbitalNumber;
+                _occupiedOrbitals[BETA][i].first = finalOrbitalNumber;
                 break;
             }
         }
-
-        // Sort occupied orbitals to maintain order (facilitates comparison)
-        std::sort(_betaOccupation.begin(), _betaOccupation.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
     }
     else
     {
@@ -113,21 +115,104 @@ void SlaterDeterminant::updateFromTransition(int initialOrbitalNumber, SpinType 
 // STATIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-double SlaterDeterminant::ionicPotentialSlaterDeterminant(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::vector<std::vector<double>>& ionicMatrix)
+std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(const SlaterDeterminant& di, const SlaterDeterminant& dj)
 {
-    double matrixElement = 0.0;
+    std::vector<std::vector<std::pair<int, int>>> differences(2, std::vector<std::pair<int, int>>());
+
+    // Get spin type int values
+    const int ALPHA = static_cast<int>(SpinType::ALPHA);
+    const int BETA = static_cast<int>(SpinType::BETA);
+
+    // Check that the determinants have the same number of occupied orbitals
+    if (di._occupiedOrbitals[ALPHA].size() != dj._occupiedOrbitals[ALPHA].size() ||
+        di._occupiedOrbitals[BETA].size() != dj._occupiedOrbitals[BETA].size())
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in SlaterDeterminant::getDifferences(): Slater determinants have different numbers of occupied orbitals." << std::endl;
+        print_error(errorMessage.str());
+
+        exit(1);
+    }
+
+    // Check for differences in occupied orbitals for each spin type
+    for (size_t i = 0; i < di._occupiedOrbitals[ALPHA].size(); ++i)
+    {
+        // Alpha spin
+        if (di._occupiedOrbitals[ALPHA][i].first != dj._occupiedOrbitals[ALPHA][i].first)
+        {
+            differences[ALPHA].emplace_back(di._occupiedOrbitals[ALPHA][i].first, dj._occupiedOrbitals[ALPHA][i].first);
+        }
+
+        // Beta spin
+        if (di._occupiedOrbitals[BETA][i].first != dj._occupiedOrbitals[BETA][i].first)
+        {
+            differences[BETA].emplace_back(di._occupiedOrbitals[BETA][i].first, dj._occupiedOrbitals[BETA][i].first);
+        }
+    }
+
+    return differences;
+}
+
+double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::array<double, 3>& position, double charge)
+{
+    if (SlaterDeterminant::_s_ionicMatrix_.empty())
+    {
+        if (SlaterDeterminant::_s_isOrbitalsSet_)
+        {
+            _s_ionicMatrix_ = SlaterDeterminant::_s_orbitals_.getIonicPotentialMatrix(position, charge);
+        }
+        else
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error in SlaterDeterminant::ionicPotential(): shared Orbitals instance has not been set yet." << std::endl;
+            errorMessage << "Please build at least the ground state Slater determinant." << std::endl;
+            print_error(errorMessage.str());
+
+            exit(1);
+        }
+    }
+
+    double sum = 0.0;
+
+    // Get spin type int values
+    const int ALPHA = static_cast<int>(SpinType::ALPHA);
+    const int BETA = static_cast<int>(SpinType::BETA);
 
     // Apply Slater-Condon rules
     if (di == dj)
     {
-
+        for (size_t i = 0; i < di._occupiedOrbitals[ALPHA].size(); ++i)
+        {
+            int orbitalIndex = di._occupiedOrbitals[ALPHA][i].first - 1;
+            sum += (SlaterDeterminant::_s_ionicMatrix_[ALPHA][orbitalIndex][orbitalIndex] + SlaterDeterminant::_s_ionicMatrix_[BETA][orbitalIndex][orbitalIndex]);
+        }
     }
     else
     {
+        std::vector<std::vector<std::pair<int, int>>> differences = SlaterDeterminant::getDifferences(di, dj);
 
+        // Check that there is only one difference
+        if (differences[ALPHA].size() + differences[BETA].size() == 1)
+        {
+            int initialOrbitalIndex, finalOrbitalIndex;
+            
+            if (!differences[ALPHA].empty())
+            {
+                int initialOrbitalIndex = differences[ALPHA][0].first - 1;
+                int finalOrbitalIndex = differences[ALPHA][0].second - 1;
+            }
+            else if (!differences[BETA].empty())
+            {
+                int initialOrbitalIndex = differences[BETA][0].first - 1;
+                int finalOrbitalIndex = differences[BETA][0].second - 1;
+            }
+
+            sum += (SlaterDeterminant::_s_ionicMatrix_[ALPHA][initialOrbitalIndex][finalOrbitalIndex]
+                    + SlaterDeterminant::_s_ionicMatrix_[BETA][initialOrbitalIndex][finalOrbitalIndex]);
+        }
     }
 
-    return matrixElement;
+    return sum;
 }
 
 
@@ -137,7 +222,8 @@ double SlaterDeterminant::ionicPotentialSlaterDeterminant(const SlaterDeterminan
 
 bool operator==(const SlaterDeterminant& lhs, const SlaterDeterminant& rhs)
 {
-    return (lhs._alphaOccupation == rhs._alphaOccupation) && (lhs._betaOccupation == rhs._betaOccupation);
+    std::vector<std::vector<std::pair<int, int>>> differences = SlaterDeterminant::getDifferences(lhs, rhs);
+    return (differences[0].empty() && differences[1].empty());
 }
 
 bool operator!=(const SlaterDeterminant& lhs, const SlaterDeterminant& rhs)
@@ -147,16 +233,20 @@ bool operator!=(const SlaterDeterminant& lhs, const SlaterDeterminant& rhs)
 
 std::ostream& operator<<(std::ostream& stream, const SlaterDeterminant& slaterDeterminant)
 {
-    for (size_t i = 0; i < slaterDeterminant._alphaOccupation.size(); ++i)
+    // Get spin type int values
+    const int ALPHA = static_cast<int>(SpinType::ALPHA);
+    const int BETA = static_cast<int>(SpinType::BETA);
+
+    for (size_t i = 0; i < slaterDeterminant._occupiedOrbitals[ALPHA].size(); ++i)
     {
-        stream << slaterDeterminant._alphaOccupation[i].first << "A(" << slaterDeterminant._alphaOccupation[i].second << ") ";
+        stream << slaterDeterminant._occupiedOrbitals[ALPHA][i].first << "A(" << slaterDeterminant._occupiedOrbitals[ALPHA][i].second << ") ";
     }
 
     stream << std::endl;
 
-    for (size_t i = 0; i < slaterDeterminant._betaOccupation.size(); ++i)
+    for (size_t i = 0; i < slaterDeterminant._occupiedOrbitals[BETA].size(); ++i)
     {
-        stream << slaterDeterminant._betaOccupation[i].first << "B(" << slaterDeterminant._betaOccupation[i].second << ") ";
+        stream << slaterDeterminant._occupiedOrbitals[BETA][i].first << "B(" << slaterDeterminant._occupiedOrbitals[BETA][i].second << ") ";
     }
 
     return stream;

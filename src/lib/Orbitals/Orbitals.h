@@ -45,13 +45,6 @@ class Orbitals
         std::vector<double> _coordinates;
         bool _mixte;
 
-        
-        //----------------------------------------------------------------------------------------------------//
-        // STATIC FIELDS
-        //----------------------------------------------------------------------------------------------------//
-
-        static std::vector<std::vector<double>> _s_ionicMatrix_;
-
 
     public:
         //----------------------------------------------------------------------------------------------------//
@@ -186,9 +179,9 @@ class Orbitals
          *
          * @param[in] position The position of the ion.
          * @param[in] Z The charge of the ion.
-         * @return The matrix < phi_i | V_ion | phi_j >
+         * @return The matrix < phi_i | V_ion | phi_j > (the first index corresponds to alpha spin, the second to beta spin).
          */
-        std::vector<std::vector<double>> ionicPotential(SpinType spinType, const std::array<double, 3>& position, double Z);
+        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& position, double Z);
 
         //! A normal member taking no arguments and returning a double value.
         /*! \return The value of the integral of Orbitals * Orbitals. */

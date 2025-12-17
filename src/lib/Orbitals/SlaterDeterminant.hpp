@@ -13,16 +13,16 @@
 class SlaterDeterminant
 {
     private:
-        /** @brief Occupied orbitals and their occupation numbers for the alpha spin. */
-        std::vector<std::pair<int, double>> _alphaOccupation;
+        /** @brief Occupied orbitals and their occupation numbers. First index corresponds to alpha spin, second to beta spin. */
+        std::vector<std::vector<std::pair<int, double>>> _occupiedOrbitals;
 
-        /** @brief Occupied orbitals and their occupation numbers for the beta spin. */
-        std::vector<std::pair<int, double>> _betaOccupation;
 
-        
         //----------------------------------------------------------------------------------------------------//
         // STATIC FIELDS
         //----------------------------------------------------------------------------------------------------//
+
+        /** @brief Static ionic matrix < phi_i | V_ion | phi_j > (the first index corresponds to alpha spin, the second to beta spin). */
+        static std::vector<std::vector<std::vector<double>>> _s_ionicMatrix_;
 
         /** @brief Static Orbitals instance shared among all SlaterDeterminant objects. */
         static Orbitals _s_orbitals_;
@@ -71,14 +71,24 @@ class SlaterDeterminant
         //----------------------------------------------------------------------------------------------------//
 
         /**
-         * @brief Computes the ionic potential matrix element between two Slater determinants.
+         * @brief Computes the differences in occupied orbitals between two Slater determinants.
          * 
          * @param di First Slater determinant.
          * @param dj Second Slater determinant.
-         * @param ionicMatrix Precomputed ionic potential matrix.
+         * @return A vector containing the differences in occupied orbitals for each spin type (first index corresponds to alpha spin, second to beta spin)
+         */
+        static std::vector<std::vector<std::pair<int, int>>> getDifferences(const SlaterDeterminant& di, const SlaterDeterminant& dj);
+
+        /**
+         * @brief Computes the ionic potential matrix element between two Slater determinants.
+         * 
+         * @param[in] di First Slater determinant.
+         * @param[in] dj Second Slater determinant.
+         * @param[in] position The position of the ion.
+         * @param[in] charge The charge of the ion.
          * @return The ionic potential matrix element < Di | V_ion | Dj >.
          */
-        static double ionicPotentialSlaterDeterminant(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::vector<std::vector<double>>& ionicMatrix);
+        static double ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::array<double, 3>& position, double charge);
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS
