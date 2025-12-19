@@ -66,6 +66,17 @@ void Job::readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames)
     }
 }
 
+void Job::readCharge(double& charge)
+{
+    if (!readOneType<double>(_inputFile, "Charge", charge))
+    {
+        std::cout << "Warning: the \"Charge\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (Charge=1)." << std::endl;
+
+        charge = 1.0;
+    }
+}
+
 void Job::readCutoff(double& cutoff)
 {
     if (!readOneType<double>(_inputFile, "Cutoff", cutoff))
@@ -262,6 +273,34 @@ void Job::readPartitionMethod(PartitionMethod& partitionMethod)
 
         std::exit(1);
     }
+}
+
+void Job::readPosition(std::array<double, 3>& position)
+{
+    std::vector<double> positionValues;
+    if (!readListType<double>(_inputFile, "Position", positionValues))
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: could not find point charge position." << std::endl;
+        errorMessage << "Please check if the \"Position\" parameter is defined and set in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    if (positionValues.size() != 3)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect number of values for the \"Position\" parameter (three values expected)." << std::endl;
+        errorMessage << "Please check documentation and the \"Position\" parameter values in " << _inputFileName << '.';
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    position = { positionValues[0], positionValues[1], positionValues[2] };
 }
 
 void Job::readRunType(RunType& runType)
@@ -1330,6 +1369,16 @@ void Job::run_computeEnergyWithPointCharge()
 
         std::exit(1);
     }
+
+
+    // Read point charge position
+    std::array<double, 3> position;
+    readPosition(position);
+
+
+    // Read point charge value
+    double charge;
+    readCharge(charge);
     
     
     // Read transitions file
@@ -1342,90 +1391,106 @@ void Job::run_computeEnergyWithPointCharge()
     computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
 
 
-    // Reading transitions file
-    std::vector<ExcitedState> excitedStates;
-    ExcitedState::readTransitionsFile(transitionsFileName, excitedStates);
-    std::cout << "Number of excited states read: " << excitedStates.size() << std::endl << std::endl;
-
-
-    // Get Ground and Excited States Slater Determinants
+    // Get Ground Slater Determinant
     SlaterDeterminant groundStateSlaterDeterminant(orbitals);
-    std::cout << "Ground State Slater Determinant:" << std::endl;
-    std::cout << groundStateSlaterDeterminant << std::endl << std::endl;
+    ExcitedState groundState(orbitals.get_energy(), groundStateSlaterDeterminant);
 
-    for (size_t i = 0; i < excitedStates.size(); ++i)
+
+    // Building states vector
+    std::vector<ExcitedState> states;
+    states.push_back(groundState);
+
+
+    // Reading transitions file
+    ExcitedState::readTransitionsFile(transitionsFileName, states);
+    std::cout << "Number of excited states read: " << states.size() << std::endl << std::endl;
+    
+
+    // Compute Slater Determinants from electronic transitions for each state
+    for (ExcitedState& state : states)
     {
-        excitedStates[i].computeSlaterDeterminants(groundStateSlaterDeterminant);
-
-        const std::vector<SlaterDeterminant>& slaterDeterminantsExcitedState = excitedStates[i].get_slaterDeterminants();
-
-        for (size_t j = 0; j < slaterDeterminantsExcitedState.size(); ++j)
-        {
-            std::cout << "Excited State " << i + 1 << ", Slater Determinant " << j + 1 << ":" << std::endl;
-            std::cout << slaterDeterminantsExcitedState[j] << std::endl << std::endl;
-        }
+        state.computeSlaterDeterminants(groundStateSlaterDeterminant);
     }
 
 
-    // Compute < psi_i | V | psi_j >
-    int nbStates = excitedStates.size() + 1; // +1 for ground state
+    // Initialize < psi_i | H | psi_j > matrix (lower triangular matrix)
+    int nbStates = static_cast<int>(states.size());
 
-    std::vector<std::vector<double>> matrixElements(nbStates, std::vector<double>(nbStates, 0.0));
-
+    std::vector<std::vector<double>> psi_i_H_psi_j(nbStates, std::vector<double>());
     for (int i = 0; i < nbStates; ++i)
     {
+        psi_i_H_psi_j[i].resize(i + 1, 0.0);
+    }
+
+
+    // Compute matrix elements
+    int i, j;
+    #ifdef ENABLE_OPENMP
+    #pragma omp parallel for private(i, j)
+    #endif
+    for (i = 0; i < nbStates; ++i)
+    {
         // Get Slater Determinants for state i
-        std::vector<SlaterDeterminant> slaterDeterminants_i;
-        if (i == 0)
-        {
-            slaterDeterminants_i.push_back(groundStateSlaterDeterminant);
-        }
-        else
-        {
-            slaterDeterminants_i = excitedStates[i - 1].get_slaterDeterminants();
-        }
+        std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_i(states[i].getSlaterDeterminantsAndCoefficients());
 
-        for (int j = 0; j < nbStates; ++j)
+        for (j = 0; j <= i; ++j)
         {
+            // Initialize < psi_i | H | psi_j > matrix element
+            double matrixElement = 0.0;
+
             // Get Slater Determinants for state j
-            std::vector<SlaterDeterminant> slaterDeterminants_j;
+            std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].getSlaterDeterminantsAndCoefficients());
 
-            if (j == 0)
-            {
-                slaterDeterminants_j.push_back(groundStateSlaterDeterminant);
-            }
-            else
-            {
-                slaterDeterminants_j = excitedStates[j - 1].get_slaterDeterminants();
-            }
+            // Compute < psi_i | H_0 | psi_j >
+            matrixElement += (i == j) ? states[i].get_energy() : 0.0;
+            std::cout << "< psi_" << i << " | H_0 | psi_" << j << " > = " << matrixElement << std::endl;
 
-            // Applying Slater-Condon rules
-            for (size_t m = 0; m < slaterDeterminants_i.size(); ++m)
+            // Compute < psi_i | V_nucleus | psi_j >
+            double value = 0.0;
+            if (i == j)
             {
-                for (size_t n = 0; n < slaterDeterminants_j.size(); ++n)
+                /*
+                #ifdef ENABLE_OPENMP
+                #pragma omp parallel for reduction(+: value)
+                #endif
+                */
+                for (const Atom& atom : orbitals.get_struct().get_atoms())
                 {
-                    if (slaterDeterminants_i[m] == slaterDeterminants_j[n])
-                    {
-                        for (int p = 0; p < orbitals.get_numberOfMo(); ++p)
-                        {
-                            for (int q = 0; q < orbitals.get_numberOfMo(); ++q)
-                            {
-                                if (p == q)
-                                {
-                                    //matrixElements[i][j] += //...
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        //matrixElements[i][j] += //...
-                    }
+                    std::cout << "atom.get_charge() " << atom.get_charge() << std::endl;
+                    std::cout << "atom.computeDistance(position) " << atom.computeDistance(position) << std::endl;
+                    std::cout << "(charge * atom.get_charge()) / atom.computeDistance(position)" << (charge * atom.get_charge()) / atom.computeDistance(position) << std::endl;
+                    value += (charge * atom.get_charge()) / atom.computeDistance(position);
                 }
             }
+            std::cout << "< psi_" << i << " | V_nucleus | psi_" << j << " > = " << value << std::endl;
+            matrixElement += value;
+
+            // Compute < psi_i | V_ion | psi_j >
+            value = 0.0;
+            #ifdef ENABLE_OPENMP
+            #pragma omp parallel for reduction(+: value)
+            #endif
+            for (const std::pair<SlaterDeterminant, double>& slaterCoeff_i : slaterDeterminants_i)
+            {
+                for (const std::pair<SlaterDeterminant, double>& slaterCoeff_j : slaterDeterminants_j)
+                {
+                    value += SlaterDeterminant::ionicPotential(slaterCoeff_i.first, slaterCoeff_j.first, position, charge) * slaterCoeff_i.second * slaterCoeff_j.second;
+                }
+            }
+            std::cout << "< psi_" << i << " | V_ion | psi_" << j << " > = " << value << std::endl << std::endl;
+            matrixElement += value;
+
+            psi_i_H_psi_j[i][j] = matrixElement;
         }
     }
 
+    for (i = 0; i < nbStates; ++i)
+    {
+        for (j = 0; j <= i; ++j)
+        {
+            std::cout << "< psi_" << i << " | H | psi_" << j << " > = " << psi_i_H_psi_j[i][j] << std::endl;
+        }
+    }
 }
 
 void Job::run_computeGridDifference()

@@ -1235,18 +1235,18 @@ void Grid::save(ofstream& nameFile)
     nameFile<<std::endl;
     for(int i=0;i<_structure.number_of_atoms();i++)
     {
-        nameFile<<_structure.atom(i).atomic_number()<<" ";
-        if(_structure.atom(i).charge()<1)
+        nameFile<<_structure.atom(i).get_atomicNumber()<<" ";
+        if(_structure.atom(i).get_charge()<1)
         {
-            nameFile<<double(_structure.atom(i).atomic_number())<<" ";
+            nameFile<<double(_structure.atom(i).get_atomicNumber())<<" ";
         }
         else
         {
-            nameFile<<_structure.atom(i).charge()<<" ";
+            nameFile<<_structure.atom(i).get_charge()<<" ";
         }
         for(int j=0; j<3;j++)
         {
-            nameFile<<_structure.atom(i).coordinates()[j]<<" ";
+            nameFile<<_structure.atom(i).get_coordinates()[j]<<" ";
         }
         nameFile<<std::endl;
     }
@@ -1361,7 +1361,7 @@ std::vector<double> Grid::atom_attract_diff(const std::vector<std::vector<int>>&
         {
             for(int i=0;i<3;i++)
             {
-                distance += double((_structure.atoms()[j].coordinates()[i]-attract[n][i])*(_structure.atoms()[j].coordinates()[i]-attract[n][i]))*ds[i]*ds[i];
+                distance += double((_structure.get_atoms()[j].get_coordinates()[i]-attract[n][i])*(_structure.get_atoms()[j].get_coordinates()[i]-attract[n][i]))*ds[i]*ds[i];
             }
             distance=sqrt(distance);
             if(distance<d1)

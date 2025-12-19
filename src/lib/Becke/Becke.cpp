@@ -227,9 +227,9 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
     for(int i=0; i<Nat; i++)
         for(int j=i+1; j<Nat; j++)
         {
-            R[i][j] = R[j][i] = _molecule.atom(i).get_distance(_molecule.atom(j));
+            R[i][j] = R[j][i] = _molecule.atom(i).computeDistance(_molecule.atom(j));
             // ratio of Slater radii
-            chi = _molecule.atom(i).covalent_radii() / _molecule.atom(j).covalent_radii();
+            chi = _molecule.atom(i).get_covalentRadius() / _molecule.atom(j).get_covalentRadius();
             uij = (chi-1)/(chi+1);
             a[i][j] = uij/(uij*uij - 1);
             a[j][i] = -a[i][j];
@@ -240,10 +240,10 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
     for(int I=0; I<Nat; I++)
     {
         // radial grid
-        Nr = number_of_radial_points(_molecule.atom(I).atomic_number());
+        Nr = number_of_radial_points(_molecule.atom(I).get_atomicNumber());
         // increase number of grid points is requested
         Nr *= radial_grid_factor;
-        rm = 0.5*_molecule.atom(I).covalent_radii();
+        rm = 0.5*_molecule.atom(I).get_covalentRadius();
         Npts = Nr*Nang;
 
         std::vector<double> k (Nr);
@@ -277,9 +277,9 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
         for (int i=0; i<Nr; i++)
             for(int j=0; j<Nang; j++)
             {
-                x[n] = r[i] * sc[j] + _molecule.atom(I).coordinates()[0];
-                y[n] = r[i] * ss[j] + _molecule.atom(I).coordinates()[1];
-                z[n] = r[i] * c[j] + _molecule.atom(I).coordinates()[2];
+                x[n] = r[i] * sc[j] + _molecule.atom(I).get_coordinates()[0];
+                y[n] = r[i] * ss[j] + _molecule.atom(I).get_coordinates()[1];
+                z[n] = r[i] * c[j] + _molecule.atom(I).get_coordinates()[2];
                 weights[n] = radial_weights[i] * 4.0 * M_PI * wang[j];
                 n++;
             }
@@ -287,9 +287,9 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
         // distance between grid points and atom i
         for (int i=0; i<Nat; i++)
             for(int j=0; j<Npts; j++)
-                dist[i][j] = std::sqrt((x[j] - _molecule.atom(i).coordinates()[0]) * (x[j] - _molecule.atom(i).coordinates()[0])
-                                        + (y[j] - _molecule.atom(i).coordinates()[1]) * (y[j] - _molecule.atom(i).coordinates()[1])
-                                        + (z[j] - _molecule.atom(i).coordinates()[2]) * (z[j] - _molecule.atom(i).coordinates()[2]));
+                dist[i][j] = std::sqrt((x[j] - _molecule.atom(i).get_coordinates()[0]) * (x[j] - _molecule.atom(i).get_coordinates()[0])
+                                        + (y[j] - _molecule.atom(i).get_coordinates()[1]) * (y[j] - _molecule.atom(i).get_coordinates()[1])
+                                        + (z[j] - _molecule.atom(i).get_coordinates()[2]) * (z[j] - _molecule.atom(i).get_coordinates()[2]));
                 
 
         // P_i(r) as defined in eqn. (13)
@@ -702,7 +702,7 @@ void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
     std::vector<double> In = multicenter_sub_integration(&density, kmax, lebedev_order, radial_grid_factor);
 
     for(int i=0; i<Nat ;i++)
-        qn[i]=_molecule.atom(i).atomic_number() - In[i];
+        qn[i]=_molecule.atom(i).get_atomicNumber() - In[i];
 
     _partial_charge=qn;
 }
@@ -714,7 +714,7 @@ void Becke::partial_charge(const Grid &g, int kmax, int lebedev_order, int radia
     std::vector<double> In = multicenter_sub_integration(g);
     for (int i = 0; i < Nat; i++)
     {
-        qn[i] = _molecule.atom(i).atomic_number() - In[i];
+        qn[i] = _molecule.atom(i).get_atomicNumber() - In[i];
     }
     _partial_charge = qn;
 }
@@ -863,6 +863,6 @@ void Becke::printCharges()
     std::cout << "Number of atoms = " << _molecule.number_of_atoms() << std::endl;
     for(int i = 0; i < _molecule.number_of_atoms(); i++)
     {
-        std::cout << " Atom = " << std::left << std::setw(10) << _molecule.atom(i).symbol() << ", " << std::setw(10) << " value = " << std::setw(15) << _partial_charge[i] << std::endl;
+        std::cout << " Atom = " << std::left << std::setw(10) << _molecule.atom(i).get_symbol() << ", " << std::setw(10) << " value = " << std::setw(15) << _partial_charge[i] << std::endl;
     }
 }

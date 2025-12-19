@@ -11,13 +11,21 @@
 #include <Utils/LOG.h>
 
 
-    //! A structure class.
-    /*! This class will be used to have molecules or periodic structures. */
+/** @brief Structure class.
+ * 
+ * This class represents molecules or periodic structures.
+ */
 class Structure
 {
     private:
+        /** @brief Atoms that compose the structure. */
         std::vector<Atom> _atoms;
+
+
     public:
+        //----------------------------------------------------------------------------------------------------//
+        // CONSTRUCTORS
+        //----------------------------------------------------------------------------------------------------//
 
             //! A real constructor.
             /*! This constructor is used to add all of the data of all atoms used in our structure. */
@@ -26,6 +34,21 @@ class Structure
             //! Default constructor.
             /*! In the case of a problem, this constructor create an element with all value on 0 and all string on "None". */
         Structure();
+
+
+        //----------------------------------------------------------------------------------------------------//
+        // GETTERS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Returns the atoms that compose the structure.
+         */
+        const std::vector<Atom>& get_atoms() const;
+
+
+        //----------------------------------------------------------------------------------------------------//
+        // OTHER PUBLIC METHODS
+        //----------------------------------------------------------------------------------------------------//
 
             //! .cube file reader
             /*! Reads .cube files to initialize the atoms in the structure and the structure itself.*/
@@ -38,10 +61,6 @@ class Structure
                 Calls read_From_Cube() to initialize the atoms of the structure
             */
         Structure(std::ifstream& nameFile, const int Natoms, const PeriodicTable& Table);
-            
-            //! A default desctructor.
-            /*! We don't use it. */
-        ~Structure(){}
 
             //! A normal member taking no arguments and returning an integer value.
             /*! \return The number of atoms in our structure. */
@@ -56,12 +75,7 @@ class Structure
         {
             return _atoms[i];
         }
-            //! Get() function
-            /*! returns _atoms as a std::vector of atoms */
-        std::vector<Atom> atoms() const
-        {
-            return _atoms;
-        }
+        
         
             //! Operator +
             /*! Overload of + returns the structure with the biggest number of atoms */

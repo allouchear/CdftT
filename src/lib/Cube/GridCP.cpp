@@ -417,7 +417,7 @@ void GridCP::computeNumCenters()
         for(int ia=0;ia<_str.number_of_atoms();ia++)
         {
             for(int c=0; c<3;c++)
-                dr[c] = r[c]-_str.atom(ia).coordinates()[c];
+                dr[c] = r[c]-_str.atom(ia).get_coordinates()[c];
             r2 = 0;
             for(int c=0; c<3;c++)
                 r2 += dr[c]*dr[c];
@@ -425,7 +425,7 @@ void GridCP::computeNumCenters()
             if (ia==0 || r2<r2old )
             {
                 _criticalPoints[ip].numCenter=ia;
-                _criticalPoints[ip].nuclearCharge=_str.atom(ia).atomic_number();
+                _criticalPoints[ip].nuclearCharge=_str.atom(ia).get_atomicNumber();
                 r2old = r2;
             }
         }
@@ -803,7 +803,7 @@ vector<double> GridCP::computeAIMCharges(const Grid& grid)
         double z = _domain.z(i, j, k) * Constants::BOHR_RADIUS_TO_ANGSTROM;
         int ia=_criticalPoints[ip].numCenter;
         for(int c=0; c<3;c++)
-            r[c] = _str.atom(ia).coordinates()[c] * Constants::BOHR_RADIUS_TO_ANGSTROM;
+            r[c] = _str.atom(ia).get_coordinates()[c] * Constants::BOHR_RADIUS_TO_ANGSTROM;
 
         cout<<" Center = "<<fixed<<setprecision(6)<<right<<setw(10)<<x<<", "<<setw(10)<<y<<", "<<setw(10)<<z;
         cout<<left<<" Atom = "<<right<<setw(10)<<r[0]<<", "<<setw(10)<<r[1]<<", "<<setw(10)<<r[2]<<", "<< setw(10)<<cp.nuclearCharge;
@@ -854,11 +854,11 @@ void GridCP::buildVDD()
     for(int ia=0;ia<nAtoms;ia++)
     {
             //double rcov =   _str.atom(ia).element().covalent_radii();
-            double rcov =   _str.atom(ia).element().radii();
+            double rcov =   _str.atom(ia).get_element().radii();
             rcov2[ia] = rcov*rcov;
             //rcov2[ia] = 0.5*0.5;
             for(int c=0;c<3;c++)
-                coordinates[ia][c] = _str.atom(ia).coordinates()[c];
+                coordinates[ia][c] = _str.atom(ia).get_coordinates()[c];
     }
     vector< double > r2minAtom(nAtoms,-1);
 

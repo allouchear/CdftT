@@ -266,13 +266,13 @@ ostream& operator<<(ostream& flux, const Descriptors& desc)
         flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
         flux<<left<<setw(7)<<"Symbol"<<setw(4)<<"k"<<setw(15)<<right<<"Qk-"<<setw(15)<<right<<"Qk+"<<setw(15)<<right<<"Qk0"<<endl;
         for(int i=0; i<desc._str.number_of_atoms(); i++)
-            flux<<left<<setw(7)<<desc._str.atom(i).symbol()<<setw(4)<<i+1<<setw(15)<<right<<desc._Qm[i]<<setw(15)<<right<<desc._Qp[i]<<setw(15)<<right<<desc._Q0[i]<<endl;
+            flux<<left<<setw(7)<<desc._str.atom(i).get_symbol()<<setw(4)<<i+1<<setw(15)<<right<<desc._Qm[i]<<setw(15)<<right<<desc._Qp[i]<<setw(15)<<right<<desc._Q0[i]<<endl;
         flux<<endl;
     }
     flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
     flux<<left<<setw(7)<<"Symbol"<<setw(4)<<"k"<<setw(15)<<right<<"f-"<<setw(15)<< right<< "f+"<<setw(15)<<right<<"f0"<<setw(15)<<right<<"Delta f"<<endl;
     for(int i=0; i<desc._str.number_of_atoms(); i++)
-        flux<<left<<setw(7)<<desc._str.atom(i).symbol()<<setw(4)<<i+1<<setw(15)<<right<<desc._fkm[i]<<setw(15)<<right<<desc._fkp[i]<<setw(15)<<right<<desc._fk0[i]<<setw(15)<<right<<desc._Deltafk[i]<<endl;
+        flux<<left<<setw(7)<<desc._str.atom(i).get_symbol()<<setw(4)<<i+1<<setw(15)<<right<<desc._fkm[i]<<setw(15)<<right<<desc._fkp[i]<<setw(15)<<right<<desc._fk0[i]<<setw(15)<<right<<desc._Deltafk[i]<<endl;
     flux<<endl;    
     flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
     flux<<left<<setw(15)<<right<<"w-"<<setw(15)<<right<<"w+"<<setw(15)<<right<<"s-"<<setw(15)<<right<<"s+"<<setw(15)<<right<<"s-/s+"<<setw(15)<<right<<"hardness-"<<setw(15)<<right<<"hardness+"<<setw(15)<<right<<"hardness"<<endl;

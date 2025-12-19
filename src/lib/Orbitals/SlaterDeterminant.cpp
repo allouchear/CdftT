@@ -5,12 +5,13 @@
 #include <Orbitals/Orbitals.h>
 #include <Orbitals/SlaterDeterminant.hpp>
 
+#include <iostream>
 
 //----------------------------------------------------------------------------------------------------//
 // STATIC FIELDS
 //----------------------------------------------------------------------------------------------------//
 
-std::vector<std::vector<std::vector<double>>> _s_ionicMatrix_ = std::vector<std::vector<std::vector<double>>>();
+std::vector<std::vector<std::vector<double>>> SlaterDeterminant::_s_ionicMatrix_ = std::vector<std::vector<std::vector<double>>>();
 bool SlaterDeterminant::_s_isOrbitalsSet_ = false;
 Orbitals SlaterDeterminant::_s_orbitals_ = Orbitals();
 
@@ -155,11 +156,11 @@ std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(
 
 double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::array<double, 3>& position, double charge)
 {
-    if (SlaterDeterminant::_s_ionicMatrix_.empty())
+    if (_s_ionicMatrix_.empty())
     {
-        if (SlaterDeterminant::_s_isOrbitalsSet_)
+        if (_s_isOrbitalsSet_)
         {
-            _s_ionicMatrix_ = SlaterDeterminant::_s_orbitals_.getIonicPotentialMatrix(position, charge);
+            _s_ionicMatrix_ = _s_orbitals_.getIonicPotentialMatrix(position, charge);
         }
         else
         {
@@ -184,12 +185,12 @@ double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const Slat
         for (size_t i = 0; i < di._occupiedOrbitals[ALPHA].size(); ++i)
         {
             int orbitalIndex = di._occupiedOrbitals[ALPHA][i].first - 1;
-            sum += (SlaterDeterminant::_s_ionicMatrix_[ALPHA][orbitalIndex][orbitalIndex] + SlaterDeterminant::_s_ionicMatrix_[BETA][orbitalIndex][orbitalIndex]);
+            sum += (_s_ionicMatrix_[ALPHA][orbitalIndex][orbitalIndex] + _s_ionicMatrix_[BETA][orbitalIndex][orbitalIndex]);
         }
     }
     else
     {
-        std::vector<std::vector<std::pair<int, int>>> differences = SlaterDeterminant::getDifferences(di, dj);
+        std::vector<std::vector<std::pair<int, int>>> differences = getDifferences(di, dj);
 
         // Check that there is only one difference
         if (differences[ALPHA].size() + differences[BETA].size() == 1)
@@ -198,17 +199,16 @@ double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const Slat
             
             if (!differences[ALPHA].empty())
             {
-                int initialOrbitalIndex = differences[ALPHA][0].first - 1;
-                int finalOrbitalIndex = differences[ALPHA][0].second - 1;
+                initialOrbitalIndex = differences[ALPHA][0].first - 1;
+                finalOrbitalIndex = differences[ALPHA][0].second - 1;
             }
-            else if (!differences[BETA].empty())
+            else
             {
-                int initialOrbitalIndex = differences[BETA][0].first - 1;
-                int finalOrbitalIndex = differences[BETA][0].second - 1;
+                initialOrbitalIndex = differences[BETA][0].first - 1;
+                finalOrbitalIndex = differences[BETA][0].second - 1;
             }
 
-            sum += (SlaterDeterminant::_s_ionicMatrix_[ALPHA][initialOrbitalIndex][finalOrbitalIndex]
-                    + SlaterDeterminant::_s_ionicMatrix_[BETA][initialOrbitalIndex][finalOrbitalIndex]);
+            sum += (_s_ionicMatrix_[ALPHA][initialOrbitalIndex][finalOrbitalIndex] + _s_ionicMatrix_[BETA][initialOrbitalIndex][finalOrbitalIndex]);
         }
     }
 

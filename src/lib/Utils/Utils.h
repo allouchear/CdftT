@@ -69,6 +69,32 @@ template<typename T> bool readListType(std::ifstream& inputFile, const std::stri
 
 
 //----------------------------------------------------------------------------------------------------//
+// MATRIX MANAGEMENT FUNCTIONS
+//----------------------------------------------------------------------------------------------------//
+
+bool diagonalisationOfATridiagonalMatrix(std::vector<double>& subDiagonal, std::vector<double>& eigenValues, std::vector<std::vector<double>>& eigenVectors);
+
+/**
+ * @brief Finds the eigenvalues and eigenvectors of a real symmetric matrix using the QL algorithm.
+ * 
+ * @param[in] matrixLowerTriangle Lower triangle of a real, symmetric matrix.
+ * @param[out] eigenValues Vector where the computed eigenvalues will be stored.
+ * @param[out] eigenVectors Matrix (as a vector of vectors) where the computed eigenvectors will be stored.
+ * @return True if the computation was successful; false otherwise.
+ */
+bool findEigenValuesAndEigenVectorsOfSymmetricalMatrix(const std::vector<std::vector<double>>& matrixLowerTriangle, std::vector<double>& eigenValues, std::vector<std::vector<double>>& eigenVectors);
+
+/**
+ * @brief Reduces a real, symmetric matrix to tridiagonal form using Householder transformations.
+ * 
+ * @param[in,out] matrix Real symmetric matrix to be reduced (modified in place).
+ * @param[out] diagonal Vector where the diagonal elements of the tridiagonal matrix will be stored.
+ * @param[out] subDiagonal Vector where the sub-diagonal elements of the tridiagonal matrix will be stored.
+ */
+void reductionToTridiagonalMatrix(std::vector<std::vector<double>>& matrix, std::vector<double>& diagonal, std::vector<double>& subDiagonal);
+
+
+//----------------------------------------------------------------------------------------------------//
 // UTIL CLASSES
 //----------------------------------------------------------------------------------------------------//
 

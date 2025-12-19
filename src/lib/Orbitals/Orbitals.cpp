@@ -846,6 +846,11 @@ const Descriptors& Orbitals::get_descriptors() const
     return _descriptors;
 }
 
+const double Orbitals::get_energy() const
+{
+    return _energy;
+}
+
 //----------------------------------------------------------------------------------------------------//
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
@@ -946,24 +951,32 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
 {
     // Build ionic potential matrix in AO basis    
     std::vector<std::vector<double>> ionicMatrixAO = std::vector<std::vector<double>>(_numberOfAo, std::vector<double>());
-
-    int i, j;
-    #ifdef ENABLE_OMP
-    #pragma omp parallel for private(i, j)
-    #endif
-    for (i = 0; i < _numberOfAo; ++i)
+    for (int i = 0; i < _numberOfAo; ++i)
     {
-        for (j = 0; j <= i; ++j)
+        ionicMatrixAO[i].resize(i + 1, 0.0);
+    }
+
+    // Compute ionic potential matrix elements in AO basis
+    for (int i = 0; i < _numberOfAo; ++i)
+    {
+        for (int j = 0; j <= i; ++j)
         {
-            ionicMatrixAO[i].push_back(_vcgtf[i].ionicPotentialCGTF(_vcgtf[j], position, Z));
+            ionicMatrixAO[i][j] = _vcgtf[i].ionicPotentialCGTF(_vcgtf[j], position, Z);
         }
     }
 
-
     // Build ionic potential matrix in MO basis
     std::vector<std::vector<std::vector<double>>> ionicMatrixMO = std::vector<std::vector<std::vector<double>>>(2, std::vector<std::vector<double>>(_numberOfMo, std::vector<double>()));
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for (int i = 0; i < _numberOfMo; ++i)
+        {
+            ionicMatrixMO[spin][i].resize(i + 1, 0.0);
+        }
+    }
 
-    int spin;
+    // Compute ionic potential matrix elements in MO basis
+    int spin, i, j;
     #ifdef ENABLE_OMP
     #pragma omp parallel for private(spin, i, j)
     #endif

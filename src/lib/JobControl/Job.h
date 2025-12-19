@@ -49,6 +49,12 @@ class Job
          */
         void readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames);
 
+        /** @brief Reads the charge of the point charge from the "Charge" parameter in the input file.
+         * 
+         * @param[out] charge Reference to a double where the read charge value will be stored.
+         */
+        void readCharge(double &charge);
+
         /** @brief Reads the numeric cutoff used by some partitioning methods from the "Cutoff" parameter in the input file.
          * 
          * @param[out] cutoff Reference to a double where the read cutoff value will be stored.
@@ -103,6 +109,13 @@ class Job
          * @param[out] partitionMethod Reference to a PartitionMethod variable where the parsed method will be stored.
          */
         void readPartitionMethod(PartitionMethod& partitionMethod);
+
+        /**
+         * @brief Reads a 3-coordinate position from the "Position" parameter in the input file.
+         *
+         * @param[out] position Reference to an array of three doubles where the read position will be stored.
+         */
+        void readPosition(std::array<double, 3>& position);
 
         /**
          * @brief Reads the requested run type (job) from the "RunType" parameter in the input file.

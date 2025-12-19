@@ -14,7 +14,7 @@
 
 /** @brief ExcitedState class.
  * 
- *  Manages excited states and their associated transitions.
+ *  Manages excited states and their associated electronic transitions.
  */
 class ExcitedState
 {
@@ -25,7 +25,7 @@ class ExcitedState
         double _energy;
         
         /** @brief Electronic transitions associated with the excited state. */
-        std::vector<std::tuple<OrbitalState, OrbitalState, double>> _transitions;
+        std::vector<std::tuple<OrbitalState, OrbitalState, double>> _electronicTransitions;
 
         /** @brief Slater determinants associated with the excited state (one for each transition). */
         std::vector<SlaterDeterminant> _slaterDeterminants;
@@ -43,6 +43,14 @@ class ExcitedState
          */
         ExcitedState(const double energy);
 
+        /**
+         * @brief Constructor for the ground state.
+         * 
+         * @param energy Energy of the ground state, in Hartree.
+         * @param slaterDeterminant Slater determinant associated with the ground state.
+         */
+        ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant);
+
 
         //----------------------------------------------------------------------------------------------------//
         // GETTERS
@@ -53,20 +61,10 @@ class ExcitedState
          */
         double get_energy() const;
 
-        /**
-         * @brief Returns the Slater determinants associated with the excited state.
-         */
-        const std::vector<SlaterDeterminant>& get_slaterDeterminants() const;
-
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
         //----------------------------------------------------------------------------------------------------//
-
-        /**
-         * @brief Returns the number of electronic transitions associated with the excited state.
-         */
-        int getNumberOfTransitions() const;
 
         /**
          * @brief Adds an electronic transition to the excited state.
@@ -83,6 +81,16 @@ class ExcitedState
          * @param[in]  SlaterDeterminant Reference to the ground state Slater determinant.
          */
         void computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant);
+
+        /**
+         * @brief Returns the number of electronic transitions associated with the excited state.
+         */
+        int getNumberOfTransitions() const;
+
+        /**
+         * @brief Returns the Slater determinants associated with the excited state along with their respective coefficient.
+         */
+        std::vector<std::pair<SlaterDeterminant, double>> getSlaterDeterminantsAndCoefficients() const;
 
         /** @brief Prints lambda diagnostic for the excited state.
          *

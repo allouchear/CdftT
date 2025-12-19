@@ -136,6 +136,11 @@ class Orbitals
          */
         const Descriptors& get_descriptors() const;
 
+        /**
+         * @brief Returns the total energy associated with the Orbitals (ground state energy).
+         */
+        const double get_energy() const;
+
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS

@@ -1,21 +1,33 @@
-#include<iostream>
-#include <string>
+#include <iostream>
 #include <fstream>
+#include <string>
 #include <vector>
+
 #include <Common/Structure.h>
 
-using namespace std;
 
-Structure::Structure(const vector<Atom>& A)
+//----------------------------------------------------------------------------------------------------//
+// CONSTRUCTORS
+//----------------------------------------------------------------------------------------------------//
+
+Structure::Structure():
+    _atoms()
+{ }
+
+Structure::Structure(const std::vector<Atom>& A):
+    _atoms(A)
+{ }
+
+
+//----------------------------------------------------------------------------------------------------//
+// GETTERS
+//----------------------------------------------------------------------------------------------------//
+
+const std::vector<Atom>& Structure::get_atoms() const
 {
-    _atoms.resize(A.size());
-    _atoms=A;
+    return _atoms;
 }
 
-Structure::Structure()
-{
-    _atoms=vector<Atom> ();
-}
 
 void Structure::read_From_Cube(ifstream& nameFile, int Natoms,const PeriodicTable& Table )
 {
@@ -31,7 +43,7 @@ void Structure::read_From_Cube(ifstream& nameFile, int Natoms,const PeriodicTabl
         for(int j=0; j<3; j++)
         {
             nameFile>>input;
-            _atoms[i].set_coordinates(j,input);
+            _atoms[i].setCoordinate(j,input);
         }
     }
 }
@@ -62,11 +74,11 @@ Structure Structure::add(const Structure& S)
             bool b=true;
             for(int k=0; k<number_of_atoms(); k++)
             {
-                if( _atoms[k].get_distance(S._atoms[j])==0 )
+                if( _atoms[k].computeDistance(S._atoms[j])==0 )
                 {
-                    if(_atoms[k].symbol()==S._atoms[j].symbol())
+                    if(_atoms[k].get_symbol()==S._atoms[j].get_symbol())
                     {
-                        throw string("::add(const Structure& S): can't add two identical atoms at same coordinates");
+                        throw std::string("::add(const Structure& S): can't add two identical atoms at same coordinates");
                     }
                     else
                     {
@@ -83,7 +95,7 @@ Structure Structure::add(const Structure& S)
         }
         return *this;
     }
-    catch(string error)
+    catch(std::string error)
     {
         cout<<error<<endl;
         exit(1);
@@ -101,7 +113,7 @@ void Structure::read_from_wfx(WFX& wfx, const PeriodicTable& Table)
         n=3*i;
         for(int j=0; j<3; j++)
         {
-            _atoms[i].set_coordinates(j, wfx.Nuclear_Cartesian_Coordinates()[n]);
+            _atoms[i].setCoordinate(j, wfx.Nuclear_Cartesian_Coordinates()[n]);
             n++;
         }
     }
@@ -123,7 +135,7 @@ void Structure::read_from_fchk(FCHK& fchk, const PeriodicTable& Table)
         n=3*i;
         for(int j=0; j<3; j++)
         {
-            _atoms[i].set_coordinates(j, fchk.CurrentCartesianCoordinates()[n]);
+            _atoms[i].setCoordinate(j, fchk.CurrentCartesianCoordinates()[n]);
             n++;
         }
     }
@@ -141,7 +153,7 @@ void Structure::read_from_moldengab(MOLDENGAB& moldengab, const PeriodicTable& T
     {
         _atoms[i]=Atom(Table, moldengab.AtomicNumbers()[i]);
         for(int j=0; j<3; j++)
-            _atoms[i].set_coordinates(j, moldengab.Coordinates()[i][j]);
+            _atoms[i].setCoordinate(j, moldengab.Coordinates()[i][j]);
     }
 }
 
@@ -157,7 +169,7 @@ void Structure::read_from_log(LOG& log, const PeriodicTable& Table)
     {
         _atoms[i]=Atom(Table, log.AtomicNumbers()[i]);
         for(int j=0; j<3; j++)
-            _atoms[i].set_coordinates(j, log.Coordinates()[i][j]);
+            _atoms[i].setCoordinate(j, log.Coordinates()[i][j]);
     }
 }
 

@@ -160,6 +160,246 @@ bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string
 
 
 //----------------------------------------------------------------------------------------------------//
+// MATRIX MANAGEMENT FUNCTIONS
+//----------------------------------------------------------------------------------------------------//
+
+bool diagonalisationOfATridiagonalMatrix(std::vector<double>& subDiagonal, std::vector<double>& eigenValues, std::vector<std::vector<double>>& eigenVectors)
+{
+    bool ok = true;
+    int dimension = static_cast<int>(eigenValues.size());
+
+    for (int i = 1; i < dimension; ++i)
+    {
+        subDiagonal[i - 1] = subDiagonal[i];
+    }
+    subDiagonal[dimension - 1] = 0.0;
+
+    for (int l = 0; ok && l < dimension; ++l)
+    {
+        int iteration = 0;
+
+        int m;
+        do
+        {
+            for (m = l; m < dimension - 1; ++m)
+            {
+                double dd = std::fabs(eigenValues[m]) + std::fabs(eigenValues[m + 1]);
+                if (std::fabs(subDiagonal[m]) + dd == dd)
+                {
+                    break;
+                }
+            }
+
+            if (m != 1)
+            {
+                ++iteration;
+                if (iteration == 30)
+                {
+                    ok = false;
+                    break;
+                }
+
+                double g = (eigenValues[l + 1] - eigenValues[l]) / (2.0 * subDiagonal[l]);
+                double r = std::sqrt((g * g) + 1.0);
+
+                g = eigenValues[m] - eigenValues[l] + subDiagonal[l] / (g + (g < 0.0) ? -std::fabs(r) : std::fabs(r));
+
+                double s = 1.0;
+                double c = 1.0;
+                double p = 0.0;
+                for (int i = m - 1; i >= 1; --i)
+                {
+                    double f = s * subDiagonal[i];
+                    double b = c * subDiagonal[i];
+
+                    if (std::fabs(f) >= std::fabs(g))
+                    {
+                        c = g / f;
+                        r = std::sqrt((c * c) + 1.0);
+
+                        subDiagonal[i + 1] = f * r;
+
+                        s = 1.0 / r;
+                        c *= s;
+                    }
+                    else
+                    {
+                        s = f / g;
+                        r = std::sqrt((s * s) + 1.0);
+
+                        subDiagonal[i + 1] = g * r;
+
+                        c = 1.0 / r;
+                        s *= c;
+                    }
+
+                    g = eigenValues[i + 1] - p;
+                    r = (eigenValues[i] - g) * s + 2.0 * c * b;
+                    p = s * r;
+
+                    eigenValues[i + 1] = g + p;
+                    g = c * r - b;
+
+                    for (int k = 0; k < dimension; ++k)
+                    {
+                        f = eigenVectors[k][i + 1];
+                        eigenVectors[k][i + 1] = s * eigenVectors[k][i] + c * f;
+                        eigenVectors[k][i] = c * eigenVectors[k][i] - s * f;
+                    }
+                }
+
+                eigenValues[l] = eigenValues[l] - p;
+                subDiagonal[l] = g;
+                subDiagonal[m] = 0.0;
+            }
+        } while (m != 1);
+    }
+
+    return ok;
+}
+
+bool findEigenValuesAndEigenVectorsOfSymmetricalMatrix(const std::vector<std::vector<double>>& matrix, std::vector<double>& eigenValues, std::vector<std::vector<double>>& eigenVectors)
+{
+    bool ok = false;
+
+    int dimension = static_cast<int>(matrix.size());
+    if (dimension > 1)
+    {
+        ok = true;
+
+        // Building whole matrix from lower triangle
+        std::vector<std::vector<double>> wholeMatrix(matrix);
+        for (int i = 0; i < dimension; ++i)
+        {
+            wholeMatrix[i].resize(dimension);
+
+            for (int j = i + 1; j < dimension; ++j)
+            {
+                wholeMatrix[i][j] = wholeMatrix[j][i];
+            }
+        }
+
+        std::vector<double> eigenVectors;
+        reductionToTridiagonalMatrix(wholeMatrix, eigenValues, eigenVectors);
+    }
+
+    return ok;
+}
+
+void reductionToTridiagonalMatrix(std::vector<std::vector<double>>& matrix, std::vector<double>& diagonal, std::vector<double>& subDiagonal)
+{
+    // Ensure diagonal and subDiagonal have the correct size
+    int dimension = static_cast<int>(matrix.size());
+    diagonal.resize(dimension);
+    subDiagonal.resize(dimension);
+
+    for (int i = dimension - 1; i >= 1; --i)
+    {
+        int l = i - 1;
+
+        double h = 0.0;
+        double scale = 0.0;
+
+        if (l > 0)
+        {
+            for (int k = 0; k <= 1; ++k)
+            {
+                scale += std::fabs(matrix[i][k]);
+            }
+
+            if (scale == 0.0)
+            {
+                subDiagonal[i] = matrix[i][l];
+            }
+            else
+            {
+                for (int k = 0; k <= l; ++k)
+                {
+                    matrix[i][k] /= scale;
+                    h += matrix[i][k] * matrix[i][k];
+                }
+
+                double f = matrix[i][l];
+                double g = (f > 0.0) ? -std::sqrt(h) : std::sqrt(h);
+
+                subDiagonal[i] = scale * g;
+                h -= f * g;
+                matrix[i][l] = f - g;
+                
+                f = 0.0;
+                for (int j = 0; j <= l; ++j)
+                {
+                    matrix[j][i] = matrix[i][j] / h;
+
+                    g = 0.0;
+                    for (int k = 0; k <= j; ++k)
+                    {
+                        g += matrix[j][k] * matrix[i][k];
+                    }
+                    for (int k = j + 1; k <= l; ++k)
+                    {
+                        g += matrix[k][j] * matrix[i][k];
+                    }
+
+                    subDiagonal[j] = g / h;
+                    f += subDiagonal[j] * matrix[i][j];
+                }
+
+                double hh = f / (h + h);
+                for (int j = 0; j <= l; ++j)
+                {
+                    f = matrix[i][j];
+
+                    g = subDiagonal[j] - hh * f;
+                    subDiagonal[j] = g;
+                    for (int k = 0; k <= j; ++k)
+                    {
+                        matrix[j][k] -= (f * subDiagonal[k] + g * matrix[i][k]);
+                    }
+                }
+            }
+        }
+        else
+        {
+            subDiagonal[i] = matrix[i][l];
+        }
+
+        diagonal[i] = h;
+    }
+
+    diagonal[0] = 0.0;
+    subDiagonal[0] = 0.0;
+    for (int i = 0; i < dimension; ++i)
+    {
+        int l = i - 1;
+
+        if (diagonal[i] != 0.0)
+        {
+            for (int j = 0; j <= l; ++j)
+            {
+                double g = 0.0;
+                for (int k = 0; k <= l; ++k)
+                {
+                    g += matrix[i][k] * matrix[k][j];
+                }
+                for (int k = 0; k <= l; ++k)
+                {
+                    matrix[k][j] -= g * matrix[k][i];
+                }
+            }
+        }
+
+        diagonal[i] = matrix[i][i];
+        matrix[i][i] = 1.0;
+        for (int j = 0; j <= l; ++j)
+        {
+            matrix[j][i] = 0.0;
+            matrix[i][j] = 0.0;
+        }
+    }
+}
+
+//----------------------------------------------------------------------------------------------------//
 // UTIL CLASSES
 //----------------------------------------------------------------------------------------------------//
 
