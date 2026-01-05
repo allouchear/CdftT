@@ -1456,10 +1456,7 @@ void Job::run_computeEnergyWithPointCharge()
                 */
                 for (const Atom& atom : orbitals.get_struct().get_atoms())
                 {
-                    std::cout << "atom.get_charge() " << atom.get_charge() << std::endl;
-                    std::cout << "atom.computeDistance(position) " << atom.computeDistance(position) << std::endl;
-                    std::cout << "(charge * atom.get_charge()) / atom.computeDistance(position)" << (charge * atom.get_charge()) / atom.computeDistance(position) << std::endl;
-                    value += (charge * atom.get_charge()) / atom.computeDistance(position);
+                    value += (charge * atom.get_element().get_atomicNumber()) / atom.computeDistance(position);
                 }
             }
             std::cout << "< psi_" << i << " | V_nucleus | psi_" << j << " > = " << value << std::endl;

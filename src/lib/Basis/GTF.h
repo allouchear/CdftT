@@ -13,12 +13,17 @@
 class GTF
 {
     private:
-        double _exposant;
+        double _exponent;
         double _coefficient;
-        std::vector<double> _coord;
+        std::array<double, 3> _coord;
         std::vector<int> _l;
         Binomial _bino;
+
+
     public:
+        //----------------------------------------------------------------------------------------------------//
+        // CONSTRUCTORS
+        //----------------------------------------------------------------------------------------------------//
 
             //! A default constructor.
             /*! This constructor is used to set all of the parameters for one GTF on 0 or "None" value. */
@@ -26,49 +31,51 @@ class GTF
 
             //! A real constructor.
             /*! This constructor is used to add all of the parameters for one GTF. */
-        GTF(const double&, const double&, const std::vector<double>&, const std::vector<int>&, Binomial&);
+        GTF(const double exponent, const double coefficient, const std::array<double, 3>& coord, const std::vector<int>& l, const Binomial& binomial);
 
-            //! A default desctructor.
-            /*! We don't use it. */
-        ~GTF(){}
 
-            //! A normal member taking no arguments and returning a double value.
-            /*! \return The exposant value. */
-        double exposant()
+        //----------------------------------------------------------------------------------------------------//
+        // GETTERS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Returns the exponent value.
+         */
+        double get_exponent() const;
+
+        /**
+         * @brief Returns the coefficient value.
+         */
+        double get_coefficient() const;
+
+        /**
+         * @brief Returns the coordinates of the atom associated with the GTF.
+         */
+        const std::array<double, 3>& get_coord() const;
+
+        /**
+         * @brief Returns the quantum numbers associated with the GTF.
+         */
+        const std::vector<int>& get_l() const;
+
+        /**
+         * @brief Returns the binomial helper object associated with the GTF.
+         */
+        Binomial& get_bino();
+
+
+        //----------------------------------------------------------------------------------------------------//
+        // OTHER PUBLIC METHODS
+        //----------------------------------------------------------------------------------------------------//
+
+        void setL(const int index, const int value)
         {
-            return _exposant;
+            _l[index] = value;
         }
 
-            //! A normal member taking no arguments and returning a double value.
-            /*! \return The coefficient value. */
-        double coefficient()
-        {
-            return _coefficient;
-        }
 
-            //! A normal member taking no arguments and returning a std::vector<double> value.
-            /*! \return The coordinates of the atom's GTF. */
-        std::vector<double> coord()
-        {
-            return _coord;
-        }
-
-            //! A normal member taking no arguments and returning a std::vector<int> value.
-            /*! \return The quantic number of the atom's GTF. */
-        std::vector<int> l()
-        {
-            return _l;
-        }
-
-            //! A normal member taking no arguments and returning a binomial value.
-            /*! \return The binomial object using for calculus. */
-        Binomial& bino()
-        {
-            return _bino;
-        }
-
-            //! A normal member taking one argument and returning a double value.
-            /*! \return norme value. */
+        //! A normal member taking one argument and returning a double value.
+        /*! \return norme value. */
         double normeGTF();
 
             //! A normal member taking one argument and returning a double value.
@@ -121,7 +128,7 @@ class GTF
         
             //! A normal member taking three arguments and returning a double value.
             /*! \return The ionic potential ???. */
-        double ionicPotentialGTF(GTF&, const std::array<double, 3>&, double);
+        double ionicPotentialGTF(const GTF&, const std::array<double, 3>&, double);
         
             //! A normal member taking three arguments and returning a double value.
             /*! \return The eri ???. */
@@ -137,7 +144,7 @@ class GTF
 
             //! A normal membre taking five arguments and returning a void value.
             /*! Insert all the data in the GTF. */
-        void push_back(const double&, const double&, const std::vector<double>&, const std::vector<int>&, Binomial&);
+        void push_back(const double&, const double&, const std::array<double, 3>&, const std::vector<int>&, Binomial&);
         
             //! Gradient of GTF
             /*! Get the ith component of the gradient of a GTF*/

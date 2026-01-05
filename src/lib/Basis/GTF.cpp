@@ -7,17 +7,60 @@
 #include <Basis/GTF.h>
 
 
-GTF::GTF()
+//----------------------------------------------------------------------------------------------------//
+// CONSTRUCTORS
+//----------------------------------------------------------------------------------------------------//
+
+GTF::GTF():
+    _exponent(0.0),
+    _coefficient(0.0),
+    _coord(),
+    _l(),
+    _bino()
+{ }
+
+GTF::GTF(const double exponent, const double coefficient, const std::array<double, 3>& coord, const std::vector<int>& l, const Binomial& binomial):
+    _exponent(exponent),
+    _coefficient(coefficient),
+    _coord(coord),
+    _l(l),
+    _bino(binomial)
+{ }
+
+
+//----------------------------------------------------------------------------------------------------//
+// GETTERS
+//----------------------------------------------------------------------------------------------------//
+
+double GTF::get_exponent() const
 {
-    _exposant=0;
-    _coefficient=0;
-    _coord.resize(0);
-    _l.resize(0);
-    _bino=Binomial();
+    return _exponent;
 }
 
-GTF::GTF(const double& exposant, const double& coefficient, const std::vector<double>& coord, const std::vector<int>& l, 
-    Binomial& B) : _exposant(exposant), _coefficient(coefficient), _coord(coord), _l(l), _bino(B){}
+double GTF::get_coefficient() const
+{
+    return _coefficient;
+}
+
+const std::array<double, 3>& GTF::get_coord() const
+{
+    return _coord;
+}
+
+const std::vector<int>& GTF::get_l() const
+{
+    return _l;
+}
+
+Binomial& GTF::get_bino()
+{
+    return _bino;
+}
+
+
+
+
+
 
 double GTF::GTFstarGTF (GTF& right)
 {
@@ -26,19 +69,19 @@ double GTF::GTFstarGTF (GTF& right)
     double t;
     std::vector<double> PA(3);
     std::vector<double> PB(3);
-    double gama=_exposant+right._exposant;
+    double gama=_exponent+right._exponent;
     double R2=0.0;
     double c=0;
 
     for(j=0; j<3; j++)
     {
-        t=(_exposant*_coord[j] + right._exposant*right._coord[j])/gama;
+        t=(_exponent*_coord[j] + right._exponent*right._coord[j])/gama;
         PA[j]=_coord[j]-t;
         PB[j]=right._coord[j]-t;
         R2+=(_coord[j]-right._coord[j])*(_coord[j]-right._coord[j]);
     }
 
-    c = (M_PI/gama)*std::sqrt(M_PI/gama)*exp(-_exposant*right._exposant/gama*R2);
+    c = (M_PI/gama)*std::sqrt(M_PI/gama)*exp(-_exponent*right._exponent/gama*R2);
 
     for(j=0; j<3; j++)
     {
@@ -60,8 +103,8 @@ double GTF::GTFstarGTFstarGTF (GTF& mid, GTF& right)
     std::vector<double> P(3);
     std::vector<double> QP(3);
     std::vector<double> QC(3);
-    double gama1=_exposant+right.exposant();
-    double gama=gama1+mid.exposant();
+    double gama1=_exponent+right.get_exponent();
+    double gama=gama1+mid.get_exponent();
     double R2AB=0.0;
     double R2PC=0.0;
     double c = 0;
@@ -70,32 +113,32 @@ double GTF::GTFstarGTFstarGTF (GTF& mid, GTF& right)
 
     for(j=0;j<3;j++)
     {
-        t=(_exposant*_coord[j]+right.exposant()*right.coord()[j])/gama1;
+        t=(_exponent*_coord[j]+right.get_exponent()*right.get_coord()[j])/gama1;
         P[j]=t;
         PA[j]=_coord[j]-t;
-        PB[j]=right.coord()[j]-t;
-        R2AB += (_coord[j]-right.coord()[j])*(_coord[j]-right.coord()[j]);
+        PB[j]=right.get_coord()[j]-t;
+        R2AB += (_coord[j]-right.get_coord()[j])*(_coord[j]-right.get_coord()[j]);
     }
     for(j=0;j<3;j++)
     {
-        t=(gama1*P[j]+mid.exposant()*mid.coord()[j])/gama;
+        t=(gama1*P[j]+mid.get_exponent()*mid.get_coord()[j])/gama;
         QP[j]=P[j]-t;
-        QC[j]=mid.coord()[j]-t;
-        R2PC += (P[j]-mid.coord()[j])*(P[j]-mid.coord()[j]);
+        QC[j]=mid.get_coord()[j]-t;
+        R2PC += (P[j]-mid.get_coord()[j])*(P[j]-mid.get_coord()[j]);
     }
-    c = (M_PI/gama)*std::sqrt(M_PI/gama)*exp(-_exposant*right.exposant()/gama1*R2AB)*exp(-gama1*mid.exposant()/gama*R2PC);
+    c = (M_PI/gama)*std::sqrt(M_PI/gama)*exp(-_exponent*right.get_exponent()/gama1*R2AB)*exp(-gama1*mid.get_exponent()/gama*R2PC);
 
     for(j=0;j<3;j++)
     {
         sum[j]=0.0;
-        for(iAB=0;iAB<=(_l[j]+right.l()[j]);iAB++)
+        for(iAB=0;iAB<=(_l[j]+right.get_l()[j]);iAB++)
         {
-            double fiAB = f(iAB,_l[j],right.l()[j],PA[j],PB[j], _bino);
-            for(i=0;i<=(iAB+mid.l()[j])/2;i++)
+            double fiAB = f(iAB,_l[j],right.get_l()[j],PA[j],PB[j], _bino);
+            for(i=0;i<=(iAB+mid.get_l()[j])/2;i++)
             {
                 sum[j] +=
                 fiAB*
-                f(2*i,iAB,mid.l()[j],QP[j],QC[j], _bino)*
+                f(2*i,iAB,mid.get_l()[j],QP[j],QC[j], _bino)*
                 _bino.fact().double_factorial(2*i-1)/(power(2.0,i)*power(gama,i));
              }
         }
@@ -115,8 +158,8 @@ double GTF::GTFstarGTFstarGTFstarGTF(GTF& B, GTF& C, GTF& D)
     std::vector<double> Q(3);
     std::vector<double> GP(3);
     std::vector<double> GQ(3);
-    double gama1=_exposant+B.exposant();
-    double gama2=C.exposant()+D.exposant();
+    double gama1=_exponent+B.get_exponent();
+    double gama2=C.get_exponent()+D.get_exponent();
     double gama=gama1+gama2;
     double R2AB=0.0;
     double R2CD=0.0;
@@ -128,19 +171,19 @@ double GTF::GTFstarGTFstarGTFstarGTF(GTF& B, GTF& C, GTF& D)
 
     for(j=0;j<3;j++)
     {
-        t=(_exposant*_coord[j]+B.exposant()*B.coord()[j])/gama1;
+        t=(_exponent*_coord[j]+B.get_exponent()*B.get_coord()[j])/gama1;
         P[j]=t;
         PA[j]=_coord[j]-t;
-        PB[j]=B.coord()[j]-t;
-        R2AB += (_coord[j]-B.coord()[j])*(_coord[j]-B.coord()[j]);
+        PB[j]=B.get_coord()[j]-t;
+        R2AB += (_coord[j]-B.get_coord()[j])*(_coord[j]-B.get_coord()[j]);
     }
     for(j=0;j<3;j++)
     {
-        t=(C.exposant()*C.coord()[j]+D.exposant()*D.coord()[j])/gama2;
+        t=(C.get_exponent()*C.get_coord()[j]+D.get_exponent()*D.get_coord()[j])/gama2;
         Q[j]=t;
-        QC[j]=C.coord()[j]-t;
-        QD[j]=D.coord()[j]-t;
-        R2CD += (C.coord()[j]-D.coord()[j])*(C.coord()[j]-D.coord()[j]);
+        QC[j]=C.get_coord()[j]-t;
+        QD[j]=D.get_coord()[j]-t;
+        R2CD += (C.get_coord()[j]-D.get_coord()[j])*(C.get_coord()[j]-D.get_coord()[j]);
     }
     for(j=0;j<3;j++)
     {
@@ -150,20 +193,20 @@ double GTF::GTFstarGTFstarGTFstarGTF(GTF& B, GTF& C, GTF& D)
         R2PQ += (P[j]-Q[j])*(P[j]-Q[j]);
     }
     c = (M_PI/gama)*std::sqrt(M_PI/gama)
-        *exp(-_exposant*B.exposant()/gama1*R2AB)
-        *exp(-C.exposant()*D.exposant()/gama2*R2CD)
+        *exp(-_exponent*B.get_exponent()/gama1*R2AB)
+        *exp(-C.get_exponent()*D.get_exponent()/gama2*R2CD)
         *exp(-gama1*gama2/gama*R2PQ);
 
 
     for(j=0;j<3;j++)
     {
         sum[j]=0.0;
-        for(iAB=0;iAB<=(_l[j]+B.l()[j]);iAB++)
+        for(iAB=0;iAB<=(_l[j]+B.get_l()[j]);iAB++)
         {
-            double fiAB = f(iAB,_l[j],B.l()[j],PA[j],PB[j],_bino);
-            for(iCD=0;iCD<=(C.l()[j]+D.l()[j]);iCD++)
+            double fiAB = f(iAB,_l[j],B.get_l()[j],PA[j],PB[j],_bino);
+            for(iCD=0;iCD<=(C.get_l()[j]+D.get_l()[j]);iCD++)
             {
-                double fiCD = f(iCD,C.l()[j],D.l()[j],QC[j],QD[j],_bino);
+                double fiCD = f(iCD,C.get_l()[j],D.get_l()[j],QC[j],QD[j],_bino);
                 for(i=0;i<=(iAB+iCD)/2;i++)
                 {
                     sum[j] +=
@@ -180,14 +223,14 @@ double GTF::GTFstarGTFstarGTFstarGTF(GTF& B, GTF& C, GTF& D)
 
 double GTF::normeGTF()
 {
-    return std::sqrt(2*_exposant/M_PI*std::sqrt(2*_exposant/M_PI)*power(4*_exposant, _l[0]+_l[1]+_l[2])
+    return std::sqrt(2*_exponent/M_PI*std::sqrt(2*_exponent/M_PI)*power(4*_exponent, _l[0]+_l[1]+_l[2])
             /(_bino.fact().double_factorial(_l[0])*_bino.fact().double_factorial(_l[1])*_bino.fact().double_factorial(_l[2])));
 }
 
 double GTF::normeGTF(GTF& q)
 {
-    return std::sqrt(2*q.exposant()/M_PI*std::sqrt(2*q.exposant()/M_PI)*power(4*q.exposant(), q.l()[0]+q.l()[1]+q.l()[2])
-            /(q.bino().fact().double_factorial(q.l()[0])*q.bino().fact().double_factorial(q.l()[1])*q.bino().fact().double_factorial(q.l()[2])));
+    return std::sqrt(2*q.get_exponent()/M_PI*std::sqrt(2*q.get_exponent()/M_PI)*power(4*q.get_exponent(), q.get_l()[0]+q.get_l()[1]+q.get_l()[2])
+            /(q.get_bino().fact().double_factorial(q.get_l()[0])*q.get_bino().fact().double_factorial(q.get_l()[1])*q.get_bino().fact().double_factorial(q.get_l()[2])));
 }
 
 void GTF::normaliseRadialGTF()
@@ -197,7 +240,7 @@ void GTF::normaliseRadialGTF()
     l[0]=l_bis;
     l[1]=0;
     l[2]=0;
-    GTF q(_exposant, _coefficient, _coord, l, _bino);
+    GTF q(_exponent, _coefficient, _coord, l, _bino);
     _coefficient*=normeGTF(q);
 }
 
@@ -208,7 +251,7 @@ void GTF::denormaliseRadialGTF()
     l[0]=l_bis;
     l[1]=0;
     l[2]=0;
-    GTF q(_exposant, _coefficient, _coord, l, _bino);
+    GTF q(_exponent, _coefficient, _coord, l, _bino);
     _coefficient/=normeGTF(q);
 }
 
@@ -225,18 +268,18 @@ double GTF::overlapGTF(GTF& right)
 
 double GTF::overlap3GTF(GTF& mid, GTF& right)
 {
-    return _coefficient*mid.coefficient()*right.coefficient()*GTFstarGTFstarGTF(mid, right);
+    return _coefficient*mid.get_coefficient()*right.get_coefficient()*GTFstarGTFstarGTF(mid, right);
 }
 
 double GTF::overlap4GTF(GTF& B, GTF& C, GTF& D)
 {
-    return _coefficient*B.coefficient()*C.coefficient()*D.coefficient()*GTFstarGTFstarGTFstarGTF(B,C,D);
+    return _coefficient*B.get_coefficient()*C.get_coefficient()*D.get_coefficient()*GTFstarGTFstarGTFstarGTF(B,C,D);
 }
 
 double GTF::GTFxyzGTF(GTF& q, int ix, int iy, int iz)
 {
-    std::vector<double> C(3,0);
-    std::vector<int> l {ix, iy, iz};
+    std::array<double, 3> C({ 0.0, 0.0, 0.0 });
+    std::vector<int> l{ix, iy, iz};
     GTF m(0.0, 1.0, C, l, _bino);
     return overlap3GTF(m, q);
 }
@@ -250,105 +293,164 @@ double GTF::kineticGTF(GTF& right)
     double T=0.0;
 
     for(j=0; j<7; j++)
+    {
         Ti[j]=0.0;
-    Ti[0]=GTFstarGTF(b);
+    }
 
-    b.l()[0]=right.l()[0]+2;
-    b.l()[1]=right.l()[1];
-    b.l()[2]=right.l()[2];
-    Ti[1]=GTFstarGTF(b);
+    Ti[0] = GTFstarGTF(b);
 
-    b.l()[0]=right.l()[0];
-    b.l()[1]=right.l()[1]+2;
-    b.l()[2]=right.l()[2];
-    Ti[2]=GTFstarGTF(b);
+    b.setL(0, right.get_l()[0] + 2);
+    b.setL(1, right.get_l()[1]);
+    b.setL(2, right.get_l()[2]);
 
-    b.l()[0]=right.l()[0];
-    b.l()[1]=right.l()[1];
-    b.l()[2]=right.l()[2]+2;
-    Ti[3]=GTFstarGTF(b);
+    Ti[1] = GTFstarGTF(b);
 
-    b.l()[0]=right.l()[0]-2;
-    b.l()[1]=right.l()[1];
-    b.l()[2]=right.l()[2];
-    Ti[4]=GTFstarGTF(b);
+    b.setL(0, right.get_l()[0]);
+    b.setL(1, right.get_l()[1] + 2);
+    b.setL(2, right.get_l()[2]);
 
-    b.l()[0]=right.l()[0];
-    b.l()[1]=right.l()[1]-2;
-    b.l()[2]=right.l()[2];
-    Ti[5]=GTFstarGTF(b);
+    Ti[2] = GTFstarGTF(b);
 
-    b.l()[0]=right.l()[0];
-    b.l()[1]=right.l()[1];
-    b.l()[2]=right.l()[2]-2;
-    Ti[6]=GTFstarGTF(b);
+    b.setL(0, right.get_l()[0]);
+    b.setL(1, right.get_l()[1]);
+    b.setL(2, right.get_l()[2] + 2);
 
-    sum[0]=right.exposant()*(2*(right.l()[0]+right.l()[1]+right.l()[2])+3)*Ti[0];
-    sum[1]=0.0;
-    for(j=1; j<=3; j++)
-        sum[1]+=Ti[j];
-    sum[1]=-2*right.exposant()*right.exposant()*sum[1];
+    Ti[3] = GTFstarGTF(b);
 
-    sum[2]=0.0;
-    for(j=4; j<=6; j++)
-        sum[2]+=right.l()[j-4]*(right.l()[j-4]-1)*Ti[j];
-    sum[2]*=-0.5;
+    b.setL(0, right.get_l()[0] - 2);
+    b.setL(1, right.get_l()[1]);
+    b.setL(2, right.get_l()[2]);
 
-    for(j=0; j<3; j++)
-        T+=sum[j];
+    Ti[4] = GTFstarGTF(b);
 
-    return T*_coefficient*right.coefficient();
+    b.setL(0, right.get_l()[0]);
+    b.setL(1, right.get_l()[1] - 2);
+    b.setL(2, right.get_l()[2]);
+
+    Ti[5] = GTFstarGTF(b);
+
+    b.setL(0, right.get_l()[0]);
+    b.setL(1, right.get_l()[1]);
+    b.setL(2, right.get_l()[2] - 2);
+
+    Ti[6] = GTFstarGTF(b);
+
+    sum[0] = right.get_exponent() * (2 * (right.get_l()[0] + right.get_l()[1] + right.get_l()[2]) + 3) * Ti[0];
+    sum[1] = 0.0;
+
+    for (j = 1; j <= 3; ++j)
+    {
+        sum[1] += Ti[j];
+    }
+
+    sum[1] = -2 * right.get_exponent() * right.get_exponent() * sum[1];
+    sum[2] = 0.0;
+
+    for(j = 4; j <= 6; ++j)
+    {
+        sum[2] += right.get_l()[j - 4] * (right.get_l()[j - 4] - 1) * Ti[j];
+    }
+
+    sum[2] *= -0.5;
+
+    for(j = 0; j < 3; ++j)
+    {
+        T += sum[j];
+    }
+
+    return T * _coefficient * right.get_coefficient();
 }
 
-double GTF::ionicPotentialGTF(GTF& right, const std::array<double, 3>& C, double Z)
+double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, double Z)
 {
-    int i,r,u;
-    int j,s,n;
-    int k,t,w;
-    double Sx,Sy,Sz;
+    int i, r, u;
+    int j, s, n;
+    int k, t, w;
+
+    double Sx, Sy, Sz;
     double temp;
-    std::vector<double> PA(3);
-    std::vector<double> PB(3);
-    std::vector<double> PC(3);
-    double gama=_exposant+right.exposant();
-    double R2=0.0;
-    double PC2=0.0;
-    double sum;
-    std::vector<double> FTable;
 
-    for(j=0; j<3; j++)
+    std::array<double, 3> PA;
+    std::array<double, 3> PB;
+    std::array<double, 3> PC;
+
+    double gamma = _exponent + right.get_exponent();
+    double R2 = 0.0;
+    double PC2 = 0.0;
+
+    for(j = 0; j < 3; ++j)
     {
-        temp=(_exposant*_coord[j]+right.exposant()*right.coord()[j])/gama;
-        PA[j]=_coord[j]-temp;
-        PB[j]=right.coord()[j]-temp;
-        PC[j]=-C[j]+temp;
-        R2+=(_coord[j]-right.coord()[j])*(_coord[j]-right.coord()[j]);
-        PC2+=PC[j]*PC[j];
-    }
-    FTable=getFTable(_l[0]+right.l()[0]+_l[1]+right.l()[1]+_l[2]+right.l()[2], gama*PC2, _bino.fact());
+        temp = (_exponent * _coord[j] + right.get_exponent() * right.get_coord()[j]) / gamma;
 
-    sum=0.0;
-    for(i=0; i<=_l[0]+right.l()[0]; i++)
-        for(r=0; r<=i/2; r++)
-            for(u=0; u<=(i-2*r)/2; u++)
+        PA[j] = _coord[j] - temp;
+        PB[j] = right.get_coord()[j] - temp;
+        PC[j] = -C[j] + temp;
+
+        R2 += (_coord[j] - right.get_coord()[j]) * (_coord[j] - right.get_coord()[j]);
+        PC2 += PC[j] * PC[j];
+    }
+
+    //std::cout << "_l[0] + right.get_l()[0] + _l[1] + right.get_l()[1] + _l[2] + right.get_l()[2] = " << _l[0] + right.get_l()[0] + _l[1] + right.get_l()[1] + _l[2] + right.get_l()[2] << ", gamma * PC2 = " << gamma * PC2 << std::endl;
+
+    std::vector<double> FTable = getFTable(_l[0] + right.get_l()[0] + _l[1] + right.get_l()[1] + _l[2] + right.get_l()[2], gamma * PC2, _bino.fact());
+
+    double sum = 0.0;
+    for(i = 0; i <= _l[0] + right.get_l()[0]; ++i)
+    {
+        for(r = 0; r <= i / 2; ++r)
+        {
+            for(u = 0; u <= (i - 2 * r) / 2; ++u)
             {
-                Sx=A(i,r,u,_l[0],right.l()[0],PA[0],PB[0],PC[0],gama,_bino);
-                for(j=0; j<=_l[1]+right.l()[1]; j++)
-                    for(s=0; s<=j/2; s++)
-                        for(n=0; n<=(j-2*s)/2;n++)
+                Sx = A(i, r, u, _l[0], right.get_l()[0], PA[0], PB[0], PC[0], gamma, _bino);
+
+                for(j = 0; j <= _l[1] + right.get_l()[1]; ++j)
+                {
+                    for(s = 0; s <= j / 2; ++s)
+                    {
+                        for(n = 0; n <= (j - 2 * s) / 2; ++n)
                         {
-                            Sy=A(j,s,n,_l[1],right.l()[1],PA[1],PB[1],PC[1],gama,_bino);
-                            for(k=0; k<=_l[2]+right.l()[2]; k++)
-                                for(t=0; t<=k/2; t++)
-                                    for(w=0; w<=(k-2*t)/2; w++)
+                            Sy = A(j, s, n, _l[1], right.get_l()[1], PA[1], PB[1], PC[1], gamma, _bino);
+
+                            for(k = 0; k <= _l[2] + right.get_l()[2]; ++k)
+                            {
+                                for(t = 0; t <= k / 2; ++t)
+                                {
+                                    for(w = 0; w <= (k - 2 * t) / 2; ++w)
                                     {
-                                        Sz=A(k,t,w,_l[2],right.l()[2],PA[2],PB[2],PC[2],gama,_bino);
-                                        sum+=Sx*Sy*Sz*FTable[i+j+k-2*(r+s+t)-u-n-w];
+                                        Sz = A(k, t, w, _l[2], right.get_l()[2], PA[2], PB[2], PC[2], gamma, _bino);
+
+                                        sum += Sx * Sy * Sz * FTable[i + j + k - 2 * (r + s + t) - u - n - w];
+
+                                        /*if (std::isnan(sum))
+                                        {
+                                            std::cout << "i = " << i
+                                                      << ", r = " << r
+                                                      << ", u = " << u
+                                                      << ", j = " << j
+                                                      << ", s = " << s
+                                                      << ", n = " << n
+                                                      << ", k = " << k
+                                                      << ", t = " << t
+                                                      << ", w = " << w << std::endl;
+
+                                            std::cout << "Sx = " << Sx
+                                                      << ", Sy = " << Sy
+                                                      << ", Sz = " << Sz
+                                                      << ", FTable[i + j + k - 2 * (r + s + t) - u - n - w] = " << FTable[i + j + k - 2 * (r + s + t) - u - n - w] << std::endl << std::endl;
+                                        }*/
                                     }
+                                }
+                            }
                         }
+                    }
+                }
             }
-    sum *=2*M_PI/gama*exp(-_exposant*right.exposant()/gama*R2)*_coefficient*right.coefficient();
-    return -Z*sum;
+        }
+    }
+
+    sum *= 2 * M_PI / gamma * exp(-_exponent * right.get_exponent() / gamma * R2) * _coefficient * right.get_coefficient();
+
+    return -Z * sum;
 }
 
 double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)    
@@ -368,8 +470,8 @@ double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)
     std::vector<double> PQ(3);
 
     
-    double g1=_exposant+q.exposant();
-    double g2=r.exposant()+s.exposant();
+    double g1=_exponent+q.get_exponent();
+    double g2=r.get_exponent()+s.get_exponent();
     double d=(1.0/g1+1.0/g2)/4;
     double RAB2=0.0;
     double RCD2=0.0;
@@ -380,52 +482,52 @@ double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)
 
     for(j=0; j<3; j++)
     {
-        temp1=(_exposant*_coord[j]+q.exposant()*q.coord()[j])/g1;
+        temp1=(_exponent*_coord[j]+q.get_exponent()*q.get_coord()[j])/g1;
         PA[j]=_coord[j]-temp1;
-        PB[j]=q.coord()[j]-temp1;
+        PB[j]=q.get_coord()[j]-temp1;
         
-        temp2=(r.exposant()*r.coord()[j]+s.exposant()*s.coord()[j])/g2;
-        QC[j]=r.coord()[j]-temp2;
-        QD[j]=s.coord()[j]-temp2;
+        temp2=(r.get_exponent()*r.get_coord()[j]+s.get_exponent()*s.get_coord()[j])/g2;
+        QC[j]=r.get_coord()[j]-temp2;
+        QD[j]=s.get_coord()[j]-temp2;
 
         PQ[j]=temp2-temp1;
 
-        RAB2+=(_coord[j]-q.coord()[j])*(_coord[j]-q.coord()[j]);
-        RCD2+=(r.coord()[j]-s.coord()[j])*(r.coord()[j]-s.coord()[j]);
+        RAB2+=(_coord[j]-q.get_coord()[j])*(_coord[j]-q.get_coord()[j]);
+        RCD2+=(r.get_coord()[j]-s.get_coord()[j])*(r.get_coord()[j]-s.get_coord()[j]);
         RPQ2+=PQ[j]*PQ[j];
     }
 
     sum=0.0;
-    for(I=0; I<=_l[0]+q.l()[0]; I++)
+    for(I=0; I<=_l[0]+q.get_l()[0]; I++)
         for(R=0; R<=I/2; R++)
         {
-            Te[0][0]=Theta(I,R,_l[0],q.l()[0],PA[0],PB[0],g1,_bino);
-            for(Ip=0; Ip<=r.l()[0]+s.l()[0]; Ip++)
+            Te[0][0]=Theta(I,R,_l[0],q.get_l()[0],PA[0],PB[0],g1,_bino);
+            for(Ip=0; Ip<=r.get_l()[0]+s.get_l()[0]; Ip++)
                 for(Rp=0; Rp<=Ip/2; Rp++)
                 {
-                    Te[1][0]=Theta(Ip,Rp,r.l()[0],s.l()[0],QC[0],QD[0],g2,_bino);
+                    Te[1][0]=Theta(Ip,Rp,r.get_l()[0],s.get_l()[0],QC[0],QD[0],g2,_bino);
                     for(U=0; U<=(I+2*Ip)/2-R-Rp; U++)
                     {
                         Sx=B(I,Ip,R,Rp,U,PQ[0],d,Te[0][0],Te[1][0],_bino.fact());
-                        for(J=0; J<=_l[1]+q.l()[1]; J++)
+                        for(J=0; J<=_l[1]+q.get_l()[1]; J++)
                             for(S=0; S<=J/2; S++)
                             {
-                                Te[0][1]=Theta(J,S,_l[1],q.l()[1],PA[1],PB[1],g1,_bino);
-                                for(Jp=0; Jp<=r.l()[1]+s.l()[1]; Jp++)
+                                Te[0][1]=Theta(J,S,_l[1],q.get_l()[1],PA[1],PB[1],g1,_bino);
+                                for(Jp=0; Jp<=r.get_l()[1]+s.get_l()[1]; Jp++)
                                     for(Sp=0; Sp<=Jp/2; Sp++)
                                     {
-                                        Te[1][1]=Theta(Jp,Sp,r.l()[1],s.l()[1],QC[1],QD[1],g2,_bino);
+                                        Te[1][1]=Theta(Jp,Sp,r.get_l()[1],s.get_l()[1],QC[1],QD[1],g2,_bino);
                                         for(N=0; N<=(J+Jp)/2-S-Sp; N++)
                                         {
                                             Sy=B(J,Jp,S,Sp,N,PQ[1],d,Te[0][1],Te[1][1],_bino.fact());
-                                            for(K=0; K<=_l[2]+q.l()[2]; K++)
+                                            for(K=0; K<=_l[2]+q.get_l()[2]; K++)
                                                 for(T=0; T<=K/2; T++)
                                                 {
-                                                    Te[0][2]=Theta(K,T,_l[2],q.l()[2],PA[2],PB[2],g1,_bino);
-                                                    for(Kp=0; Kp<=r.l()[2]+s.l()[2]; Kp++)
+                                                    Te[0][2]=Theta(K,T,_l[2],q.get_l()[2],PA[2],PB[2],g1,_bino);
+                                                    for(Kp=0; Kp<=r.get_l()[2]+s.get_l()[2]; Kp++)
                                                         for(Tp=0; Tp<=Kp/2; Tp++)
                                                         {
-                                                            Te[1][2]=Theta(Kp,Tp,r.l()[2],s.l()[2],QC[2],QD[2],g2,_bino);
+                                                            Te[1][2]=Theta(Kp,Tp,r.get_l()[2],s.get_l()[2],QC[2],QD[2],g2,_bino);
                                                             for(W=0; W<=(K+Kp)/2-T-Tp; W++)
                                                             {
                                                                 Sz=B(K,Kp,T,Tp,W,PQ[2],d,Te[0][2],Te[1][2],_bino.fact());
@@ -441,8 +543,8 @@ double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)
                 }
         }
 
-    sum*=2*M_PI*M_PI*std::sqrt(M_PI)/g1/g2/std::sqrt(g1+g2)*exp(-_exposant*q.exposant()*RAB2/g1)*exp(-r.exposant()*s.exposant()*RCD2/g2)*
-            _coefficient*q.coefficient()*r.coefficient()*s.coefficient();
+    sum*=2*M_PI*M_PI*std::sqrt(M_PI)/g1/g2/std::sqrt(g1+g2)*exp(-_exponent*q.get_exponent()*RAB2/g1)*exp(-r.get_exponent()*s.get_exponent()*RCD2/g2)*
+            _coefficient*q.get_coefficient()*r.get_coefficient()*s.get_coefficient();
     return sum;
 }
 
@@ -452,7 +554,7 @@ double GTF::func(double x, double y, double z) const
     double yA = y - _coord[1];
     double zA = z - _coord[2];
 
-    return _coefficient * power(xA, _l[0]) * power(yA, _l[1]) * power(zA, _l[2]) * exp(- _exposant * (xA * xA + yA * yA + zA * zA));
+    return _coefficient * power(xA, _l[0]) * power(yA, _l[1]) * power(zA, _l[2]) * exp(- _exponent * (xA * xA + yA * yA + zA * zA));
 }
 
 void GTF::operator/=(double c)
@@ -465,9 +567,9 @@ void GTF::operator*=(double c)
     _coefficient *= c;
 }
 
-void GTF::push_back(const double& a, const double& c, const std::vector<double>& coord, const std::vector<int>& l, Binomial& B)
+void GTF::push_back(const double& a, const double& c, const std::array<double, 3>& coord, const std::vector<int>& l, Binomial& B)
 {
-    _exposant=a;
+    _exponent=a;
     _coefficient=c;
     _coord=coord;
     _l=l;
@@ -478,20 +580,20 @@ bool operator==(GTF a, GTF b)
 {
     size_t i;
     bool n=true;
-    if(abs(a.exposant()-b.exposant())>10e-10)
+    if(abs(a.get_exponent()-b.get_exponent())>10e-10)
         n=false;
-    if(abs(a.coefficient()-b.coefficient())>10e-10)
+    if(abs(a.get_coefficient()-b.get_coefficient())>10e-10)
         n=false;
     for(i=0; i<3; i++)
-        if(abs(a.l()[i]-b.l()[i])>10e10-10 || abs(a.coord()[i]-b.coord()[i])>10e-10)
+        if(abs(a.get_l()[i]-b.get_l()[i])>10e10-10 || abs(a.get_coord()[i]-b.get_coord()[i])>10e-10)
             n=false;
     return n;
 }
 
 std::ostream& operator<<(std::ostream& flux, GTF& gtf)
 {
-    flux << std::left << std::setw(20) << gtf.coefficient() << std::setw(20) << gtf.exposant() << std::setw(5) << gtf.l()[0] << std::setw(5) << gtf.l()[1]
-    << std::setw(5) << gtf.l()[2] << std::setw(20) << gtf.coord()[0] << std::setw(20) << gtf.coord()[1] << std::setw(20) << gtf.coord()[2];
+    flux << std::left << std::setw(20) << gtf.get_coefficient() << std::setw(20) << gtf.get_exponent() << std::setw(5) << gtf.get_l()[0] << std::setw(5) << gtf.get_l()[1]
+    << std::setw(5) << gtf.get_l()[2] << std::setw(20) << gtf.get_coord()[0] << std::setw(20) << gtf.get_coord()[1] << std::setw(20) << gtf.get_coord()[2];
     return flux;
 }
 
@@ -509,10 +611,10 @@ double GTF::grad_GTF(const double& x, const double& y, const double& z, int i)
     double xA[3] = {x-_coord[0], y-_coord[1], z-_coord[2]};
     int k=(i+1)%3;
     int j=(i+2)%3;
-    double expo =(xA[i]*xA[i]+xA[j]*xA[j]+xA[k]*xA[k])*_exposant;
+    double expo =(xA[i]*xA[i]+xA[j]*xA[j]+xA[k]*xA[k])*_exponent;
     if(expo > 40) return 1e-14;
     if(_l[i]==0)
-        return -2*_exposant*xA[i]*_coefficient*power(xA[k], _l[k])*power(xA[j], _l[j])*exp(-expo);
+        return -2*_exponent*xA[i]*_coefficient*power(xA[k], _l[k])*power(xA[j], _l[j])*exp(-expo);
     else
-        return _coefficient*exp(-expo)*power(xA[i], _l[i]-1)*power(xA[k], _l[k])*power(xA[j], _l[j])*(_l[i]-2*_exposant*xA[i]*xA[i]);
+        return _coefficient*exp(-expo)*power(xA[i], _l[i]-1)*power(xA[k], _l[k])*power(xA[j], _l[j])*(_l[i]-2*_exponent*xA[i]*xA[i]);
 }

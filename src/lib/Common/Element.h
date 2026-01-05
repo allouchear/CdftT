@@ -42,13 +42,6 @@ class Isotope
         Isotope(const std::string&, const int, const double, const double);
 
         /**
-         * @brief Default destructor.
-         *
-         * Not used explicitly.
-         */
-        ~Isotope();
-
-        /**
          * @brief Returns the isotope symbol.
          */
         std::string symbol() const
@@ -96,22 +89,22 @@ class Element
         std::string _symbol;
 
         /** @brief Atomic number (Z) of the element. */
-        int _atomic_number;
+        int _atomicNumber;
 
         /** @brief Covalent radius of the element (in angstroms or project units). */
-        double _covalent_radii;
+        double _covalentRadius;
 
         /** @brief Bond order adjusted radius. */
-        double _bond_order_radii;
+        double _bondOrderRadius;
 
         /** @brief Van der Waals radius. */
-        double _van_der_waals_radii;
+        double _vanDerWaalsRadius;
 
         /** @brief Generic atomic radius used by the project. */
-        double _radii;
+        double _radius;
 
         /** @brief Maximum number of bonds allowed for this element. */
-        int _maximum_bond_valence;
+        int _maximumBondValence;
 
         /** @brief Atomic mass of the element. */
         double _mass;
@@ -124,6 +117,10 @@ class Element
 
 
     public:
+        //----------------------------------------------------------------------------------------------------//
+        // CONSTRUCTORS
+        //----------------------------------------------------------------------------------------------------//
+
         /**
          * @brief Default constructor.
          *
@@ -138,92 +135,65 @@ class Element
          */
         Element(const std::string& name, const std::string& symbol, const int atomicNumber, const double covalentRadii, const double bondOrderRadii, const double vanDerWaalsRadii, const double radii, const int maximumBondValence, const double mass, const double electronegativity);
 
-        /**
-         * @brief Default destructor.
-         *
-         * Not used explicitly.
-         */
-        ~Element();
+
+        //----------------------------------------------------------------------------------------------------//
+        // GETTERS
+        //----------------------------------------------------------------------------------------------------//
 
         /**
          * @brief Returns the name.
          */
-        std::string name() const
-        {
-            return _name;
-        }
+        const std::string& get_name() const;
 
         /**
          * @brief Returns the symbol.
          */
-        std::string symbol() const
-        {
-            return _symbol;
-        }
+        const std::string& get_symbol() const;
 
         /**
          * @brief Returns the atomic number.
          */
-        int atomic_number() const
-        {
-            return _atomic_number;
-        }
+        int get_atomicNumber() const;
 
         /**
          * @brief Returns the covalent radius.
          */
-        double covalent_radii() const
-        {
-            return _covalent_radii;
-        }
+        double get_covalentRadius() const;
 
         /**
          * @brief Returns the bond order radius.
          */
-        double bond_order_radii() const
-        {
-            return _bond_order_radii;
-        }
+        double get_bondOrderRadius() const;
 
         /**
          * @brief Returns the van der Waals radius.
          */
-        double van_der_waals_radii() const
-        {
-            return _van_der_waals_radii;
-        }
+        double get_vanDerWaalsRadius() const;
 
         /**
          * @brief Returns the generic radius.
          */
-        double radii() const
-        {
-            return _radii;
-        }
+        double get_radius() const;
 
         /**
          * @brief Returns the maximum number of bonds allowed for this element.
          */
-        int maximum_bond_valence() const
-        {
-            return _maximum_bond_valence;
-        }
+        int get_maximumBondValence() const;
 
         /**
          * @brief Returns the atomic mass in atomic mass units.
          */
-        double mass() const
-        {
-            return _mass;
-        }
+        double get_mass() const;
 
         /**
          * @brief Returns the electronegativity (Pauling scale).
          */
-        double electronegativity() const
-        {
-            return _electronegativity;
-        }
+        double get_electronegativity() const;
+
+
+        //----------------------------------------------------------------------------------------------------//
+        // OTHER PUBLIC METHODS
+        //----------------------------------------------------------------------------------------------------//
 
         /**
          * @brief Returns the given isotope of the element.
@@ -231,20 +201,14 @@ class Element
          * @param i Index of the isotope (starting from 1).
          * @return The requested Isotope object.
          */
-        Isotope isotope(const int i) const
-        {
-            return _isotope[i - 1];
-        }
+        Isotope getIsotope(const int i) const;
 
         /**
          * @brief Adds an isotope to the element.
          *
          * @param isotope Isotope object to append to the internal isotope list.
          */
-        void push_isotope(const Isotope& isotope)
-        {
-            _isotope.push_back(isotope);
-        }
+        void pushIsotope(const Isotope& isotope);
 };
 
 

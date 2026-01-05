@@ -1,4 +1,4 @@
-Charge=1
+Charge=-1
 RunType=ComputeEnergyWithPointCharge
 AnalyticFiles=tests/CO_TDDFT.log
 TransitionsFile=tests/transitions_CO_firstState.txt

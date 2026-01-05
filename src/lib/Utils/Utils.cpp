@@ -646,9 +646,9 @@ double myGamma(int n, Factorial& Fa)
     return Fa.double_factorial(2 * n - 1) * sqrt(M_PI) / power(2, n);
 }
 
-double F(int n,double t, Factorial& Fa)
+double F(int n, double t, Factorial& factorial)
 {
-    double et = exp(-t);
+    double et = std::exp(-t);
     double twot = 2 * t;
     double T = 0.0;
     double x = 1.0;
@@ -658,25 +658,26 @@ double F(int n,double t, Factorial& Fa)
     int MAXFACT = 200;
     double acc = 1e-16;
 
-    if (fabs(t) <= acc)
+    if (std::fabs(t) <= acc)
     {
-        T = 1.0 / (double)(2 * n + 1);
+        T = 1.0 / (2 * n + 1);
     }
     else
     {
         if (t >= TMAX)
         {
-            T = myGamma(n, Fa) / power(t, n) / 2.0 / sqrt(t);
+            T = myGamma(n, factorial) / power(t, n) / 2.0 / std::sqrt(t);
         }
         else
         {
-            while(fabs(x / T) > acc and (n + i) < MAXFACT)
-            {    
-                x = Fa.double_factorial(2 * n - 1) / Fa.double_factorial(2 * (n + i + 1) - 1) * DD;
+            while(std::fabs(x / T) > acc && (n + i) < MAXFACT)
+            {
+                x = factorial.double_factorial(2 * n - 1) / factorial.double_factorial(2 * (n + i + 1) - 1) * DD;
                 T += x;
                 i++;
                 DD *= twot;
             }
+
             if (n + i >= MAXFACT)
             {
                 std::cout << "Divergence in F, Ionic integrals" << std::endl;
@@ -690,27 +691,89 @@ double F(int n,double t, Factorial& Fa)
     return T;
 }
 
-std::vector<double> getFTable(int mMax, double t, Factorial& Fa)
+double F_debug(int n, double t, Factorial& factorial)
+{
+    double et = std::exp(-t);
+    double twot = 2 * t;
+    double T = 0.0;
+    double x = 1.0;
+    int i = 0;
+    double DD = 1.0;
+    double TMAX = 50.0;
+    int MAXFACT = 200;
+    double acc = 1e-16;
+
+    if (std::fabs(t) <= acc)
+    {
+        T = 1.0 / (2 * n + 1);
+    }
+    else
+    {
+        if (t >= TMAX)
+        {
+            T = myGamma(n, factorial) / power(t, n) / 2.0 / std::sqrt(t);
+        }
+        else
+        {
+            while (std::fabs(x / T) > acc && (n + i) < MAXFACT)
+            {
+                x = factorial.double_factorial(2 * n - 1) / factorial.double_factorial(2 * (n + i + 1) - 1) * DD;
+
+                std::cout << "factorial.double_factorial(2 * n - 1) = " << factorial.double_factorial(2 * n - 1) << std::endl;
+                std::cout << "factorial.double_factorial(2 * (n + i + 1) - 1) = " << factorial.double_factorial(2 * (n + i + 1) - 1) << std::endl << std::endl;
+                
+                T += x;
+                i++;
+                DD *= twot;
+            }
+
+            if (n + i >= MAXFACT)
+            {
+                std::cout << "Divergence in F, Ionic integrals" << std::endl;
+                exit(1);
+            }
+
+            T *= et;
+        }
+    }
+
+    return T;
+}
+
+std::vector<double> getFTable(int mMax, double t, Factorial& factorial)
 {
     double tCritic = 30.0;
+
     std::vector<double> Fmt(mMax + 1);
-    int m;
+
     if (t > tCritic)
     {
-        Fmt[0] = sqrt(M_PI / t) * 0.5;
-        for (m = 1; m <= mMax; m++)
+        Fmt[0] = std::sqrt(M_PI / t) * 0.5;
+        for (int m = 1; m <= mMax; ++m)
         {
-            Fmt[m] = Fmt[m-1] * (m-0.5) / t;
+            Fmt[m] = Fmt[m - 1] * (m - 0.5) / t;
         }
     }
     else
     {
-        Fmt[mMax] = F(mMax, t, Fa);
-        double expt = exp(-t);
+        Fmt[mMax] = F(mMax, t, factorial);
+        double expt = std::exp(-t);
         double twot = 2 * t;
-        for (m = mMax - 1; m >= 0; m--)
+        for (int m = mMax - 1; m >= 0; --m)
         {
             Fmt[m] = (twot * Fmt[m + 1] + expt) / (m * 2 + 1);
+            
+            // debug
+            if (!std::isfinite(Fmt[m]))
+            {
+                std::cout << "In: getFTable(" << mMax << ", " << t << ")" << std::endl; // debug
+                std::cout << "m = " << m << std::endl;
+                std::cout << "twot = " << twot << " ; Fmt[m + 1] = " << Fmt[m + 1] << " ; expt = " << expt << " ; m * 2 + 1 = " << (m * 2 + 1) << std::endl;
+                std::cout << "Fmt[" << m << "] = " << Fmt[m] << std::endl << std::endl;
+
+                F_debug(mMax, t, factorial);
+                exit(1);
+            }
         }
     }
 

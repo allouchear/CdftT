@@ -23,7 +23,7 @@ Atom::Atom():
     _hardness(0.0),
     _width(0.0),
     _covalentRadius(0.0),
-    _e(),
+    _element(),
     _mmType("none"),
     _pdbType("none"),
     _residueName("none"),
@@ -43,18 +43,18 @@ Atom::Atom(const PeriodicTable& periodicTable, const std::string& name):
     _hardness(0.0),
     _width(0.0),
     _covalentRadius(0.0),
-    _e(),
+    _element(),
     _mmType("none"),
     _pdbType("none"),
     _residueName("none"),
     _residueNumber(0),
     _N(0)
 {
-    _e = periodicTable.element(name);
-    _name = _e.name();
-    _symbol = _e.symbol();
-    _atomicNumber = _e.atomic_number();
-    _covalentRadius=_e.covalent_radii();
+    _element = periodicTable.element(name);
+    _name = _element.get_name();
+    _symbol = _element.get_symbol();
+    _atomicNumber = _element.get_atomicNumber();
+    _covalentRadius=_element.get_covalentRadius();
 }
 
 Atom::Atom(const PeriodicTable& periodicTable, const int Z):
@@ -69,18 +69,18 @@ Atom::Atom(const PeriodicTable& periodicTable, const int Z):
     _hardness(0.0),
     _width(0.0),
     _covalentRadius(0.0),
-    _e(),
+    _element(),
     _mmType("none"),
     _pdbType("none"),
     _residueName("none"),
     _residueNumber(0),
     _N(0)
 {
-    _e = periodicTable.element(Z);
-    _name = _e.name();
-    _symbol = _e.symbol();
-    _atomicNumber = _e.atomic_number();
-    _covalentRadius=_e.covalent_radii();
+    _element = periodicTable.element(Z);
+    _name = _element.get_name();
+    _symbol = _element.get_symbol();
+    _atomicNumber = _element.get_atomicNumber();
+    _covalentRadius=_element.get_covalentRadius();
 }
 
 
@@ -143,9 +143,9 @@ double Atom::get_covalentRadius() const
     return _covalentRadius;
 }
 
-Element Atom::get_element()
+const Element& Atom::get_element() const
 {
-    return _e;
+    return _element;
 }
 
 

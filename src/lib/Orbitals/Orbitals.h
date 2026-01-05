@@ -61,12 +61,11 @@ class Orbitals
 
             //! A real constructor.
             /*! This constructor is used to add all of the parameters for Orbitals with the data in .fchk file. */
-        Orbitals(FCHK&, Binomial&, const PeriodicTable&);
+        Orbitals(FCHK& fchkParser, Binomial& bino, const PeriodicTable& periodicTable);
 
             //! A real constructor.
             /*! This constructor is used to add all of the parameters for Orbitals with the data in .molden or .gab file. */
-        Orbitals(MOLDENGAB&, Binomial&, const PeriodicTable&);
-
+        Orbitals(MOLDENGAB& moldengabParser, Binomial& bino, const PeriodicTable& periodicTable);
             //! A real constructor.
             /*! This constructor is used to add all of the parameters for Orbitals with the data in .log file. */
         Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodicTable);

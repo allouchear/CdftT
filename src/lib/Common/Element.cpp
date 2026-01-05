@@ -1,7 +1,11 @@
-#include<string>
+#include <string>
 
-#include"Element.h"
+#include "Element.h"
 
+
+//----------------------------------------------------------------------------------------------------//
+// CLASS ISOTOPE
+//----------------------------------------------------------------------------------------------------//
 
 Isotope::Isotope():
     _symbol("None"),
@@ -17,19 +21,25 @@ Isotope::Isotope(const std::string& symbol, const int intMass, const double real
     _abundance(abundance)
 { }
 
-Isotope::~Isotope()
-{ }
 
+
+//----------------------------------------------------------------------------------------------------//
+// CLASS ELEMENT
+//----------------------------------------------------------------------------------------------------//
+
+//----------------------------------------------------------------------------------------------------//
+// CONSTRUCTORS
+//----------------------------------------------------------------------------------------------------//
 
 Element::Element():
     _name("None"),
     _symbol("None"),
-    _atomic_number(0),
-    _covalent_radii(0.0),
-    _bond_order_radii(0.0),
-    _van_der_waals_radii(0.0),
-    _radii(0.0),
-    _maximum_bond_valence(0),
+    _atomicNumber(0),
+    _covalentRadius(0.0),
+    _bondOrderRadius(0.0),
+    _vanDerWaalsRadius(0.0),
+    _radius(0.0),
+    _maximumBondValence(0),
     _mass(0.0),
     _electronegativity(0.0) 
 {
@@ -40,18 +50,84 @@ Element::Element():
 Element::Element(const std::string& name, const std::string& symbol, const int atomicNumber, const double covalentRadii, const double bondOrderRadii, const double vanDerWaalsRadii, const double radii, const int maximumBondValence, const double mass, const double electronegativity):
     _name(name),
     _symbol(symbol),
-    _atomic_number(atomicNumber),
-    _covalent_radii(covalentRadii),
-    _bond_order_radii(bondOrderRadii),
-    _van_der_waals_radii(vanDerWaalsRadii),
-    _radii(radii),
-    _maximum_bond_valence(maximumBondValence),
+    _atomicNumber(atomicNumber),
+    _covalentRadius(covalentRadii),
+    _bondOrderRadius(bondOrderRadii),
+    _vanDerWaalsRadius(vanDerWaalsRadii),
+    _radius(radii),
+    _maximumBondValence(maximumBondValence),
     _mass(mass),
     _electronegativity(electronegativity)
 {
     _isotope.resize(0);
 }
 
-Element::~Element()
-{ }
 
+//----------------------------------------------------------------------------------------------------//
+// GETTERS
+//----------------------------------------------------------------------------------------------------//
+
+const std::string& Element::get_name() const
+{
+    return _name;
+}
+
+const std::string& Element::get_symbol() const
+{
+    return _symbol;
+}
+
+int Element::get_atomicNumber() const
+{
+    return _atomicNumber;
+}
+
+double Element::get_covalentRadius() const
+{
+    return _covalentRadius;
+}
+
+double Element::get_bondOrderRadius() const
+{
+    return _bondOrderRadius;
+}
+
+double Element::get_vanDerWaalsRadius() const
+{
+    return _vanDerWaalsRadius;
+}
+
+double Element::get_radius() const
+{
+    return _radius;
+}
+
+int Element::get_maximumBondValence() const
+{
+    return _maximumBondValence;
+}
+
+double Element::get_mass() const
+{
+    return _mass;
+}
+
+double Element::get_electronegativity() const
+{
+    return _electronegativity;
+}
+
+
+//----------------------------------------------------------------------------------------------------//
+// OTHER PUBLIC METHODS
+//----------------------------------------------------------------------------------------------------//
+
+Isotope Element::getIsotope(const int i) const
+{
+    return _isotope[i - 1];
+}
+
+void Element::pushIsotope(const Isotope& isotope)
+{
+    _isotope.push_back(isotope);
+}

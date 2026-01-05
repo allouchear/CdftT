@@ -247,10 +247,10 @@ double F(int,double, Factorial&);
 
     //! A method taking three arguments and returning a vector<double> value.
     /*! \return ???*/
-std::vector<double> getFTable(int, double, Factorial&);
+std::vector<double> getFTable(int mMax, double t, Factorial& factorial);
 
-    //! A method taking one argument and returning an int value.
-    /*! \return The L type (S, Px, Py, ...) in the nomenclatur of .wfx file.*/
+//! A method taking one argument and returning an int value.
+/*! \return The L type (S, Px, Py, ...) in the nomenclatur of .wfx file.*/
 int getwfxType(const std::vector<int>& l);
 
     //! A method taking one argument and returning an int value.

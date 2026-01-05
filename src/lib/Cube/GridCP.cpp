@@ -854,7 +854,7 @@ void GridCP::buildVDD()
     for(int ia=0;ia<nAtoms;ia++)
     {
             //double rcov =   _str.atom(ia).element().covalent_radii();
-            double rcov =   _str.atom(ia).get_element().radii();
+            double rcov =   _str.atom(ia).get_element().get_radius();
             rcov2[ia] = rcov*rcov;
             //rcov2[ia] = 0.5*0.5;
             for(int c=0;c<3;c++)

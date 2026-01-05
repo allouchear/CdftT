@@ -26,7 +26,7 @@ Element PeriodicTable::element(const std::string& symbolOrName) const
     {
         for(int i = 0; i < int(_periodic_table.size()); ++i)
         {
-            if(symbolOrName == _periodic_table[i].symbol())
+            if(symbolOrName == _periodic_table[i].get_symbol())
             {
                 e = _periodic_table[i];
                 break;
@@ -37,7 +37,7 @@ Element PeriodicTable::element(const std::string& symbolOrName) const
     {
         for(size_t i = 0; i < _periodic_table.size(); ++i)
         {
-            if(symbolOrName == _periodic_table[i].name())
+            if(symbolOrName == _periodic_table[i].get_name())
             {
                 e = _periodic_table[i];
                 break;
@@ -57,9 +57,9 @@ void PeriodicTable::add_isotope(const Isotope& isotope)
 {
     for(size_t i = 0; i < _periodic_table.size(); ++i)
     {
-        if(_periodic_table[i].symbol() == isotope.symbol())
+        if(_periodic_table[i].get_symbol() == isotope.symbol())
         {
-            _periodic_table[i].push_isotope(isotope);
+            _periodic_table[i].pushIsotope(isotope);
         }
     }
 }

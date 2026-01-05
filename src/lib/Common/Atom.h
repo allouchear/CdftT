@@ -50,7 +50,7 @@ class Atom
         double _covalentRadius;
 
         /** @brief Associated Element object (properties dictionary). */
-        Element _e;
+        Element _element;
 
         /** @brief Molecular mechanics atom type. */
         std::string _mmType;
@@ -181,7 +181,7 @@ class Atom
          *
          * @return Element The associated Element object.
          */
-        Element get_element();
+        const Element& get_element() const;
 
 
         //----------------------------------------------------------------------------------------------------//

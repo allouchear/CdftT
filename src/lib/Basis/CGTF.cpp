@@ -20,7 +20,7 @@ CGTF::CGTF(std::vector<GTF> gtfs) : _gtf(gtfs)
 {
     _numberOfFunctions=_gtf.size();
     _coefficients=std::vector<double> (_numberOfFunctions, 1);
-    _bino = gtfs[0].bino();
+    _bino = gtfs[0].get_bino();
 }
 
 void CGTF::setCoef(double c)
@@ -135,7 +135,7 @@ double CGTF::CGTFxyzCGTF(CGTF& right, int ix, int iy, int iz)
     double sum=0.0;
     int n;
     int ns;
-    std::vector<double> C(3,0);
+    std::array<double, 3> C({ 0.0, 0.0, 0.0 });
     std::vector<int> l {ix, iy, iz};
     GTF m(0.0, 1.0, C, l, _bino);
 
@@ -164,11 +164,15 @@ double CGTF::ionicPotentialCGTF(CGTF& right, const std::array<double, 3>& C, dou
 {
     int n;
     int np;
-    double sum=0.0;
+    double sum = 0.0;
 
-    for(n=0;n<_numberOfFunctions;n++)
-        for(np=0;np<right.numberOfFunctions();np++)
-            sum += _gtf[n].ionicPotentialGTF(right.gtf()[np], C, Z); 
+    for(n = 0; n < _numberOfFunctions; ++n)
+    {
+        for(np = 0; np < right.numberOfFunctions(); ++np)
+        {
+            sum += _gtf[n].ionicPotentialGTF(right.gtf()[np], C, Z);
+        }
+    }
 
     return sum;
 }

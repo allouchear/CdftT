@@ -88,14 +88,18 @@ Orbitals::Orbitals(WFX& wfxParser, Binomial& bino, const PeriodicTable& periodic
 
     GTF gtf;
     for(int j = 0; j < wfxParser.Number_of_Primitives(); ++j)
-    {            
-            gtf.push_back(wfxParser.Primitive_Exponents()[j], 1.0, coord[wfxParser.Primitive_Centers()[j] - 1], setLxyz(wfxParser.Primitive_Types()[j]), bino);
-            _vcgtf[j].push_back(gtf);
-            _vcgtf[j].setCoef(1.0);
-            _vcgtf[j].setFactorCoef(1.0);
-            _vcgtf[j].setNumCenter(wfxParser.Primitive_Centers()[j]);
-            _vcgtf[j].setLtype(getLType(_vcgtf[j].gtf()[0].l()));
-            _vcgtf[j].setFormat("Cart");
+    {
+        std::array<double, 3> coords ({ coord[wfxParser.Primitive_Centers()[j] - 1][0],
+                                        coord[wfxParser.Primitive_Centers()[j] - 1][1],
+                                        coord[wfxParser.Primitive_Centers()[j] - 1][2] });
+        
+        gtf.push_back(wfxParser.Primitive_Exponents()[j], 1.0, coords, setLxyz(wfxParser.Primitive_Types()[j]), bino);
+        _vcgtf[j].push_back(gtf);
+        _vcgtf[j].setCoef(1.0);
+        _vcgtf[j].setFactorCoef(1.0);
+        _vcgtf[j].setNumCenter(wfxParser.Primitive_Centers()[j]);
+        _vcgtf[j].setLtype(getLType(_vcgtf[j].gtf()[0].get_l()));
+        _vcgtf[j].setFormat("Cart");
     }
 
     //_coefficients=std::vector<std::vector<std::vector<double>>> (2);
@@ -136,127 +140,178 @@ Orbitals::Orbitals(WFX& wfxParser, Binomial& bino, const PeriodicTable& periodic
     _vcgtfNonNormalise = _vcgtf;
 }
 
-Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
+Orbitals::Orbitals(FCHK& fchkParser, Binomial& bino, const PeriodicTable& periodicTable):
+    _vcgtf(),
+    _coefficients(2),
+    _numberOfAo(0),
+    _numberOfMo(0),
+    _numberOfAlphaElectrons(0),
+    _numberOfBetaElectrons(0),
+    _numberOfAtoms(0),
+    _primitiveCenters(),
+    _struct(fchkParser, periodicTable),
+    _atomicNumbers(),
+    _symbol(),
+    _orbitalEnergy(),
+    _all_f(),
+    _numOrb(),
+    _occupationNumber(),
+    _alphaAndBeta(false),
+    _bino(bino),
+    _descriptors(),
+    _vcgtfNonNormalise(),
+    _numberOfGtf(0),
+    _energy(0.0),
+    _coordinates(),
+    _mixte(false)
 {
-    _struct=Structure(fchk, Table);
-    _vcgtfNonNormalise = std::vector<CGTF> ();
-    _numberOfMo=fchk.NumberOfBasisFunctions();
-    _coordinates=fchk.CurrentCartesianCoordinates();
-    _bino=Bin;
-    _numberOfGtf=0;
-    _energy=fchk.TotalEnergy();
-    int lmax = fchk.HighestAngularMomentum();
-    int nShells = fchk.NumberOfContractedShells();
-    int llmax = (lmax+1)*(lmax+2)/2;
-    std::vector<int> numAtoms = fchk.ShellToAtomMap();
-    std::vector<int> nPrimitivesByShell = fchk.NumberOfPrimitivesPerShell();
-    std::vector<int> nCoefs (llmax);
-    std::vector<int> shellTypes = fchk.ShellTypes();
-    std::vector<double> contractionsCoefs = fchk.ContractionCoefficients();
-    std::vector<double> contractionsCoefsSP = fchk.spContractionCoefficients();
-    std::vector<double> coordinatesForShells = fchk.CoordinatesForShells();
-    std::vector<double> primitiveExponents = fchk.PrimitiveExponents();
-    std::vector<std::vector<double>> coefs (llmax, std::vector<double> (llmax));
-    std::vector<std::vector<std::vector<int>>> l (3, std::vector<std::vector<int>> (llmax, std::vector<int> (llmax)));
-    _mixte=fchk.Mixte();
+    _numberOfMo = fchkParser.NumberOfBasisFunctions();
+    _coordinates = fchkParser.CurrentCartesianCoordinates();
+    _energy = fchkParser.TotalEnergy();
+    _mixte = fchkParser.Mixte();
+
+    int lmax = fchkParser.HighestAngularMomentum();
+    int nShells = fchkParser.NumberOfContractedShells();
+    int llmax = (lmax + 1) * (lmax + 2) / 2;
+
+    std::vector<int> nCoefs(llmax);
+    std::vector<std::vector<double>> coefs(llmax, std::vector<double>(llmax));
+    std::vector<std::vector<std::vector<int>>> l(3, std::vector<std::vector<int>>(llmax, std::vector<int>(llmax)));
+
+    std::vector<int> numAtoms = fchkParser.ShellToAtomMap();
+    std::vector<int> nPrimitivesByShell = fchkParser.NumberOfPrimitivesPerShell();
+    std::vector<int> shellTypes = fchkParser.ShellTypes();
+
+    std::vector<double> contractionsCoefs = fchkParser.ContractionCoefficients();
+    std::vector<double> contractionsCoefsSP = fchkParser.spContractionCoefficients();
+    std::vector<double> coordinatesForShells = fchkParser.CoordinatesForShells();
+    std::vector<double> primitiveExponents = fchkParser.PrimitiveExponents();
 
     int NOrb = 0;
-    for(int nS=0;nS<nShells;nS++) 
+    for(int nS = 0; nS < nShells; ++nS) 
     {
         if(shellTypes[nS]<-1)
-            NOrb += 2*abs(shellTypes[nS])+1; /* Spherical D, F, G, ...*/
-        else if(shellTypes[nS]==-1)
-            NOrb +=  4; /* This a SP.*/
+        {
+            NOrb += 2 * std::abs(shellTypes[nS]) + 1; /* Spherical D, F, G, ...*/
+        }
+        else if(shellTypes[nS] == -1)
+        {
+            NOrb += 4; /* This a SP.*/
+        }
         else
-            NOrb +=  (shellTypes[nS]+1)*(shellTypes[nS]+2)/2; /* Cartesian S,P,D,F,G,..*/
+        {
+            NOrb += (shellTypes[nS] + 1) * (shellTypes[nS] + 2) / 2; /* Cartesian S,P,D,F,G,..*/
+        }
     }
-    _vcgtf = std::vector<CGTF> (NOrb);
+
+    _vcgtf = std::vector<CGTF>(NOrb);
     int kOrb = 0;
     int kPrimitive = 0;
     std::string format;
 
-    for(int nS = 0;nS<nShells; nS++)
+    for(int nS = 0; nS < nShells; ++nS)
     {
         int nM = 0;
         /* printf("begin primitive nS = %d\n",nS);*/
-        if(shellTypes[nS]<-1)
+        if(shellTypes[nS] < -1)
         {
-            nM = 2*abs(shellTypes[nS])+1; /* Sperical D, F, G, ...*/
-            format="Sphe";
+            nM = 2 * std::abs(shellTypes[nS]) + 1; /* Sperical D, F, G, ...*/
+            format = "Sphe";
         }
-        else if(shellTypes[nS]==-1)
+        else if(shellTypes[nS] == -1)
         {
             nM = 1; /* This a SP. Make S before */
-            format="Cart";
+            format = "Cart";
         }
         else
         {
-            nM = (shellTypes[nS]+1)*(shellTypes[nS]+2)/2;
-            format="Cart";
+            nM = (shellTypes[nS] + 1) * (shellTypes[nS] + 2) / 2;
+            format = "Cart";
         }
 
         /* printf("nM = %d\n",nM);*/
-        if(shellTypes[nS]==-1)
+        if(shellTypes[nS] == -1)
+        {
             getlTable(0, nCoefs, coefs, l, _bino); /* This a SP. Make S before */
+        }
         else
+        {
             getlTable(shellTypes[nS], nCoefs, coefs, l, _bino); 
+        }
+
         /* printf("end getlTable\n");*/
-        for(int m=0;m<nM;m++)
+        for(int m = 0; m < nM; ++m)
         {
             int ip,j,n;
             /* printf("P : m = %d nCoef = %d nPrim = %d\n",m,nCoefs[m],nPrimitivesByShell[nS]);*/
+
             _vcgtf[kOrb]= CGTF ();
             _vcgtf[kOrb].setNumCenter(numAtoms[nS]);
             _vcgtf[kOrb].setFactorCoef(1.0);
             _vcgtf[kOrb].setFormat(format);
-              j = -1;
-             for(ip=0;ip<nPrimitivesByShell[nS];ip++)
-                 for(n=0;n<nCoefs[m];n++)
-                 {
-                        j++;
-                       std::vector<double> coord_ (3);
-                       std::vector<int> l_ (3);
-                       for(int c=0;c<3;c++)
-                       {
-                           coord_[c] = coordinatesForShells[c+nS*3];
+
+            j = -1;
+            for(ip = 0; ip < nPrimitivesByShell[nS]; ++ip)
+            {
+                for(n = 0; n < nCoefs[m]; ++n)
+                {
+                    j++;
+
+                    std::array<double, 3> coord_;
+                    std::vector<int> l_ (3);
+                    for(int c = 0; c < 3; ++c)
+                    {
+                        coord_[c] = coordinatesForShells[c + nS * 3];
                         l_[c] = l[c][m][n];
-                       }
-                       GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
-                       _vcgtf[kOrb].push_back(gtf);
-                     _vcgtf[kOrb].setCoef(contractionsCoefs[kPrimitive+ip]*coefs[m][n]);
-                     _vcgtf[kOrb].setLtype(getLType(l_));
-                 }
+                    }
+
+                    GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
+                    _vcgtf[kOrb].push_back(gtf);
+                    _vcgtf[kOrb].setCoef(contractionsCoefs[kPrimitive+ip]*coefs[m][n]);
+                    _vcgtf[kOrb].setLtype(getLType(l_));
+                }
+            }
+
             kOrb++;
         }
-        if(shellTypes[nS]==-1) /* This a SP. Now make P*/
+
+        if(shellTypes[nS] == -1) /* This a SP. Now make P*/
         {
             getlTable(-1, nCoefs, coefs, l, _bino);
+
             nM = 3;
-            for(int m=0;m<nM;m++)
+            for(int m = 0; m < nM; ++m)
             {
                 int ip,j,n;
                 /* printf("P : m = %d nCoef = %d nPrim = %d\n",m,nCoefs[m],nPrimitivesByShell[nS]);*/
+
                 _vcgtf[kOrb]= CGTF ();
                 _vcgtf[kOrb].setNumCenter(numAtoms[nS]);
                 _vcgtf[kOrb].setFactorCoef(1.0);
                 _vcgtf[kOrb].setFormat(format);
-                      j = -1;
-                 for(ip=0;ip<nPrimitivesByShell[nS];ip++)
-                     for(n=0;n<nCoefs[m];n++)
-                     {
-                            j++;
-                           std::vector<double> coord_ (3);
-                           std::vector<int> l_ (3);
-                           for(int c=0;c<3;c++)
-                           {
-                               coord_[c] = coordinatesForShells[c+nS*3];
-                               l_[c] = l[c][m][n];
-                           }
-                       GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
-                       _vcgtf[kOrb].push_back(gtf);
-                       _vcgtf[kOrb].setCoef(contractionsCoefsSP[kPrimitive+ip]*coefs[m][n]);
-                       _vcgtf[kOrb].setLtype(getLType(l_));
-                 }
+
+                j = -1;
+                for(ip = 0; ip < nPrimitivesByShell[nS]; ++ip)
+                {
+                    for(n = 0; n < nCoefs[m]; ++n)
+                    {
+                        j++;
+
+                        std::array<double, 3> coord_ ;
+                        std::vector<int> l_ (3);
+                        for(int c = 0; c < 3; ++c)
+                        {
+                            coord_[c] = coordinatesForShells[c + nS * 3];
+                            l_[c] = l[c][m][n];
+                        }
+
+                        GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
+                        _vcgtf[kOrb].push_back(gtf);
+                        _vcgtf[kOrb].setCoef(contractionsCoefsSP[kPrimitive+ip]*coefs[m][n]);
+                        _vcgtf[kOrb].setLtype(getLType(l_));
+                    }
+                }
+
                 kOrb++;
             }
         }
@@ -264,274 +319,360 @@ Orbitals::Orbitals(FCHK& fchk, Binomial& Bin, const PeriodicTable& Table)
         kPrimitive += nPrimitivesByShell[nS];
     }
 
-    _numberOfAo=_vcgtf.size();
-
+    _numberOfAo = _vcgtf.size();
     if(_numberOfAo != _numberOfMo)
     {
-        cout<<"Error : Their is "<<_vcgtf.size()<<" CGTF for "<<_numberOfMo<<" basis in file."<<endl;
-        cout<<"Please check your file."<<endl;
+        std::stringstream errorMessage;
+        errorMessage << "Error : There are " << _vcgtf.size() << " CGTFs for " << _numberOfMo << " basis in file." << std::endl;
+        errorMessage << "Please check your file.";
+
+        print_error(errorMessage.str());
+
         exit(1);
     }
 
-    _numberOfAlphaElectrons=fchk.NumberOfAlphaElectrons();
-    _numberOfBetaElectrons=fchk.NumberOfBetaElectrons();
-    _numberOfAtoms=fchk.NumberOfAtoms();
-    _coefficients=std::vector<std::vector<std::vector<double>>> (2, std::vector<std::vector<double>> ());
-    int nOrb_alpha=fchk.AlphaMOCoefficients().size()/fchk.AlphaOrbitalEnergies().size();
-    int nOrb_beta=fchk.BetaMOCoefficients().size()/fchk.BetaOrbitalEnergies().size();
+    _numberOfAlphaElectrons = fchkParser.NumberOfAlphaElectrons();
+    _numberOfBetaElectrons = fchkParser.NumberOfBetaElectrons();
+    _numberOfAtoms = fchkParser.NumberOfAtoms();
+    _coefficients = std::vector<std::vector<std::vector<double>>>(2, std::vector<std::vector<double>>());
 
-    _coefficients[0]=std::vector<std::vector<double>> (nOrb_alpha, std::vector<double> (_numberOfMo));
-    _coefficients[1]=std::vector<std::vector<double>> (nOrb_beta, std::vector<double> (_numberOfMo));
+    int nOrb_alpha = fchkParser.AlphaMOCoefficients().size() / fchkParser.AlphaOrbitalEnergies().size();
+    int nOrb_beta = fchkParser.BetaMOCoefficients().size() / fchkParser.BetaOrbitalEnergies().size();
 
-    for(int i=0; i<nOrb_alpha; i++)
-        for(int j=0; j<_numberOfMo; j++)
-            _coefficients[0][i][j]=fchk.AlphaMOCoefficients()[i*_numberOfMo+j];
-    for(int i=0; i<nOrb_beta; i++)
-        for(int j=0; j<_numberOfMo; j++)        
-            _coefficients[1][i][j]=fchk.BetaMOCoefficients()[i*_numberOfMo+j];
-    _orbitalEnergy=std::vector<std::vector<double>> (2, std::vector<double> ());
-    _orbitalEnergy[0]=fchk.AlphaOrbitalEnergies();
-    _orbitalEnergy[1]=fchk.BetaOrbitalEnergies();
+    _coefficients[0] = std::vector<std::vector<double>>(nOrb_alpha, std::vector<double>(_numberOfMo));
+    _coefficients[1] = std::vector<std::vector<double>>(nOrb_beta, std::vector<double>(_numberOfMo));
 
-    _occupationNumber=std::vector<std::vector<double>> (2);
-    _alphaAndBeta=fchk.AlphaAndBeta();
+    for(int i = 0; i < nOrb_alpha; ++i)
+    {
+        for(int j = 0; j < _numberOfMo; ++j)
+        {
+            _coefficients[0][i][j] = fchkParser.AlphaMOCoefficients()[i * _numberOfMo + j];
+        }
+    }
 
+    for(int i = 0; i < nOrb_beta; ++i)
+    {
+        for(int j = 0; j < _numberOfMo; ++j)
+        {
+            _coefficients[1][i][j] = fchkParser.BetaMOCoefficients()[i * _numberOfMo + j];
+        }
+    }
+
+    _orbitalEnergy = std::vector<std::vector<double>>(2, std::vector<double>());
+    _orbitalEnergy[0] = fchkParser.AlphaOrbitalEnergies();
+    _orbitalEnergy[1] = fchkParser.BetaOrbitalEnergies();
+
+    _occupationNumber = std::vector<std::vector<double>>(2);
+
+    _alphaAndBeta = fchkParser.AlphaAndBeta();
     if(_alphaAndBeta)
     {
-        _occupationNumber[0]=std::vector<double> (_numberOfMo);
-        for(int i=0; i<_numberOfMo; i++)
-            _occupationNumber[0][i]=fchk.AlphaOccupation()[i]+fchk.BetaOccupation()[i];
-        _occupationNumber[1]=_occupationNumber[0];
+        _occupationNumber[0] = std::vector<double>(_numberOfMo);
+        for(int i = 0; i < _numberOfMo; ++i)
+        {
+            _occupationNumber[0][i] = fchkParser.AlphaOccupation()[i] + fchkParser.BetaOccupation()[i];
+        }
+        _occupationNumber[1] = _occupationNumber[0];
     }
     else
     {
-        _occupationNumber[0]=fchk.AlphaOccupation();
-        _occupationNumber[1]=fchk.BetaOccupation();
+        _occupationNumber[0] = fchkParser.AlphaOccupation();
+        _occupationNumber[1] = fchkParser.BetaOccupation();
     }
 
-    _atomicNumbers=fchk.AtomicNumbers();
-    _symbol=std::vector<std::string> (_numberOfAtoms);
+    _atomicNumbers = fchkParser.AtomicNumbers();
+    _symbol = std::vector<std::string>(_numberOfAtoms);
     
-    for(int i=0; i<_numberOfAtoms; i++)
-        _symbol[i]=Table.element(_atomicNumbers[i]).symbol();
+    for(int i = 0; i < _numberOfAtoms; ++i)
+    {
+        _symbol[i] = periodicTable.element(_atomicNumbers[i]).get_symbol();
+    }
 
-    _numOrb=std::vector<int> (2,0);
-    _descriptors=Descriptors(fchk, Table);
+    _numOrb = std::vector<int>(2, 0);
+    _descriptors = Descriptors(fchkParser, periodicTable);
 
-    for(size_t i=0; i<_vcgtf.size(); i++)
+    for(size_t i = 0; i < _vcgtf.size(); i++)
+    {
         _primitiveCenters.push_back(_vcgtf[i].NumCenter());
+    }
 
-    _vcgtfNonNormalise=_vcgtf;
-
+    _vcgtfNonNormalise = _vcgtf;
     NormaliseAllBasis();
 
-    for(size_t i=0; i<_vcgtf.size(); i++)
-        _numberOfGtf+=_vcgtf[i].numberOfFunctions();
+    for(size_t i = 0; i < _vcgtf.size(); i++)
+    {
+        _numberOfGtf += _vcgtf[i].numberOfFunctions();
+    }
 }
 
-Orbitals::Orbitals(MOLDENGAB& moldengab, Binomial& Bin, const PeriodicTable& Table)
+Orbitals::Orbitals(MOLDENGAB& moldengabParser, Binomial& bino, const PeriodicTable& periodicTable):
+    _vcgtf(),
+    _coefficients(2),
+    _numberOfAo(0),
+    _numberOfMo(0),
+    _numberOfAlphaElectrons(0),
+    _numberOfBetaElectrons(0),
+    _numberOfAtoms(0),
+    _primitiveCenters(),
+    _struct(moldengabParser, periodicTable),
+    _atomicNumbers(),
+    _symbol(),
+    _orbitalEnergy(),
+    _all_f(),
+    _numOrb(),
+    _occupationNumber(),
+    _alphaAndBeta(false),
+    _bino(bino),
+    _descriptors(),
+    _vcgtfNonNormalise(),
+    _numberOfGtf(0),
+    _energy(0.0),
+    _coordinates(),
+    _mixte(false)
 {
-    _struct=Structure(moldengab, Table);
-    _vcgtfNonNormalise = std::vector<CGTF> ();
-    _numberOfGtf=0;
-    _energy=0;
-    _coefficients=std::vector<std::vector<std::vector<double>>> (2);
-    _coefficients[0]=moldengab.AlphaMOCoefs();
-    _coefficients[1]=moldengab.BetaMOCoefs();
+    _coefficients[0] = moldengabParser.AlphaMOCoefs();
+    _coefficients[1] = moldengabParser.BetaMOCoefs();
 
-    _numberOfAtoms=moldengab.NumberOfAtoms();
-    _coordinates=std::vector<double> (_numberOfAtoms*3);
-    for(int i=0; i<_numberOfAtoms; i++)
+    _numberOfAtoms = moldengabParser.NumberOfAtoms();
+
+    _coordinates = std::vector<double>(_numberOfAtoms * 3);
+    for (int i = 0; i < _numberOfAtoms; ++i)
     {
-        int k=0;
-        for(int j=i*3; j<(i+1)*3; j++)
+        int k = 0;
+        for(int j = i * 3; j < (i + 1) * 3; ++j)
         {
-            _coordinates[j]=moldengab.Coordinates()[i][k];
+            _coordinates[j] = moldengabParser.Coordinates()[i][k];
             k++;
         }
     }
-    _numberOfMo=moldengab.NumberOfMO();
-    _alphaAndBeta=moldengab.AlphaAndBeta();
+
+    _numberOfMo = moldengabParser.NumberOfMO();
+    _alphaAndBeta = moldengabParser.AlphaAndBeta();
 
     if(!_alphaAndBeta)
-        _numberOfMo/=2;
-
-    _numberOfAlphaElectrons=0;
-    _numberOfBetaElectrons=0;
+    {
+        _numberOfMo /= 2;
+    }
 
     if(_alphaAndBeta)
     {
-        for(size_t i=0; i<moldengab.AlphaOccupation().size(); i++)
-            if(moldengab.AlphaOccupation()[i]==1)
+        for(size_t i = 0; i < moldengabParser.AlphaOccupation().size(); i++)
+        {
+            if(moldengabParser.AlphaOccupation()[i] == 1)
+            {
                 _numberOfAlphaElectrons++;
-        _numberOfBetaElectrons=_numberOfAlphaElectrons;
-    }
+            }
+        }
 
+        _numberOfBetaElectrons = _numberOfAlphaElectrons;
+    }
     else
     {
-        for(size_t i=0; i<moldengab.AlphaOccupation().size(); i++)
-            if(moldengab.AlphaOccupation()[i]==1)
+        for(size_t i = 0; i < moldengabParser.AlphaOccupation().size(); i++)
+        {
+            if(moldengabParser.AlphaOccupation()[i] == 1)
+            {
                 _numberOfAlphaElectrons++;
+            }
+        }
 
-        for(size_t i=0; i<moldengab.BetaOccupation().size(); i++)
-            if(moldengab.BetaOccupation()[i]==1)
+        for(size_t i = 0; i < moldengabParser.BetaOccupation().size(); i++)
+        {
+            if(moldengabParser.BetaOccupation()[i] == 1)
+            {
                 _numberOfBetaElectrons++;
+            }
+        }
     }
 
-    _bino=Bin;
-        
-    _atomicNumbers=moldengab.AtomicNumbers();
-    _symbol=moldengab.Symbol();
-    _orbitalEnergy=std::vector<std::vector<double>> (2);
-    _orbitalEnergy[0]=moldengab.AlphaEnergies();
-    _orbitalEnergy[1]=moldengab.BetaEnergies();    
-    _numOrb=std::vector<int> (2,0);
-    _occupationNumber=std::vector<std::vector<double>> (2);
-    _occupationNumber[0]=moldengab.AlphaOccupation();
-    _occupationNumber[1]=moldengab.BetaOccupation();
-    _descriptors=Descriptors(moldengab, Table);
+    _atomicNumbers = moldengabParser.AtomicNumbers();
+    _symbol = moldengabParser.Symbol();
 
-    std::vector<int> Ltypes = moldengab.Ltypes();
+    _orbitalEnergy = std::vector<std::vector<double>>(2);
+    _orbitalEnergy[0] = moldengabParser.AlphaEnergies();
+    _orbitalEnergy[1] = moldengabParser.BetaEnergies();
+
+    _numOrb = std::vector<int>(2, 0);
+
+    _occupationNumber = std::vector<std::vector<double>>(2);
+    _occupationNumber[0] = moldengabParser.AlphaOccupation();
+    _occupationNumber[1] = moldengabParser.BetaOccupation();
+
+    _descriptors = Descriptors(moldengabParser, periodicTable);
+
+    std::vector<int> Ltypes = moldengabParser.Ltypes();
+
     int nShells = Ltypes.size();
-
     int lmax=0;
-    for(int i=0; i<nShells; i++)
-        if(lmax<abs(Ltypes[i]))
-            lmax=abs(Ltypes[i]);
+    for(int i = 0; i < nShells; ++i)
+    {
+        if(lmax < std::abs(Ltypes[i]))
+        {
+            lmax = std::abs(Ltypes[i]);
+        }
+    }
 
-    int llmax = (lmax+1)*(lmax+2)/2;
-    std::vector<int> nPrimitivesByShell = moldengab.NumberOfGtf();
+    int llmax = (lmax + 1) * (lmax + 2) / 2;
+    std::vector<int> nPrimitivesByShell = moldengabParser.NumberOfGtf();
     std::vector<int> nCoefs (llmax);
-    
-    std::vector<double> FactorCoefs = moldengab.FactorCoefficients();
-    std::vector<double> CgtfCoefs = moldengab.CgtfCoefficients();
+    std::vector<std::vector<double>> coefs(llmax, std::vector<double>(llmax));
+    std::vector<std::vector<std::vector<int>>> l(3, std::vector<std::vector<int>>(llmax, std::vector<int>(llmax)));
+
+    std::vector<double> FactorCoefs = moldengabParser.FactorCoefficients();
+    std::vector<double> CgtfCoefs = moldengabParser.CgtfCoefficients();
     std::vector<std::vector<double>> coordinatesForShells;
-    std::vector<int> NatBasis = moldengab.NatBasis();
+    std::vector<int> NatBasis = moldengabParser.NatBasis();
 
-    for(int i=0; i<_numberOfAtoms; i++)
-        for(int j=0; j<NatBasis[i]; j++)
-            coordinatesForShells.push_back(moldengab.Coordinates()[i]);
+    for(int i = 0; i < _numberOfAtoms; ++i)
+    {
+        for(int j = 0; j < NatBasis[i]; ++j)
+        {
+            coordinatesForShells.push_back(moldengabParser.Coordinates()[i]);
+        }
+    }
 
-    std::vector<double> primitiveExponents = moldengab.Exposants();
-    std::vector<std::vector<double>> coefs (llmax, std::vector<double> (llmax));
-    std::vector<std::vector<std::vector<int>>> l (3, std::vector<std::vector<int>> (llmax, std::vector<int> (llmax)));
+    std::vector<double> primitiveExponents = moldengabParser.Exposants();
 
-    int NOrb = moldengab.NumberOfMOCoefs();
-    _vcgtf = std::vector<CGTF> (NOrb);
+    int NOrb = moldengabParser.NumberOfMOCoefs();
+
+    _vcgtf = std::vector<CGTF>(NOrb);
+
     std::string format;
 
     int kOrb = 0;
     int kPrimitive = 0;
-    for(int nS = 0;nS<nShells; nS++)
+    for(int nS = 0; nS < nShells; ++nS)
     {
         int nM = 0;
 
-        if(Ltypes[nS]<-1)
+        if(Ltypes[nS] < -1)
         {
-            nM = 2*abs(Ltypes[nS])+1; /* Sperical D, F, G, ...*/
-            format="Sphe";
+            nM = 2 * std::abs(Ltypes[nS]) + 1; /* Sperical D, F, G, ...*/
+            format = "Sphe";
         }
-        else if(Ltypes[nS]==-1)
+        else if(Ltypes[nS] == -1)
         {
             nM = 1; /* This a SP. Make S before */
-            format="Cart";
+            format = "Cart";
         }
         else
         {
-            nM = (Ltypes[nS]+1)*(Ltypes[nS]+2)/2;
-            format="Cart";
+            nM = (Ltypes[nS] + 1) * (Ltypes[nS] + 2) / 2;
+            format = "Cart";
         }
 
-        if(Ltypes[nS]==-1)
+        if(Ltypes[nS] == -1)
+        {
             getlTable(0, nCoefs, coefs, l, _bino); /* This a SP. Make S before */
-        
+        }
         else
-            getlTable(Ltypes[nS], nCoefs, coefs, l, _bino); 
-    
-
-        for(int m=0;m<nM;m++)
         {
+            getlTable(Ltypes[nS], nCoefs, coefs, l, _bino);
+        }
 
+        for(int m = 0; m < nM; ++m)
+        {
             int ip,j,n;
+
             _vcgtf[kOrb]= CGTF ();
-            _vcgtf[kOrb].setNumCenter(moldengab.Numcenter()[nS]);
-            _vcgtf[kOrb].setLtype(moldengab.ShellTypes()[nS]);
+            _vcgtf[kOrb].setNumCenter(moldengabParser.Numcenter()[nS]);
+            _vcgtf[kOrb].setLtype(moldengabParser.ShellTypes()[nS]);
             _vcgtf[kOrb].setFactorCoef(FactorCoefs[nS]);
             _vcgtf[kOrb].setFormat(format);
-              j = -1;
 
-             for(ip=0;ip<nPrimitivesByShell[nS];ip++)
-                 for(n=0;n<nCoefs[m];n++)
-                 {
-                        j++;
-                       std::vector<double> coord_ (3);
-                       std::vector<int> l_ (3);
-                       for(int c=0;c<3;c++)
-                       {
-                           coord_[c] = coordinatesForShells[kPrimitive+ip][c];
+            j = -1;
+            for(ip = 0; ip < nPrimitivesByShell[nS]; ++ip)
+            {
+                for(n = 0; n < nCoefs[m]; ++n)
+                {
+                    j++;
+
+                    std::array<double, 3> coord_;
+                    std::vector<int> l_(3);
+                    for(int c = 0; c < 3; ++c)
+                    {
+                        coord_[c] = coordinatesForShells[kPrimitive + ip][c];
                         l_[c] = l[c][m][n];
-                       }
-                       GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
-                       _vcgtf[kOrb].push_back(gtf);
-                     _vcgtf[kOrb].setCoef(FactorCoefs[kPrimitive+ip]*CgtfCoefs[kPrimitive+ip]*coefs[m][n]);
-                 }
+                    }
+
+                    GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
+                    _vcgtf[kOrb].push_back(gtf);
+                    _vcgtf[kOrb].setCoef(FactorCoefs[kPrimitive+ip]*CgtfCoefs[kPrimitive+ip]*coefs[m][n]);
+                }
+            }
+
             kOrb++;
         }
-        if(Ltypes[nS]==-1) /* This a SP. Now make P*/
+
+        if(Ltypes[nS] == -1) /* This a SP. Now make P*/
         {
             getlTable(-1, nCoefs, coefs, l, _bino);
             nM = 3;
-            for(int m=0;m<nM;m++)
+            for(int m = 0; m < nM; ++m)
             {
                 int ip,j,n;
 
                 _vcgtf[kOrb]= CGTF ();
-                _vcgtf[kOrb].setNumCenter(moldengab.Numcenter()[nS]);
-                _vcgtf[kOrb].setLtype(moldengab.ShellTypes()[nS]);
+                _vcgtf[kOrb].setNumCenter(moldengabParser.Numcenter()[nS]);
+                _vcgtf[kOrb].setLtype(moldengabParser.ShellTypes()[nS]);
                 _vcgtf[kOrb].setFactorCoef(FactorCoefs[nS]);
                 _vcgtf[kOrb].setFormat(format);
-                  j = -1;
-                 for(ip=0;ip<nPrimitivesByShell[nS];ip++)
-                     for(n=0;n<nCoefs[m];n++)
-                     {
-                            j++;
-                           std::vector<double> coord_ (3);
-                           std::vector<int> l_ (3);
-                           for(int c=0;c<3;c++)
-                           {
-                               coord_[c] = coordinatesForShells[nS][c];
-                               l_[c] = l[c][m][n];
-                           }
-                       GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
-                       _vcgtf[kOrb].push_back(gtf);
-                       _vcgtf[kOrb].setCoef(FactorCoefs[kOrb]*CgtfCoefs[kPrimitive+ip]*coefs[m][n]);
-                     }
+
+                j = -1;
+                for(ip=0;ip<nPrimitivesByShell[nS];ip++)
+                {
+                    for(n=0;n<nCoefs[m];n++)
+                    {
+                        j++;
+                        std::array<double, 3> coord_;
+                        std::vector<int> l_(3);
+                        for(int c = 0; c < 3; ++c)
+                        {
+                            coord_[c] = coordinatesForShells[nS][c];
+                            l_[c] = l[c][m][n];
+                        }
+
+                        GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
+                        _vcgtf[kOrb].push_back(gtf);
+                        _vcgtf[kOrb].setCoef(FactorCoefs[kOrb]*CgtfCoefs[kPrimitive+ip]*coefs[m][n]);
+                    }
+                }
+
                 kOrb++;
             }
         }
+
         kPrimitive += nPrimitivesByShell[nS];
     }
 
     _numberOfAo=_vcgtf.size();
 
-    if(_numberOfAo != moldengab.NumberOfMOCoefs())
+    if(_numberOfAo != moldengabParser.NumberOfMOCoefs())
     {
-        cout<<"Error : Their is "<<_vcgtf.size()<<" CGTF for "<<moldengab.NumberOfMOCoefs()<<" basis in file."<<endl;
-        cout<<"Please check your file."<<endl;
+        std::stringstream errorMessage;
+        errorMessage << "Error : There are " << _vcgtf.size() << " CGTFs for " << moldengabParser.NumberOfMOCoefs() << " basis in file." << std::endl;
+        errorMessage << "Please check your file.";
+
+        print_error(errorMessage.str());
+
         exit(1);
     }
 
-    _vcgtfNonNormalise=_vcgtf;
+    _vcgtfNonNormalise = _vcgtf;
 
-    for(size_t i=0; i<_vcgtf.size(); i++)
+    for(size_t i = 0; i < _vcgtf.size(); ++i)
+    {
         _primitiveCenters.push_back(_vcgtf[i].NumCenter());
+    }
 
     NormaliseAllBasis();
 
-    for(size_t i=0; i<_vcgtf.size(); i++)
-        _numberOfGtf+=_vcgtf[i].numberOfFunctions();
+    for(size_t i = 0; i < _vcgtf.size(); ++i)
+    {
+        _numberOfGtf += _vcgtf[i].numberOfFunctions();
+    }
 
-    _mixte=moldengab.Mixte();
+    _mixte = moldengabParser.Mixte();
 
     //Sorting(); Don't work
 }
@@ -604,9 +745,9 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
     int lmax = 0;
     for(int i = 0; i < nShells; ++i)
     {
-        if(lmax < abs(Ltypes[i]))
+        if(lmax < std::abs(Ltypes[i]))
         {
-            lmax = abs(Ltypes[i]);
+            lmax = std::abs(Ltypes[i]);
         }
     }
 
@@ -644,7 +785,7 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
 
         if(Ltypes[nS] < -1)
         {
-            nM = 2 * abs(Ltypes[nS]) + 1; /* Sperical D, F, G, ...*/
+            nM = 2 * std::abs(Ltypes[nS]) + 1; /* Sperical D, F, G, ...*/
             format = "Sphe";
         }
         else if(Ltypes[nS] == -1)
@@ -678,9 +819,9 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
                 for(n = 0; n < nCoefs[m]; ++n)
                 {
                     j++;
-                    std::vector<double> coord_(3);
+
+                    std::array<double, 3> coord_;
                     std::vector<int> l_(3);
-                    
                     for(int c = 0; c < 3; ++c)
                     {
                         coord_[c] = coordinatesForShells[kPrimitive + ip][c];
@@ -716,9 +857,9 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
                     for(n = 0; n < nCoefs[m]; ++n)
                     {
                         j++;
-                        std::vector<double> coord_(3);
-                        std::vector<int> l_(3);
 
+                        std::array<double, 3> coord_;
+                        std::vector<int> l_(3);
                         for(int c = 0; c < 3; ++c)
                         {
                             coord_[c] = coordinatesForShells[nS][c];
@@ -977,9 +1118,11 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
 
     // Compute ionic potential matrix elements in MO basis
     int spin, i, j;
+    /*
     #ifdef ENABLE_OMP
     #pragma omp parallel for private(spin, i, j)
     #endif
+    */
     for (spin = 0; spin < 2; ++spin)
     {
         for (i = 0; i < _numberOfMo; ++i)
@@ -1032,7 +1175,7 @@ double Orbitals::OrbxyzOrb(int ix, int iy, int iz)
     double sum=0.0;
     int n;
     int ns;
-    std::vector<double> C(3,0);
+    std::array<double, 3> C({ 0.0, 0.0, 0.0 });
     std::vector<int> l {ix, iy, iz};
     GTF m1(0.0, 1.0, C, l, _bino);
     std::vector<GTF> mbis (1,m1);
@@ -1083,7 +1226,7 @@ double Orbitals::func(double x, double y, double z) const
             }
             for(int k=0; k<_numberOfMo; k++)
             {
-                if(abs(_coefficients[i][j][k])>1e-10)
+                if(std::abs(_coefficients[i][j][k])>1e-10)
                     r+=_coefficients[i][j][k] * _vcgtf[k].func(x,y,z);
             }
         }
