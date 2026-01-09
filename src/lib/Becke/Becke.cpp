@@ -793,7 +793,7 @@ double Becke::phiStarPhi(Orbitals& orbitals, int i, int j, double x, double y, d
     return phi_star_phi;
 }
 
-double Becke::phiStarVionicStarphi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge)
+double Becke::phiStarVionicStarPhi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge)
 {
     return phiStarPhi(orbitals, i, j, x, y, z, spinType) * charge / std::sqrt((x - chargePosition[0]) * (x - chargePosition[0])
                                                                               + (y - chargePosition[1]) * (y - chargePosition[1])

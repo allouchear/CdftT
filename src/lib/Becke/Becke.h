@@ -391,7 +391,7 @@ class Becke
          * @param[in] charge Value of the charge.
          * @return double Product value of the two orbitals at (x,y,z) multiplied by the ionic potential.
          */
-        static double phiStarVionicStarphi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge);
+        static double phiStarVionicStarPhi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge);
 
         /**
          * @brief Returns the HOMO energy.
