@@ -1,11 +1,13 @@
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include <Common/Constants.h>
 #include <Utils/LOG.h>
+#include <Utils/Utils.h>
 
 
 LOG::LOG() :
@@ -275,23 +277,25 @@ void LOG::read_basis_data(std::ifstream& f)
     sss >> line;
     sss >> _number_of_beta_electrons;
 
-    do
-    {
-        lastPosition = position;
-        position = LocaliseNextDataLogBefore(f, "E(");
-    } while (position != -1);
+    position = LocaliseNextDataLogBefore(f, "E(");
 
     f.clear();
-    f.seekg(lastPosition);
+    f.seekg(position);
 
     getline(f,line);
-    
-    std::stringstream ssss(line);
-    ssss >> line;
-    ssss >> line;
-    ssss >> line;
-    ssss >> line;
-    ssss >> _energy;
+
+    std::regex energyRegex("E\\(.*\\)\\s*=\\s*(-?\\d+(?:\\.\\d+)?)\\s+A\\.U\\.\\s+after\\s+\\d+\\s+cycles");
+    std::smatch energyRegexMatch;
+    if (std::regex_search(line, energyRegexMatch, energyRegex))
+    {
+        std::stringstream ssss(energyRegexMatch[1]);
+        ssss >> _energy;
+    }
+    else
+    {
+        print_error("Error: could not read energy from LOG file.");
+        std::exit(1);
+    }
 
     position = LocaliseDataLogBefore(f, "Standard basis:", "General basis read from cards:");
 

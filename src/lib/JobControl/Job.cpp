@@ -1379,6 +1379,7 @@ void Job::run_computeEnergyWithPointCharge()
     // Read point charge value
     double charge;
     readCharge(charge);
+    std::cout << "Point charge: " << charge << " e at position (" << position[0] << ", " << position[1] << ", " << position[2] << ")." << std::endl << std::endl;
     
     
     // Read transitions file
@@ -1403,7 +1404,7 @@ void Job::run_computeEnergyWithPointCharge()
 
     // Reading transitions file
     ExcitedState::readTransitionsFile(transitionsFileName, states, groundState.get_energy());
-    std::cout << "Number of excited states read: " << states.size() << std::endl << std::endl;
+    std::cout << "Total number of states: " << states.size() << std::endl << std::endl;
     
 
     // Compute Slater Determinants from electronic transitions for each state
@@ -1443,7 +1444,7 @@ void Job::run_computeEnergyWithPointCharge()
 
             // Compute < psi_i | H_0 | psi_j >
             matrixElement += (i == j) ? states[i].get_energy() : 0.0;
-            std::cout << "< psi_" << i << " | H_0 | psi_" << j << " > = " << matrixElement << std::endl;
+            std::cout << "< psi_" << i << " | H_0 | psi_" << j << " > = " << std::setprecision(12) <<matrixElement << std::endl;
 
             // Compute < psi_i | V_nucleus | psi_j >
             double value = 0.0;
@@ -1462,14 +1463,22 @@ void Job::run_computeEnergyWithPointCharge()
 
             // Compute < psi_i | V_ion | psi_j >
             value = 0.0;
+            /*
             #ifdef ENABLE_OPENMP
             #pragma omp parallel for reduction(+: value)
             #endif
+            */
             for (const std::pair<SlaterDeterminant, double>& slaterCoeff_i : slaterDeterminants_i)
             {
                 for (const std::pair<SlaterDeterminant, double>& slaterCoeff_j : slaterDeterminants_j)
                 {
-                    value += SlaterDeterminant::ionicPotential(slaterCoeff_i.first, slaterCoeff_j.first, position, charge) * slaterCoeff_i.second * slaterCoeff_j.second;
+                    /*std::cout << "Computing < SD_" << i << " | V_ion | SD_" << j << " >..." << std::endl;
+                    std::cout << "SD_" << i << ": " << std::endl << slaterCoeff_i.first << std::endl;
+                    std::cout << "  Coefficient SD_" << i << ": " << slaterCoeff_i.second << std::endl;
+                    std::cout << "SD_" << j << ": " << std::endl << slaterCoeff_j.first << std::endl;
+                    std::cout << "  Coefficient SD_" << j << ": " << slaterCoeff_j.second << std::endl;*/
+
+                    value += SlaterDeterminant::ionicPotential(slaterCoeff_i.first, slaterCoeff_j.first, position, charge) * (slaterCoeff_i.second * slaterCoeff_j.second);
                 }
             }
             std::cout << "< psi_" << i << " | V_ion | psi_" << j << " > = " << value << std::endl << std::endl;

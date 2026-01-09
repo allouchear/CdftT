@@ -217,10 +217,10 @@ class Becke
          * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
          * @param lebedev_order Lebedev order for angular quadrature (default 41).
          * @param radial_grid_factor Radial grid multiplicative factor (default 5).
-         * @param alpha ?
+         * @param spinType Spin type for the integral (default ALPHA).
          * @return double Value of the integral.
          */
-        double multicenter_integration(std::function<double(Orbitals&, int, int, double, double, double, int)> f, int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, int alpha = 0);
+        double multicenter_integration(std::function<double(Orbitals&, int, int, double, double, double, SpinType)> f, int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, SpinType spinType = SpinType::ALPHA);
 
         /**
          * @brief Multicenter integration from a density Grid.
@@ -345,23 +345,23 @@ class Becke
          * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
          * @param lebedev_order Lebedev order for angular quadrature (default 41).
          * @param radial_grid_factor Radial grid multiplicative factor (default 5).
-         * @param alpha ? (default 0).
+         * @param spinType SpinType for the integral (default ALPHA).
          * @return double Value of the overlap integral.
          */
-        double overlap(int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, int alpha = 0);
+        double overlap(int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, SpinType spinType = SpinType::ALPHA);
 
         /**
          * @brief Returns the value of the i-th orbital at point (x,y,z).
          *
-         * @param Orb Orbitals reference.
+         * @param orbitals Orbitals reference.
          * @param i Index of the chosen orbital.
          * @param x X coordinate.
          * @param y Y coordinate.
          * @param z Z coordinate.
-         * @param alpha ? (default 0).
+         * @param spinType SpinType to consider (default ALPHA).
          * @return double Value of the chosen orbital at the point (x,y,z).
          */
-        static double phi(Orbitals& Orb, int i, double x, double y, double z, int alpha = 0);
+        static double phi(Orbitals& orbitals, int i, double x, double y, double z, SpinType spinType = SpinType::ALPHA);
 
         /**
          * @brief Returns the product of two orbitals of indexes i and j at a point (x,y,z).
@@ -372,17 +372,37 @@ class Becke
          * @param x X coordinate.
          * @param y Y coordinate.
          * @param z Z coordinate.
-         * @param alpha ? (default 0).
+         * @param spinType SpinType to consider (default ALPHA).
          * @return double Product value of the two orbitals at (x,y,z).
          */
-        static double phistarphi(Orbitals& Orb, int i, int j, double x, double y, double z, int alpha=0);
+        static double phiStarPhi(Orbitals& Orb, int i, int j, double x, double y, double z, SpinType spinType = SpinType::ALPHA);
+
+        /**
+         * @brief Returns the product of two orbitals of indexes i and j at a point (x,y,z) multiplied by the ionic potential (electrostatic potential interaction with a point charge).
+         *
+         * @param[in] orbitals Orbitals reference.
+         * @param[in] i Index of the first orbital.
+         * @param[in] j Index of the second orbital.
+         * @param[in] x X coordinate.
+         * @param[in] y Y coordinate.
+         * @param[in] z Z coordinate.
+         * @param[in] spinType Spin type (ALPHA, BETA, ALPHA_BETA).
+         * @param[in] position Position of the charge.
+         * @param[in] charge Value of the charge.
+         * @return double Product value of the two orbitals at (x,y,z) multiplied by the ionic potential.
+         */
+        static double phiStarVionicStarphi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge);
 
         /**
          * @brief Returns the HOMO energy.
          *
          * @return double HOMO energy.
          */
-        double eHOMO() {_orbitals.HOMO(); return _orbitals.eHOMO();}
+        double eHOMO()
+        {
+            _orbitals.HOMO();
+            return _orbitals.eHOMO();
+        }
 
         /**
          * @brief Returns the LUMO energy.

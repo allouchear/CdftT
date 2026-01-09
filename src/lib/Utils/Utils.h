@@ -232,25 +232,46 @@ class Binomial
 // MATHS FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
 
-    //! A method for approximation power (small number) taking two arguments and returning a double value.
-    /*! \return The result */
-double power(double, int);
+/**
+ * @brief Computes the value of e raised to the power of n, with an approximation based on the value of e.
+ * 
+ * @param[in] e Base value.
+ * @param[in] n Exponent value.
+ * @return The computed power value, with the following approximation: if |e| < 1e-10, returns 1.0 if n equals 0, else returns 0.0.
+ */
+double power(double e, int n);
 
-    //! A method taking six arguments and returning a double value.
-    /*! \return ???*/
-double f(int, int, int, double, double, Binomial&);
+/**
+ * @brief Computes the value of f(i, l, m, A, B) used in integral calculations.
+ *
+ * Ref : Modern techniques in computational chemistry: Motecc -90
+ * Enrico Clementi.
+ * ESCOM, 1990. ISBN: 90-72199-07-3.
+ * Page 422.
+ */
+double f(int i, int l, int m, double A, double B, Binomial& binomial);
 
     //! A method taking eight arguments and returning a double value.
     /*! \return ???*/
 double Theta(int, int, int, int, double, double, double, Binomial&);
 
-    //! A method taking one argument and returning an int value.
-    /*! \return ???*/
-int m1p(int);
+/**
+ * @brief Computes -1 raised to the power of i.
+ * 
+ * @param[in] i Exponent.
+ * @return -1 if i is odd, 1 if i is even.
+ */
+int m1p(int i);
 
-    //! A method taking ten arguments and returning a double value.
-    /*! \return ???*/
-double A(int, int, int, int, int, double, double, double, double, Binomial&);
+/**
+ * @brief Computes the value of A_{i,r,u}(l_1, l_2, A, B, C, \gamma) used in integral calculations.
+ *
+ * Ref : Modern techniques in computational chemistry: Motecc -90
+ * Enrico Clementi.
+ * ESCOM, 1990. ISBN: 90-72199-07-3.
+ * Page 394.
+ */
+double A(int i, int r, int u, int l1, int l2, double A, double B, double C, double gamma, Binomial& binomial);
 
     //! A method taking ten arguments and returning a double value.
     /*! \return ???*/
@@ -262,6 +283,7 @@ double B(int,int,int , int , int , double , double , double , double , Factorial
 
 /**
  * @brief Computes the incomplete gamma function F_nu(t) = \int_0^1 x^{2 \nu} e^{-t x^2} dx.
+ * 
  * @param[in] nu Order of the function.
  * @return The value of F_nu(t).
  */

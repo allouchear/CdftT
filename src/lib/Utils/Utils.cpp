@@ -588,26 +588,17 @@ double power(double e, int n)
     return p;
 }
 
-double f(int i, int l, int m, double A, double B, Binomial& Bi)
+double f(int i, int l, int m, double A, double B, Binomial& binomial)
 {
-    int j, jmin, jmax;
     double sum = 0.0;
 
-    jmin = 0;
-    if (jmin < i - m)
-    {
-        jmin = i - m;
-    }
+    int jmin = (0 > i - m ? 0 : i - m);
+    int jmax = (i < l ? i : l);
 
-    jmax = i;
-    if (jmax > l)
+    for (int j = jmin; j <= jmax; ++j)
     {
-        jmax = l;
-    }
-
-    for (j = jmin; j <= jmax; ++j)
-    {
-        sum += Bi.binomial(l, j) * Bi.binomial(m, i - j) * power(-A, l - j) * power(-B, m - i + j);
+        // sum += binomial.binomial(l, j) * binomial.binomial(m, i - j) * power(-A, l - j) * power(-B, m - i + j); // Note Ludo : error in the formula?
+        sum += binomial.binomial(l, j) * binomial.binomial(m, i - j) * power(A, l - j) * power(B, m - i + j);
     }
 
     return sum;
@@ -623,14 +614,14 @@ int m1p(int i)
     return (i % 2 == 0) ? 1 : -1;
 }
 
-double A(int i, int r, int u, int l1, int l2, double A, double B, double C,double g, Binomial& Bi)
+double A(int i, int r, int u, int l1, int l2, double A, double B, double C,double gamma, Binomial& binomial)
 {
-    return (m1p(i + u) * f(i, l1, l2, A, B, Bi)
-                       * Bi.fact().factorial(i)
-                       * power(C, i - 2 * (r + u)))
-            / (Bi.fact().factorial(r) * Bi.fact().factorial(u)
-                                      * Bi.fact().factorial(i - 2 * r - 2 * u)
-                                      * power(4 * g, r + u));
+    return m1p(i + u) * f(i, l1, l2, A, B, binomial)
+                      * binomial.fact().factorial(i)
+                      * power(C, i - 2 * (r + u))
+                      / (binomial.fact().factorial(r) * binomial.fact().factorial(u)
+                                                      * binomial.fact().factorial(i - 2 * r - 2 * u)
+                                                      * power(4 * gamma, r + u));
 }
 
 double B(int i, int ip, int r, int rp, int u, double PQ, double d, double T1, double T2, Factorial& Fa)

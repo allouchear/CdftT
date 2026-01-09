@@ -20,4 +20,6 @@ MOLDENGAB.o: MOLDENGAB.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h
 LOG.o: LOG.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Constants.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp

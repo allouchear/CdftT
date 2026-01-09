@@ -493,7 +493,7 @@ double Becke::multicenter_integration(std::function<double(Orbitals&, int i, int
     return integral;
 }
 
-double Becke::multicenter_integration(std::function<double(Orbitals& Orb, int i, int j, double x, double y, double z, int alpha)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor, int alpha)
+double Becke::multicenter_integration(std::function<double(Orbitals& Orb, int i, int j, double x, double y, double z, SpinType spinType)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor, SpinType spinType)
 {    /*
     compute the integral
 
@@ -539,7 +539,7 @@ double Becke::multicenter_integration(std::function<double(Orbitals& Orb, int i,
         #pragma omp parallel for reduction(+:integ)
         #endif
         for(size_t J=0; J<_grid_weights[I].size(); J++)
-            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, i, j, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2], alpha);       // evaluate function on the grid
+            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, i, j, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2], spinType);       // evaluate function on the grid
 
         integral+=integ;
     }
@@ -665,7 +665,7 @@ double Becke::OverlapCGTF(int i, int j, int kmax, int lebedev_order, int radial_
     return Sab;
 }
 
-double Becke::overlap(int i, int j, int kmax, int lebedev_order, int radial_grid_factor, int alpha)
+double Becke::overlap(int i, int j, int kmax, int lebedev_order, int radial_grid_factor, SpinType spinType)
 {
     /*
     overlap between two basis functions
@@ -690,7 +690,7 @@ double Becke::overlap(int i, int j, int kmax, int lebedev_order, int radial_grid
     //                                    
     // 2. integrate density on a multicenter grid
 
-    double Sab = multicenter_integration(&phistarphi, i, j, kmax, lebedev_order, radial_grid_factor, alpha);
+    double Sab = multicenter_integration(&phiStarPhi, i, j, kmax, lebedev_order, radial_grid_factor, spinType);
 
     return Sab;
 }
@@ -749,38 +749,55 @@ double Becke::CGTFstarCGTF(Orbitals& Orb, int i, int j, double x, double y ,doub
     return c;
 }
 
-double Becke::phi(Orbitals& Orb, int i, double x, double y, double z, int alpha)
+double Becke::phi(Orbitals& orbitals, int i, double x, double y, double z, SpinType spinType)
 {
-    double phi=0.0;
+    double phi = 0.0;
     
-    for(size_t j=0; j<Orb.get_vcgtf().size(); j++)
-        phi+=Orb.get_coefficients()[alpha][i][j]*Orb.get_vcgtf()[i].func(x,y,z);
+    for(size_t j = 0; j < orbitals.get_vcgtf().size(); ++j)
+    {
+        phi += orbitals.get_coefficients()[static_cast<int>(spinType)][i][j] * orbitals.get_vcgtf()[i].func(x, y, z);
+    }
 
     return phi;
 }
 
-double Becke::phistarphi(Orbitals& Orb, int i, int j, double x, double y, double z, int alpha)
+double Becke::phiStarPhi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType)
 {
-    if(i==j)
-    {
-        double phi=0.0;
+    double phi_star_phi = 0.0;
 
-        for(size_t k=0; k<Orb.get_vcgtf().size(); k++)
-            phi+=Orb.get_coefficients()[alpha][i][k]*Orb.get_vcgtf()[k].func(x,y,z);
-        
-        return phi*phi;
+    if (i == j)
+    {
+        double phi_i = 0.0;
+
+        for (size_t k = 0; k < orbitals.get_vcgtf().size(); k++)
+        {
+            phi_i += orbitals.get_coefficients()[static_cast<int>(spinType)][i][k] * orbitals.get_vcgtf()[k].func(x, y, z);
+        }
+
+        phi_star_phi = phi_i * phi_i;
+    }
+    else
+    {
+        double phi_i = 0.0;
+        double phi_j = 0.0;
+
+        for (size_t k = 0; k < orbitals.get_vcgtf().size(); k++)
+        {
+            phi_i += orbitals.get_coefficients()[static_cast<int>(spinType)][i][k] * orbitals.get_vcgtf()[k].func(x, y, z);
+            phi_j += orbitals.get_coefficients()[static_cast<int>(spinType)][j][k] * orbitals.get_vcgtf()[k].func(x, y, z);
+        }
+
+        phi_star_phi = phi_i * phi_j;
     }
 
-    double phii=0.0;
-    double phij=0.0;
+    return phi_star_phi;
+}
 
-    for(size_t k=0; k<Orb.get_vcgtf().size(); k++)
-    {
-        phii+=Orb.get_coefficients()[alpha][i][k]*Orb.get_vcgtf()[k].func(x,y,z);
-        phij+=Orb.get_coefficients()[alpha][j][k]*Orb.get_vcgtf()[k].func(x,y,z);
-    }
-
-    return phii*phij;
+double Becke::phiStarVionicStarphi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge)
+{
+    return phiStarPhi(orbitals, i, j, x, y, z, spinType) * charge / std::sqrt((x - chargePosition[0]) * (x - chargePosition[0])
+                                                                              + (y - chargePosition[1]) * (y - chargePosition[1])
+                                                                              + (z - chargePosition[2]) * (z - chargePosition[2]));
 }
 
 double Becke::multicenter_integration(const Grid& g, int kmax, int lebedev_order, int radial_grid_factor)
