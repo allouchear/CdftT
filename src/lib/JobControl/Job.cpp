@@ -1402,7 +1402,7 @@ void Job::run_computeEnergyWithPointCharge()
 
 
     // Reading transitions file
-    ExcitedState::readTransitionsFile(transitionsFileName, states);
+    ExcitedState::readTransitionsFile(transitionsFileName, states, groundState.get_energy());
     std::cout << "Number of excited states read: " << states.size() << std::endl << std::endl;
     
 
@@ -1449,11 +1449,9 @@ void Job::run_computeEnergyWithPointCharge()
             double value = 0.0;
             if (i == j)
             {
-                /*
                 #ifdef ENABLE_OPENMP
                 #pragma omp parallel for reduction(+: value)
                 #endif
-                */
                 for (const Atom& atom : orbitals.get_struct().get_atoms())
                 {
                     value += (charge * atom.get_element().get_atomicNumber()) / atom.computeDistance(position);
@@ -1488,6 +1486,61 @@ void Job::run_computeEnergyWithPointCharge()
             std::cout << "< psi_" << i << " | H | psi_" << j << " > = " << psi_i_H_psi_j[i][j] << std::endl;
         }
     }
+
+    // Diagonalize < psi_i | H | psi_j > matrix
+    std::vector<double> eigenvalues;
+    std::vector<std::vector<double>> eigenvectors;
+    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(psi_i_H_psi_j, eigenvalues, eigenvectors);
+
+    std::cout << std::endl << "Eigenvalues: ";
+    for (size_t k = 0; k < eigenvalues.size(); ++k)
+    {
+        std::cout << eigenvalues[k] << ' ';
+    }
+    std::cout << std::endl << std::endl;
+
+    std::cout << "Eigenvectors (columns): " << std::endl;
+    for (size_t i = 0; i < eigenvectors.size(); ++i)
+    {
+        for (size_t j = 0; j < eigenvectors[i].size(); ++j)
+        {
+            std::cout << std::setw(11) << eigenvectors[i][j] << '\t';
+        }
+
+        std::cout << std::endl;
+    }
+
+    /*
+    // DEBUG - comparison with C diagonalization
+    std::cout << std::endl << "DEBUG - comparaison fonctions C ";
+
+    nt taille = (nbStates * (nbStates + 1)) / 2;
+    double* psi_i_H_psi_j_pointer = new double[taille];
+    int indice = 0;
+    for (size_t i = 0; i < psi_i_H_psi_j.size(); ++i)
+    {
+        for (size_t j = 0; j < psi_i_H_psi_j[i].size(); ++j)
+        {
+            psi_i_H_psi_j_pointer[indice] = psi_i_H_psi_j[i][j];
+            ++indice;
+        }
+    }
+
+    double* eigenvalues_pointer = new double[nbStates];
+    double** eigenvectors_pointer = new double*[nbStates];
+    for (int i = 0; i < nbStates; ++i)
+    {
+        eigenvectors_pointer[i] = new double[nbStates];
+    }
+    
+    eigenQL(nbStates, psi_i_H_psi_j_pointer, eigenvalues_pointer, eigenvectors_pointer);
+    std::cout << "Eigenvalues (C): ";
+    for (int k = 0; k < nbStates; ++k)
+    {
+        std::cout << eigenvalues_pointer[k] << ' ';
+    }
+    std::cout << std::endl;
+    */
 }
 
 void Job::run_computeGridDifference()
@@ -1706,7 +1759,7 @@ void Job::run_lambdaDiagnostic()
 
     // Reading transitions file
     std::vector<ExcitedState> excitedStates;
-    ExcitedState::readTransitionsFile(transitionsFileName, excitedStates);
+    ExcitedState::readTransitionsFile(transitionsFileName, excitedStates, orbitals.get_energy());
     std::cout << "Number of excited states read: " << excitedStates.size() << std::endl << std::endl;
 
 

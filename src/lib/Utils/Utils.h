@@ -72,6 +72,14 @@ template<typename T> bool readListType(std::ifstream& inputFile, const std::stri
 // MATRIX MANAGEMENT FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
 
+/**
+ * @brief Diagonalises a tridiagonal matrix using the QL algorithm.
+ * 
+ * @param[in] subDiagonal Sub-diagonal elements of the tridiagonal matrix.
+ * @param[out] eigenValues Vector where the computed eigenvalues will be stored.
+ * @param[out] eigenVectors Matrix (as a vector of vectors) where the computed eigenvectors will be stored.
+ * @return True if the diagonalisation was successful; false otherwise.
+ */
 bool diagonalisationOfATridiagonalMatrix(std::vector<double>& subDiagonal, std::vector<double>& eigenValues, std::vector<std::vector<double>>& eigenVectors);
 
 /**
@@ -92,6 +100,12 @@ bool findEigenValuesAndEigenVectorsOfSymmetricalMatrix(const std::vector<std::ve
  * @param[out] subDiagonal Vector where the sub-diagonal elements of the tridiagonal matrix will be stored.
  */
 void reductionToTridiagonalMatrix(std::vector<std::vector<double>>& matrix, std::vector<double>& diagonal, std::vector<double>& subDiagonal);
+
+
+// TESTS
+int eigenQL(int n, double *M, double *EVals, double** V);
+void reductionToTridiagonal(double **A, int n, double *D, double *E);
+int diagonalisationOfATridiagonalMatrix(double *D, double *E, int n, double **V);
 
 
 //----------------------------------------------------------------------------------------------------//
@@ -213,6 +227,11 @@ class Binomial
         }
 };
 
+
+//----------------------------------------------------------------------------------------------------//
+// MATHS FUNCTIONS
+//----------------------------------------------------------------------------------------------------//
+
     //! A method for approximation power (small number) taking two arguments and returning a double value.
     /*! \return The result */
 double power(double, int);
@@ -239,15 +258,18 @@ double B(int,int,int , int , int , double , double , double , double , Factorial
 
     //! A method taking two arguments and returning a double value.
     /*! \return ???*/
-double myGamma(int, Factorial&);
+// double myGamma(int, Factorial&);
 
-    //! A method taking three arguments and returning a double value.
-    /*! \return ???*/
-double F(int,double, Factorial&);
+/**
+ * @brief Computes the incomplete gamma function F_nu(t) = \int_0^1 x^{2 \nu} e^{-t x^2} dx.
+ * @param[in] nu Order of the function.
+ * @return The value of F_nu(t).
+ */
+double F(int nu, double t);
 
     //! A method taking three arguments and returning a vector<double> value.
     /*! \return ???*/
-std::vector<double> getFTable(int mMax, double t, Factorial& factorial);
+std::vector<double> getFTable(int nuMax, double t);
 
 //! A method taking one argument and returning an int value.
 /*! \return The L type (S, Px, Py, ...) in the nomenclatur of .wfx file.*/

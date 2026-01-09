@@ -174,7 +174,7 @@ void ExcitedState::printLambdaDiagnostic(const Grid& grid) const
 // STATIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void ExcitedState::readTransitionsFile(std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates)
+void ExcitedState::readTransitionsFile(std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy)
 {
     std::ifstream transitionsFile(transitionsFileName);
     if (transitionsFile)
@@ -222,7 +222,7 @@ void ExcitedState::readTransitionsFile(std::string& transitionsFileName, std::ve
                         std::exit(1);
                     }
 
-                    ExcitedState excitedState(energy);
+                    ExcitedState excitedState(energy + groundStateEnergy);
 
                     // Read transitions
                     do

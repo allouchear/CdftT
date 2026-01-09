@@ -390,9 +390,7 @@ double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, 
         PC2 += PC[j] * PC[j];
     }
 
-    //std::cout << "_l[0] + right.get_l()[0] + _l[1] + right.get_l()[1] + _l[2] + right.get_l()[2] = " << _l[0] + right.get_l()[0] + _l[1] + right.get_l()[1] + _l[2] + right.get_l()[2] << ", gamma * PC2 = " << gamma * PC2 << std::endl;
-
-    std::vector<double> FTable = getFTable(_l[0] + right.get_l()[0] + _l[1] + right.get_l()[1] + _l[2] + right.get_l()[2], gamma * PC2, _bino.fact());
+    std::vector<double> FTable = getFTable(_l[0] + right.get_l()[0] + _l[1] + right.get_l()[1] + _l[2] + right.get_l()[2], gamma * PC2);
 
     double sum = 0.0;
     for(i = 0; i <= _l[0] + right.get_l()[0]; ++i)
@@ -420,24 +418,6 @@ double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, 
                                         Sz = A(k, t, w, _l[2], right.get_l()[2], PA[2], PB[2], PC[2], gamma, _bino);
 
                                         sum += Sx * Sy * Sz * FTable[i + j + k - 2 * (r + s + t) - u - n - w];
-
-                                        /*if (std::isnan(sum))
-                                        {
-                                            std::cout << "i = " << i
-                                                      << ", r = " << r
-                                                      << ", u = " << u
-                                                      << ", j = " << j
-                                                      << ", s = " << s
-                                                      << ", n = " << n
-                                                      << ", k = " << k
-                                                      << ", t = " << t
-                                                      << ", w = " << w << std::endl;
-
-                                            std::cout << "Sx = " << Sx
-                                                      << ", Sy = " << Sy
-                                                      << ", Sz = " << Sz
-                                                      << ", FTable[i + j + k - 2 * (r + s + t) - u - n - w] = " << FTable[i + j + k - 2 * (r + s + t) - u - n - w] << std::endl << std::endl;
-                                        }*/
                                     }
                                 }
                             }
@@ -530,8 +510,8 @@ double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)
                                                             Te[1][2]=Theta(Kp,Tp,r.get_l()[2],s.get_l()[2],QC[2],QD[2],g2,_bino);
                                                             for(W=0; W<=(K+Kp)/2-T-Tp; W++)
                                                             {
-                                                                Sz=B(K,Kp,T,Tp,W,PQ[2],d,Te[0][2],Te[1][2],_bino.fact());
-                                                                sum +=Sx*Sy*Sz*F(I+Ip+J+Jp+K+Kp-2*(R+Rp+S+Sp+T+Tp)-U-N-W,RPQ2/4/d,_bino.fact());
+                                                                Sz = B(K, Kp, T, Tp, W, PQ[2], d, Te[0][2], Te[1][2], _bino.fact());
+                                                                sum += Sx * Sy * Sz * F(I + Ip + J + Jp + K + Kp - 2 * (R + Rp + S + Sp + T + Tp) - U - N - W, RPQ2 / 4.0 / d);
                                                             }
                                                         }
 

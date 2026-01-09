@@ -1118,11 +1118,9 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
 
     // Compute ionic potential matrix elements in MO basis
     int spin, i, j;
-    /*
     #ifdef ENABLE_OMP
     #pragma omp parallel for private(spin, i, j)
     #endif
-    */
     for (spin = 0; spin < 2; ++spin)
     {
         for (i = 0; i < _numberOfMo; ++i)

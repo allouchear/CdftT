@@ -174,7 +174,8 @@ bool diagonalisationOfATridiagonalMatrix(std::vector<double>& subDiagonal, std::
     }
     subDiagonal[dimension - 1] = 0.0;
 
-    for (int l = 0; ok && l < dimension; ++l)
+    //for (int l = 0; ok && l < dimension; ++l)
+    for (int l = 0; l < dimension; ++l)
     {
         int iteration = 0;
 
@@ -190,7 +191,7 @@ bool diagonalisationOfATridiagonalMatrix(std::vector<double>& subDiagonal, std::
                 }
             }
 
-            if (m != 1)
+            if (m != l)
             {
                 ++iteration;
                 if (iteration == 30)
@@ -202,12 +203,12 @@ bool diagonalisationOfATridiagonalMatrix(std::vector<double>& subDiagonal, std::
                 double g = (eigenValues[l + 1] - eigenValues[l]) / (2.0 * subDiagonal[l]);
                 double r = std::sqrt((g * g) + 1.0);
 
-                g = eigenValues[m] - eigenValues[l] + subDiagonal[l] / (g + (g < 0.0) ? -std::fabs(r) : std::fabs(r));
+                g = eigenValues[m] - eigenValues[l] + subDiagonal[l] / (g + (g < 0.0 ? -std::fabs(r) : std::fabs(r)));
 
                 double s = 1.0;
                 double c = 1.0;
                 double p = 0.0;
-                for (int i = m - 1; i >= 1; --i)
+                for (int i = m - 1; i >= l; --i)
                 {
                     double f = s * subDiagonal[i];
                     double b = c * subDiagonal[i];
@@ -252,35 +253,37 @@ bool diagonalisationOfATridiagonalMatrix(std::vector<double>& subDiagonal, std::
                 subDiagonal[l] = g;
                 subDiagonal[m] = 0.0;
             }
-        } while (m != 1);
+        } while (m != l);
     }
 
     return ok;
 }
 
-bool findEigenValuesAndEigenVectorsOfSymmetricalMatrix(const std::vector<std::vector<double>>& matrix, std::vector<double>& eigenValues, std::vector<std::vector<double>>& eigenVectors)
+bool findEigenValuesAndEigenVectorsOfSymmetricalMatrix(const std::vector<std::vector<double>>& matrixLowerTriangle, std::vector<double>& eigenValues, std::vector<std::vector<double>>& eigenVectors)
 {
     bool ok = false;
 
-    int dimension = static_cast<int>(matrix.size());
+    int dimension = static_cast<int>(matrixLowerTriangle.size());
     if (dimension > 1)
     {
         ok = true;
 
         // Building whole matrix from lower triangle
-        std::vector<std::vector<double>> wholeMatrix(matrix);
+        eigenVectors = matrixLowerTriangle;
         for (int i = 0; i < dimension; ++i)
         {
-            wholeMatrix[i].resize(dimension);
+            eigenVectors[i].resize(dimension);
 
             for (int j = i + 1; j < dimension; ++j)
             {
-                wholeMatrix[i][j] = wholeMatrix[j][i];
+                eigenVectors[i][j] = eigenVectors[j][i];
             }
         }
 
-        std::vector<double> eigenVectors;
-        reductionToTridiagonalMatrix(wholeMatrix, eigenValues, eigenVectors);
+        std::vector<double> subDiagonal;
+        reductionToTridiagonalMatrix(eigenVectors, eigenValues, subDiagonal);
+
+        ok = diagonalisationOfATridiagonalMatrix(subDiagonal, eigenValues, eigenVectors);
     }
 
     return ok;
@@ -302,7 +305,7 @@ void reductionToTridiagonalMatrix(std::vector<std::vector<double>>& matrix, std:
 
         if (l > 0)
         {
-            for (int k = 0; k <= 1; ++k)
+            for (int k = 0; k <= l; ++k)
             {
                 scale += std::fabs(matrix[i][k]);
             }
@@ -641,6 +644,9 @@ double B(int i, int ip, int r, int rp, int u, double PQ, double d, double T1, do
                                  * pow(d, ii - u));
 }
 
+/*
+Old functions used to obtain F_nu(t) but the double factorial in the denominator of x variable in the while loop was diverging and we obtained infinite/nan values in the program.
+
 double myGamma(int n, Factorial& Fa)
 {
     return Fa.double_factorial(2 * n - 1) * sqrt(M_PI) / power(2, n);
@@ -691,55 +697,6 @@ double F(int n, double t, Factorial& factorial)
     return T;
 }
 
-double F_debug(int n, double t, Factorial& factorial)
-{
-    double et = std::exp(-t);
-    double twot = 2 * t;
-    double T = 0.0;
-    double x = 1.0;
-    int i = 0;
-    double DD = 1.0;
-    double TMAX = 50.0;
-    int MAXFACT = 200;
-    double acc = 1e-16;
-
-    if (std::fabs(t) <= acc)
-    {
-        T = 1.0 / (2 * n + 1);
-    }
-    else
-    {
-        if (t >= TMAX)
-        {
-            T = myGamma(n, factorial) / power(t, n) / 2.0 / std::sqrt(t);
-        }
-        else
-        {
-            while (std::fabs(x / T) > acc && (n + i) < MAXFACT)
-            {
-                x = factorial.double_factorial(2 * n - 1) / factorial.double_factorial(2 * (n + i + 1) - 1) * DD;
-
-                std::cout << "factorial.double_factorial(2 * n - 1) = " << factorial.double_factorial(2 * n - 1) << std::endl;
-                std::cout << "factorial.double_factorial(2 * (n + i + 1) - 1) = " << factorial.double_factorial(2 * (n + i + 1) - 1) << std::endl << std::endl;
-                
-                T += x;
-                i++;
-                DD *= twot;
-            }
-
-            if (n + i >= MAXFACT)
-            {
-                std::cout << "Divergence in F, Ionic integrals" << std::endl;
-                exit(1);
-            }
-
-            T *= et;
-        }
-    }
-
-    return T;
-}
-
 std::vector<double> getFTable(int mMax, double t, Factorial& factorial)
 {
     double tCritic = 30.0;
@@ -762,22 +719,78 @@ std::vector<double> getFTable(int mMax, double t, Factorial& factorial)
         for (int m = mMax - 1; m >= 0; --m)
         {
             Fmt[m] = (twot * Fmt[m + 1] + expt) / (m * 2 + 1);
-            
-            // debug
-            if (!std::isfinite(Fmt[m]))
-            {
-                std::cout << "In: getFTable(" << mMax << ", " << t << ")" << std::endl; // debug
-                std::cout << "m = " << m << std::endl;
-                std::cout << "twot = " << twot << " ; Fmt[m + 1] = " << Fmt[m + 1] << " ; expt = " << expt << " ; m * 2 + 1 = " << (m * 2 + 1) << std::endl;
-                std::cout << "Fmt[" << m << "] = " << Fmt[m] << std::endl << std::endl;
-
-                F_debug(mMax, t, factorial);
-                exit(1);
-            }
         }
     }
 
     return Fmt;
+}
+*/
+
+double F(int nu, double t)
+{
+    // Exact t = 0 result
+    double F = 1.0 / (2 * nu + 1);
+
+    if (t != 0.0)
+    {
+        // Initial value using error function for nu = 0
+        F = 0.5 * std::sqrt(M_PI / t) * std::erf(std::sqrt(t));
+
+        double expMinust = std::exp(-t);
+        double twot = 2.0 * t;
+
+        // Apply recurrence
+        for (int n = 1; n <= nu; ++n)
+        {
+            F = ((2.0 * n + 1.0) * F - expMinust) / twot;
+        }
+    }
+
+    return F;
+}
+
+std::vector<double> getFTable(int nuMax, double t)
+{
+    // Check parameter validity
+    if (nuMax < 0)
+    {
+        print_error("Error in getFTable(int nuMax, double t): nuMax must be non-negative.");
+        exit(1);
+    }
+
+    if (t < 0.0)
+    {
+        print_error("Error in getFTable(int nuMax, double t): t must be non-negative.");
+        exit(1);
+    }
+
+
+    std::vector<double> FTable(nuMax + 1);
+
+    // Exact t = 0 result
+    if (t == 0.0)
+    {
+        for (int n = 0; n <= nuMax; ++n)
+        {
+            FTable[n] = 1.0 / (2 * n + 1);
+        }
+    }
+    else
+    {
+        // Initial value using error function
+        FTable[0] = 0.5 * std::sqrt(M_PI / t) * std::erf(std::sqrt(t));
+
+        double expMinust = std::exp(-t);
+        double twot = 2.0 * t;
+
+        // Apply recurrence
+        for (int n = 0; n < nuMax; ++n)
+        {
+            FTable[n + 1] = ((2.0 * n + 1.0) * FTable[n] - expMinust) / twot;
+        }
+    }
+
+    return FTable;
 }
 
 int getwfxType(const std::vector<int>& l)
@@ -993,4 +1006,211 @@ std::string getLType(const std::vector<int>& l)
     }
 
     return LType;
+}
+
+
+
+////////////////// matrix function comparison with C /////////////////////
+
+int eigenQL(int n, double *M, double *EVals, double** V)
+{
+	double** A;
+	double* E;
+	int ii;
+	int success = 0;
+	int i;
+	int j;
+
+	if(n<1) return 0;
+	A = new double*[n];
+	for(i=0;i<n;i++) A[i]=new double[n];
+
+	/* M is an inf symmetric matrix */
+	ii = -1;
+	for(i=0;i<n;i++)
+	for(j=0;j<=i;j++)
+	{
+		ii++;
+		A[i][j] = M[ii];
+	}
+	for(i=0;i<n;i++)
+  	for(j=i+1;j<n;j++)
+    		A[i][j] = A[j][i];
+
+	E = new double[n];
+	reductionToTridiagonal(A, n, EVals, E);
+
+	/*
+	for(i=0;i<n;i++) printf("EVals[%d]=%f\n",i,EVals[i]);
+	*/
+	success = diagonalisationOfATridiagonalMatrix(EVals, E, n, A);
+
+    std::cout << "After diagonalisationOfATridiagonalMatrix():" << std::endl;
+    std::cout << "Matrix A:" << std::endl;
+    for (int i = 0; i < n; ++i)
+    {
+        for (int j = 0; j < n; ++j)
+        {
+            std::cout <<  A[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "Eigenvalues EVals: ";
+    for (int i = 0; i < n; ++i)
+    {
+        std::cout << EVals[i] << ' ';
+    }
+    std::cout << std::endl << "Subdiagonal E:";
+    for (int i = 0; i < n; ++i)
+    {
+        std::cout << E[i] << ' ';
+    }
+    std::cout << std::endl;
+
+
+	for(i=0;i<n;i++)
+	for(j=0;j<n;j++)
+		V[i][j] = A[i][j];
+
+	delete[] E;
+	for(i=0;i<n;i++) delete[] A[i];
+	delete[] A;
+
+	return success;
+}
+/* procedure to reduce a real symmetric matrix to the tridiagonal form that is suitable for input to 
+ * diagonalisationOfATridiagonalMatrix.*/
+/********************************************************************************/
+void reductionToTridiagonal(double **A, int n, double *D, double *E)
+{
+	int	l, k, j, i;
+	double  scale, hh, h, g, f;
+ 
+	for (i = n-1; i >= 1; i--)
+	{
+	    l = i - 1;
+	    h = scale = 0.0;
+	    if (l > 0)
+	    {
+		   for (k = 0; k <= l; k++) scale += fabs(A[i][k]);
+		   if (scale == 0.0) E[i] = A[i][l];
+		   else
+		   {
+			  for (k = 0; k <= l; k++)
+			  {
+				 A[i][k] /= scale;
+				 h += A[i][k] * A[i][k];
+			  }
+			  f = A[i][l];
+			  g = f > 0 ? -sqrt(h) : sqrt(h);
+			  E[i] = scale * g;
+			  h -= f * g;
+			  A[i][l] = f - g;
+			  f = 0.0;
+			  for (j = 0; j <= l; j++)
+			  {
+				 A[j][i] = A[i][j] / h;
+				 g = 0.0;
+				 for (k = 0; k <= j; k++) g += A[j][k] * A[i][k];
+				 for (k = j + 1; k <= l; k++) g += A[k][j] * A[i][k];
+				 E[j] = g / h;
+				 f += E[j] * A[i][j];
+			  }
+			  hh = f / (h + h);
+			  for (j = 0; j <= l; j++)
+			  {
+				 f = A[i][j];
+				 E[j] = g = E[j] - hh * f;
+				 for (k = 0; k <= j; k++) A[j][k] -= (f * E[k] + g * A[i][k]);
+			  }
+		   }
+	    } else E[i] = A[i][l];
+	    D[i] = h;
+	}
+	D[0] = 0.0;
+	E[0] = 0.0;
+	for (i = 0; i < n; i++)
+	{
+	    l = i - 1;
+	    if (D[i])
+	    {
+		   for (j = 0; j <= l; j++)
+		   {
+			  g = 0.0;
+			  for (k = 0; k <= l; k++) g += A[i][k] * A[k][j];
+			  for (k = 0; k <= l; k++) A[k][j] -= g * A[k][i];
+		   }
+	    }
+	    D[i] = A[i][i];
+	    A[i][i] = 1.0;
+	    for (j = 0; j <= l; j++) A[j][i] = A[i][j] = 0.0;
+	}
+}
+#undef SIGN
+#define SIGN(A,B) ((B)<0 ? -fabs(A) : fabs(A))
+/* QL algorithm to determine 
+ * the eigenvalues and eigenvectors of a real, symmetric, tridiagonal matrix.*/
+/********************************************************************************/
+int diagonalisationOfATridiagonalMatrix(double *D, double *E, int n, double **V)
+{
+	int	m, l, iter, i, k;
+	double  s, r, p, g, f, dd, c, b;
+ 
+	for (i = 1; i < n; i++) E[i - 1] = E[i];
+	E[n-1] = 0.0;
+	for (l = 0; l < n; l++)
+	{
+	    iter = 0;
+	    do
+	    {
+		   for (m = l; m < n - 1; m++)
+		   {
+			  dd = fabs(D[m]) + fabs(D[m + 1]);
+			  if (fabs(E[m]) + dd == dd) break;
+		   }
+		   if (m != l)
+		   {
+			  if (iter++ == 30) return 0;
+			  g = (D[l + 1] - D[l]) / (2.0 * E[l]);
+			  r = sqrt((g*g) + 1.0);
+			  g = D[m] - D[l] + E[l] / (g + SIGN(r, g));
+			  s = c = 1.0;
+			  p = 0.0;
+			  for (i = m - 1; i >= l; i--)
+			  {
+				 f = s * E[i];
+				 b = c * E[i];
+				 if (fabs(f) >= fabs(g))
+				 {
+					c = g / f;
+					r = sqrt((c*c) + 1.0);
+					E[i + 1] = f * r;
+					c *= (s = 1.0 / r);
+				 } else
+				 {
+					s = f / g;
+					r = sqrt((s*s) + 1.0);
+					E[i + 1] = g * r;
+					s *= (c = 1.0 / r);
+				 }
+				 g = D[i + 1] - p;
+				 r = (D[i] - g) * s + 2.0 * c * b;
+				 p = s * r;
+				 D[i + 1] = g + p;
+				 g = c * r - b;
+				 for (k = 0; k < n; k++)
+				 {
+					f = V[k][i + 1];
+					V[k][i + 1] = s * V[k][i] + c * f;
+					V[k][i] = c * V[k][i] - s * f;
+				 }
+			  }
+			  D[l] = D[l] - p;
+			  E[l] = g;
+			  E[m] = 0.0;
+		   }
+	    } while (m != l);
+	}
+ 
+	return 1;
 }

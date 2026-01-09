@@ -1,5 +1,5 @@
 RunType=LambdaDiagnostic
-AnalyticFiles=testLambdaD/CO_TDDFT.log
+AnalyticFiles=tests/CO_TDDFT.log
 Size=Custom
 CustomSizeData=128,128,128,5,5,5,7.87401574803148e-02,0,0,0,7.87401574803148e-02,0,0,0,7.87401574803148e-02
-TransitionsFile=testLambdaD/transitions_CO.txt
+TransitionsFile=tests/transitions_CO_twoFirstStates.txt

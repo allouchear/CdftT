@@ -165,8 +165,8 @@ double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const Slat
         else
         {
             std::stringstream errorMessage;
-            errorMessage << "Error in SlaterDeterminant::ionicPotential(): shared Orbitals instance has not been set yet." << std::endl;
-            errorMessage << "Please build at least the ground state Slater determinant." << std::endl;
+            errorMessage << "Error in SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::array<double, 3>& position, double charge): shared Orbitals instance has not been set yet." << std::endl;
+            errorMessage << "Please ensure that the ground state Slater determinant has been built before calling this function." << std::endl;
             print_error(errorMessage.str());
 
             exit(1);

@@ -38,19 +38,18 @@ class ExcitedState
 
         /**
          * @brief Constructor.
-         * 
+         *
          * @param energy Energy of the excited state, in Hartree.
          */
         ExcitedState(const double energy);
 
         /**
          * @brief Constructor for the ground state.
-         * 
-         * @param energy Energy of the ground state, in Hartree.
-         * @param slaterDeterminant Slater determinant associated with the ground state.
+         *
+         * @param[in] energy Energy of the ground state, in Hartree.
+         * @param[in] slaterDeterminant Slater determinant associated with the ground state.
          */
         ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant);
-
 
         //----------------------------------------------------------------------------------------------------//
         // GETTERS
@@ -61,23 +60,22 @@ class ExcitedState
          */
         double get_energy() const;
 
-
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
         //----------------------------------------------------------------------------------------------------//
 
         /**
          * @brief Adds an electronic transition to the excited state.
-         * 
-         * @param initialOrbital Initial orbital state (number and spin).
-         * @param finalOrbital Final orbital state (number and spin).
-         * @param coefficient Coefficient of the transition.
+         *
+         * @param[in] initialOrbital Initial orbital state (number and spin).
+         * @param[in] finalOrbital Final orbital state (number and spin).
+         * @param[in] coefficient Coefficient of the transition.
          */
         void addTransition(const OrbitalState& initialOrbital, const OrbitalState& finalOrbital, const double coefficient);
 
         /**
          * @brief Computes the Slater determinant of the excited state.
-         * 
+         *
          * @param[in]  SlaterDeterminant Reference to the ground state Slater determinant.
          */
         void computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant);
@@ -102,19 +100,18 @@ class ExcitedState
          */
         void printLambdaDiagnostic(const Grid& grid) const;
 
-
         //----------------------------------------------------------------------------------------------------//
         // STATIC METHODS
         //----------------------------------------------------------------------------------------------------//
 
         /**
          * @brief Reads a transitions file and populates a vector of ExcitedState objects.
-         * 
+         *
          * @param[in] transitionsFileName Name of the transitions file to read.
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
+         * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
          */
-        static void readTransitionsFile(std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates);
-
+        static void readTransitionsFile(std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS
@@ -125,8 +122,8 @@ class ExcitedState
          *
          * Prints energy of the excited state and transitions associated with it.
          *
-         * @param stream Output stream.
-         * @param excitedState ExcitedState to print.
+         * @param[in,out] stream Output stream.
+         * @param[in] excitedState ExcitedState to print.
          * @return Reference to the output stream.
          */
         friend std::ostream& operator<<(std::ostream& stream, const ExcitedState& excitedState);
