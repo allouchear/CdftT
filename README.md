@@ -60,8 +60,7 @@ See examples folder.
 
 ## Contributors
  - [Abdul-Rahman ALLOUCHE](https://sites.google.com/site/allouchear/Home)
+ - [Dylan BISSUEL](https://github.com/BissuelD) (Engineer)
  - [Dimitri BUFFAT](https://github.com/dbuffat) (Master 1/Physics/Univ Lyon 1, Intern supervised by A.R. Allouche)
- - [Lodovic Gardre](https://github.com/lgardre) (post-doc, supervised by A.R. Allouche)
+ - [Lodovic GARDRE](https://github.com/lgardre) (post-doc, supervised by A.R. Allouche)
  - [Tetautahi MAAMAATUAIAHUTAPU](https://github.com/tmaamaatua) (Master 1/Physics/Univ Lyon 1, Intern supervised by A.R. Allouche)
- - [Ludovic GARDRE](https://github.com/lgardre) (Post-doc)
- - [Dylan Bissuel](https://github.com/BissuelD) (Engineer)
