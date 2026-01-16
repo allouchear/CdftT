@@ -223,14 +223,38 @@ double GTF::GTFstarGTFstarGTFstarGTF(GTF& B, GTF& C, GTF& D)
 
 double GTF::normeGTF()
 {
-    return std::sqrt(2*_exponent/M_PI*std::sqrt(2*_exponent/M_PI)*power(4*_exponent, _l[0]+_l[1]+_l[2])
-            /(_bino.fact().double_factorial(_l[0])*_bino.fact().double_factorial(_l[1])*_bino.fact().double_factorial(_l[2])));
+    return std::sqrt(2 * _exponent / M_PI * std::sqrt(2 * _exponent / M_PI)
+                     * power(4 * _exponent, _l[0] + _l[1] + _l[2])
+                     / (_bino.fact().double_factorial(_l[0])
+                        * _bino.fact().double_factorial(_l[1])
+                        * _bino.fact().double_factorial(_l[2])));
+
+    // Note Ludo : error in the formula? See. MOTEC page 420, eq. (A4)
+    // Should be result below instead?
+
+    // return std::sqrt(2 * _exponent / M_PI * std::sqrt(2 * _exponent / M_PI)
+    //                  * power(4 * _exponent, _l[0] + _l[1] + _l[2])
+    //                  / (_bino.fact().double_factorial(2 * _l[0] - 1)
+    //                     * _bino.fact().double_factorial(2 * _l[1] - 1)
+    //                     * _bino.fact().double_factorial(2 * _l[2] - 1)));
 }
 
 double GTF::normeGTF(GTF& q)
 {
-    return std::sqrt(2*q.get_exponent()/M_PI*std::sqrt(2*q.get_exponent()/M_PI)*power(4*q.get_exponent(), q.get_l()[0]+q.get_l()[1]+q.get_l()[2])
-            /(q.get_bino().fact().double_factorial(q.get_l()[0])*q.get_bino().fact().double_factorial(q.get_l()[1])*q.get_bino().fact().double_factorial(q.get_l()[2])));
+    return std::sqrt(2 * q.get_exponent() / M_PI * std::sqrt(2 * q.get_exponent() / M_PI)
+                     * power(4 * q.get_exponent(), q.get_l()[0] + q.get_l()[1] + q.get_l()[2])
+                     / (q.get_bino().fact().double_factorial(q.get_l()[0])
+                        * q.get_bino().fact().double_factorial(q.get_l()[1])
+                        * q.get_bino().fact().double_factorial(q.get_l()[2])));
+
+    // Note Ludo : error in the formula? See. MOTEC page 420, eq. (A4)
+    // Should be result below instead?
+
+    // return std::sqrt(2 * q.get_exponent() / M_PI * std::sqrt(2 * q.get_exponent() / M_PI)
+    //                  * power(4 * q.get_exponent(), q.get_l()[0] + q.get_l()[1] + q.get_l()[2])
+    //                  / (q.get_bino().fact().double_factorial(2 * q.get_l()[0] - 1)
+    //                     * q.get_bino().fact().double_factorial(2 * q.get_l()[1] - 1)
+    //                     * q.get_bino().fact().double_factorial(2 * q.get_l()[2] - 1)));
 }
 
 void GTF::normaliseRadialGTF()
@@ -284,10 +308,10 @@ double GTF::GTFxyzGTF(GTF& q, int ix, int iy, int iz)
     return overlap3GTF(m, q);
 }
 
-double GTF::kineticGTF(GTF& right)
+double GTF::kineticGTF(const GTF& right)
 {
     int j;
-    GTF b=right;
+    GTF b = right;
     std::vector<double> Ti(7);
     std::vector<double> sum(3);
     double T=0.0;
@@ -368,29 +392,29 @@ double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, 
     int k, t, w;
 
     double Sx, Sy, Sz;
-    double temp;
 
     std::array<double, 3> PA;
     std::array<double, 3> PB;
-    std::array<double, 3> PC;
+    std::array<double, 3> CP;
+    double P;
 
     double gamma = _exponent + right.get_exponent();
-    double R2 = 0.0;
-    double PC2 = 0.0;
+    double AB2 = 0.0;
+    double CP2 = 0.0;
 
     for(j = 0; j < 3; ++j)
     {
-        temp = (_exponent * _coord[j] + right.get_exponent() * right.get_coord()[j]) / gamma;
+        P = (_exponent * _coord[j] + right.get_exponent() * right.get_coord()[j]) / gamma;
 
-        PA[j] = _coord[j] - temp;
-        PB[j] = right.get_coord()[j] - temp;
-        PC[j] = -C[j] + temp;
+        PA[j] = _coord[j] - P;
+        PB[j] = right.get_coord()[j] - P;
+        CP[j] = P - C[j];
 
-        R2 += (_coord[j] - right.get_coord()[j]) * (_coord[j] - right.get_coord()[j]);
-        PC2 += PC[j] * PC[j];
+        AB2 += (_coord[j] - right.get_coord()[j]) * (_coord[j] - right.get_coord()[j]);
+        CP2 += CP[j] * CP[j];
     }
 
-    std::vector<double> FTable = getFTable(_l[0] + right.get_l()[0] + _l[1] + right.get_l()[1] + _l[2] + right.get_l()[2], gamma * PC2);
+    std::vector<double> FTable = getFTable(_l[0] + right.get_l()[0] + _l[1] + right.get_l()[1] + _l[2] + right.get_l()[2], gamma * CP2);
 
     double sum = 0.0;
     for(i = 0; i <= _l[0] + right.get_l()[0]; ++i)
@@ -399,7 +423,7 @@ double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, 
         {
             for(u = 0; u <= (i - 2 * r) / 2; ++u)
             {
-                Sx = A(i, r, u, _l[0], right.get_l()[0], PA[0], PB[0], PC[0], gamma, _bino);
+                Sx = A(i, r, u, _l[0], right.get_l()[0], PA[0], PB[0], CP[0], gamma, _bino);
 
                 for(j = 0; j <= _l[1] + right.get_l()[1]; ++j)
                 {
@@ -407,7 +431,7 @@ double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, 
                     {
                         for(n = 0; n <= (j - 2 * s) / 2; ++n)
                         {
-                            Sy = A(j, s, n, _l[1], right.get_l()[1], PA[1], PB[1], PC[1], gamma, _bino);
+                            Sy = A(j, s, n, _l[1], right.get_l()[1], PA[1], PB[1], CP[1], gamma, _bino);
 
                             for(k = 0; k <= _l[2] + right.get_l()[2]; ++k)
                             {
@@ -415,7 +439,7 @@ double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, 
                                 {
                                     for(w = 0; w <= (k - 2 * t) / 2; ++w)
                                     {
-                                        Sz = A(k, t, w, _l[2], right.get_l()[2], PA[2], PB[2], PC[2], gamma, _bino);
+                                        Sz = A(k, t, w, _l[2], right.get_l()[2], PA[2], PB[2], CP[2], gamma, _bino);
 
                                         sum += Sx * Sy * Sz * FTable[i + j + k - 2 * (r + s + t) - u - n - w];
                                     }
@@ -428,7 +452,7 @@ double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, 
         }
     }
 
-    sum *= 2 * M_PI / gamma * exp(-_exponent * right.get_exponent() / gamma * R2) * _coefficient * right.get_coefficient();
+    sum *= 2 * M_PI / gamma * std::exp(- _exponent * right.get_exponent() * AB2 / gamma) * _coefficient * right.get_coefficient();
 
     return -Z * sum;
 }

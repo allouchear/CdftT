@@ -146,21 +146,22 @@ double CGTF::CGTFxyzCGTF(CGTF& right, int ix, int iy, int iz)
     return sum;
 }
 
-double CGTF::kineticCGTF(CGTF& right)
+double CGTF::kineticCGTF(const CGTF& otherCGTF)
 {
-    int n;
-    int np;
-    double sum=0.0;
+    double sum = 0.0;
 
-    for(n=0;n<_numberOfFunctions;n++)
-        for(np=0;np<right.numberOfFunctions();np++)
-            sum += _gtf[n].kineticGTF(right.gtf()[np]);
-
+    for(int n = 0; n < _numberOfFunctions; n++)
+    {
+        for(int np = 0; np < otherCGTF.numberOfFunctions(); ++np)
+        {
+            sum += _gtf[n].kineticGTF(otherCGTF.gtf()[np]);
+        }
+    }
 
     return sum;
 }
 
-double CGTF::ionicPotentialCGTF(CGTF& right, const std::array<double, 3>& C, double Z)
+double CGTF::ionicPotentialCGTF(const CGTF& otherCGTF, const std::array<double, 3>& position, double charge)
 {
     int n;
     int np;
@@ -168,9 +169,9 @@ double CGTF::ionicPotentialCGTF(CGTF& right, const std::array<double, 3>& C, dou
 
     for(n = 0; n < _numberOfFunctions; ++n)
     {
-        for(np = 0; np < right.numberOfFunctions(); ++np)
+        for(np = 0; np < otherCGTF.numberOfFunctions(); ++np)
         {
-            sum += _gtf[n].ionicPotentialGTF(right.gtf()[np], C, Z);
+            sum += _gtf[n].ionicPotentialGTF(otherCGTF.gtf()[np], position, charge);
         }
     }
 

@@ -11,7 +11,6 @@
 // STATIC FIELDS
 //----------------------------------------------------------------------------------------------------//
 
-std::vector<std::vector<std::vector<double>>> SlaterDeterminant::_s_ionicMatrix_ = std::vector<std::vector<std::vector<double>>>();
 bool SlaterDeterminant::_s_isOrbitalsSet_ = false;
 Orbitals SlaterDeterminant::_s_orbitals_ = Orbitals();
 
@@ -138,12 +137,14 @@ std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(
     // Check for differences in occupied orbitals for each spin type
     for (size_t i = 0; i < di._occupiedOrbitals[ALPHA].size(); ++i)
     {
-        // Alpha spin
         if (di._occupiedOrbitals[ALPHA][i].first != dj._occupiedOrbitals[ALPHA][i].first)
         {
             differences[ALPHA].emplace_back(di._occupiedOrbitals[ALPHA][i].first, dj._occupiedOrbitals[ALPHA][i].first);
         }
+    }
 
+    for (size_t i = 0; i < di._occupiedOrbitals[BETA].size(); ++i)
+    {
         // Beta spin
         if (di._occupiedOrbitals[BETA][i].first != dj._occupiedOrbitals[BETA][i].first)
         {
@@ -154,25 +155,8 @@ std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(
     return differences;
 }
 
-double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::array<double, 3>& position, double charge)
+double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::vector<std::vector<std::vector<double>>>& ionicMatrix)
 {
-    if (_s_ionicMatrix_.empty())
-    {
-        if (_s_isOrbitalsSet_)
-        {
-            _s_ionicMatrix_ = _s_orbitals_.getIonicPotentialMatrix(position, charge);
-        }
-        else
-        {
-            std::stringstream errorMessage;
-            errorMessage << "Error in SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::array<double, 3>& position, double charge): shared Orbitals instance has not been set yet." << std::endl;
-            errorMessage << "Please ensure that the ground state Slater determinant has been built before calling this function." << std::endl;
-            print_error(errorMessage.str());
-
-            exit(1);
-        }
-    }
-
     double sum = 0.0;
 
     // Get spin type int values
@@ -185,7 +169,7 @@ double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const Slat
         for (size_t i = 0; i < di._occupiedOrbitals[ALPHA].size(); ++i)
         {
             int orbitalIndex = di._occupiedOrbitals[ALPHA][i].first - 1;
-            sum += (_s_ionicMatrix_[ALPHA][orbitalIndex][orbitalIndex] + _s_ionicMatrix_[BETA][orbitalIndex][orbitalIndex]);
+            sum += (ionicMatrix[ALPHA][orbitalIndex][orbitalIndex] + ionicMatrix[BETA][orbitalIndex][orbitalIndex]);
         }
     }
     else
@@ -208,7 +192,7 @@ double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const Slat
                 finalOrbitalIndex = differences[BETA][0].second - 1;
             }
 
-            sum += (_s_ionicMatrix_[ALPHA][initialOrbitalIndex][finalOrbitalIndex] + _s_ionicMatrix_[BETA][initialOrbitalIndex][finalOrbitalIndex]);
+            sum += (ionicMatrix[ALPHA][initialOrbitalIndex][finalOrbitalIndex] + ionicMatrix[BETA][initialOrbitalIndex][finalOrbitalIndex]);
         }
     }
 

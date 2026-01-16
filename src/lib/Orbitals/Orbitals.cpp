@@ -1076,19 +1076,20 @@ double Orbitals::Overlap4Orbitals(int i, int j, int k, int l, int alpha)
 
 double Orbitals::kinetic()
 {
-    int n;
-    int np;
     double sum=0.0;
 
-    for(n=0;n<_numberOfAo;n++)
-        for(np=0;np<_numberOfAo;np++)
+    for (int n = 0; n < _numberOfAo; ++n)
+    {
+        for (int np = 0; np < _numberOfAo; ++np)
+        {
             sum += _vcgtf[n].kineticCGTF(_vcgtf[np]);
-
+        }
+    }
 
     return sum;
 }
 
-std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(const std::array<double, 3>& position, double Z)
+std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge)
 {
     // Build ionic potential matrix in AO basis    
     std::vector<std::vector<double>> ionicMatrixAO = std::vector<std::vector<double>>(_numberOfAo, std::vector<double>());
@@ -1102,7 +1103,7 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
     {
         for (int j = 0; j <= i; ++j)
         {
-            ionicMatrixAO[i][j] = _vcgtf[i].ionicPotentialCGTF(_vcgtf[j], position, Z);
+            ionicMatrixAO[i][j] = _vcgtf[i].ionicPotentialCGTF(_vcgtf[j], chargePosition, charge);
         }
     }
 
@@ -1408,6 +1409,8 @@ std::ostream& operator<<(std::ostream& stream, Orbitals& orbitals)
         }
     }
 
+    stream << std::defaultfloat;
+
     return stream;
 }
 
@@ -1464,6 +1467,7 @@ double Orbitals::density(double x, double y, double z)
 
     return rho;
 }
+
 Grid Orbitals::makeOrbGrid(const Domain& d, const std::vector<int>& nums, const std::vector<int>& typesSpin)
 {
     Grid g;
@@ -1471,10 +1475,9 @@ Grid Orbitals::makeOrbGrid(const Domain& d, const std::vector<int>& nums, const 
     g.set_domain(d);
     g.reset();
 
-#ifdef ENABLE_OMP
-#pragma omp parallel
-#endif
-
+    #ifdef ENABLE_OMP
+    #pragma omp parallel
+    #endif
     for(int i = 0; i < d.get_N1() ; ++i)
     {
         for(int j = 0; j < d.get_N2(); ++j)

@@ -174,18 +174,19 @@ class Orbitals
             /*! \return The overlap between four orbitals i, j, k, and l. */
         double Overlap4Orbitals(int i, int j, int k, int l, int alpha=0);
 
-            //! A normal member taking no arguments and returning a double value.
-            /*! \return The value of the kinetic energy. */
+        /**
+         * @brief Calculates the kinetic energy integral < psi | -1/2 nabla^2 | psi >.
+         */
         double kinetic();
 
         /**
          * @brief Calculates the ion-electron integral for a given ion : < phi_i | V_ion | phi_j >
          *
-         * @param[in] position The position of the ion.
-         * @param[in] Z The charge of the ion.
+         * @param[in] chargePosition The position of the ion.
+         * @param[in] charge The charge of the ion.
          * @return The matrix < phi_i | V_ion | phi_j > (the first index corresponds to alpha spin, the second to beta spin).
          */
-        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& position, double Z);
+        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge);
 
         //! A normal member taking no arguments and returning a double value.
         /*! \return The value of the integral of Orbitals * Orbitals. */
@@ -223,15 +224,6 @@ class Orbitals
             //! A normal member taking no arguments and returning a std::vector<std::vector<double>> value.
             /*! \return The matrix of overlaps. */
         std::vector<std::vector<double>> get_S();
-
-        /**
-         * @brief Returns the matrix < xi_i | Z / (r - position) | xi_j >.
-         *
-         * @param[in] position The position of the ion.
-         * @param[in] Z The charge of the ion.
-         * @return The matrix < xi_i | Z / (r - position) | xi_j >.
-         */
-        void set_s_ionicMatrix_(const std::array<double, 3>& position, double Z);
 
         //! A normal member taking no arguments and returning a std::vector<double> value.
         /*! \return The table of f value. */

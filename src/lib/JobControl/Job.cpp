@@ -1372,14 +1372,14 @@ void Job::run_computeEnergyWithPointCharge()
 
 
     // Read point charge position
-    std::array<double, 3> position;
-    readPosition(position);
+    std::array<double, 3> chargePosition;
+    readPosition(chargePosition);
 
 
     // Read point charge value
     double charge;
     readCharge(charge);
-    std::cout << "Point charge: " << charge << " e at position (" << position[0] << ", " << position[1] << ", " << position[2] << ")." << std::endl << std::endl;
+    std::cout << "Point charge: " << charge << " e at position (" << chargePosition[0] << ", " << chargePosition[1] << ", " << chargePosition[2] << ")." << std::endl << std::endl;
     
     
     // Read transitions file
@@ -1390,6 +1390,8 @@ void Job::run_computeEnergyWithPointCharge()
     // Loading orbitals
     Orbitals orbitals;
     computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
+
+    //std::cout << orbitals << std::endl;
 
 
     // Get Ground Slater Determinant
@@ -1424,78 +1426,86 @@ void Job::run_computeEnergyWithPointCharge()
     }
 
 
-    // Compute matrix elements
+    
+
+    // Compute ionic matrix only once
+    std::vector<std::vector<std::vector<double>>> ionicMatrix = orbitals.getIonicPotentialMatrix(chargePosition, charge);
+
+
+    // // Compute matrix elements < psi_i | H | psi_j >
     int i, j;
-    #ifdef ENABLE_OPENMP
-    #pragma omp parallel for private(i, j)
-    #endif
-    for (i = 0; i < nbStates; ++i)
-    {
-        // Get Slater Determinants for state i
-        std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_i(states[i].getSlaterDeterminantsAndCoefficients());
+    // #ifdef ENABLE_OPENMP
+    // #pragma omp parallel for private(i, j)
+    // #endif
+    // for (i = 0; i < nbStates; ++i)
+    // {
+    //     // Get Slater Determinants for state i
+    //     std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_i(states[i].getSlaterDeterminantsAndCoefficients());
 
-        for (j = 0; j <= i; ++j)
-        {
-            // Initialize < psi_i | H | psi_j > matrix element
-            double matrixElement = 0.0;
+    //     for (j = 0; j <= i; ++j)
+    //     {
+    //         // Initialize < psi_i | H | psi_j > matrix element
+    //         double matrixElement = 0.0;
 
-            // Get Slater Determinants for state j
-            std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].getSlaterDeterminantsAndCoefficients());
+    //         // Get Slater Determinants for state j
+    //         std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].getSlaterDeterminantsAndCoefficients());
 
-            // Compute < psi_i | H_0 | psi_j >
-            matrixElement += (i == j) ? states[i].get_energy() : 0.0;
-            std::cout << "< psi_" << i << " | H_0 | psi_" << j << " > = " << std::setprecision(12) <<matrixElement << std::endl;
+    //         // Compute < psi_i | H_0 | psi_j >
+    //         matrixElement += (i == j) ? states[i].get_energy() : 0.0;
+    //         std::cout << "< psi_" << i << " | H_0 | psi_" << j << " > = " << std::setprecision(12) << matrixElement << std::endl;
 
-            // Compute < psi_i | V_nucleus | psi_j >
-            double value = 0.0;
-            if (i == j)
-            {
-                #ifdef ENABLE_OPENMP
-                #pragma omp parallel for reduction(+: value)
-                #endif
-                for (const Atom& atom : orbitals.get_struct().get_atoms())
-                {
-                    value += (charge * atom.get_element().get_atomicNumber()) / atom.computeDistance(position);
-                }
-            }
-            std::cout << "< psi_" << i << " | V_nucleus | psi_" << j << " > = " << value << std::endl;
-            matrixElement += value;
+    //         // Compute < psi_i | V_nuclear + V_ionic | psi_j >
+    //         double nuclearContribution = 0.0;
+    //         if (i == j)
+    //         {
+    //             for (const Atom& atom : orbitals.get_struct().get_atoms())
+    //             {
+    //                 nuclearContribution += charge * atom.get_atomicNumber() / std::sqrt((atom.get_coordinates()[0] - chargePosition[0]) * (atom.get_coordinates()[0] - chargePosition[0])
+    //                                                                                     + (atom.get_coordinates()[1] - chargePosition[1]) * (atom.get_coordinates()[1] - chargePosition[1])
+    //                                                                                     + (atom.get_coordinates()[2] - chargePosition[2]) * (atom.get_coordinates()[2] - chargePosition[2]));
+    //             }
+    //         }
+    //         std::cout << "< psi_" << i << " | V_ion/nucleus | psi_" << j << " > = " << std::setprecision(12) << nuclearContribution << std::endl;
 
-            // Compute < psi_i | V_ion | psi_j >
-            value = 0.0;
-            /*
-            #ifdef ENABLE_OPENMP
-            #pragma omp parallel for reduction(+: value)
-            #endif
-            */
-            for (const std::pair<SlaterDeterminant, double>& slaterCoeff_i : slaterDeterminants_i)
-            {
-                for (const std::pair<SlaterDeterminant, double>& slaterCoeff_j : slaterDeterminants_j)
-                {
-                    /*std::cout << "Computing < SD_" << i << " | V_ion | SD_" << j << " >..." << std::endl;
-                    std::cout << "SD_" << i << ": " << std::endl << slaterCoeff_i.first << std::endl;
-                    std::cout << "  Coefficient SD_" << i << ": " << slaterCoeff_i.second << std::endl;
-                    std::cout << "SD_" << j << ": " << std::endl << slaterCoeff_j.first << std::endl;
-                    std::cout << "  Coefficient SD_" << j << ": " << slaterCoeff_j.second << std::endl;*/
+    //         matrixElement += nuclearContribution;
 
-                    value += SlaterDeterminant::ionicPotential(slaterCoeff_i.first, slaterCoeff_j.first, position, charge) * (slaterCoeff_i.second * slaterCoeff_j.second);
-                }
-            }
-            std::cout << "< psi_" << i << " | V_ion | psi_" << j << " > = " << value << std::endl << std::endl;
-            matrixElement += value;
+    //         double chargeContribution = 0.0;
+    //         /*
+    //         #ifdef ENABLE_OPENMP
+    //         #pragma omp parallel for reduction(+: value)
+    //         #endif
+    //         */
+    //         for (const std::pair<SlaterDeterminant, double>& slaterCoeff_i : slaterDeterminants_i)
+    //         {
+    //             for (const std::pair<SlaterDeterminant, double>& slaterCoeff_j : slaterDeterminants_j)
+    //             {
+    //                 /*std::cout << "Computing < SD_" << i << " | V_ion | SD_" << j << " >..." << std::endl;
+    //                 std::cout << "SD_" << i << ": " << std::endl << slaterCoeff_i.first << std::endl;
+    //                 std::cout << "  Coefficient SD_" << i << ": " << slaterCoeff_i.second << std::endl;
+    //                 std::cout << "SD_" << j << ": " << std::endl << slaterCoeff_j.first << std::endl;
+    //                 std::cout << "  Coefficient SD_" << j << ": " << slaterCoeff_j.second << std::endl;*/
 
-            psi_i_H_psi_j[i][j] = matrixElement;
-        }
-    }
+    //                 // Compute < D_i | V_ion | D_j > contribution in < psi_i | V_ion | psi_j >
+    //                 chargeContribution += SlaterDeterminant::ionicPotential(slaterCoeff_i.first, slaterCoeff_j.first, ionicMatrix) * (slaterCoeff_i.second * slaterCoeff_j.second);
+    //             }
+    //         }
+    //         std::cout << "< psi_" << i << " | V_ion/electrons | psi_" << j << " > = " << chargeContribution << std::endl << std::endl;
 
-    for (i = 0; i < nbStates; ++i)
-    {
-        for (j = 0; j <= i; ++j)
-        {
-            std::cout << "< psi_" << i << " | H | psi_" << j << " > = " << psi_i_H_psi_j[i][j] << std::endl;
-        }
-    }
+    //         matrixElement += chargeContribution;
 
+    //         psi_i_H_psi_j[i][j] = matrixElement;
+    //     }
+    // }
+
+    // for (i = 0; i < nbStates; ++i)
+    // {
+    //     for (j = 0; j <= i; ++j)
+    //     {
+    //         std::cout << "< psi_" << i << " | H | psi_" << j << " > = " << psi_i_H_psi_j[i][j] << std::endl;
+    //     }
+    // }
+
+    /*
     // Diagonalize < psi_i | H | psi_j > matrix
     std::vector<double> eigenvalues;
     std::vector<std::vector<double>> eigenvectors;
@@ -1518,6 +1528,94 @@ void Job::run_computeEnergyWithPointCharge()
 
         std::cout << std::endl;
     }
+    */
+
+
+    // Compute < phi_0 | V_nuclear | phi_0 >
+    std::vector<std::vector<std::vector<std::vector<double>>>> nuclearMatrices(orbitals.get_numberOfAtoms());
+    int atomIndex = 0;
+    for (const Atom& atom : orbitals.get_struct().get_atoms())
+    {
+        std::cout << "Computing nuclear matrix for atom " << atom.get_name() << ": Z = " << atom.get_atomicNumber() << " ; position = (" << atom.get_coordinates()[0] << ", " << atom.get_coordinates()[1] << ", " << atom.get_coordinates()[2] << ")..." << std::endl;
+        
+        nuclearMatrices[atomIndex] = orbitals.getIonicPotentialMatrix(atom.get_coordinates(), atom.get_atomicNumber());
+        ++atomIndex;
+    }
+    std::cout << std::endl;
+    
+    double sum_phi0_Vnuclear_phi0 = 0.0;
+    for (int atomIndex = 0; atomIndex < orbitals.get_numberOfAtoms(); ++atomIndex)
+    {
+        int spin = static_cast<int>(SpinType::ALPHA);
+        //for (size_t spin = 0; spin < nuclearMatrices[atomIndex].size(); ++spin)
+        {
+            for (size_t i = 0; i < nuclearMatrices[atomIndex][spin].size(); ++i)
+            {
+                for (size_t j = 0; j <= i; ++j)
+                {
+                    sum_phi0_Vnuclear_phi0 +=nuclearMatrices[atomIndex][spin][i][j];
+                }
+            }
+        }
+    }
+    std::cout << "< psi_0 | V_nuclear | psi_0 > = " << sum_phi0_Vnuclear_phi0 << std::endl;
+
+    
+    // COMPARAISON AVEC CALCUL SUR GRILLE
+    std::cout << std::endl << std::endl << "====================== CALCUL SUR GRILLE ======================" << std::endl << std::endl;
+
+    // Read grid size
+    GridSize gridSize;
+    CustomSizeData customSizeData;
+    readSize(gridSize, customSizeData);
+
+    // Setting orbitals
+    std::vector<int> orbitalsSpins;
+    std::vector<int> orbitalsNumbers;
+    setOrbitals(orbitals, orbitals.get_numberOfMo(), orbitalsNumbers, orbitalsSpins, OrbitalType::ALL, SpinType::ALPHA);
+
+    // Building domain and grid
+    std::cout << "Building domain and grid, please wait..." << std::endl;
+    Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, orbitalsNumbers.size());
+    Grid orbitalsGrid = orbitals.makeOrbGrid(domain, orbitalsNumbers, orbitalsSpins);
+
+    sum_phi0_Vnuclear_phi0 = 0.0;
+    for (i = 0; i < orbitals.get_numberOfMo(); ++i)
+    {
+        for (j = 0; j <= i; ++j)
+        {
+            for (const Atom& atom : orbitals.get_struct().get_atoms())
+            {
+                sum_phi0_Vnuclear_phi0 += orbitalsGrid.phiStarVionicStarPhi(i, j, atom.get_coordinates(), atom.get_atomicNumber());
+            }
+        }
+    }
+
+    std::cout << "< psi_0 | V_nuclear | psi_0 > = " << sum_phi0_Vnuclear_phi0 << std::endl;
+
+
+
+
+
+    // COMPARAISON AVEC BECKE
+    std::cout << std::endl << std::endl << "====================== CALCUL AVEC BECKE ======================" << std::endl << std::endl;
+
+    Becke becke;
+    computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
+
+    sum_phi0_Vnuclear_phi0 = 0.0;
+    for (i = 0; i < orbitals.get_numberOfMo(); ++i)
+    {
+        for (j = 0; j <= i; ++j)
+        {
+            for (const Atom& atom : orbitals.get_struct().get_atoms())
+            {
+                sum_phi0_Vnuclear_phi0 += becke.ionic_potential(i, j, SpinType::ALPHA, atom.get_coordinates(), atom.get_atomicNumber());
+            }
+        }
+    }
+
+    std::cout << "< psi_0 | V_nuclear | psi_0 > = " << sum_phi0_Vnuclear_phi0 << std::endl;
 
     /*
     // DEBUG - comparison with C diagonalization
@@ -1752,11 +1850,9 @@ void Job::run_lambdaDiagnostic()
 
 
     // Setting orbitals
-    int numberOfOrbitals = orbitals.get_numberOfMo();
     std::vector<int> orbitalsSpins;
     std::vector<int> orbitalsNumbers;
-
-    setOrbitals(orbitals, numberOfOrbitals, orbitalsNumbers, orbitalsSpins, OrbitalType::ALL, SpinType::ALPHA_BETA);
+    setOrbitals(orbitals, orbitals.get_numberOfMo(), orbitalsNumbers, orbitalsSpins, OrbitalType::ALL, SpinType::ALPHA_BETA);
 
 
     // Building domain and grid

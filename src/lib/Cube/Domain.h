@@ -49,6 +49,9 @@ class Domain
         /** @brief Infinitesimal volume increment (equals to _dx * _dy * _dz). */
         double _dv;
 
+        //----------------------------------------------------------------------------------------------------//
+        // PRIVATE METHODS
+        //----------------------------------------------------------------------------------------------------//
 
         /** @brief Computes the infinitesimal distance and volume increments. */
         void computeInfinitesimalElements();

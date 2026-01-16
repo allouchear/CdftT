@@ -121,14 +121,34 @@ class GTF
             //! A normal member taking four arguments and returning a double value.
             /*! \return The result of an integral with three ???. */
         double GTFxyzGTF(GTF&, int, int, int);
-        
-            //! A normal member taking one argument and returning a double value.
-            /*! \return The kinetic ???. */
-        double kineticGTF(GTF&);
-        
-            //! A normal member taking three arguments and returning a double value.
-            /*! \return The ionic potential ???. */
-        double ionicPotentialGTF(const GTF&, const std::array<double, 3>&, double);
+
+        /**
+         * @brief Calculates the kinetic energy integral < thisGTF | -1/2 nabla^2 | otherGTF >.
+         *
+         * Ref : Modern techniques in computational chemistry: Motecc -90
+         * Enrico Clementi.
+         * ESCOM, 1990. ISBN: 90-72199-07-3.
+         * Page 392, Eq. (42).
+         * 
+         * @param[in] otherGTF The other GTF.
+         */
+        double kineticGTF(const GTF& otherGTF);
+
+        /**
+         * @brief Calculates the ionic potential integral < thisGTF | charge / |r - position| | otherGTF >.
+         *
+         * Ref : Modern techniques in computational chemistry: Motecc -90
+         * Enrico Clementi.
+         * ESCOM, 1990. ISBN: 90-72199-07-3.
+         * Page 394, Eq. (48).
+         *
+         * @param[in] otherGTF The other GTF.
+         * @param[in] position Position of the ion.
+         * @param[in] charge Charge of the ion.
+         *
+         * @return The ionic potential integral.
+         */
+        double ionicPotentialGTF(const GTF& otherGTF, const std::array<double, 3>& position, const double charge);
         
             //! A normal member taking three arguments and returning a double value.
             /*! \return The eri ???. */

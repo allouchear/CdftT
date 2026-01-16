@@ -21,9 +21,6 @@ class SlaterDeterminant
         // STATIC FIELDS
         //----------------------------------------------------------------------------------------------------//
 
-        /** @brief Static ionic matrix < phi_i | V_ion | phi_j > (the first index corresponds to alpha spin, the second to beta spin). */
-        static std::vector<std::vector<std::vector<double>>> _s_ionicMatrix_;
-
         /** @brief Static Orbitals instance shared among all SlaterDeterminant objects. */
         static Orbitals _s_orbitals_;
 
@@ -84,11 +81,10 @@ class SlaterDeterminant
          * 
          * @param[in] di First Slater determinant.
          * @param[in] dj Second Slater determinant.
-         * @param[in] position The position of the ion.
-         * @param[in] charge The charge of the ion.
-         * @return The ionic potential matrix element < Di | V_ion | Dj >.
+         * @param[in] ionicMatrix Ionic matrix < phi_i | V_ionic | phi_j > (the first index corresponds to alpha spin, the second to beta spin).
+         * @return The ionic potential matrix element < Di | V_ionic | Dj >.
          */
-        static double ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::array<double, 3>& position, double charge);
+        static double ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::vector<std::vector<std::vector<double>>>& ionicMatrix);
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS

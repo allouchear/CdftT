@@ -27,6 +27,10 @@ class Grid
         /** @brief Values for each grid point. The first three dimensions are spatial dimensions (x,y,z). The fourth dimensions stores the values. */
         vector<vector<vector<vector<double>>>> _values;
 
+        //----------------------------------------------------------------------------------------------------//
+        // PRIVATE METHODS
+        //----------------------------------------------------------------------------------------------------//
+
         /**
          * @brief Advances the density ascent trajectory to the next point.
          *
@@ -58,9 +62,9 @@ class Grid
 
 
     public:
-        //////////////////
-        // CONSTRUCTORS //
-        //////////////////
+        //----------------------------------------------------------------------------------------------------//
+        // CONSTRUCTORS
+        //----------------------------------------------------------------------------------------------------//
 
         /**
          * @brief Default constructor.
@@ -86,10 +90,9 @@ class Grid
          */
         Grid(ifstream& nameFile, const PeriodicTable& table);
 
-
-        /////////////
-        // GETTERS //
-        /////////////
+        //----------------------------------------------------------------------------------------------------//
+        // GETTERS
+        //----------------------------------------------------------------------------------------------------//
 
         /**
          * @brief Returns the domain object.
@@ -108,20 +111,9 @@ class Grid
          */
         vector<vector<vector<vector<double>>>> get_values() const;
 
-
-
-        /**
-         * @brief Resets all grid values to zero and resizes _values to match the domain size.
-         */
-        void reset();
-
-        /**
-         * @brief Initializes grid from a .cube file.
-         *
-         * @param nameFile Input file stream opened on a .cube file.
-         * @param table PeriodicTable reference.
-         */
-        void readFromCube(ifstream& nameFile, const PeriodicTable& table);
+        //----------------------------------------------------------------------------------------------------//
+        // SETTERS
+        //----------------------------------------------------------------------------------------------------//
 
         /**
          * @brief Sets the domain.
@@ -138,6 +130,23 @@ class Grid
          */
         void set_values(const vector<vector<vector<vector<double>>>>& U);
 
+        //----------------------------------------------------------------------------------------------------//
+        // OTHER PUBLIC METHODS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Resets all grid values to zero and resizes _values to match the domain size.
+         */
+        void reset();
+
+        /**
+         * @brief Initializes grid from a .cube file.
+         *
+         * @param nameFile Input file stream opened on a .cube file.
+         * @param table PeriodicTable reference.
+         */
+        void readFromCube(ifstream& nameFile, const PeriodicTable& table);
+
         /**
          * @brief Sets the value at grid indices (i,j,k,l).
          * 
@@ -150,35 +159,11 @@ class Grid
         void set_Vijkl(double rho, int i, int j, int k, int l);
 
         /**
-         * @brief Overloads the addition operator for two grid objects.
-         * 
-         * @param g Grid to add.
-         * @return Sum grid.
-         */
-        Grid operator+(const Grid& g); // ?? Should be a const method. Also: outside of class?
-
-        /**
          * @brief Adds another grid to this one.
          * 
          * @param g Grid to add.
          */
         Grid add(const Grid& g); // ?? Should return Grid& ? Refactor: overload operator+= ?
-
-        /**
-         * @brief Overloads the multiplication operator to multiply two grids pointwise.
-         * 
-         * @param g Grid to multiply with.
-         * @return Product grid.
-         */
-        Grid operator*(const Grid& g);
-
-        /**
-         * @brief Overloads the substraction operator to subtract two grids pointwise.
-         
-         * @param g Grid to subtract.
-         * @return Difference grid.
-         */
-        Grid operator-(const Grid& g);
 
         /**
          * @brief Returns the sum of all grid values over all points.
@@ -268,25 +253,15 @@ class Grid
         void save(ofstream& name);
 
         /**
-         * @brief Returns the value at grid indices (i,j,k,0).
-         * 
-         * @param i Grid index i.
-         * @param j Grid index j.
-         * @param k Grid index k.
-         * @return Value at (i,j,k,0).
-         */
-        double value(int i, int j, int k) const;
-
-        /**
          * @brief Returns the value at grid indices (i,j,k,l).
          * 
          * @param i Grid index i.
          * @param j Grid index j.
          * @param k Grid index k.
-         * @param l Value index l.
+         * @param l Orbital index, ie. number of the orbital minus 1. (default 0)
          * @return Value at (i,j,k,l).
          */
-        double value(int i, int j, int k, int l) const; //refactor : une seule fonction avec valeur l par defaut à 0 ?
+        double value(int i, int j, int k, int l = 0) const;
 
         /**
          * @brief Advances to the next point in a trajectory.
@@ -358,6 +333,48 @@ class Grid
          * @return Weighted electronic density.
          */
         double value(double x, double y, double z) const;
+
+        /**
+         * @brief Returns the product of two orbitals of indexes i and j multiplied by the electrostatic potential V_ionic created by a point charge.
+         *
+         * @param[in] leftOrbitalIndex Index of the left orbital.
+         * @param[in] rightOrbitalIndex Index of the right orbital.
+         * @param[in] chargePosition Position of the charge.
+         * @param[in] charge Value of the charge.
+         * @return Product value of the orbitals multiplied by the electrostatic potential V_ionic.
+         */
+        double phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, const std::array<double, 3>& chargePosition, const double charge);
+
+        //----------------------------------------------------------------------------------------------------//
+        // OPERATOR OVERLOADS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Overloads the addition operator for two grid objects.
+         *
+         * @param[in] lhsGrid Left-hand side grid.
+         * @param[in] rhsGrid Right-hand side grid.
+         * @return Sum grid.
+         */
+        friend Grid operator+(const Grid& lhsGrid, const Grid& rhsGrid);
+
+        /**
+         * @brief Overloads the multiplication operator to multiply two grids pointwise.
+         *
+         * @param[in] lhsGrid Left-hand side grid.
+         * @param[in] rhsGrid Right-hand side grid.
+         * @return Product grid.
+         */
+        friend Grid operator*(const Grid& lhsGrid, const Grid& rhsGrid);
+
+        /**
+         * @brief Overloads the substraction operator to subtract two grids pointwise.
+
+         * @param[in] lhsGrid Left-hand side grid.
+         * @param[in] rhsGrid Right-hand side grid.
+         * @return Difference grid.
+         */
+        friend Grid operator-(const Grid& lhsGrid, const Grid& rhsGrid);
 };
 
 

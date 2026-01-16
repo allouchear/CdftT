@@ -118,7 +118,7 @@ class CGTF
          *
          * @return Number of primitive GTFs composing the CGTF.
          */
-        int numberOfFunctions()
+        int numberOfFunctions() const
         {
             return _numberOfFunctions;
         }
@@ -128,7 +128,7 @@ class CGTF
          *
          * @return std::vector of primitive GTF objects.
          */
-        std::vector<GTF> gtf()
+        std::vector<GTF> gtf() const
         {
             return _gtf;
         }
@@ -209,13 +209,23 @@ class CGTF
          */
         double CGTFxyzCGTF(CGTF&, int, int, int);
 
-            //! A normal member taking one argument and returning a double value.
-            /*! \return The kinetic value ??? */
-        double kineticCGTF(CGTF&);
+        /**
+         * @brief Calculates the kinetic energy integral < thisCGTF | -1/2 nabla^2 | otherCGTF >.
+         * 
+         * @param[in] otherCGTF The other CGTF.
+         */
+        double kineticCGTF(const CGTF& otherCGTF);
 
-            //! A normal member taking two arguments and returning a double value.
-            /*! \return The ionic potential value ??? */
-        double ionicPotentialCGTF(CGTF&, const std::array<double, 3>&, double);
+        /**
+         * @brief Calculates the ionic potential integral < thisCGTF | charge / |r - position| | otherCGTF >.
+         * 
+         * @param[in] otherCGTF The other CGTF.
+         * @param[in] position Position of the ion.
+         * @param[in] charge Charge of the ion.
+         * 
+         * @return The ionic potential integral.
+         */
+        double ionicPotentialCGTF(const CGTF &otherCGTF, const std::array<double, 3>& position, const double charge);
         
             //! A normal member taking one argument and returning a double value.
             /*! \return ???. */

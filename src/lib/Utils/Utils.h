@@ -269,7 +269,7 @@ int m1p(int i);
  * Ref : Modern techniques in computational chemistry: Motecc -90
  * Enrico Clementi.
  * ESCOM, 1990. ISBN: 90-72199-07-3.
- * Page 394.
+ * Page 394, Eq. (49).
  */
 double A(int i, int r, int u, int l1, int l2, double A, double B, double C, double gamma, Binomial& binomial);
 

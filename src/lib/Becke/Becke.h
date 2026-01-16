@@ -238,6 +238,11 @@ class Becke
         double multicenter_integration(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
+         * @brief TODO
+         */
+        double multicenter_integration(std::function<double(Orbitals&, int, int, double, double, double, SpinType, const std::array<double, 3>&, double)> f, int i, int j, SpinType spinType, const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
          * @brief Returns the table of integral values for a function of signature double(Orbitals&, double, double, double), evaluated on each grid (so on each atom).
          *
          * @param f Function to evaluate.
@@ -247,7 +252,7 @@ class Becke
          * @return Table of integral values per atom.
          */
         std::vector<double> multicenter_sub_integration(std::function<double(Orbitals&, double, double, double)> f, int kmax=3, int lebedev_order=41, int radial_grid_factor=5);
-
+        
         /**
          * @brief ?
          *
@@ -277,6 +282,11 @@ class Becke
          * @param radial_grid_factor Radial grid multiplicative factor (default 5).
          */
         void partial_charge(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Calculates and returns the ionic potential energy.
+         */
+        double ionic_potential(int i, int j, SpinType spinType, const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
          * @brief Electronic density value at point (x,y,z).
@@ -378,7 +388,7 @@ class Becke
         static double phiStarPhi(Orbitals& Orb, int i, int j, double x, double y, double z, SpinType spinType = SpinType::ALPHA);
 
         /**
-         * @brief Returns the product of two orbitals of indexes i and j at a point (x,y,z) multiplied by the ionic potential (electrostatic potential interaction with a point charge).
+         * @brief Returns the product of two orbitals of indexes i and j at a point (x,y,z) multiplied by the electrostatic potential V_ionic created by a point charge.
          *
          * @param[in] orbitals Orbitals reference.
          * @param[in] i Index of the first orbital.
@@ -389,9 +399,9 @@ class Becke
          * @param[in] spinType Spin type (ALPHA, BETA, ALPHA_BETA).
          * @param[in] position Position of the charge.
          * @param[in] charge Value of the charge.
-         * @return double Product value of the two orbitals at (x,y,z) multiplied by the ionic potential.
+         * @return Product value of the two orbitals at (x,y,z) multiplied by the electrostatic potential V_ionic.
          */
-        static double phiStarVionicStarPhi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge);
+        static double phiStarVionicStarPhi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType, const std::array<double, 3>& chargePosition, double charge);
 
         /**
          * @brief Returns the HOMO energy.
