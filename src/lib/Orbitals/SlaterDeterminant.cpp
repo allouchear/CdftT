@@ -122,10 +122,11 @@ std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(
     // Get spin type int values
     const int ALPHA = static_cast<int>(SpinType::ALPHA);
     const int BETA = static_cast<int>(SpinType::BETA);
+    std::array<int, 2> spins = { ALPHA, BETA };
 
     // Check that the determinants have the same number of occupied orbitals
-    if (di._occupiedOrbitals[ALPHA].size() != dj._occupiedOrbitals[ALPHA].size() ||
-        di._occupiedOrbitals[BETA].size() != dj._occupiedOrbitals[BETA].size())
+    if (di._occupiedOrbitals[ALPHA].size() != dj._occupiedOrbitals[ALPHA].size()
+        || di._occupiedOrbitals[BETA].size() != dj._occupiedOrbitals[BETA].size())
     {
         std::stringstream errorMessage;
         errorMessage << "Error in SlaterDeterminant::getDifferences(): Slater determinants have different numbers of occupied orbitals." << std::endl;
@@ -135,20 +136,14 @@ std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(
     }
 
     // Check for differences in occupied orbitals for each spin type
-    for (size_t i = 0; i < di._occupiedOrbitals[ALPHA].size(); ++i)
+    for (int spin : spins)
     {
-        if (di._occupiedOrbitals[ALPHA][i].first != dj._occupiedOrbitals[ALPHA][i].first)
+        for (size_t i = 0; i < di._occupiedOrbitals[spin].size(); ++i)
         {
-            differences[ALPHA].emplace_back(di._occupiedOrbitals[ALPHA][i].first, dj._occupiedOrbitals[ALPHA][i].first);
-        }
-    }
-
-    for (size_t i = 0; i < di._occupiedOrbitals[BETA].size(); ++i)
-    {
-        // Beta spin
-        if (di._occupiedOrbitals[BETA][i].first != dj._occupiedOrbitals[BETA][i].first)
-        {
-            differences[BETA].emplace_back(di._occupiedOrbitals[BETA][i].first, dj._occupiedOrbitals[BETA][i].first);
+            if (di._occupiedOrbitals[spin][i].first != dj._occupiedOrbitals[spin][i].first)
+            {
+                differences[spin].emplace_back(di._occupiedOrbitals[spin][i].first, dj._occupiedOrbitals[spin][i].first);
+            }
         }
     }
 
@@ -159,40 +154,35 @@ double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const Slat
 {
     double sum = 0.0;
 
-    // Get spin type int values
-    const int ALPHA = static_cast<int>(SpinType::ALPHA);
-    const int BETA = static_cast<int>(SpinType::BETA);
+    // Get spin type int values;
+    std::array<int, 2> spins = {static_cast<int>(SpinType::ALPHA), static_cast<int>(SpinType::BETA)};
 
     // Apply Slater-Condon rules
     if (di == dj)
     {
-        for (size_t i = 0; i < di._occupiedOrbitals[ALPHA].size(); ++i)
+        for (int spin : spins)
         {
-            int orbitalIndex = di._occupiedOrbitals[ALPHA][i].first - 1;
-            sum += (ionicMatrix[ALPHA][orbitalIndex][orbitalIndex] + ionicMatrix[BETA][orbitalIndex][orbitalIndex]);
+            for (size_t i = 0; i < di._occupiedOrbitals[spin].size(); ++i)
+            {
+                int orbitalIndex = di._occupiedOrbitals[spin][i].first - 1;
+                sum += ionicMatrix[spin][orbitalIndex][orbitalIndex];
+            }
         }
     }
     else
     {
         std::vector<std::vector<std::pair<int, int>>> differences = getDifferences(di, dj);
 
-        // Check that there is only one difference
-        if (differences[ALPHA].size() + differences[BETA].size() == 1)
+        for (int spin : spins)
         {
-            int initialOrbitalIndex, finalOrbitalIndex;
-            
-            if (!differences[ALPHA].empty())
+            // Check that there is only one difference
+            if (differences[spin].size() == 1)
             {
-                initialOrbitalIndex = differences[ALPHA][0].first - 1;
-                finalOrbitalIndex = differences[ALPHA][0].second - 1;
-            }
-            else
-            {
-                initialOrbitalIndex = differences[BETA][0].first - 1;
-                finalOrbitalIndex = differences[BETA][0].second - 1;
-            }
+                int initialOrbitalIndex = differences[spin][0].first - 1;
+                int finalOrbitalIndex = differences[spin][0].second - 1;
 
-            sum += (ionicMatrix[ALPHA][initialOrbitalIndex][finalOrbitalIndex] + ionicMatrix[BETA][initialOrbitalIndex][finalOrbitalIndex]);
+                sum += ionicMatrix[spin][initialOrbitalIndex][finalOrbitalIndex];
+            }
         }
     }
 

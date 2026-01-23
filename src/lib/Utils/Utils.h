@@ -291,7 +291,7 @@ double F(int nu, double t);
 
     //! A method taking three arguments and returning a vector<double> value.
     /*! \return ???*/
-std::vector<double> getFTable(int nuMax, double t);
+std::vector<double> getFTable(int nuMax, double t, bool debug = false);
 
 //! A method taking one argument and returning an int value.
 /*! \return The L type (S, Px, Py, ...) in the nomenclatur of .wfx file.*/

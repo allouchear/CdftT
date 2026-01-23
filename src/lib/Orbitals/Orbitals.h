@@ -186,7 +186,7 @@ class Orbitals
          * @param[in] charge The charge of the ion.
          * @return The matrix < phi_i | V_ion | phi_j > (the first index corresponds to alpha spin, the second to beta spin).
          */
-        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge);
+        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, bool debug = false);
 
         //! A normal member taking no arguments and returning a double value.
         /*! \return The value of the integral of Orbitals * Orbitals. */

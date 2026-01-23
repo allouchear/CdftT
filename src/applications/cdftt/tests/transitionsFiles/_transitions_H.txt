@@ -1,0 +1,42 @@
+Energy 14.2595 eV
+1 A 2 A 1.00034
+
+Energy 21.8404 eV
+1 A 3 A 0.99160
+1 A 4 A 0.12936
+
+Energy 21.8404 eV
+1 A 3 A -0.12936
+1 A 4 A 0.99160
+
+Energy 21.8603 eV
+1 A 5 A 1.00000
+
+Energy 63.2704 eV
+1 A 6 A 1.00005
+
+Energy 88.3385 eV
+1 A 7 A 0.96649
+1 A 8 A -0.25710
+
+Energy 88.3385 eV
+1 A 7 A 0.25710
+1 A 8 A 0.96649
+
+Energy 88.3457 eV
+1 A 9 A 1.00006
+
+Energy 88.3457 eV
+1 A 10 A 1.00006
+
+Energy 88.3485 eV
+1 A 11 A 1.00010
+
+Energy 98.5002 eV
+1 A 12 A 0.99880
+
+Energy 98.5002 eV
+1 A 13 A 0.99880
+
+Energy 98.5094 eV
+1 A 14 A 1.00006

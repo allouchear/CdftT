@@ -597,8 +597,7 @@ double f(int i, int l, int m, double A, double B, Binomial& binomial)
 
     for (int j = jmin; j <= jmax; ++j)
     {
-        // sum += binomial.binomial(l, j) * binomial.binomial(m, i - j) * power(-A, l - j) * power(-B, m - i + j); // Note Ludo : error in the formula?
-        sum += binomial.binomial(l, j) * binomial.binomial(m, i - j) * power(A, l - j) * power(B, m - i + j);
+        sum += binomial.binomial(l, j) * binomial.binomial(m, i - j) * power(-A, l - j) * power(-B, m - i + j);
     }
 
     return sum;
@@ -614,14 +613,15 @@ int m1p(int i)
     return (i % 2 == 0) ? 1 : -1;
 }
 
-double A(int i, int r, int u, int l1, int l2, double A, double B, double C,double gamma, Binomial& binomial)
+double A(int i, int r, int u, int l1, int l2, double A, double B, double C, double gamma, Binomial& binomial)
 {
     return m1p(i + u) * f(i, l1, l2, A, B, binomial)
                       * binomial.fact().factorial(i)
                       * power(C, i - 2 * (r + u))
-                      / (binomial.fact().factorial(r) * binomial.fact().factorial(u)
-                                                      * binomial.fact().factorial(i - 2 * r - 2 * u)
-                                                      * power(4 * gamma, r + u));
+                      / (binomial.fact().factorial(r)
+                         * binomial.fact().factorial(u)
+                         * binomial.fact().factorial(i - 2 * r - 2 * u)
+                         * power(4 * gamma, r + u));
 }
 
 double B(int i, int ip, int r, int rp, int u, double PQ, double d, double T1, double T2, Factorial& Fa)
@@ -722,7 +722,7 @@ double F(int nu, double t)
     // Exact t = 0 result
     double F = 1.0 / (2 * nu + 1);
 
-    if (t != 0.0)
+    if (std::abs(t) > 1e-10)
     {
         // Initial value using error function for nu = 0
         F = 0.5 * std::sqrt(M_PI / t) * std::erf(std::sqrt(t));
@@ -740,7 +740,7 @@ double F(int nu, double t)
     return F;
 }
 
-std::vector<double> getFTable(int nuMax, double t)
+std::vector<double> getFTable(int nuMax, double t, bool debug)
 {
     // Check parameter validity
     if (nuMax < 0)
@@ -755,11 +755,15 @@ std::vector<double> getFTable(int nuMax, double t)
         exit(1);
     }
 
+    if (debug)
+    {
+        std::cout << "t = " << t << std::endl;
+    }
 
     std::vector<double> FTable(nuMax + 1);
 
     // Exact t = 0 result
-    if (t == 0.0)
+    if (std::abs(t) < 1e-10)
     {
         for (int n = 0; n <= nuMax; ++n)
         {
@@ -773,6 +777,11 @@ std::vector<double> getFTable(int nuMax, double t)
 
         double expMinust = std::exp(-t);
         double twot = 2.0 * t;
+
+        if (debug)
+        {
+            std::cout << "exp(-t) = " << expMinust << std::endl;
+        }
 
         // Apply recurrence
         for (int n = 0; n < nuMax; ++n)
@@ -1035,29 +1044,6 @@ int eigenQL(int n, double *M, double *EVals, double** V)
 	for(i=0;i<n;i++) printf("EVals[%d]=%f\n",i,EVals[i]);
 	*/
 	success = diagonalisationOfATridiagonalMatrix(EVals, E, n, A);
-
-    std::cout << "After diagonalisationOfATridiagonalMatrix():" << std::endl;
-    std::cout << "Matrix A:" << std::endl;
-    for (int i = 0; i < n; ++i)
-    {
-        for (int j = 0; j < n; ++j)
-        {
-            std::cout <<  A[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
-    std::cout << "Eigenvalues EVals: ";
-    for (int i = 0; i < n; ++i)
-    {
-        std::cout << EVals[i] << ' ';
-    }
-    std::cout << std::endl << "Subdiagonal E:";
-    for (int i = 0; i < n; ++i)
-    {
-        std::cout << E[i] << ' ';
-    }
-    std::cout << std::endl;
-
 
 	for(i=0;i<n;i++)
 	for(j=0;j<n;j++)

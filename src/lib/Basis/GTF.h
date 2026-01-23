@@ -148,7 +148,7 @@ class GTF
          *
          * @return The ionic potential integral.
          */
-        double ionicPotentialGTF(const GTF& otherGTF, const std::array<double, 3>& position, const double charge);
+        double ionicPotentialGTF(const GTF& otherGTF, const std::array<double, 3>& position, const double charge, bool debug = false);
         
             //! A normal member taking three arguments and returning a double value.
             /*! \return The eri ???. */
@@ -178,7 +178,7 @@ bool operator==(GTF, GTF);
 
     //! An operator member taking two arguments and returning an std::ostream value.
     /*! Print all the data of one GTF */
-std::ostream& operator<<(std::ostream&, GTF&);
+std::ostream& operator<<(std::ostream&, const GTF& gtf);
 
     //! An operator member taking two arguments and returning a double value.
     /*! \return The double value of a product between a std::vector of GTF at the coordinates x,y,z*/

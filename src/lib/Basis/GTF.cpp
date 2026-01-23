@@ -385,10 +385,10 @@ double GTF::kineticGTF(const GTF& right)
     return T * _coefficient * right.get_coefficient();
 }
 
-double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, double Z)
+double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, double Z, bool debug)
 {
     int i, r, u;
-    int j, s, n;
+    int j, s, v;
     int k, t, w;
 
     double Sx, Sy, Sz;
@@ -414,7 +414,17 @@ double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, 
         CP2 += CP[j] * CP[j];
     }
 
-    std::vector<double> FTable = getFTable(_l[0] + right.get_l()[0] + _l[1] + right.get_l()[1] + _l[2] + right.get_l()[2], gamma * CP2);
+    std::vector<double> FTable = getFTable(_l[0] + right.get_l()[0] + _l[1] + right.get_l()[1] + _l[2] + right.get_l()[2], gamma * CP2, debug);
+
+    if (debug)
+    {
+        std::cout << "FTable(" << _l[0] << " + " << right.get_l()[0] << " + " << _l[1] << " + " << right.get_l()[1] << " + " << _l[2] << " + " << right.get_l()[2] << ", " << gamma << " * " << CP2 << ") values:" << std::endl;
+        for (size_t bhj = 0; bhj < FTable.size(); ++bhj)
+        {
+            std::cout << "FTable[" << bhj << "] = " << FTable[bhj] << std::endl;
+        }
+        std::cout << std::endl;
+    }
 
     double sum = 0.0;
     for(i = 0; i <= _l[0] + right.get_l()[0]; ++i)
@@ -429,9 +439,9 @@ double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, 
                 {
                     for(s = 0; s <= j / 2; ++s)
                     {
-                        for(n = 0; n <= (j - 2 * s) / 2; ++n)
+                        for(v = 0; v <= (j - 2 * s) / 2; ++v)
                         {
-                            Sy = A(j, s, n, _l[1], right.get_l()[1], PA[1], PB[1], CP[1], gamma, _bino);
+                            Sy = A(j, s, v, _l[1], right.get_l()[1], PA[1], PB[1], CP[1], gamma, _bino);
 
                             for(k = 0; k <= _l[2] + right.get_l()[2]; ++k)
                             {
@@ -441,7 +451,7 @@ double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, 
                                     {
                                         Sz = A(k, t, w, _l[2], right.get_l()[2], PA[2], PB[2], CP[2], gamma, _bino);
 
-                                        sum += Sx * Sy * Sz * FTable[i + j + k - 2 * (r + s + t) - u - n - w];
+                                        sum += Sx * Sy * Sz * FTable[i + j + k - 2 * (r + s + t) - u - v - w];
                                     }
                                 }
                             }
@@ -594,7 +604,7 @@ bool operator==(GTF a, GTF b)
     return n;
 }
 
-std::ostream& operator<<(std::ostream& flux, GTF& gtf)
+std::ostream& operator<<(std::ostream& flux, const GTF& gtf)
 {
     flux << std::left << std::setw(20) << gtf.get_coefficient() << std::setw(20) << gtf.get_exponent() << std::setw(5) << gtf.get_l()[0] << std::setw(5) << gtf.get_l()[1]
     << std::setw(5) << gtf.get_l()[2] << std::setw(20) << gtf.get_coord()[0] << std::setw(20) << gtf.get_coord()[1] << std::setw(20) << gtf.get_coord()[2];

@@ -154,24 +154,32 @@ double CGTF::kineticCGTF(const CGTF& otherCGTF)
     {
         for(int np = 0; np < otherCGTF.numberOfFunctions(); ++np)
         {
-            sum += _gtf[n].kineticGTF(otherCGTF.gtf()[np]);
+            sum += _coefficients[n] * otherCGTF._coefficients[np] * _gtf[n].kineticGTF(otherCGTF.gtf()[np]);
         }
     }
 
     return sum;
 }
 
-double CGTF::ionicPotentialCGTF(const CGTF& otherCGTF, const std::array<double, 3>& position, double charge)
+double CGTF::ionicPotentialCGTF(const CGTF& otherCGTF, const std::array<double, 3>& position, double charge, bool debug)
 {
     int n;
     int np;
     double sum = 0.0;
 
+    if (debug)
+    {
+        std::cout << "Left CGTF:" << std::endl;
+        std::cout << *this << std::endl;
+        std::cout << "Right CGTF:" << std::endl;
+        std::cout << otherCGTF << std::endl;
+    }
+
     for(n = 0; n < _numberOfFunctions; ++n)
     {
         for(np = 0; np < otherCGTF.numberOfFunctions(); ++np)
         {
-            sum += _gtf[n].ionicPotentialGTF(otherCGTF.gtf()[np], position, charge);
+            sum += _coefficients[n] * otherCGTF._coefficients[np] * _gtf[n].ionicPotentialGTF(otherCGTF.gtf()[np], position, charge, debug);
         }
     }
 
@@ -247,23 +255,35 @@ double CGTF::func(double x, double y, double z) const
     return r;
 }
 
-bool operator==(CGTF left, CGTF right)
+bool operator==(const CGTF& left, const CGTF& right)
 {
-    size_t i,j;
-    size_t c=0;
-    if (left.gtf().size() != right.gtf().size())
-        return false;
-    for (i = 0; i < left.gtf().size(); i++)
-        for (j = 0; j < left.gtf().size(); j++)
-            if (left.gtf()[i] == right.gtf()[j])
-                c++;
-    if (c == left.gtf().size())
-        return true;
-    else
-        return false;
+    bool equal = false;
+
+    if (left.gtf().size() == right.gtf().size())
+    {
+        size_t c = 0;
+
+        for (size_t i = 0; i < left.gtf().size(); ++i)
+        {
+            for (size_t j = 0; j < left.gtf().size(); ++j)
+            {
+                if (left.gtf()[i] == right.gtf()[j])
+                {
+                    ++c;
+                }
+            }
+        }
+
+        if (c == left.gtf().size())
+        {
+            equal = true;
+        }
+    }
+
+    return equal;
 }
 
-std::ostream& operator<<(std::ostream &stream, CGTF &cgtf)
+std::ostream& operator<<(std::ostream &stream, const CGTF &cgtf)
 {
     for (int i = 0; i < cgtf.numberOfFunctions(); i++)
         stream << std::setw(20) << cgtf.coefficients()[i] << cgtf.gtf()[i] << std::endl;

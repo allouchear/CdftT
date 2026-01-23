@@ -83,7 +83,7 @@ class CGTF
          *
          * @return std::vector of coefficients for the primitive GTFs.
          */
-        std::vector<double> coefficients() {return _coefficients;}
+        std::vector<double> coefficients() const {return _coefficients;}
 
         /**
          * @brief Returns the orbital type ("S", "P", "D", ...).
@@ -225,7 +225,7 @@ class CGTF
          * 
          * @return The ionic potential integral.
          */
-        double ionicPotentialCGTF(const CGTF &otherCGTF, const std::array<double, 3>& position, const double charge);
+        double ionicPotentialCGTF(const CGTF &otherCGTF, const std::array<double, 3>& position, const double charge, bool debug = false);
         
             //! A normal member taking one argument and returning a double value.
             /*! \return ???. */
@@ -267,7 +267,7 @@ class CGTF
  * @param b Second CGTF.
  * @return True if the two CGTFs are equal, false otherwise.
  */
-bool operator==(CGTF left, CGTF right);
+bool operator==(const CGTF& left, const CGTF& right);
 
 /**
  * @brief Overloads the output stream redirection operator for a CGTF.
@@ -278,7 +278,7 @@ bool operator==(CGTF left, CGTF right);
  * @param cgtf CGTF to print.
  * @return Reference to the output stream.
  */
-std::ostream& operator<<(std::ostream &stream, CGTF &cgtf);
+std::ostream& operator<<(std::ostream &stream, const CGTF &cgtf);
 
 /**
  * @brief Computes the product of many CGTFs evaluated at a given point (x,y,z).

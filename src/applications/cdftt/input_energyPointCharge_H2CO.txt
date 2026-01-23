@@ -1,0 +1,8 @@
+Charge=-0.1
+RunType=ComputeEnergyWithPointCharge
+AnalyticFiles=tests/CC-pvtz/H2CO_TDDFT.log
+TransitionsFile=tests/transitionsFiles/transitions_H2CO.txt
+Position=2.0,2.0,2.0
+Size=Custom
+CustomSizeData=256,256,128,10,10,10,7.87401574803148e-02,0,0,0,7.87401574803148e-02,0,0,0,7.87401574803148e-02
+

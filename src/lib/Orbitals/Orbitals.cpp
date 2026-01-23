@@ -1018,14 +1018,19 @@ double Orbitals::ERIorbitals(Orbitals& q, Orbitals& r, Orbitals& s)
 
 double Orbitals::overlap(const int i, const int j, const SpinType spinType)
 {
+    if (spinType == SpinType::ALPHA_BETA)
+    {
+        print_error("Error in Orbitals::overlap(): spinType must be either ALPHA or BETA but not ALPHA_BETA.");
+        exit(1);
+    }
+
     int alpha = static_cast<int>(spinType);
 
     double sum = 0.0;
 
-#ifdef ENABLE_OMP
-#pragma omp parallel for reduction(+:sum)
-#endif
-
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for reduction(+:sum)
+    #endif
     for(size_t m = 0; m < _coefficients[alpha][i].size(); ++m)
     {
         for(size_t n = 0; n < _coefficients[alpha][j].size(); ++n)
@@ -1089,13 +1094,25 @@ double Orbitals::kinetic()
     return sum;
 }
 
-std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge)
+std::vector<std::vector<double>> displayM;
+double totalSumM = 0.0;
+
+std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, bool debug)
 {
+    // debug
+    if (displayM.size() == 0)
+    {
+        displayM = std::vector<std::vector<double>>(_numberOfAo, std::vector<double>());
+    }
+
     // Build ionic potential matrix in AO basis    
     std::vector<std::vector<double>> ionicMatrixAO = std::vector<std::vector<double>>(_numberOfAo, std::vector<double>());
     for (int i = 0; i < _numberOfAo; ++i)
     {
         ionicMatrixAO[i].resize(i + 1, 0.0);
+
+        // debug
+        displayM[i].resize(i + 1, 0.0);
     }
 
     // Compute ionic potential matrix elements in AO basis
@@ -1104,7 +1121,26 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
         for (int j = 0; j <= i; ++j)
         {
             ionicMatrixAO[i][j] = _vcgtf[i].ionicPotentialCGTF(_vcgtf[j], chargePosition, charge);
+
+            // debug
+            // ionicMatrixAO[i][j] = _vcgtf[i].ionicPotentialCGTF(_vcgtf[j], chargePosition, charge, (i == 9 && j == 0));
         }
+    }
+
+    // debug
+    if (debug)
+    {
+        for (int ii = 0; ii < _numberOfAo; ++ii)
+        {
+            for (int jj = 0; jj <= ii; ++jj)
+            {
+                displayM[ii][jj] += ionicMatrixAO[ii][jj];
+                totalSumM += (ii == jj ? ionicMatrixAO[ii][jj] : 2.0 * ionicMatrixAO[ii][jj]);
+                std::cout << std::setprecision(6) << std::setw(10) << displayM[ii][jj] << '\t';
+            }
+            std::cout << std::endl;
+        }
+        std::cout << "Total sum: " << totalSumM << std::endl << std::endl;
     }
 
     // Build ionic potential matrix in MO basis
@@ -1130,9 +1166,6 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
             {
                 double sum = 0.0;
 
-                #ifdef ENABLE_OMP
-                #pragma omp parallel for reduction(+: sum)
-                #endif
                 for (size_t m = 0; m < _coefficients[spin][i].size(); ++m)
                 {
                     for (size_t n = 0; n < _coefficients[spin][j].size(); ++n)

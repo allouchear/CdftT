@@ -1946,13 +1946,13 @@ double Grid::phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, c
 
                 if (distance > 1e-6)
                 {
-                    phiStarVionicStarPhi += _values[i][j][k][leftOrbitalIndex] * _values[i][j][k][rightOrbitalIndex] * (- charge / distance);
+                    phiStarVionicStarPhi += _values[i][j][k][leftOrbitalIndex] * _values[i][j][k][rightOrbitalIndex] / distance;
                 }
             }
         }
     }
 
-    return phiStarVionicStarPhi * _domain.get_dv();
+    return - charge * phiStarVionicStarPhi * _domain.get_dv();
 }
 
 
