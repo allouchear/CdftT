@@ -101,8 +101,16 @@ bool findEigenValuesAndEigenVectorsOfSymmetricalMatrix(const std::vector<std::ve
  */
 void reductionToTridiagonalMatrix(std::vector<std::vector<double>>& matrix, std::vector<double>& diagonal, std::vector<double>& subDiagonal);
 
+/**
+ * @brief Sorts eigenvalues in ascending order and rearranges the corresponding eigenvectors accordingly.
+ * 
+ * @param[in,out] eigenValues Vector of eigenvalues to be sorted.
+ * @param[in,out] eigenVectors Matrix (as a vector of vectors) of eigenvectors to be rearranged, according to the sorted eigenvalues.
+ */
+void sortEigenValuesAndEigenVectors(std::vector<double>& eigenValues, std::vector<std::vector<double>>& eigenVectors);
 
-// TESTS
+
+// DEBUG
 int eigenQL(int n, double *M, double *EVals, double** V);
 void reductionToTridiagonal(double **A, int n, double *D, double *E);
 int diagonalisationOfATridiagonalMatrix(double *D, double *E, int n, double **V);

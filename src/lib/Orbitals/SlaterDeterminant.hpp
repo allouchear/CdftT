@@ -78,11 +78,11 @@ class SlaterDeterminant
 
         /**
          * @brief Computes the ionic potential matrix element between two Slater determinants.
-         * 
+         *
          * @param[in] di First Slater determinant.
          * @param[in] dj Second Slater determinant.
-         * @param[in] ionicMatrix Ionic matrix < phi_i | V_ionic | phi_j > (the first index corresponds to alpha spin, the second to beta spin).
-         * @return The ionic potential matrix element < Di | V_ionic | Dj >.
+         * @param[in] ionicMatrix Ionic matrix < phi_i | V_ion/electrons | phi_j > (the first index corresponds to alpha spin, the second to beta spin).
+         * @return The ionic potential matrix element < D_k | V_ion/electrons | D_l >.
          */
         static double ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::vector<std::vector<std::vector<double>>>& ionicMatrix);
 

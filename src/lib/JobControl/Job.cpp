@@ -464,19 +464,16 @@ void Job::readTransitionsFileName(std::string& transitionsFileName)
 {
     if (!readOneString(_inputFile, "TransitionsFile", transitionsFileName))
     {
-        std::stringstream errorMessage;
-        errorMessage << "Error: could not find transition file name." << std::endl;
-        errorMessage << "Please check if the \"TransitionsFile\" parameter is defined and set in the provided input file (" << _inputFileName << ").";
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
+        transitionsFileName = ""
+        ;
+        std::cout << "Note: the \"TransitionsFile\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will try to read the transitions from the analytic file." << std::endl << std::endl;
     }
 }
 
 
 //----------------------------------------------------------------------------------------------------//
-// SECTION TO BE NAMED
+// JOBS
 //----------------------------------------------------------------------------------------------------//
 
 void Job::setJobList()
@@ -1417,7 +1414,14 @@ void Job::run_computeEnergyWithPointCharge()
 
 
     // Reading transitions file
-    ExcitedState::readTransitionsFile(transitionsFileName, states, groundState.get_energy());
+    if (!transitionsFileName.empty())
+    {
+        ExcitedState::readTransitionsFile(transitionsFileName, states, groundState.get_energy());
+    }
+    else
+    {
+        ExcitedState::readTransitionsFromLogFile(analyticFilesNames[0], states, groundState.get_energy());
+    }
     std::cout << "Total number of states: " << states.size() << std::endl << std::endl;
     
 
@@ -1520,6 +1524,28 @@ void Job::run_computeEnergyWithPointCharge()
     std::cout << std::endl << std::endl;
 
     std::cout << "Eigenvectors (columns): " << std::endl;
+    for (size_t i = 0; i < eigenvectors.size(); ++i)
+    {
+        for (size_t j = 0; j < eigenvectors[i].size(); ++j)
+        {
+            std::cout << std::setw(11) << eigenvectors[i][j] << '\t';
+        }
+
+        std::cout << std::endl;
+    }
+
+
+    // Sort eigenvalues and eigenvectors
+    sortEigenValuesAndEigenVectors(eigenvalues, eigenvectors);
+    
+    std::cout << std::endl << "Sorted Eigenvalues: ";
+    for (size_t k = 0; k < eigenvalues.size(); ++k)
+    {
+        std::cout << eigenvalues[k] << ' ';
+    }
+    std::cout << std::endl << std::endl;
+
+    std::cout << "Sorted Eigenvectors (columns): " << std::endl;
     for (size_t i = 0; i < eigenvectors.size(); ++i)
     {
         for (size_t j = 0; j < eigenvectors[i].size(); ++j)

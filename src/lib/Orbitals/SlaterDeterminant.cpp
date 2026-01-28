@@ -149,17 +149,20 @@ std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(
 
     return differences;
 }
-
+bool printedOnce = false;
 double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::vector<std::vector<std::vector<double>>>& ionicMatrix)
 {
     double sum = 0.0;
 
     // Get spin type int values;
-    std::array<int, 2> spins = {static_cast<int>(SpinType::ALPHA), static_cast<int>(SpinType::BETA)};
+    const int ALPHA = static_cast<int>(SpinType::ALPHA);
+    const int BETA = static_cast<int>(SpinType::BETA);
+    std::array<int, 2> spins = {ALPHA, BETA};
 
     // Apply Slater-Condon rules
     if (di == dj)
     {
+        // Interaction with the electrons
         for (int spin : spins)
         {
             for (size_t i = 0; i < di._occupiedOrbitals[spin].size(); ++i)
@@ -173,16 +176,16 @@ double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const Slat
     {
         std::vector<std::vector<std::pair<int, int>>> differences = getDifferences(di, dj);
 
-        for (int spin : spins)
+        // Check that there is only one difference in total
+        if (differences[ALPHA].size() + differences[BETA].size() == 1)
         {
-            // Check that there is only one difference
-            if (differences[spin].size() == 1)
-            {
-                int initialOrbitalIndex = differences[spin][0].first - 1;
-                int finalOrbitalIndex = differences[spin][0].second - 1;
+            // Get the spin for which there is a difference
+            int spin = differences[ALPHA].size() == 1 ? ALPHA : BETA;
 
-                sum += ionicMatrix[spin][initialOrbitalIndex][finalOrbitalIndex];
-            }
+            int firstOrbitalIndex = differences[spin][0].first - 1;
+            int secondOrbitalIndex = differences[spin][0].second - 1;
+            
+            sum += (firstOrbitalIndex > secondOrbitalIndex ? ionicMatrix[spin][firstOrbitalIndex][secondOrbitalIndex] : ionicMatrix[spin][secondOrbitalIndex][firstOrbitalIndex]);
         }
     }
 

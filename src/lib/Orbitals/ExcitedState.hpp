@@ -111,7 +111,27 @@ class ExcitedState
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
          * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
          */
-        static void readTransitionsFile(std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
+        static bool readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
+
+        /**
+         * @brief Reads transitions from a .log file and populates a vector of ExcitedState objects.
+         *
+         * @param[in] logFileName Name of the log file to read.
+         * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
+         * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
+         * @return True if reading was successful, false otherwise.
+         */
+        static bool readTransitionsFromLogFile(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
+
+        /**
+         * @brief Reads transitions from the provided file and populates a vector of ExcitedState objects.
+         *
+         * @param[in] fileName Name of the file to read.
+         * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
+         * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
+         * @return True if reading was successful, false otherwise.
+         */
+        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS

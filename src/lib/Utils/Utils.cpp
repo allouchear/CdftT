@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <numeric>
 #include <regex>
 #include <string>
 #include <vector>
@@ -400,6 +402,44 @@ void reductionToTridiagonalMatrix(std::vector<std::vector<double>>& matrix, std:
             matrix[i][j] = 0.0;
         }
     }
+}
+
+void sortEigenValuesAndEigenVectors(std::vector<double>& eigenValues, std::vector<std::vector<double>>& eigenVectors)
+{
+    size_t dimension = eigenValues.size();
+
+    if (eigenVectors.size() != dimension)
+    {
+        print_error("Error in sortEigenValuesAndEigenVectors(): eigenVectors size does not match eigenValues size.");
+        exit(1);
+    }
+
+    // Create a vector of indices
+    std::vector<size_t> indices(dimension);
+    std::iota(indices.begin(), indices.end(), 0);
+
+    // Sort indices based on eigenvalues
+    std::sort(indices.begin(), indices.end(), [&eigenValues](size_t a, size_t b) { return eigenValues[a] < eigenValues[b]; });
+
+    // Create sorted copies
+    std::vector<double> sortedEigenValues(dimension);
+    std::vector<std::vector<double>> sortedEigenVectors(eigenVectors);
+
+    // Reorganize eigenvalues and eigenvectors according to sorted indices
+    for (size_t i = 0; i < dimension; ++i)
+    {
+        sortedEigenValues[i] = eigenValues[indices[i]];
+        
+        // Copy column indices[i] to column i (eigenvectors stored as columns)
+        for (size_t k = 0; k < dimension; ++k)
+        {
+            sortedEigenVectors[k][i] = eigenVectors[k][indices[i]];
+        }
+    }
+
+    // Replace with sorted data
+    eigenValues = std::move(sortedEigenValues);
+    eigenVectors = std::move(sortedEigenVectors);
 }
 
 //----------------------------------------------------------------------------------------------------//

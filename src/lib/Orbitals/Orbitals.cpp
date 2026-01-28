@@ -1170,14 +1170,7 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
                 {
                     for (size_t n = 0; n < _coefficients[spin][j].size(); ++n)
                     {
-                        if (n <= m)
-                        {
-                            sum += _coefficients[spin][i][m] * _coefficients[spin][j][n] * ionicMatrixAO[m][n];
-                        }
-                        else
-                        {
-                            sum += _coefficients[spin][i][m] * _coefficients[spin][j][n] * ionicMatrixAO[n][m];
-                        }
+                        sum += _coefficients[spin][i][m] * _coefficients[spin][j][n] * (n <= m ? ionicMatrixAO[m][n] : ionicMatrixAO[n][m]);
                     }
                 }
 
