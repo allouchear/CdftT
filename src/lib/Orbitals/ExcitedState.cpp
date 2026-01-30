@@ -201,7 +201,7 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
             else
             {
                 // New excited state: read energy
-                std::regex energyRegex("(?:energy)\\s+(\\d*\\.?\\d+)\\s+(eV|H)", std::regex_constants::icase);
+                std::regex energyRegex("(?:energy)\\s+(-?\\d*\\.?\\d+)\\s+(eV|H)", std::regex_constants::icase);
                 std::smatch energyRegexMatch;
                 if (std::regex_search(line, energyRegexMatch, energyRegex))
                 {
@@ -241,34 +241,67 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
                         }
                         else if (!line.empty())
                         {
-                            std::regex transitionRegex("(\\d+)\\s+([aAbB])\\s+(\\d+)\\s+([aAbB])\\s+(-?\\d*\\.?\\d+)");
-                            std::smatch transitionRegexMatch;
-                            if (std::regex_search(line, transitionRegexMatch, transitionRegex))
+                            // First, consider the case where the spins are specified
+                            std::regex transitionRegexAlphaBeta("(\\d+)\\s+([aAbB])\\s+(\\d+)\\s+([aAbB])\\s+(-?\\d*\\.?\\d+)");
+                            std::smatch transitionRegexAlphaBetaMatch;
+                            if (std::regex_search(line, transitionRegexAlphaBetaMatch, transitionRegexAlphaBeta))
                             {
                                 std::pair<int, SpinType> initialOrbital;
                                 std::pair<int, SpinType> finalOrbital;
 
-                                initialOrbital.first = std::stoi(transitionRegexMatch[1]);
-                                initialOrbital.second = (transitionRegexMatch[2] == "a" || transitionRegexMatch[2] == "A") ? SpinType::ALPHA : SpinType::BETA;
+                                initialOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[1]);
+                                initialOrbital.second = (transitionRegexAlphaBetaMatch[2] == "a" || transitionRegexAlphaBetaMatch[2] == "A") ? SpinType::ALPHA : SpinType::BETA;
 
-                                finalOrbital.first = std::stoi(transitionRegexMatch[3]);
-                                finalOrbital.second = (transitionRegexMatch[4] == "a" || transitionRegexMatch[4] == "A") ? SpinType::ALPHA : SpinType::BETA;
-
-                                double coefficient = std::stod(transitionRegexMatch[5]);
+                                finalOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[3]);
+                                finalOrbital.second = (transitionRegexAlphaBetaMatch[4] == "a" || transitionRegexAlphaBetaMatch[4] == "A") ? SpinType::ALPHA : SpinType::BETA;
+                                double coefficient = std::stod(transitionRegexAlphaBetaMatch[5]);
 
                                 excitedState.addTransition(initialOrbital, finalOrbital, coefficient);
                             }
                             else
                             {
-                                ok = false;
+                                // Then, consider the case where spins are not specified: both alpha and beta transitions are assumed
+                                std::regex transitionRegex("(\\d+)\\s+(\\d+)\\s+(-?\\d*\\.?\\d+)");
+                                std::smatch transitionRegexMatch;
+                                if (std::regex_search(line, transitionRegexMatch, transitionRegex))
+                                {
+                                    std::pair<int, SpinType> initialOrbital_alpha;
+                                    std::pair<int, SpinType> finalOrbital_alpha;
+                                    std::pair<int, SpinType> initialOrbital_beta;
+                                    std::pair<int, SpinType> finalOrbital_beta;
 
-                                std::stringstream errorMessage;
-                                errorMessage << "Error: could not read transition in transitions file " << transitionsFileName << '.' << std::endl;
-                                errorMessage << "Please check the documentation for the format of the file.";
+                                    // Add alpha transition
+                                    initialOrbital_alpha.first = std::stoi(transitionRegexMatch[1]);
+                                    initialOrbital_alpha.second = SpinType::ALPHA;
 
-                                print_error(errorMessage.str());
+                                    finalOrbital_alpha.first = std::stoi(transitionRegexMatch[2]);
+                                    finalOrbital_alpha.second = SpinType::ALPHA;
 
-                                std::exit(1);
+                                    double coefficient = std::stod(transitionRegexMatch[3]);
+
+                                    excitedState.addTransition(initialOrbital_alpha, finalOrbital_alpha, coefficient);
+
+                                    // Add beta transition
+                                    initialOrbital_beta.first = initialOrbital_alpha.first;
+                                    initialOrbital_beta.second = SpinType::BETA;
+
+                                    finalOrbital_beta.first = finalOrbital_alpha.first;
+                                    finalOrbital_beta.second = SpinType::BETA;
+
+                                    excitedState.addTransition(initialOrbital_beta, finalOrbital_beta, coefficient);
+                                }
+                                else
+                                {
+                                    ok = false;
+
+                                    std::stringstream errorMessage;
+                                    errorMessage << "Error: could not read transition in transitions file " << transitionsFileName << '.' << std::endl;
+                                    errorMessage << "Please check the documentation for the format of the file.";
+
+                                    print_error(errorMessage.str());
+
+                                    std::exit(1);
+                                }
                             }
                         }
                     } while (!transitionsFile.eof() && !line.empty());
@@ -374,11 +407,6 @@ bool ExcitedState::readTransitionsFromLogFile(const std::string& logFileName, st
                                 finalOrbital.second = (transitionRegexAlphaBetaMatch[4] == "A" ? SpinType::ALPHA : SpinType::BETA);
 
                                 double coefficient = std::stod(transitionRegexAlphaBetaMatch[5]);
-
-                                // debug
-                                std::cout << "Found alpha and beta transition: " << initialOrbital.first << to_char(initialOrbital.second)
-                                          << " -> " << finalOrbital.first << to_char(finalOrbital.second)
-                                          << " with coefficient " << coefficient << std::endl;
 
                                 excitedState.addTransition(initialOrbital, finalOrbital, coefficient);
                             }

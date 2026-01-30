@@ -83,6 +83,13 @@ class Job
         void readGridFilesNames(std::vector<std::string>& gridFilesNames);
 
         /**
+         * @brief Reads the cutoff distance for nuclear contribution from the "NuclearCutoff" parameter in the input file.
+         *
+         * @param[out] nuclearCutoff Reference to a double where the read cutoff distance will be stored.
+         */
+        void readNuclearCutoff(double& nuclearCutoff);
+
+        /**
          * @brief Reads a list of orbital numbers from the "OrbitalsNumbers" parameter in the input file.
          *
          * @param[out] orbitalsNumbers Reference to a vector where the orbital numbers will be stored.

@@ -161,6 +161,17 @@ void Job::readGridFilesNames(std::vector<std::string>& gridFilesNames)
     }
 }
 
+void Job::readNuclearCutoff(double& nuclearCutoff)
+{
+    if (!readOneType<double>(_inputFile, "NuclearCutoff", nuclearCutoff))
+    {
+        std::cout << "Warning: the \"NuclearCutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (NuclearCutoff=0.1)." << std::endl;
+
+        nuclearCutoff = 0.1;
+    }
+}
+
 void Job::readOrbitalsNumbers(std::vector<int>& orbitalsNumbers)
 {
     if (!readListType<int>(_inputFile, "OrbitalsNumbers", orbitalsNumbers))
@@ -1377,6 +1388,11 @@ void Job::run_computeEnergyWithPointCharge()
     double charge;
     readCharge(charge);
     std::cout << "Point charge: " << charge << " e at position (" << chargePosition[0] << ", " << chargePosition[1] << ", " << chargePosition[2] << ")." << std::endl << std::endl;
+
+
+    // Read cutoff distance for nuclear contribution
+    double nuclearCutoff;
+    readNuclearCutoff(nuclearCutoff);
     
     
     // Read transitions file
@@ -1416,7 +1432,7 @@ void Job::run_computeEnergyWithPointCharge()
     // Reading transitions file
     if (!transitionsFileName.empty())
     {
-        ExcitedState::readTransitionsFile(transitionsFileName, states, groundState.get_energy());
+        ExcitedState::readTransitions(transitionsFileName, states, groundState.get_energy());
     }
     else
     {
@@ -1428,6 +1444,7 @@ void Job::run_computeEnergyWithPointCharge()
     // Compute Slater Determinants from electronic transitions for each state
     for (ExcitedState& state : states)
     {
+        std::cout << state << std::endl;
         state.computeSlaterDeterminants(groundStateSlaterDeterminant);
     }
 
@@ -1474,9 +1491,14 @@ void Job::run_computeEnergyWithPointCharge()
             {
                 for (const Atom& atom : orbitals.get_struct().get_atoms())
                 {
-                    nuclearContribution += charge * atom.get_atomicNumber() / std::sqrt((atom.get_coordinates()[0] - chargePosition[0]) * (atom.get_coordinates()[0] - chargePosition[0])
-                                                                                        + (atom.get_coordinates()[1] - chargePosition[1]) * (atom.get_coordinates()[1] - chargePosition[1])
-                                                                                        + (atom.get_coordinates()[2] - chargePosition[2]) * (atom.get_coordinates()[2] - chargePosition[2]));
+                    double distance = std::sqrt((atom.get_coordinates()[0] - chargePosition[0]) * (atom.get_coordinates()[0] - chargePosition[0])
+                                                + (atom.get_coordinates()[1] - chargePosition[1]) * (atom.get_coordinates()[1] - chargePosition[1])
+                                                + (atom.get_coordinates()[2] - chargePosition[2]) * (atom.get_coordinates()[2] - chargePosition[2]));
+
+                    if (distance > nuclearCutoff)
+                    {
+                        nuclearContribution += charge * atom.get_atomicNumber() / distance;
+                    }
                 }
             }
             matrixElement += nuclearContribution;
@@ -1641,7 +1663,7 @@ void Job::run_computeEnergyWithPointCharge()
     */
 
 
-
+    /*
     ///////////////////////////////////////////////
     // Debug - Comparison with C diagonalization //
     ///////////////////////////////////////////////
@@ -1686,6 +1708,7 @@ void Job::run_computeEnergyWithPointCharge()
         }
         std::cout << std::endl;
     }
+    */
 }
 
 void Job::run_computeGridDifference()
