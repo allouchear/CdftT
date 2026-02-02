@@ -162,6 +162,13 @@ class Job
          */
         void readTransitionsFileName(std::string& transitionsFileName);
 
+        /**
+         * @brief Reads the verbosity level from the "Verbose" parameter in the input file.
+         * 
+         * @param[out] verbose Reference to an integer where the read verbosity level will be stored.
+         */
+        void readVerbose(int& verbose);
+
 
         //----------------------------------------------------------------------------------------------------//
         // JOBS

@@ -110,12 +110,6 @@ void reductionToTridiagonalMatrix(std::vector<std::vector<double>>& matrix, std:
 void sortEigenValuesAndEigenVectors(std::vector<double>& eigenValues, std::vector<std::vector<double>>& eigenVectors);
 
 
-// DEBUG
-int eigenQL(int n, double *M, double *EVals, double** V);
-void reductionToTridiagonal(double **A, int n, double *D, double *E);
-int diagonalisationOfATridiagonalMatrix(double *D, double *E, int n, double **V);
-
-
 //----------------------------------------------------------------------------------------------------//
 // UTIL CLASSES
 //----------------------------------------------------------------------------------------------------//

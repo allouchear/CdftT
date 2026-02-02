@@ -1,8 +1,9 @@
-#include<iostream>
-#include<sstream>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
 #include <Utils/FCHK.h>
 
-using namespace std;
 
 FCHK::FCHK()
 {
@@ -41,7 +42,7 @@ FCHK::FCHK()
     _mixte=false;
 }
 
-FCHK::FCHK(ifstream& file)
+FCHK::FCHK(std::ifstream& file)
 {
     _ok_alpha=0;
     _alpha_and_beta=false;
@@ -65,7 +66,7 @@ FCHK::FCHK(ifstream& file)
     }
 }
 
-int FCHK::read_one_int(ifstream& f, string b)
+int FCHK::read_one_int(std::ifstream& f, string b)
 {
     string p;
     double data;
@@ -74,14 +75,14 @@ int FCHK::read_one_int(ifstream& f, string b)
 
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
-        cout<<"Data required, please check your file"<<endl;
+        std::cout<<b+" : data not found"<<std::endl;
+        std::cout<<"Data required, please check your file"<<std::endl;
         exit(1);
     }
 
     f.seekg(pos);
     getline(f,p);
-    stringstream ss(p);
+    std::stringstream ss(p);
 
     do{
         ss>>p;
@@ -92,7 +93,7 @@ int FCHK::read_one_int(ifstream& f, string b)
     return data;
 }
 
-double FCHK::read_one_real(ifstream& f, string b)
+double FCHK::read_one_real(std::ifstream& f, string b)
 {
     string p;
     double data;
@@ -101,14 +102,14 @@ double FCHK::read_one_real(ifstream& f, string b)
 
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
-        cout<<"Data required, please check your file"<<endl;
+        std::cout<<b+" : data not found"<<std::endl;
+        std::cout<<"Data required, please check your file"<<std::endl;
         exit(1);
     }
 
     f.seekg(pos);
     getline(f,p);
-    stringstream ss(p);
+    std::stringstream ss(p);
 
     do{
         ss>>p;
@@ -119,7 +120,7 @@ double FCHK::read_one_real(ifstream& f, string b)
     return data;
 }
 
-vector<int> FCHK::read_one_block_int(ifstream& f, string b)
+vector<int> FCHK::read_one_block_int(std::ifstream& f, string b)
 {
     string p;
     vector<int> data;
@@ -129,14 +130,14 @@ vector<int> FCHK::read_one_block_int(ifstream& f, string b)
 
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
-        cout<<"Data required, please check your file"<<endl;
+        std::cout<<b+" : data not found"<<std::endl;
+        std::cout<<"Data required, please check your file"<<std::endl;
         exit(1);
     }
 
     f.seekg(pos);
     getline(f,p);
-    stringstream ss(p);
+    std::stringstream ss(p);
 
     do{
         ss>>p;
@@ -154,7 +155,7 @@ vector<int> FCHK::read_one_block_int(ifstream& f, string b)
     return data;
 }
 
-vector<double> FCHK::read_one_block_real(ifstream& f, string b)
+vector<double> FCHK::read_one_block_real(std::ifstream& f, string b)
 {
     string p;
     vector<double> data;
@@ -165,21 +166,20 @@ vector<double> FCHK::read_one_block_real(ifstream& f, string b)
 
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
         if((b=="Beta Orbital Energies" || b=="Beta MO coefficients") && _ok_alpha==2)
             return vector<double> ();
         else if(b=="NPA Charges")
             return vector<double> ();
         else
         {
-            cout<<"Data required, please check your file"<<endl;
+            std::cout << b + " : data not found, but required. Please check your file." << std::endl;
             exit(1);
         }
     }
 
     f.seekg(pos);
     getline(f,p);
-    stringstream ss(p);
+    std::stringstream ss(p);
 
     do{
         ss>>p;
@@ -200,7 +200,7 @@ vector<double> FCHK::read_one_block_real(ifstream& f, string b)
     return data;
 }
 
-void FCHK::read_file_fchk(ifstream& file)
+void FCHK::read_file_fchk(std::ifstream& file)
 {
     string a = "Number of electrons";
     string b = "Number of alpha electrons";
@@ -283,7 +283,7 @@ void FCHK::read_file_fchk(ifstream& file)
     }    
 }
 
-long int LocaliseData(ifstream& f, string b)
+long int LocaliseData(std::ifstream& f, string b)
 {
     long int position;
     f.clear();
@@ -309,57 +309,57 @@ long int LocaliseData(ifstream& f, string b)
 
 void FCHK::PrintData()
 {
-    cout<<"Number of electrons : "<<_number_of_electrons<<endl;
-    cout<<"Number of alpha electrons : "<<_number_of_alpha_electrons<<endl;
-    cout<<"Number of beta electrons : "<<_number_of_beta_electrons<<endl;
-    cout<<"Number of basis functions : "<<_number_of_basis_functions<<endl;
+    std::cout<<"Number of electrons : "<<_number_of_electrons<<std::endl;
+    std::cout<<"Number of alpha electrons : "<<_number_of_alpha_electrons<<std::endl;
+    std::cout<<"Number of beta electrons : "<<_number_of_beta_electrons<<std::endl;
+    std::cout<<"Number of basis functions : "<<_number_of_basis_functions<<std::endl;
     for(size_t i=0; i<_atomic_numbers.size(); i++)
-        cout<<"Atomic number "<<i<<" : "<<_atomic_numbers[i]<<endl;
+        std::cout<<"Atomic number "<<i<<" : "<<_atomic_numbers[i]<<std::endl;
     for(size_t i=0; i<_nuclear_charges.size(); i++)
-        cout<<"Nuclear charges "<<i<<" : "<<_nuclear_charges[i]<<endl;
+        std::cout<<"Nuclear charges "<<i<<" : "<<_nuclear_charges[i]<<std::endl;
     for(int i=0; i<_number_of_atoms; i++)
     {
-        cout<<"Current Cartesian Coordinates "<<i<<" : ";
+        std::cout<<"Current Cartesian Coordinates "<<i<<" : ";
         for(int j=0; j<3; j++)
-            cout<<_current_cartesian_coordinates[j+3*i]<<"   ";
-        cout<<endl;
+            std::cout<<_current_cartesian_coordinates[j+3*i]<<"   ";
+        std::cout<<std::endl;
     }
     for(size_t i=0; i<_primitive_exponents.size(); i++)
-        cout<<"Primitive exponents "<<i<<" : "<<_primitive_exponents[i]<<endl;
+        std::cout<<"Primitive exponents "<<i<<" : "<<_primitive_exponents[i]<<std::endl;
     for(size_t i=0; i<_contraction_coefficients.size(); i++)
-        cout<<"Contraction coefficients "<<i<<" : "<<_contraction_coefficients[i]<<endl;
+        std::cout<<"Contraction coefficients "<<i<<" : "<<_contraction_coefficients[i]<<std::endl;
     for(size_t i=0; i<_alpha_orbital_energies.size(); i++)
-        cout<<"Alpha orbital energies "<<i<<" : "<<_alpha_orbital_energies[i]<<endl;
+        std::cout<<"Alpha orbital energies "<<i<<" : "<<_alpha_orbital_energies[i]<<std::endl;
     for(size_t i=0; i<_alpha_mo_coefficients.size(); i++)
-        cout<<"Alpha MO coefficients "<<i<<" : "<<_alpha_mo_coefficients[i]<<endl;
+        std::cout<<"Alpha MO coefficients "<<i<<" : "<<_alpha_mo_coefficients[i]<<std::endl;
     for(size_t i=0; i<_beta_orbital_energies.size(); i++)
-        cout<<"Beta orbital energies "<<i<<" : "<<_beta_orbital_energies[i]<<endl;
+        std::cout<<"Beta orbital energies "<<i<<" : "<<_beta_orbital_energies[i]<<std::endl;
     for(size_t i=0; i<_beta_mo_coefficients.size(); i++)
-        cout<<"Beta MO coefficients "<<i<<" : "<<_beta_mo_coefficients[i]<<endl;
-    cout<<"Total energy : "<<_total_energy<<endl;
+        std::cout<<"Beta MO coefficients "<<i<<" : "<<_beta_mo_coefficients[i]<<std::endl;
+    std::cout<<"Total energy : "<<_total_energy<<std::endl;
     for(size_t i=0; i<_mulliken_charges.size(); i++)
-        cout<<"Mulliken charges "<<i<<" : "<<_mulliken_charges[i]<<endl;
+        std::cout<<"Mulliken charges "<<i<<" : "<<_mulliken_charges[i]<<std::endl;
     for(size_t i=0; i<_npa_charges.size(); i++)
-        cout<<"NPA charges "<<i<<" : "<<_npa_charges[i]<<endl;
+        std::cout<<"NPA charges "<<i<<" : "<<_npa_charges[i]<<std::endl;
     for(size_t i=0; i<_dipole_moment.size(); i++)
-        cout<<"Dipole moment "<<i<<" : "<<_dipole_moment[i]<<endl;
+        std::cout<<"Dipole moment "<<i<<" : "<<_dipole_moment[i]<<std::endl;
     for(size_t i=0; i<_shell_types.size(); i++)
-        cout<<"Shell types "<<i<<" : "<<_shell_types[i]<<endl;
+        std::cout<<"Shell types "<<i<<" : "<<_shell_types[i]<<std::endl;
     for(size_t i=0; i<_shell_to_atom_map.size(); i++)
-        cout<<"Shell to atom map "<<i<<" : "<<_shell_to_atom_map[i]<<endl;
+        std::cout<<"Shell to atom map "<<i<<" : "<<_shell_to_atom_map[i]<<std::endl;
     for(size_t i=0; i<_number_of_primitives_per_shell.size(); i++)
-        cout<<"Number of primitives per shell "<<i<<" : "<<_number_of_primitives_per_shell[i]<<endl;
+        std::cout<<"Number of primitives per shell "<<i<<" : "<<_number_of_primitives_per_shell[i]<<std::endl;
     for(size_t i=0; i<_sp_contraction_coefficients.size(); i++)
-        cout<<"SP contraction coefficients "<<i<<" : "<<_sp_contraction_coefficients[i]<<endl;
+        std::cout<<"SP contraction coefficients "<<i<<" : "<<_sp_contraction_coefficients[i]<<std::endl;
     for(int i=0; i<_number_of_contracted_shells; i++)
     {
-        cout<<"Coordinates for each shells "<<i<<" : ";
+        std::cout<<"Coordinates for each shells "<<i<<" : ";
         for(int j=0; j<3; j++)
-            cout<<_coordinates_for_shells[j+3*i]<<"   ";
-        cout<<endl;
+            std::cout<<_coordinates_for_shells[j+3*i]<<"   ";
+        std::cout<<std::endl;
     }
-    cout<<"Number of atoms : "<<_number_of_atoms<<endl;
-    cout<<"Number of contracted shells : "<<_number_of_contracted_shells<<endl;
-    cout<<"Number of primitive shells : "<<_number_of_primitive_shells<<endl;
-    cout<<"Highest angular momentum : "<<_highest_angular_momentum<<endl;
+    std::cout<<"Number of atoms : "<<_number_of_atoms<<std::endl;
+    std::cout<<"Number of contracted shells : "<<_number_of_contracted_shells<<std::endl;
+    std::cout<<"Number of primitive shells : "<<_number_of_primitive_shells<<std::endl;
+    std::cout<<"Highest angular momentum : "<<_highest_angular_momentum<<std::endl;
 }

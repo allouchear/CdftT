@@ -149,6 +149,12 @@ std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(
 
     return differences;
 }
+
+double SlaterDeterminant::overlap(const SlaterDeterminant& di, const SlaterDeterminant& dj)
+{
+    return di == dj ? 1.0 : 0.0;
+}
+
 bool printedOnce = false;
 double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::vector<std::vector<std::vector<double>>>& ionicMatrix)
 {
@@ -219,7 +225,7 @@ std::ostream& operator<<(std::ostream& stream, const SlaterDeterminant& slaterDe
         stream << slaterDeterminant._occupiedOrbitals[ALPHA][i].first << "A(" << slaterDeterminant._occupiedOrbitals[ALPHA][i].second << ") ";
     }
 
-    stream << std::endl;
+    stream << "; ";
 
     for (size_t i = 0; i < slaterDeterminant._occupiedOrbitals[BETA].size(); ++i)
     {

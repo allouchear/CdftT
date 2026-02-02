@@ -23,12 +23,14 @@
 
 ExcitedState::ExcitedState(const double energy) :
     _energy(energy),
+    _isGroundState(false),
     _electronicTransitions(),
     _slaterDeterminants()
 { }
 
 ExcitedState::ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant) :
     _energy(energy),
+    _isGroundState(true),
     _electronicTransitions(),
     _slaterDeterminants(1, slaterDeterminant)
 { }
@@ -41,6 +43,11 @@ ExcitedState::ExcitedState(const double energy, const SlaterDeterminant& slaterD
 double ExcitedState::get_energy() const
 {
     return _energy;
+}
+
+bool ExcitedState::isGroundState() const
+{
+    return _isGroundState;
 }
 
 
@@ -508,18 +515,22 @@ bool ExcitedState::readTransitions(const std::string& fileName, std::vector<Exci
 
 std::ostream& operator<<(std::ostream& stream, const ExcitedState& excitedState)
 {
-    stream << "Excited State Energy: " << excitedState._energy << " Hartree." << std::endl;
-    stream << "Transitions:" << std::endl;
+    stream << (excitedState._isGroundState ? "Ground" : "Excited") << " State Energy: " << excitedState._energy << " Hartree." << std::endl;
 
-    for (const auto& transition : excitedState._electronicTransitions)
+    if (!excitedState._isGroundState)
     {
-        const ExcitedState::OrbitalState& initialOrbital = std::get<0>(transition);
-        const ExcitedState::OrbitalState& finalOrbital = std::get<1>(transition);
-        const double& coefficient =  std::get<2>(transition);
+        stream << "  Transitions:" << std::endl;
 
-        stream << "  From Orbital " << initialOrbital.first << to_char(initialOrbital.second)
-               << " to Orbital " << finalOrbital.first << to_char(finalOrbital.second)
-               << " with Coefficient: " << coefficient << std::endl;
+        for (const auto& transition : excitedState._electronicTransitions)
+        {
+            const ExcitedState::OrbitalState& initialOrbital = std::get<0>(transition);
+            const ExcitedState::OrbitalState& finalOrbital = std::get<1>(transition);
+            const double& coefficient = std::get<2>(transition);
+
+            stream << "    " << initialOrbital.first << to_char(initialOrbital.second)
+                             << " -> " << finalOrbital.first << to_char(finalOrbital.second)
+                             << ", coefficient: " << coefficient << std::endl;
+        }
     }
 
     return stream;

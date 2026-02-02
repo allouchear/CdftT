@@ -83,6 +83,12 @@ namespace Constants
     /** @brief Conversion constant from electron-volts (eV) to Hartrees (atomic energy unit). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?evhr). */
     const double EV_TO_HARTREE = 3.6749322175665e-2;
 
+    /** @brief Conversion constant from Hartrees (atomic energy unit) to Joules (J). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?hrj). */
+    const double HARTREE_TO_JOULE = 4.3597447222060e-18;
+
+    /** @brief Conversion constant from Joules (J) to Hartrees (atomic energy unit). Source: NIST (https://physics.nist.gov/cgi-bin/cuu/Value?jhr). */
+    const double JOULE_TO_HARTREE = 2.2937122783969e17;
+
     //////////////////
     // LENGTH UNITS
 

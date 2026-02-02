@@ -71,7 +71,7 @@ void Job::readCharge(double& charge)
     if (!readOneType<double>(_inputFile, "Charge", charge))
     {
         std::cout << "Warning: the \"Charge\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (Charge=1)." << std::endl;
+        std::cout << "The program will use the default value (Charge=1)." << std::endl << std::endl;
 
         charge = 1.0;
     }
@@ -82,7 +82,7 @@ void Job::readCutoff(double& cutoff)
     if (!readOneType<double>(_inputFile, "Cutoff", cutoff))
     {
         std::cout << "Warning: the \"Cutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (Cutoff=0)." << std::endl;
+        std::cout << "The program will use the default value (Cutoff=0)." << std::endl << std::endl;
 
         cutoff = 0.0;
     }
@@ -94,7 +94,7 @@ void Job::readELFMethod(ELFMethod& elfMethod)
     if (!readOneString(_inputFile, "ELFMethod", strELFMethod))
     {
         std::cout << "Warning: the \"ELFMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (ELFMethod=Savin)." << std::endl;
+        std::cout << "The program will use the default value (ELFMethod=Savin)." << std::endl << std::endl;
         elfMethod = ELFMethod::SAVIN;
     }
     else
@@ -166,7 +166,7 @@ void Job::readNuclearCutoff(double& nuclearCutoff)
     if (!readOneType<double>(_inputFile, "NuclearCutoff", nuclearCutoff))
     {
         std::cout << "Warning: the \"NuclearCutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (NuclearCutoff=0.1)." << std::endl;
+        std::cout << "The program will use the default value (NuclearCutoff=0.1)." << std::endl << std::endl;
 
         nuclearCutoff = 0.1;
     }
@@ -238,7 +238,7 @@ void Job::readOrbitalType(OrbitalType& orbitalType)
     if (!readOneString(_inputFile, "OrbitalType", strOrbitalType))
     {
         std::cout << "Warning: the \"OrbitalType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (OrbitalType=All)." << std::endl;
+        std::cout << "The program will use the default value (OrbitalType=All)." << std::endl << std::endl;
         orbitalType = OrbitalType::ALL;
     }
     else
@@ -265,7 +265,7 @@ void Job::readPartitionMethod(PartitionMethod& partitionMethod)
     if (!readOneString(_inputFile, "PartitionMethod", strMethod))
     {
         std::cout << "Warning: the \"PartitionMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (PartitionMethod=On-Grid)." << std::endl;
+        std::cout << "The program will use the default value (PartitionMethod=On-Grid)." << std::endl << std::endl;
         partitionMethod = PartitionMethod::AIM_ON_GRID;
     }
     else
@@ -320,7 +320,7 @@ void Job::readRunType(RunType& runType)
     if (!readOneString(_inputFile, "RunType", strRunType))
     {
         std::cout << "Warning: the \"RunType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (RunType=Help)." << std::endl;
+        std::cout << "The program will use the default value (RunType=Help)." << std::endl << std::endl;
         runType = RunType::HELP;
     }
     else
@@ -347,7 +347,7 @@ void Job::readSize(GridSize& gridSize, CustomSizeData& customSizeData)
     if (!readOneString(_inputFile, "Size", strGridSize))
     {
         std::cout << "Warning: the \"Size\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (Size=Medium)." << std::endl;
+        std::cout << "The program will use the default value (Size=Medium)." << std::endl << std::endl;
 
         gridSize = GridSize::MEDIUM;
     }
@@ -449,7 +449,7 @@ void Job::readSpinType(SpinType& spinType)
     if (!readOneString(_inputFile, "SpinType", strSpinType))
     {
         std::cout << "Warning: the \"SpinType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (SpinType=Alpha-Beta)." << std::endl;
+        std::cout << "The program will use the default value (SpinType=Alpha-Beta)." << std::endl << std::endl;
 
         spinType = SpinType::ALPHA_BETA;
     }
@@ -475,10 +475,18 @@ void Job::readTransitionsFileName(std::string& transitionsFileName)
 {
     if (!readOneString(_inputFile, "TransitionsFile", transitionsFileName))
     {
-        transitionsFileName = ""
-        ;
         std::cout << "Note: the \"TransitionsFile\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
         std::cout << "The program will try to read the transitions from the analytic file." << std::endl << std::endl;
+
+        transitionsFileName = "";
+    }
+}
+
+void Job::readVerbose(int& verbose)
+{
+    if (!readOneType<int>(_inputFile, "Verbose", verbose))
+    {
+        verbose = 0;
     }
 }
 
@@ -1361,7 +1369,12 @@ void Job::run_computeDescriptors()
 
 void Job::run_computeEnergyWithPointCharge()
 {
-    //Read analytic file name
+    // Read verbose level
+    int verbose;
+    readVerbose(verbose);
+
+
+    // Read analytic file name
     std::vector<std::string> analyticFilesNames;
     readAnalyticFilesNames(analyticFilesNames);
 
@@ -1403,21 +1416,14 @@ void Job::run_computeEnergyWithPointCharge()
     // Loading orbitals
     Orbitals orbitals;
     computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
+    std::cout << std::endl;
 
-    //===========
-    // // debug
-    // std::cout << orbitals << std::endl;
+    if (verbose >= 3)
+    {
+        std::cout << "Molecular orbitals:" << std::endl;
+        std::cout << orbitals << std::endl;
+    }
     
-    // // Overlap check
-    // std::cout << "Print overlaps:" << std::endl;
-    // for (int ii = 0; ii < orbitals.get_numberOfMo(); ++ii)
-    // {
-    //     for (int jj = 0; jj <= ii; ++jj)
-    //     {
-    //         std::cout << " < phi_" << ii << " | phi_" << jj << " > = " << orbitals.overlap(ii, jj, SpinType::ALPHA) << std::endl;
-    //     }
-    // }
-    //===========
 
     // Get Ground Slater Determinant
     SlaterDeterminant groundStateSlaterDeterminant(orbitals);
@@ -1432,26 +1438,42 @@ void Job::run_computeEnergyWithPointCharge()
     // Reading transitions file
     if (!transitionsFileName.empty())
     {
+        std::cout << "Reading transitions from file: " << transitionsFileName << ". Please wait..." << std::endl;
         ExcitedState::readTransitions(transitionsFileName, states, groundState.get_energy());
     }
     else
     {
+        std::cout << "Reading transitions from analytic file: " << analyticFilesNames[0] << ". Please wait..." << std::endl;
         ExcitedState::readTransitionsFromLogFile(analyticFilesNames[0], states, groundState.get_energy());
     }
     std::cout << "Total number of states: " << states.size() << std::endl << std::endl;
-    
+
 
     // Compute Slater Determinants from electronic transitions for each state
     for (ExcitedState& state : states)
     {
-        std::cout << state << std::endl;
         state.computeSlaterDeterminants(groundStateSlaterDeterminant);
+
+        if (verbose >= 1)
+        {
+            std::cout << state;
+
+            if (verbose >= 2)
+            {
+                std::cout << "  Slater Determinants: " << std::endl;
+                for (const auto& slaterCoeff : state.getSlaterDeterminantsAndCoefficients())
+                {
+                    std::cout << "    " << slaterCoeff.first << "; Coefficient: " << slaterCoeff.second << std::endl;
+                }
+            }
+
+            std::cout << std::endl;
+        }
     }
 
 
-    // Initialize < psi_i | H | psi_j > matrix (lower triangular matrix)
+    // Build and initialise < psi_i | H | psi_j > (lower triangular matrix)
     int nbStates = static_cast<int>(states.size());
-
     std::vector<std::vector<double>> psi_i_H_psi_j(nbStates, std::vector<double>());
     for (int i = 0; i < nbStates; ++i)
     {
@@ -1465,9 +1487,16 @@ void Job::run_computeEnergyWithPointCharge()
 
     // Compute matrix elements < psi_i | H | psi_j >
     int i, j;
-    #ifdef ENABLE_OPENMP
-    #pragma omp parallel for private(i, j)
-    #endif
+    if (verbose >= 2)
+    {
+        std::cout << "Matrix elements < psi_i | H | psi_j >:" << std::endl;
+    }
+    else
+    {
+        #ifdef ENABLE_OPENMP
+        #pragma omp parallel for private(i, j)
+        #endif
+    }
     for (i = 0; i < nbStates; ++i)
     {
         // Get Slater Determinants for state i
@@ -1483,7 +1512,10 @@ void Job::run_computeEnergyWithPointCharge()
 
             // Compute < psi_i | H_0 | psi_j >
             matrixElement += (i == j) ? states[i].get_energy() : 0.0;
-            std::cout << "< psi_" << i << " | H_0 | psi_" << j << " > = " << std::setprecision(12) << matrixElement << std::endl;
+            if (verbose >= 2)
+            {
+                std::cout << "< " << i << " | H_0 | " << j << " > = " << std::setprecision(12) << matrixElement << std::endl;
+            }
 
             // Compute < psi_i | V_ion/nucleus | psi_j >
             double nuclearContribution = 0.0;
@@ -1502,7 +1534,10 @@ void Job::run_computeEnergyWithPointCharge()
                 }
             }
             matrixElement += nuclearContribution;
-            std::cout << "< psi_" << i << " | V_ion/nucleus | psi_" << j << " > = " << std::setprecision(12) << nuclearContribution << std::endl;
+            if (verbose >= 2)
+            {
+                std::cout << "< " << i << " | V_ion/nucleus | " << j << " > = " << std::setprecision(12) << nuclearContribution << std::endl;
+            }
 
             // Compute < psi_i | V_ion/electrons | psi_j >
             double chargeContribution = 0.0;
@@ -1515,21 +1550,28 @@ void Job::run_computeEnergyWithPointCharge()
                 }
             }
             matrixElement += chargeContribution;
-            std::cout << "< psi_" << i << " | V_ion/electrons | psi_" << j << " > = " << chargeContribution << std::endl << std::endl;
+            if (verbose >= 2)
+            {
+                std::cout << "< " << i << " | V_ion/electrons | " << j << " > = " << chargeContribution << std::endl;
+            }
 
             // Store < psi_i | H | psi_j > matrix element
             psi_i_H_psi_j[i][j] = matrixElement;
+
+            if (verbose >= 1)
+            {
+                std::cout << "< " << i << " | H | " << j << " > = " << std::setprecision(12) << matrixElement << std::endl;
+            }
+            if (verbose >= 2)
+            {
+                std::cout << std::endl;
+            }
         }
     }
 
-
-    // Print < psi_i | H | psi_j > matrix
-    for (i = 0; i < nbStates; ++i)
+    if (verbose >= 1)
     {
-        for (j = 0; j <= i; ++j)
-        {
-            std::cout << "< psi_" << i << " | H | psi_" << j << " > = " << psi_i_H_psi_j[i][j] << std::endl;
-        }
+        std::cout << std::endl;
     }
 
 
@@ -1538,32 +1580,38 @@ void Job::run_computeEnergyWithPointCharge()
     std::vector<std::vector<double>> eigenvectors;
     findEigenValuesAndEigenVectorsOfSymmetricalMatrix(psi_i_H_psi_j, eigenvalues, eigenvectors);
 
-    std::cout << std::endl << "Eigenvalues: ";
-    for (size_t k = 0; k < eigenvalues.size(); ++k)
+    if (verbose >= 3)
     {
-        std::cout << eigenvalues[k] << ' ';
-    }
-    std::cout << std::endl << std::endl;
-
-    std::cout << "Eigenvectors (columns): " << std::endl;
-    for (size_t i = 0; i < eigenvectors.size(); ++i)
-    {
-        for (size_t j = 0; j < eigenvectors[i].size(); ++j)
+        std::cout << std::scientific;
+        std::cout << std::endl << "Eigenvalues: ";
+        for (size_t k = 0; k < eigenvalues.size(); ++k)
         {
-            std::cout << std::setw(11) << eigenvectors[i][j] << '\t';
+            std::cout << std::setprecision(16) << eigenvalues[k] << ' ';
         }
+        std::cout << std::endl << std::endl;
 
-        std::cout << std::endl;
+        std::cout << "Eigenvectors (columns): " << std::endl;
+        for (size_t i = 0; i < eigenvectors.size(); ++i)
+        {
+            for (size_t j = 0; j < eigenvectors[i].size(); ++j)
+            {
+                std::cout << std::setw(22) << std::setprecision(16) << eigenvectors[i][j] << ' ';
+            }
+
+            std::cout << std::endl;
+        }
+        std::cout << std::defaultfloat;
     }
-
+    
 
     // Sort eigenvalues and eigenvectors
     sortEigenValuesAndEigenVectors(eigenvalues, eigenvectors);
-    
-    std::cout << std::endl << "Sorted Eigenvalues: ";
+
+    std::cout << std::scientific;
+    std::cout << "Sorted Eigenvalues: " << std::endl;
     for (size_t k = 0; k < eigenvalues.size(); ++k)
     {
-        std::cout << eigenvalues[k] << ' ';
+        std::cout << std::setprecision(16) << eigenvalues[k] << ' ';
     }
     std::cout << std::endl << std::endl;
 
@@ -1572,36 +1620,102 @@ void Job::run_computeEnergyWithPointCharge()
     {
         for (size_t j = 0; j < eigenvectors[i].size(); ++j)
         {
-            std::cout << std::setw(11) << eigenvectors[i][j] << '\t';
+            std::cout << std::setw(22) << std::setprecision(16) << eigenvectors[i][j] << ' ';
         }
 
         std::cout << std::endl;
     }
+    std::cout << std::defaultfloat;
 
+
+
+    if (verbose >= 3)
+    {
+        // Compute projections of perturbed states onto unperturbed basis
+        std::cout << std::endl << "Projection onto unperturbed basis:" << std::endl;
+
+        for (int i = 0; i < nbStates; ++i)
+        {
+            std::vector<std::pair<double, int>> contributions;
+
+            std::cout << "Perturbed state " << i << " (E = " << std::setprecision(10) << eigenvalues[i] << " H):" << std::endl;
+            std::cout << "  | " << i << "' > = ";
+            
+            bool firstTerm = true;
+            for (int k = 0; k < nbStates; ++k)
+            {
+                double c_k = eigenvectors[i][k];
+                double c_k_squared = c_k * c_k;
+
+                contributions.push_back({c_k_squared, k});
+
+                if (!firstTerm && c_k > 0)
+                {
+                    std::cout << " + ";
+                }
+                else if (c_k < 0)
+                {
+                    std::cout << " - ";
+                }
+
+                std::cout << std::setprecision(6) << std::abs(c_k) << " | " << k << " >";
+                firstTerm = false;
+            }
+            std::cout << std::endl;
+            
+            // Show dominant contributions
+            std::sort(contributions.begin(), contributions.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
+            std::cout << "  Main contributions:" << std::endl;
+            for (size_t ii = 0; ii < std::min(size_t(5), contributions.size()); ++ii)
+            {
+                if (contributions[ii].first > 1e-6)
+                {
+                    size_t k = contributions[ii].second;
+                    std::cout << "    State " << k << ": "
+                              << std::setprecision(6) << std::setw(10) << contributions[ii].first * 100 << " %"
+                              << "  (c_" << k << " = " << std::setprecision(8) << eigenvectors[i][k] << ")" << std::endl;
+                }
+            }
+            std::cout << std::endl;
+        }
+    }
+    
+
+
+
+    // Compute dS and E_polarisation for each state
+    std::vector<double> dS(nbStates, 0.0);
+    std::vector<double> E_polarisation_abs(nbStates, 0.0);
+
+    for (int i = 0; i < nbStates; ++i)
+    {
+        for (int k = 0; k < nbStates; ++k)
+        {
+            double c_k = eigenvectors[i][k];
+            double dp_k = c_k * c_k;
+
+            if (dp_k != 0)
+            {
+                dS[i] -= dp_k * std::log(dp_k);
+            }
+        }
+
+        dS[i] *= (Constants::KB * Constants::AVOGADRO_CONSTANT);
+        E_polarisation_abs[i] = std::abs(states[i].get_energy() - eigenvalues[i]) * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
+    }
+
+    // Print dS and E_polarisation results
+    std::cout << std::endl << "dS (J/mol/K) and |E_polarisation| (J/mol) for each state:" << std::endl;
+    std::cout << std::scientific;
+    for (int i = 0; i < nbStates; ++i)
+    {
+        std::cout << std::setw(22) << std::setprecision(16) << dS[i] << '\t' << std::setw(22) << std::setprecision(16) << E_polarisation_abs[i] << std::endl;
+    }
+    std::cout << std::defaultfloat << std::endl;
 
     
+
     /*
-    ////////////////////////////////////
-    // Debug - V_nuclear calculations //
-    ////////////////////////////////////
-    std::cout << std::endl << std::endl << std::endl;
-    std::cout << "==================================================================================================" << std::endl;
-    std::cout << "====================== DEBUG - Computation of < phi_0 | V_nuclear | phi_0 > ======================" << std::endl;
-    std::cout << "==================================================================================================" << std::endl << std::endl;
-
-    // Compute Nuclear Matrices for each atom
-    std::vector<std::vector<std::vector<std::vector<double>>>> nuclearMatrices(orbitals.get_numberOfAtoms());
-    int atomIndex = 0;
-    for (const Atom& atom : orbitals.get_struct().get_atoms())
-    {
-        std::cout << "Computing nuclear matrix for atom " << atom.get_name() << ": Z = " << atom.get_atomicNumber() << " ; position = (" << atom.get_coordinates()[0] << ", " << atom.get_coordinates()[1] << ", " << atom.get_coordinates()[2] << ")..." << std::endl;
-        
-        nuclearMatrices[atomIndex] = orbitals.getIonicPotentialMatrix(atom.get_coordinates(), atom.get_atomicNumber(), true);
-        ++atomIndex;
-    }
-    std::cout << std::endl;
-
-
     // COMPARAISON AVEC CALCUL SUR GRILLE
     std::cout << std::endl << std::endl << "====================== CALCUL SUR GRILLE ======================" << std::endl << std::endl;
 
@@ -1620,7 +1734,7 @@ void Job::run_computeEnergyWithPointCharge()
     Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, orbitalsNumbers.size());
     Grid orbitalsGrid = orbitals.makeOrbGrid(domain, orbitalsNumbers, orbitalsSpins);
 
-    sum_phi0_Vnuclear_phi0 = 0.0;
+    double sum_phi0_Vnuclear_phi0 = 0.0;
     double V_ij = 0.0;
     for (i = 0; i < orbitals.get_numberOfMo(); ++i)
     {
@@ -1662,52 +1776,27 @@ void Job::run_computeEnergyWithPointCharge()
     std::cout << "< psi_0 | V_nuclear | psi_0 > = " << sum_phi0_Vnuclear_phi0 << std::endl;
     */
 
-
+    
     /*
-    ///////////////////////////////////////////////
-    // Debug - Comparison with C diagonalization //
-    ///////////////////////////////////////////////
+    ////////////////////////////////////
+    // Debug - V_nuclear calculations //
+    ////////////////////////////////////
     std::cout << std::endl << std::endl << std::endl;
-    std::cout << "=======================================================================================" << std::endl;
-    std::cout << "====================== DEBUG - Comparison with C diagonalization ======================" << std::endl;
-    std::cout << "=======================================================================================" << std::endl << std::endl;
+    std::cout << "==================================================================================================" << std::endl;
+    std::cout << "====================== DEBUG - Computation of < phi_0 | V_nuclear | phi_0 > ======================" << std::endl;
+    std::cout << "==================================================================================================" << std::endl << std::endl;
 
-    int taille = (nbStates * (nbStates + 1)) / 2;
-    double* psi_i_H_psi_j_pointer = new double[taille];
-    int indice = 0;
-    for (size_t i = 0; i < psi_i_H_psi_j.size(); ++i)
+    // Compute Nuclear Matrices for each atom
+    std::vector<std::vector<std::vector<std::vector<double>>>> nuclearMatrices(orbitals.get_numberOfAtoms());
+    int atomIndex = 0;
+    for (const Atom& atom : orbitals.get_struct().get_atoms())
     {
-        for (size_t j = 0; j < psi_i_H_psi_j[i].size(); ++j)
-        {
-            psi_i_H_psi_j_pointer[indice] = psi_i_H_psi_j[i][j];
-            ++indice;
-        }
+        std::cout << "Computing nuclear matrix for atom " << atom.get_name() << ": Z = " << atom.get_atomicNumber() << " ; position = (" << atom.get_coordinates()[0] << ", " << atom.get_coordinates()[1] << ", " << atom.get_coordinates()[2] << ")..." << std::endl;
+        
+        nuclearMatrices[atomIndex] = orbitals.getIonicPotentialMatrix(atom.get_coordinates(), atom.get_atomicNumber(), true);
+        ++atomIndex;
     }
-
-    double* eigenvalues_pointer = new double[nbStates];
-    double** eigenvectors_pointer = new double*[nbStates];
-    for (int i = 0; i < nbStates; ++i)
-    {
-        eigenvectors_pointer[i] = new double[nbStates];
-    }
-
-    eigenQL(nbStates, psi_i_H_psi_j_pointer, eigenvalues_pointer, eigenvectors_pointer);
-    std::cout << "Eigenvalues: ";
-    for (int k = 0; k < nbStates; ++k)
-    {
-        std::cout << eigenvalues_pointer[k] << ' ';
-    }
-    std::cout << std::endl << std::endl;
-
-    std::cout << "Eigenvectors:" << std::endl;
-    for (int i = 0; i < nbStates; ++i)
-    {
-        for (int j = 0; j < nbStates; ++j)
-        {
-            std::cout << std::setw(11) << eigenvectors_pointer[i][j] << '\t';
-        }
-        std::cout << std::endl;
-    }
+    std::cout << std::endl;
     */
 }
 

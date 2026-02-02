@@ -77,6 +77,15 @@ class SlaterDeterminant
         static std::vector<std::vector<std::pair<int, int>>> getDifferences(const SlaterDeterminant& di, const SlaterDeterminant& dj);
 
         /**
+         * @brief Computes the overlap between two Slater determinants.
+         *
+         * @param[in] di First Slater determinant.
+         * @param[in] dj Second Slater determinant.
+         * @return The overlap < D_i | D_j > between the two Slater determinants.
+         */
+        static double overlap(const SlaterDeterminant& di, const SlaterDeterminant& dj);
+
+        /**
          * @brief Computes the ionic potential matrix element between two Slater determinants.
          *
          * @param[in] di First Slater determinant.

@@ -23,6 +23,9 @@ class ExcitedState
 
         /** @brief Energy of the excited state. */
         double _energy;
+
+        /** @brief Indicates if the state is the ground state. */
+        bool _isGroundState;
         
         /** @brief Electronic transitions associated with the excited state. */
         std::vector<std::tuple<OrbitalState, OrbitalState, double>> _electronicTransitions;
@@ -59,6 +62,11 @@ class ExcitedState
          * @brief Returns the excited state's energy, in Hartree.
          */
         double get_energy() const;
+
+        /**
+         * @brief Returns whether the state is the ground state.
+         */
+        bool isGroundState() const;
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
