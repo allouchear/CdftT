@@ -1487,7 +1487,7 @@ void Job::run_computeEnergyWithPointCharge()
 
     // Compute matrix elements < psi_i | H | psi_j >
     int i, j;
-    if (verbose >= 2)
+    if (verbose >= 1)
     {
         std::cout << "Matrix elements < psi_i | H | psi_j >:" << std::endl;
     }
@@ -1567,11 +1567,15 @@ void Job::run_computeEnergyWithPointCharge()
                 std::cout << std::endl;
             }
         }
-    }
 
-    if (verbose >= 1)
-    {
-        std::cout << std::endl;
+        if (verbose >= 2 && i < nbStates - 1)
+        {
+            std::cout << std::endl;
+        }
+        else if (verbose == 1)
+        {
+            std::cout << std::endl;
+        }
     }
 
 
@@ -1583,7 +1587,7 @@ void Job::run_computeEnergyWithPointCharge()
     if (verbose >= 3)
     {
         std::cout << std::scientific;
-        std::cout << std::endl << "Eigenvalues: ";
+        std::cout << "Eigenvalues: ";
         for (size_t k = 0; k < eigenvalues.size(); ++k)
         {
             std::cout << std::setprecision(16) << eigenvalues[k] << ' ';
@@ -1600,7 +1604,7 @@ void Job::run_computeEnergyWithPointCharge()
 
             std::cout << std::endl;
         }
-        std::cout << std::defaultfloat;
+        std::cout << std::defaultfloat << std::endl;
     }
     
 
@@ -1625,14 +1629,14 @@ void Job::run_computeEnergyWithPointCharge()
 
         std::cout << std::endl;
     }
-    std::cout << std::defaultfloat;
+    std::cout << std::defaultfloat << std::endl;
 
 
 
     if (verbose >= 3)
     {
         // Compute projections of perturbed states onto unperturbed basis
-        std::cout << std::endl << "Projection onto unperturbed basis:" << std::endl;
+        std::cout << "Projection onto unperturbed basis:" << std::endl;
 
         for (int i = 0; i < nbStates; ++i)
         {
@@ -1644,7 +1648,7 @@ void Job::run_computeEnergyWithPointCharge()
             bool firstTerm = true;
             for (int k = 0; k < nbStates; ++k)
             {
-                double c_k = eigenvectors[i][k];
+                double c_k = eigenvectors[k][i];
                 double c_k_squared = c_k * c_k;
 
                 contributions.push_back({c_k_squared, k});
@@ -1673,7 +1677,7 @@ void Job::run_computeEnergyWithPointCharge()
                     size_t k = contributions[ii].second;
                     std::cout << "    State " << k << ": "
                               << std::setprecision(6) << std::setw(10) << contributions[ii].first * 100 << " %"
-                              << "  (c_" << k << " = " << std::setprecision(8) << eigenvectors[i][k] << ")" << std::endl;
+                              << "  (c_" << k << " = " << std::setprecision(8) << eigenvectors[k][i] << ")" << std::endl;
                 }
             }
             std::cout << std::endl;
@@ -1691,7 +1695,7 @@ void Job::run_computeEnergyWithPointCharge()
     {
         for (int k = 0; k < nbStates; ++k)
         {
-            double c_k = eigenvectors[i][k];
+            double c_k = eigenvectors[k][i];
             double dp_k = c_k * c_k;
 
             if (dp_k != 0)
@@ -1705,7 +1709,7 @@ void Job::run_computeEnergyWithPointCharge()
     }
 
     // Print dS and E_polarisation results
-    std::cout << std::endl << "dS (J/mol/K) and |E_polarisation| (J/mol) for each state:" << std::endl;
+    std::cout << "dS (J/mol/K) and |E_polarisation| (J/mol) for each state:" << std::endl;
     std::cout << std::scientific;
     for (int i = 0; i < nbStates; ++i)
     {
