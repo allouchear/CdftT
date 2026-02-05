@@ -19,3 +19,10 @@ Documentation/
 *.exe
 # p
 p
+
+# ignore ALL .mk files
+**/*.mk
+
+# ignore all executable files and library files
+**/*.so
+src/applications/cdftt/cdftt

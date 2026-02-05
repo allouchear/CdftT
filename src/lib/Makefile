@@ -45,3 +45,4 @@ clean:
 	@$(RM) *.out
 	@$(RM) *.txt
 	@$(RM) *.mk
+	@$(RM) $(LIBCDFTTDIR)/lib/libcdftt.so
