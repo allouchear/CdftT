@@ -3,7 +3,7 @@ RM = rm -f
 MAKE = make
 WIN32LIB   = 
 
-LIBCDFTTDIR =/usr/home/lgardre-local/Work/CdftT
+# LIBCDFTTDIR =/usr/home/lgardre-local/Work/CdftT
 
 #CC = g++ -pg
 #CC = g++ -O -fPIC -I $(LIBCDFTTDIR)/src/lib 

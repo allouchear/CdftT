@@ -44,3 +44,4 @@ clean:
 	@$(RM) *.log
 	@$(RM) *.out
 	@$(RM) *.txt
+	@$(RM) *.mk

@@ -13,7 +13,7 @@ all: compiling
 compiling: $(OBJECTS)
 
 clean:
-	@$(RM) *o *.out *.log *.inp *~ 
+	@$(RM) *o *.out *.log *.inp *~ *.mk
 
 #make dependance
 SRCS = $(OBJECTS:%.o=%.cpp)

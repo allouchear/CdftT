@@ -1,4 +1,4 @@
-LIBCDFTTDIR =/usr/home/lgardre-local/Work/CdftT
+#LIBCDFTTDIR =/usr/home/lgardre-local/Work/CdftT
 
 include $(LIBCDFTTDIR)/CONFIG
 
@@ -31,7 +31,7 @@ all: compiling  cdftt
 compiling: $(OBJECTS)
 
 clean:
-	@$(RM) *o *.out *.inp *~ cdftt
+	@$(RM) *o *.out *.inp *~ cdftt *.mk
 
 #make dependance
 SRCS = $(OBJECTS:%.o=%.cpp)
