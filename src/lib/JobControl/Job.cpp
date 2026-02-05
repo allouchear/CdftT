@@ -66,14 +66,14 @@ void Job::readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames)
     }
 }
 
-void Job::readCharge(double& charge)
+void Job::readCharges(std::vector<double>& charges)
 {
-    if (!readOneType<double>(_inputFile, "Charge", charge))
+    if (!readListType<double>(_inputFile, "Charges", charges))
     {
-        std::cout << "Warning: the \"Charge\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (Charge=1)." << std::endl << std::endl;
+        std::cout << "Warning: the \"Charges\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (Charges=1)." << std::endl << std::endl;
 
-        charge = 1.0;
+        charges = { 1.0 };
     }
 }
 
@@ -286,32 +286,29 @@ void Job::readPartitionMethod(PartitionMethod& partitionMethod)
     }
 }
 
-void Job::readPosition(std::array<double, 3>& position)
+void Job::readPositions(std::vector<std::array<double, 3>>& positions)
 {
     std::vector<double> positionValues;
-    if (!readListType<double>(_inputFile, "Position", positionValues))
+    readListType<double>(_inputFile, "Positions", positionValues);
+
+    if (!positionValues.empty())
     {
-        std::stringstream errorMessage;
-        errorMessage << "Error: could not find point charge position." << std::endl;
-        errorMessage << "Please check if the \"Position\" parameter is defined and set in the provided input file (" << _inputFileName << ").";
+        if (positionValues.size() % 3 != 0)
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error: incorrect number of values for the \"Positions\" parameter (multiple of three values expected)." << std::endl;
+            errorMessage << "Please check documentation and the \"Positions\" parameter values in " << _inputFileName << '.';
 
-        print_error(errorMessage.str());
+            print_error(errorMessage.str());
 
-        std::exit(1);
+            std::exit(1);
+        }
+
+        for (size_t i = 0; i < positionValues.size(); i += 3)
+        {
+            positions.push_back({positionValues[i] * Constants::ANGSTROM_TO_BOHR_RADIUS, positionValues[i + 1] * Constants::ANGSTROM_TO_BOHR_RADIUS, positionValues[i + 2] * Constants::ANGSTROM_TO_BOHR_RADIUS});
+        }
     }
-
-    if (positionValues.size() != 3)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of values for the \"Position\" parameter (three values expected)." << std::endl;
-        errorMessage << "Please check documentation and the \"Position\" parameter values in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-    position = { positionValues[0], positionValues[1], positionValues[2] };
 }
 
 void Job::readRunType(RunType& runType)
@@ -1188,9 +1185,9 @@ void Job::run()
             run_computeDescriptors();
             break;
         }
-        case RunType::COMPUTE_ENERGY_WITH_POINT_CHARGE:
+        case RunType::COMPUTE_ENERGY_WITH_POINT_CHARGES:
         {
-            run_computeEnergyWithPointCharge();
+            run_computeEnergyWithPointCharges();
             break;
         }
         case RunType::COMPUTE_GRID_DIFFERENCE:
@@ -1367,7 +1364,7 @@ void Job::run_computeDescriptors()
     }
 }
 
-void Job::run_computeEnergyWithPointCharge()
+void Job::run_computeEnergyWithPointCharges()
 {
     // Read verbose level
     int verbose;
@@ -1392,15 +1389,83 @@ void Job::run_computeEnergyWithPointCharge()
     }
 
 
-    // Read point charge position
-    std::array<double, 3> chargePosition;
-    readPosition(chargePosition);
+    // Loading orbitals
+    Orbitals orbitals;
+    computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
+    std::cout << std::endl;
 
 
-    // Read point charge value
-    double charge;
-    readCharge(charge);
-    std::cout << "Point charge: " << charge << " e at position (" << chargePosition[0] << ", " << chargePosition[1] << ", " << chargePosition[2] << ")." << std::endl << std::endl;
+    // Keep a const reference on orbitals' atoms
+    const std::vector<Atom>& atoms = orbitals.get_struct().get_atoms();
+
+
+    // Read point charges
+    std::vector<double> charges;
+    readCharges(charges);
+    int nbCharges = static_cast<int>(charges.size());
+
+
+    // Read point charges positions
+    bool loopOnAtoms = false;
+    std::vector<std::array<double, 3>> chargesPositions;
+    readPositions(chargesPositions);
+
+    if (chargesPositions.empty())
+    {
+        if (nbCharges > 1)
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error: could not find point charges positions." << std::endl;
+            errorMessage << "Please check if the \"Positions\" parameter is defined and set in the provided input file (" << _inputFileName << ").";
+
+            print_error(errorMessage.str());
+
+            std::exit(1);
+        }
+        else
+        {
+            std::cout << "Note: the \"Positions\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+            std::cout << "The program will place the point charge on each atom successively." << std::endl << std::endl;
+
+            loopOnAtoms = true;
+            for (const Atom& atom : atoms)
+            {
+                chargesPositions.push_back(atom.get_coordinates());
+            }
+        }
+    }
+
+
+    // Check number of charges positions
+    if (!loopOnAtoms && chargesPositions.size() != charges.size())
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect number of point charges positions." << std::endl;
+        errorMessage << "Please check the documentation and the positions specified in the \"ChargesPositions\" parameter in " << _inputFileName << '.';
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+
+    // Print charges information
+    std::cout << "Number of point charges: " << nbCharges << std::endl;
+    if (!loopOnAtoms)
+    {
+        for (int i = 0; i < nbCharges; ++i)
+        {
+            std::cout << "Point charge #" << i + 1 << ": " << charges[i] << " e at position (" << chargesPositions[i][0] << ", " << chargesPositions[i][1] << ", " << chargesPositions[i][2] << ")." << std::endl;
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < chargesPositions.size(); ++i)
+        {
+            std::cout << "Loop #" << i + 1 << ": point charge of " << charges[0] << " e on " << atoms[i].get_name() << " at position (" << chargesPositions[i][0] << ", " << chargesPositions[i][1] << ", " << chargesPositions[i][2] << ")." << std::endl;
+        }
+    }
+    std::cout << std::endl;
 
 
     // Read cutoff distance for nuclear contribution
@@ -1412,11 +1477,6 @@ void Job::run_computeEnergyWithPointCharge()
     std::string transitionsFileName;
     readTransitionsFileName(transitionsFileName);
 
-
-    // Loading orbitals
-    Orbitals orbitals;
-    computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
-    std::cout << std::endl;
 
     if (verbose >= 3)
     {
@@ -1472,251 +1532,376 @@ void Job::run_computeEnergyWithPointCharge()
     }
 
 
-    // Build and initialise < psi_i | H | psi_j > (lower triangular matrix)
-    int nbStates = static_cast<int>(states.size());
-    std::vector<std::vector<double>> psi_i_H_psi_j(nbStates, std::vector<double>());
-    for (int i = 0; i < nbStates; ++i)
+    // Compute ionic matrixes only once.
+    // We build a 5D vector of size [nbLoops][nbCharges][spin][nbStates][0..nbStates] to store the ionic matrixes.
+    // The first dimension corresponds to the number of loops (in case the program has to loop on atoms positions).
+    // The second dimension corresponds to the number of point charges.
+    // The third dimension corresponds to the spin (0 for alpha, 1 for beta).
+    // the fourth and fifth dimensions correspond to the indices of the matrix elements (i and j) with j <= i (lower triangular matrix).
+    std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>> ionicMatrixes;
+    
+    if (loopOnAtoms)
     {
-        psi_i_H_psi_j[i].resize(i + 1, 0.0);
-    }
+        ionicMatrixes.resize(orbitals.get_struct().get_atoms().size(), std::vector<std::vector<std::vector<std::vector<double>>>>(1));
 
-
-    // Compute ionic matrix only once
-    std::vector<std::vector<std::vector<double>>> ionicMatrix = orbitals.getIonicPotentialMatrix(chargePosition, charge);
-
-
-    // Compute matrix elements < psi_i | H | psi_j >
-    int i, j;
-    if (verbose >= 1)
-    {
-        std::cout << "Matrix elements < psi_i | H | psi_j >:" << std::endl;
+        int i = 0;
+        for (const Atom& atom : atoms)
+        {
+            ionicMatrixes[i][0] = orbitals.getIonicPotentialMatrix(atom.get_coordinates(), charges[0]);
+            ++i;
+        }
     }
     else
     {
-        #ifdef ENABLE_OPENMP
-        #pragma omp parallel for private(i, j)
-        #endif
-    }
-    for (i = 0; i < nbStates; ++i)
-    {
-        // Get Slater Determinants for state i
-        std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_i(states[i].getSlaterDeterminantsAndCoefficients());
+        ionicMatrixes.resize(1, std::vector<std::vector<std::vector<std::vector<double>>>>(nbCharges));
 
-        for (j = 0; j <= i; ++j)
+        for (int i = 0; i < nbCharges; ++i)
         {
-            // Initialize < psi_i | H | psi_j > matrix element
-            double matrixElement = 0.0;
+            ionicMatrixes[0][i] = orbitals.getIonicPotentialMatrix(chargesPositions[i], charges[i]);
+        }
+    }
 
-            // Get Slater Determinants for state j
-            std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].getSlaterDeterminantsAndCoefficients());
 
-            // Compute < psi_i | H_0 | psi_j >
-            matrixElement += (i == j) ? states[i].get_energy() : 0.0;
-            if (verbose >= 2)
+    // Compute ions-nuclei interactions only once
+    std::vector<double> chargeNucleiContributions = std::vector<double>(nbCharges, 0.0);
+    double nuclearContribution = 0.0;
+    for (int i = 0; i < nbCharges; ++i)
+    {
+        for (const Atom& atom : atoms)
+        {
+            double distance = std::sqrt((atom.get_coordinates()[0] - chargesPositions[i][0]) * (atom.get_coordinates()[0] - chargesPositions[i][0])
+                                        + (atom.get_coordinates()[1] - chargesPositions[i][1]) * (atom.get_coordinates()[1] - chargesPositions[i][1])
+                                        + (atom.get_coordinates()[2] - chargesPositions[i][2]) * (atom.get_coordinates()[2] - chargesPositions[i][2]));
+
+            if (distance > nuclearCutoff)
             {
-                std::cout << "< " << i << " | H_0 | " << j << " > = " << std::setprecision(12) << matrixElement << std::endl;
+                chargeNucleiContributions[i] += charges[i] * atom.get_atomicNumber() / distance;
             }
+        }
 
-            // Compute < psi_i | V_ion/nucleus | psi_j >
-            double nuclearContribution = 0.0;
-            if (i == j)
+        nuclearContribution += chargeNucleiContributions[i];
+    }
+
+
+    // Loop on atoms if needed
+    for (size_t loopIndex = 0; loopIndex < ionicMatrixes.size(); ++loopIndex)
+    {
+        if (loopOnAtoms)
+        {
+            std::cout << "====================== LOOP #" << loopIndex + 1
+                      << ": charge on " << atoms[loopIndex].get_name()
+                      << " at position (" << chargesPositions[loopIndex][0] << ", " << chargesPositions[loopIndex][1] << ", " << chargesPositions[loopIndex][2]
+                      << ") ======================"
+                      << std::endl << std::endl;
+        }
+
+
+        // Build and initialise two lower triangular matrixes:
+        //     (*) < psi_i | H | psi_j > for the variational approach,
+        //     (*) < psi_i | H - H_0 | psi_j > for the perturbative approach.
+        int nbStates = static_cast<int>(states.size());
+
+        std::vector<std::vector<double>> psi_i_H_psi_j(nbStates, std::vector<double>());
+        std::vector<std::vector<double>> psi_i_HminusH0_psi_j(nbStates, std::vector<double>());
+        
+        for (int i = 0; i < nbStates; ++i)
+        {
+            psi_i_H_psi_j[i].resize(i + 1, 0.0);
+            psi_i_HminusH0_psi_j[i].resize(i + 1, 0.0);
+        }
+
+        // Compute matrix elements < psi_i | H | psi_j > and < psi_i | H - H_0 | psi_j >
+        int i, j;
+        if (verbose >= 1)
+        {
+            std::cout << "Matrix elements < psi_i | H | psi_j > and < psi_i | H - H_0 | psi_j >:" << std::endl;
+        }
+        else
+        {
+            #ifdef ENABLE_OPENMP
+            #pragma omp parallel for private(i, j)
+            #endif
+        }
+        for (i = 0; i < nbStates; ++i)
+        {
+            // Get Slater Determinants for state i
+            std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_i(states[i].getSlaterDeterminantsAndCoefficients());
+
+            for (j = 0; j <= i; ++j)
             {
-                for (const Atom& atom : orbitals.get_struct().get_atoms())
-                {
-                    double distance = std::sqrt((atom.get_coordinates()[0] - chargePosition[0]) * (atom.get_coordinates()[0] - chargePosition[0])
-                                                + (atom.get_coordinates()[1] - chargePosition[1]) * (atom.get_coordinates()[1] - chargePosition[1])
-                                                + (atom.get_coordinates()[2] - chargePosition[2]) * (atom.get_coordinates()[2] - chargePosition[2]));
+                // Initialize < psi_i | H | psi_j > matrix element
+                double matrixElement = 0.0;
 
-                    if (distance > nuclearCutoff)
+                // Get Slater Determinants for state j
+                std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].getSlaterDeterminantsAndCoefficients());
+
+                // Compute < psi_i | H_0 | psi_j >
+                double h0Contribution = (i == j ? states[i].get_energy() : 0.0);
+                matrixElement += h0Contribution;
+                if (verbose >= 2)
+                {
+                    std::cout << "< " << i << " | H_0 | " << j << " > = " << std::setprecision(12) << h0Contribution << std::endl;
+                }
+
+                // Compute < psi_i | V_ions/nuclei | psi_j >
+                matrixElement += (i == j ? nuclearContribution : 0.0);
+                if (verbose >= 3)
+                {
+                    for (int chargeIndex = 0; chargeIndex < nbCharges; ++chargeIndex)
                     {
-                        nuclearContribution += charge * atom.get_atomicNumber() / distance;
+                        std::cout << "< " << i << " | V" << chargeIndex + 1 << "_nuclei | " << j << " > = " << std::setprecision(12) << chargeNucleiContributions[chargeIndex] << std::endl;
                     }
                 }
-            }
-            matrixElement += nuclearContribution;
-            if (verbose >= 2)
-            {
-                std::cout << "< " << i << " | V_ion/nucleus | " << j << " > = " << std::setprecision(12) << nuclearContribution << std::endl;
-            }
-
-            // Compute < psi_i | V_ion/electrons | psi_j >
-            double chargeContribution = 0.0;
-            for (const std::pair<SlaterDeterminant, double>& slaterCoeff_i : slaterDeterminants_i)
-            {
-                for (const std::pair<SlaterDeterminant, double>& slaterCoeff_j : slaterDeterminants_j)
+                if (verbose >= 2)
                 {
-                    // Compute < D_i | V_ion/electrons | D_j > contribution in < psi_i | V_ion/electrons | psi_j >
-                    chargeContribution += SlaterDeterminant::ionicPotential(slaterCoeff_i.first, slaterCoeff_j.first, ionicMatrix) * (slaterCoeff_i.second * slaterCoeff_j.second);
+                    std::cout << "< " << i << " | V_ions/nuclei | " << j << " > = " << std::setprecision(12) << nuclearContribution << std::endl;
+                }
+
+                // Compute < psi_i | V_ion/electrons | psi_j >
+                double chargeContribution = 0.0;
+                for (int chargeIndex = 0; chargeIndex < nbCharges; ++chargeIndex)
+                {
+                    double currentChargeContribution = 0.0;
+
+                    for (const std::pair<SlaterDeterminant, double>& slaterCoeff_i : slaterDeterminants_i)
+                    {
+                        for (const std::pair<SlaterDeterminant, double>& slaterCoeff_j : slaterDeterminants_j)
+                        {
+                            // Compute < D_i | V_ion/electrons | D_j > contribution in < psi_i | V_ion/electrons | psi_j >
+                            currentChargeContribution += SlaterDeterminant::ionicPotential(slaterCoeff_i.first, slaterCoeff_j.first, ionicMatrixes[loopIndex][chargeIndex]) * (slaterCoeff_i.second * slaterCoeff_j.second);
+                        }
+                    }
+
+                    chargeContribution += currentChargeContribution;
+                    if (verbose >= 3)
+                    {
+                        std::cout << "< " << i << " | V" << chargeIndex + 1 << "_electrons | " << j << " > = " << std::setprecision(12) << currentChargeContribution << std::endl;
+                    }
+                }
+                matrixElement += chargeContribution;
+                if (verbose >= 2)
+                {
+                    std::cout << "< " << i << " | V_ions/electrons | " << j << " > = " << chargeContribution << std::endl;
+                }
+
+                // Store < psi_i | H | psi_j > matrix element
+                psi_i_H_psi_j[i][j] = matrixElement;
+                psi_i_HminusH0_psi_j[i][j] = psi_i_H_psi_j[i][j] - h0Contribution;
+
+                if (verbose >= 1)
+                {
+                    std::cout << "< " << i << " | H | " << j << " > = " << std::setprecision(12) << matrixElement << std::endl;
+                }
+                if (verbose >= 2 && j != i)
+                {
+                    std::cout << std::endl;
                 }
             }
-            matrixElement += chargeContribution;
-            if (verbose >= 2)
-            {
-                std::cout << "< " << i << " | V_ion/electrons | " << j << " > = " << chargeContribution << std::endl;
-            }
-
-            // Store < psi_i | H | psi_j > matrix element
-            psi_i_H_psi_j[i][j] = matrixElement;
 
             if (verbose >= 1)
-            {
-                std::cout << "< " << i << " | H | " << j << " > = " << std::setprecision(12) << matrixElement << std::endl;
-            }
-            if (verbose >= 2)
             {
                 std::cout << std::endl;
             }
         }
 
-        if (verbose >= 2 && i < nbStates - 1)
+
+        // Diagonalize < psi_i | H | psi_j > matrix
+        std::vector<double> eigenvalues;
+        std::vector<std::vector<double>> eigenvectors;
+        findEigenValuesAndEigenVectorsOfSymmetricalMatrix(psi_i_H_psi_j, eigenvalues, eigenvectors);
+
+        if (verbose >= 3)
         {
-            std::cout << std::endl;
+            std::cout << std::scientific;
+            std::cout << std::setprecision(10);
+            std::cout << "Eigenvalues:" << std::endl;
+            for (size_t k = 0; k < eigenvalues.size(); ++k)
+            {
+                std::cout << eigenvalues[k] << ' ';
+            }
+            std::cout << std::endl << std::endl;
+
+            std::cout << "Eigenvectors (columns): " << std::endl;
+            for (size_t i = 0; i < eigenvectors.size(); ++i)
+            {
+                for (size_t j = 0; j < eigenvectors[i].size(); ++j)
+                {
+                    std::cout << std::right << std::setw(17) << eigenvectors[i][j] << '\t';
+                }
+
+                std::cout << std::endl;
+            }
+            std::cout << std::defaultfloat << std::endl;
         }
-        else if (verbose == 1)
-        {
-            std::cout << std::endl;
-        }
-    }
+        
 
+        // Sort eigenvalues and eigenvectors
+        sortEigenValuesAndEigenVectors(eigenvalues, eigenvectors);
 
-    // Diagonalize < psi_i | H | psi_j > matrix
-    std::vector<double> eigenvalues;
-    std::vector<std::vector<double>> eigenvectors;
-    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(psi_i_H_psi_j, eigenvalues, eigenvectors);
-
-    if (verbose >= 3)
-    {
         std::cout << std::scientific;
-        std::cout << "Eigenvalues: ";
+        std::cout << std::setprecision(10);
+        std::cout << "Sorted Eigenvalues:" << std::endl;
         for (size_t k = 0; k < eigenvalues.size(); ++k)
         {
-            std::cout << std::setprecision(16) << eigenvalues[k] << ' ';
+            std::cout << eigenvalues[k] << ' ';
         }
         std::cout << std::endl << std::endl;
 
-        std::cout << "Eigenvectors (columns): " << std::endl;
+        std::cout << "Sorted Eigenvectors (columns): " << std::endl;
         for (size_t i = 0; i < eigenvectors.size(); ++i)
         {
             for (size_t j = 0; j < eigenvectors[i].size(); ++j)
             {
-                std::cout << std::setw(22) << std::setprecision(16) << eigenvectors[i][j] << ' ';
+                std::cout << std::right << std::setw(17) << eigenvectors[i][j] << '\t';
             }
 
             std::cout << std::endl;
         }
         std::cout << std::defaultfloat << std::endl;
+
+
+        if (verbose >= 3)
+        {
+            // Compute projections of perturbed states onto unperturbed basis
+            std::cout << "Projection onto unperturbed basis:" << std::endl;
+
+            for (int i = 0; i < nbStates; ++i)
+            {
+                std::vector<std::pair<double, int>> contributions;
+
+                std::cout << "Perturbed state " << i << " (E = " << std::setprecision(10) << eigenvalues[i] << " H):" << std::endl;
+                std::cout << "  | " << i << "' > = ";
+                
+                bool firstTerm = true;
+                for (int k = 0; k < nbStates; ++k)
+                {
+                    double c_k = eigenvectors[k][i];
+                    double c_k_squared = c_k * c_k;
+
+                    contributions.push_back({c_k_squared, k});
+
+                    if (!firstTerm && c_k > 0)
+                    {
+                        std::cout << " + ";
+                    }
+                    else if (c_k < 0)
+                    {
+                        std::cout << " - ";
+                    }
+
+                    std::cout << std::setprecision(6) << std::abs(c_k) << " | " << k << " >";
+                    firstTerm = false;
+                }
+                std::cout << std::endl;
+                
+                // Show dominant contributions
+                std::sort(contributions.begin(), contributions.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
+                std::cout << "  Main contributions:" << std::endl;
+                for (size_t ii = 0; ii < std::min(size_t(5), contributions.size()); ++ii)
+                {
+                    if (contributions[ii].first > 1e-6)
+                    {
+                        size_t k = contributions[ii].second;
+                        std::cout << "    State " << k << ": "
+                                << std::setprecision(6) << std::setw(10) << contributions[ii].first * 100 << " %"
+                                << "  (c_" << k << " = " << std::setprecision(8) << eigenvectors[k][i] << ")" << std::endl;
+                    }
+                }
+                std::cout << std::endl;
+            }
+        }
+
+
+        std::cout << std::endl << std::endl << "------ Perturbative approach ------" << std::endl << std::endl;
+
+        // Compute dpk
+        std::cout << "dp_k values using Eq. (27):" << std::endl;
+        std::cout << std::scientific;
+        std::cout << std::setprecision(10);
+        std::vector<double> dpk_perturb(nbStates, 0.0);
+        for (int i = 1; i < nbStates; ++i)
+        {
+            dpk_perturb[i] = psi_i_HminusH0_psi_j[i][0] / (states[0].get_energy() - states[i].get_energy());
+            dpk_perturb[i] *= dpk_perturb[i];
+            std::cout << dpk_perturb[i] << ' ';
+        }
+        std::cout << std::defaultfloat << std::endl << std::endl;
+
+        // Compute dS
+        double dS_perturb = 0.0;
+        for (int i = 1; i < nbStates; ++i)
+        {
+            dS_perturb -= dpk_perturb[i] * std::log(dpk_perturb[i]);
+        }
+        dS_perturb *= (Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT);
+
+        std::cout << "dS = " << std::scientific << std::setprecision(10) << dS_perturb << " J/mol/K using Eq. (32)" << std::defaultfloat << std::endl;
+
+        // Compute E_polarisation
+        double E_polarisation_perturb = 0.0;
+        for (int i = 1; i < nbStates; ++i)
+        {
+            E_polarisation_perturb -= dpk_perturb[i] * (states[i].get_energy() - states[0].get_energy());
+        }
+        E_polarisation_perturb *= (Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT);
+
+        std::cout << "E_polarisation = " << std::scientific << std::setprecision(10) << E_polarisation_perturb << " J/mol using Eq. (26)" << std::defaultfloat << std::endl << std::endl;
+
+
+
+
+        std::cout << std::endl << std::endl << "------ Variational approach ------" << std::endl << std::endl;
+
+        // Compute dpk
+        std::cout << "dp_k values using eigenvectors:" << std::endl;
+        std::cout << std::scientific;
+        std::cout << std::setprecision(10);
+        std::vector<double> dpk(nbStates, 0.0);
+        for (int i = 1; i < nbStates; ++i)
+        {
+            dpk[i] = eigenvectors[i][0];
+            dpk[i] *= dpk[i];
+            std::cout << dpk[i] << ' ';
+        }
+        std::cout << std::defaultfloat << std::endl << std::endl;
     }
+
     
 
-    // Sort eigenvalues and eigenvectors
-    sortEigenValuesAndEigenVectors(eigenvalues, eigenvectors);
-
-    std::cout << std::scientific;
-    std::cout << "Sorted Eigenvalues: " << std::endl;
-    for (size_t k = 0; k < eigenvalues.size(); ++k)
-    {
-        std::cout << std::setprecision(16) << eigenvalues[k] << ' ';
-    }
-    std::cout << std::endl << std::endl;
-
-    std::cout << "Sorted Eigenvectors (columns): " << std::endl;
-    for (size_t i = 0; i < eigenvectors.size(); ++i)
-    {
-        for (size_t j = 0; j < eigenvectors[i].size(); ++j)
-        {
-            std::cout << std::setw(22) << std::setprecision(16) << eigenvectors[i][j] << ' ';
-        }
-
-        std::cout << std::endl;
-    }
-    std::cout << std::defaultfloat << std::endl;
 
 
 
-    if (verbose >= 3)
-    {
-        // Compute projections of perturbed states onto unperturbed basis
-        std::cout << "Projection onto unperturbed basis:" << std::endl;
 
-        for (int i = 0; i < nbStates; ++i)
-        {
-            std::vector<std::pair<double, int>> contributions;
 
-            std::cout << "Perturbed state " << i << " (E = " << std::setprecision(10) << eigenvalues[i] << " H):" << std::endl;
-            std::cout << "  | " << i << "' > = ";
-            
-            bool firstTerm = true;
-            for (int k = 0; k < nbStates; ++k)
-            {
-                double c_k = eigenvectors[k][i];
-                double c_k_squared = c_k * c_k;
 
-                contributions.push_back({c_k_squared, k});
 
-                if (!firstTerm && c_k > 0)
-                {
-                    std::cout << " + ";
-                }
-                else if (c_k < 0)
-                {
-                    std::cout << " - ";
-                }
+    
 
-                std::cout << std::setprecision(6) << std::abs(c_k) << " | " << k << " >";
-                firstTerm = false;
-            }
-            std::cout << std::endl;
-            
-            // Show dominant contributions
-            std::sort(contributions.begin(), contributions.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
-            std::cout << "  Main contributions:" << std::endl;
-            for (size_t ii = 0; ii < std::min(size_t(5), contributions.size()); ++ii)
-            {
-                if (contributions[ii].first > 1e-6)
-                {
-                    size_t k = contributions[ii].second;
-                    std::cout << "    State " << k << ": "
-                              << std::setprecision(6) << std::setw(10) << contributions[ii].first * 100 << " %"
-                              << "  (c_" << k << " = " << std::setprecision(8) << eigenvectors[k][i] << ")" << std::endl;
-                }
-            }
-            std::cout << std::endl;
-        }
-    }
+
+
+    
     
 
 
 
     // Compute dS and E_polarisation for each state
-    std::vector<double> dS(nbStates, 0.0);
-    std::vector<double> E_polarisation_abs(nbStates, 0.0);
+    
+    //std::vector<double> E_polarisation_abs(nbStates, 0.0);
 
-    for (int i = 0; i < nbStates; ++i)
-    {
-        for (int k = 0; k < nbStates; ++k)
-        {
-            double c_k = eigenvectors[k][i];
-            double dp_k = c_k * c_k;
+    
 
-            if (dp_k != 0)
-            {
-                dS[i] -= dp_k * std::log(dp_k);
-            }
-        }
 
-        dS[i] *= (Constants::KB * Constants::AVOGADRO_CONSTANT);
-        E_polarisation_abs[i] = std::abs(states[i].get_energy() - eigenvalues[i]) * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
-    }
-
+    /*
     // Print dS and E_polarisation results
     std::cout << "dS (J/mol/K) and |E_polarisation| (J/mol) for each state:" << std::endl;
     std::cout << std::scientific;
+    std::cout << std::setprecision(10);
     for (int i = 0; i < nbStates; ++i)
     {
-        std::cout << std::setw(22) << std::setprecision(16) << dS[i] << '\t' << std::setw(22) << std::setprecision(16) << E_polarisation_abs[i] << std::endl;
+        std::cout << std::right << std::setw(17) << dS[i] << '\t' << std::right << std::setw(17) << E_polarisation_abs[i] << std::endl;
     }
     std::cout << std::defaultfloat << std::endl;
-
+    */
     
 
     /*

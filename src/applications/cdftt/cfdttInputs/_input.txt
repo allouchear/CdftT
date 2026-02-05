@@ -1,2 +1,0 @@
-RunType=ConvertOrbitals
-AnalyticFiles=h2o.fchk, h2o.wfx

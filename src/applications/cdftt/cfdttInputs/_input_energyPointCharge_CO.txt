@@ -1,8 +1,0 @@
-Charge=-0.1
-RunType=ComputeEnergyWithPointCharge
-AnalyticFiles=tests/CC-pvtz/CO_TDDFT.log
-TransitionsFile=tests/transitionsFiles/transitions_CO.txt
-Position=2.0,2.0,2.0
-Size=Custom
-CustomSizeData=128,128,128,5,5,5,7.87401574803148e-02,0,0,0,7.87401574803148e-02,0,0,0,7.87401574803148e-02
-
