@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "../Orbitals/Orbitals.h"
-#include <Orbitals/SlaterDeterminant.hpp>
-#include <Utils/Enums.hpp>
+#include "../Orbitals/SlaterDeterminant.hpp"
+#include "../Utils/Enums.hpp"
 
 
 /** @brief ExcitedState class.

@@ -7,7 +7,7 @@ using namespace std;
 #include "../Common/PeriodicTable.h"
 #include "../Common/Structure.h"
 #include "../Cube/GridCP.h"
-#include <Utils/Enums.hpp>
+#include "../Utils/Enums.hpp"
 
 #ifdef ENABLE_OMP
 #include <omp.h>

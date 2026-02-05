@@ -10,7 +10,7 @@
 #include "../Common/PeriodicTable.h"
 #include "../Cube/GridCP.h"
 #include "../Orbitals/Orbitals.h"
-#include <Utils/Enums.hpp>
+#include "../Utils/Enums.hpp"
 #include "../Utils/Utils.h"
 
 

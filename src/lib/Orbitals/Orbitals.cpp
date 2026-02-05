@@ -8,7 +8,7 @@
 #include "../Basis/CGTF.h"
 #include "../Common/PeriodicTable.h"
 #include "../Orbitals/Orbitals.h"
-#include <Utils/Enums.hpp>
+#include "../Utils/Enums.hpp"
 #include "../Utils/FCHK.h"
 #include "../Utils/LM.h"
 #include "../Utils/LOG.h"

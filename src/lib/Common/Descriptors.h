@@ -61,7 +61,7 @@
 #include <vector>
 #include "../Common/PeriodicTable.h"
 #include "../Common/Structure.h"
-#include <Utils/Enums.hpp>
+#include "../Utils/Enums.hpp"
 
 using namespace std;
 

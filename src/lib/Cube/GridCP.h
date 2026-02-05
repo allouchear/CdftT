@@ -6,7 +6,7 @@
 #include "../Common/Structure.h"
 #include "../Cube/Domain.h"
 #include "../Cube/Grid.h"
-#include <Utils/Enums.hpp>
+#include "../Utils/Enums.hpp"
 
 
     //! Critical point

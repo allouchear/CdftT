@@ -25,8 +25,8 @@
 #include "../Cube/GridCP.h"
 #include "../JobControl/Job.h"
 #include "../Orbitals/Orbitals.h"
-#include <Orbitals/ExcitedState.hpp>
-#include <Orbitals/SlaterDeterminant.hpp>
+#include "../Orbitals/ExcitedState.hpp"
+#include "../Orbitals/SlaterDeterminant.hpp"
 #include "../Utils/Utils.h"
 
 

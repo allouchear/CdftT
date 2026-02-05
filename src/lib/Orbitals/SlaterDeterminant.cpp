@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "../Orbitals/Orbitals.h"
-#include <Orbitals/SlaterDeterminant.hpp>
+#include "../Orbitals/SlaterDeterminant.hpp"
 
 #include <iostream>
 

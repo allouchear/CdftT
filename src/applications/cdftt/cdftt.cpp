@@ -7,8 +7,8 @@
 
 #include "Timer.h"
 
-#include <JobControl/Job.h>
-#include <Utils/Utils.h>
+#include "../../lib/JobControl/Job.h"
+#include "../../lib/Utils/Utils.h"
 
 
 int main(int argc, char* argv[])
