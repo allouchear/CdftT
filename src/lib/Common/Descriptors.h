@@ -55,12 +55,12 @@
     J. Phys. Chem. A 2005, 109, 205-212, DOI: 10.1021/jp046577a
 ------------------------------------------------------------------------------------------------------------------------------
 */
-#include <Cube/Grid.h>
-#include <Cube/GridCP.h>
+#include "../Cube/Grid.h"
+#include "../Cube/GridCP.h"
 
 #include <vector>
-#include <Common/PeriodicTable.h>
-#include <Common/Structure.h>
+#include "../Common/PeriodicTable.h"
+#include "../Common/Structure.h"
 #include <Utils/Enums.hpp>
 
 using namespace std;

@@ -1,5 +1,5 @@
 #include<iostream>
-#include <Becke/GridPoints.h>
+#include "../Becke/GridPoints.h"
 
 using namespace std;
 

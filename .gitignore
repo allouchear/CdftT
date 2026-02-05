@@ -26,3 +26,6 @@ p
 # ignore all executable files and library files
 **/*.so
 src/applications/cdftt/cdftt
+
+# custom file to switch includes from angle brackets to relative paths (with quotes) to help with IDEs that don't support the angle bracket syntax
+src/lib/switch_includes.sh

@@ -5,14 +5,14 @@
 #include <functional>
 #include <vector>
 
-#include <Becke/GridPoints.h>
-#include <Common/Descriptors.h>
-#include <Common/Structure.h>
-#include <Orbitals/Orbitals.h>
-#include <Utils/FCHK.h>
-#include <Utils/LOG.h>
-#include <Utils/MOLDENGAB.h>
-#include <Utils/WFX.h>
+#include "../Becke/GridPoints.h"
+#include "../Common/Descriptors.h"
+#include "../Common/Structure.h"
+#include "../Orbitals/Orbitals.h"
+#include "../Utils/FCHK.h"
+#include "../Utils/LOG.h"
+#include "../Utils/MOLDENGAB.h"
+#include "../Utils/WFX.h"
 
 /**
  * @brief Becke class.

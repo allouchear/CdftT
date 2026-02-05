@@ -6,12 +6,12 @@
 #include <set>
 #include <vector>
 
-#include <Common/Descriptors.h>
-#include <Common/PeriodicTable.h>
-#include <Cube/GridCP.h>
-#include <Orbitals/Orbitals.h>
+#include "../Common/Descriptors.h"
+#include "../Common/PeriodicTable.h"
+#include "../Cube/GridCP.h"
+#include "../Orbitals/Orbitals.h"
 #include <Utils/Enums.hpp>
-#include <Utils/Utils.h>
+#include "../Utils/Utils.h"
 
 
 /**

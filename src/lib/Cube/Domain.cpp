@@ -4,9 +4,9 @@
 #include <string>
 #include <sstream>
 
-#include <Common/Atom.h>
-#include <Common/Constants.h>
-#include <Cube/Domain.h>
+#include "../Common/Atom.h"
+#include "../Common/Constants.h"
+#include "../Cube/Domain.h"
 
 
 //----------------------------------------------------------------------------------------------------//

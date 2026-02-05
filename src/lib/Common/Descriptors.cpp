@@ -1,7 +1,7 @@
 #include <iomanip>
-#include <Common/Descriptors.h>
-#include <Common/PeriodicTable.h>
-#include <Becke/Becke.h>
+#include "../Common/Descriptors.h"
+#include "../Common/PeriodicTable.h"
+#include "../Becke/Becke.h"
 
 using namespace std;
 

@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include <Common/Constants.h>
-#include <Utils/MOLDENGAB.h>
+#include "../Common/Constants.h"
+#include "../Utils/MOLDENGAB.h"
 
 
 MOLDENGAB::MOLDENGAB() :

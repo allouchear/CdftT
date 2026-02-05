@@ -3,10 +3,10 @@ using namespace std;
 #include <cmath>
 #include <iomanip>
 
-#include <Common/Constants.h>
-#include <Common/PeriodicTable.h>
-#include <Common/Structure.h>
-#include <Cube/GridCP.h>
+#include "../Common/Constants.h"
+#include "../Common/PeriodicTable.h"
+#include "../Common/Structure.h"
+#include "../Cube/GridCP.h"
 #include <Utils/Enums.hpp>
 
 #ifdef ENABLE_OMP

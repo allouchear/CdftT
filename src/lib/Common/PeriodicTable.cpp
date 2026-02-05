@@ -1,6 +1,6 @@
 #include <string>
 
-#include <Common/PeriodicTable.h>
+#include "../Common/PeriodicTable.h"
 
 
 PeriodicTable::PeriodicTable()

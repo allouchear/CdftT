@@ -17,17 +17,17 @@
 #include <omp.h>
 #endif
 
-#include <Becke/Becke.h>
-#include <Common/Descriptors.h>
-#include <Common/Element.h>
-#include <Common/Constants.h>
-#include <Cube/Grid.h>
-#include <Cube/GridCP.h>
-#include <JobControl/Job.h>
-#include <Orbitals/Orbitals.h>
+#include "../Becke/Becke.h"
+#include "../Common/Descriptors.h"
+#include "../Common/Element.h"
+#include "../Common/Constants.h"
+#include "../Cube/Grid.h"
+#include "../Cube/GridCP.h"
+#include "../JobControl/Job.h"
+#include "../Orbitals/Orbitals.h"
 #include <Orbitals/ExcitedState.hpp>
 #include <Orbitals/SlaterDeterminant.hpp>
-#include <Utils/Utils.h>
+#include "../Utils/Utils.h"
 
 
 //----------------------------------------------------------------------------------------------------//

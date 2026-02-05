@@ -5,8 +5,8 @@
 #include<iostream>
 #include<vector>
 
-#include <Cube/Grid.h>
-#include <Becke/Becke.h>
+#include "../Cube/Grid.h"
+#include "../Becke/Becke.h"
 
 
 

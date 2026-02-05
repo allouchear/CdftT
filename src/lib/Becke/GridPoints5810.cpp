@@ -1,4 +1,4 @@
-#include <Becke/GridPoints.h>
+#include "../Becke/GridPoints.h"
 
 void GridPoints::GridPoints5810()
 {

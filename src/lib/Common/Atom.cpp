@@ -3,8 +3,8 @@
 #include <iostream>
 #include <string>
 
-#include <Common/Atom.h>
-#include <Common/Constants.h>
+#include "../Common/Atom.h"
+#include "../Common/Constants.h"
 
 
 //----------------------------------------------------------------------------------------------------//

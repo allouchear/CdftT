@@ -7,9 +7,9 @@
 #include <omp.h>
 #endif
 
-#include <Cube/Grid.h>
-#include <Cube/GridCP.h>
-#include <Common/Constants.h>
+#include "../Cube/Grid.h"
+#include "../Cube/GridCP.h"
+#include "../Common/Constants.h"
 
 
 //----------------------------------------------------------------------------------------------------//

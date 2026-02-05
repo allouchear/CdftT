@@ -4,8 +4,8 @@
 #include <array>
 #include <string>
 
-#include <Common/PeriodicTable.h>
-#include <Common/Element.h>
+#include "../Common/PeriodicTable.h"
+#include "../Common/Element.h"
 
 
 /**

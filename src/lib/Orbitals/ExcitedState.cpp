@@ -12,7 +12,7 @@
 #include <omp.h>
 #endif
 
-#include <Common/Constants.h>
+#include "../Common/Constants.h"
 #include <Orbitals/ExcitedState.hpp>
 #include <Utils/Enums.hpp>
 

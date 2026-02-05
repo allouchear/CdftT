@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include <Basis/CGTF.h>
+#include "../Basis/CGTF.h"
 
 
 CGTF::CGTF()

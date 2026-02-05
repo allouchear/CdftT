@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include <Orbitals/Orbitals.h>
+#include "../Orbitals/Orbitals.h"
 #include <Orbitals/SlaterDeterminant.hpp>
 #include <Utils/Enums.hpp>
 

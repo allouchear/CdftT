@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 
-#include <Common/Constants.h>
-#include <Utils/LOG.h>
-#include <Utils/Utils.h>
+#include "../Common/Constants.h"
+#include "../Utils/LOG.h"
+#include "../Utils/Utils.h"
 
 
 LOG::LOG() :

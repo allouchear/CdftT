@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <Basis/GTF.h>
+#include "../Basis/GTF.h"
 
 
 /**

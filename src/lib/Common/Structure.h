@@ -4,11 +4,11 @@
 #include <fstream>
 #include <vector>
 
-#include <Common/Atom.h>
-#include <Utils/WFX.h>
-#include <Utils/FCHK.h>
-#include <Utils/MOLDENGAB.h>
-#include <Utils/LOG.h>
+#include "../Common/Atom.h"
+#include "../Utils/WFX.h"
+#include "../Utils/FCHK.h"
+#include "../Utils/MOLDENGAB.h"
+#include "../Utils/LOG.h"
 
 
 /** @brief Structure class.

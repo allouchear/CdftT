@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-#include <Basis/GTF.h>
+#include "../Basis/GTF.h"
 
 
 //----------------------------------------------------------------------------------------------------//

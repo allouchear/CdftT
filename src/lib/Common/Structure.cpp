@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include <Common/Structure.h>
+#include "../Common/Structure.h"
 
 
 //----------------------------------------------------------------------------------------------------//

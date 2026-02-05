@@ -100,7 +100,7 @@ template<typename T> std::string enum_to_string(const T& enumValue, const std::u
 template <typename T> T enum_from_char(const char charValue, const std::unordered_map<T, char>& enumToCharMap, const T& defaultValue);
 template<typename T> T enum_from_string(const std::string& strValue, const std::unordered_map<T, std::string>& enumToStringMap, const T& defaultValue);
 
-#include <Utils/Utils_enumConversion.tpp>
+#include "../Utils/Utils_enumConversion.tpp"
 
 
 std::string to_string(ELFMethod method);

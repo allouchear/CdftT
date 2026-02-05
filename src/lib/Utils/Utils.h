@@ -65,7 +65,7 @@ template<typename T> bool readOneType(std::ifstream& inputFile, const std::strin
  */
 template<typename T> bool readListType(std::ifstream& inputFile, const std::string& tag, std::vector<T>& x);
 
-#include <Utils/Utils_fileParsing.tpp>
+#include "../Utils/Utils_fileParsing.tpp"
 
 
 //----------------------------------------------------------------------------------------------------//

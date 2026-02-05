@@ -4,17 +4,17 @@
 #include <string>
 #include <vector>
 
-#include <Basis/GTF.h>
-#include <Basis/CGTF.h>
-#include <Common/PeriodicTable.h>
-#include <Orbitals/Orbitals.h>
+#include "../Basis/GTF.h"
+#include "../Basis/CGTF.h"
+#include "../Common/PeriodicTable.h"
+#include "../Orbitals/Orbitals.h"
 #include <Utils/Enums.hpp>
-#include <Utils/FCHK.h>
-#include <Utils/LM.h>
-#include <Utils/LOG.h>
-#include <Utils/MOLDENGAB.h>
-#include <Utils/Utils.h>
-#include <Utils/WFX.h>
+#include "../Utils/FCHK.h"
+#include "../Utils/LM.h"
+#include "../Utils/LOG.h"
+#include "../Utils/MOLDENGAB.h"
+#include "../Utils/Utils.h"
+#include "../Utils/WFX.h"
 
 
 //----------------------------------------------------------------------------------------------------//

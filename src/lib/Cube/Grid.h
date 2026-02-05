@@ -3,8 +3,8 @@
 
 #include <fstream>
 #include <vector>
-#include <Common/Structure.h>
-#include <Cube/Domain.h>
+#include "../Common/Structure.h"
+#include "../Cube/Domain.h"
 
 using std::ifstream;
 using std::ofstream;
