@@ -70,7 +70,7 @@ void Job::readCharges(std::vector<double>& charges)
 {
     if (!readListType<double>(_inputFile, "Charges", charges))
     {
-        std::cout << "Warning: the \"Charges\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "Note: the \"Charges\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
         std::cout << "The program will use the default value (Charges=1)." << std::endl << std::endl;
 
         charges = { 1.0 };
@@ -81,7 +81,7 @@ void Job::readCutoff(double& cutoff)
 {
     if (!readOneType<double>(_inputFile, "Cutoff", cutoff))
     {
-        std::cout << "Warning: the \"Cutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "Note: the \"Cutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
         std::cout << "The program will use the default value (Cutoff=0)." << std::endl << std::endl;
 
         cutoff = 0.0;
@@ -93,7 +93,7 @@ void Job::readELFMethod(ELFMethod& elfMethod)
     std::string strELFMethod;
     if (!readOneString(_inputFile, "ELFMethod", strELFMethod))
     {
-        std::cout << "Warning: the \"ELFMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "Note: the \"ELFMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
         std::cout << "The program will use the default value (ELFMethod=Savin)." << std::endl << std::endl;
         elfMethod = ELFMethod::SAVIN;
     }
@@ -165,7 +165,7 @@ void Job::readNuclearCutoff(double& nuclearCutoff)
 {
     if (!readOneType<double>(_inputFile, "NuclearCutoff", nuclearCutoff))
     {
-        std::cout << "Warning: the \"NuclearCutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "Note: the \"NuclearCutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
         std::cout << "The program will use the default value (NuclearCutoff=0.1)." << std::endl << std::endl;
 
         nuclearCutoff = 0.1;
@@ -237,7 +237,7 @@ void Job::readOrbitalType(OrbitalType& orbitalType)
     std::string strOrbitalType;
     if (!readOneString(_inputFile, "OrbitalType", strOrbitalType))
     {
-        std::cout << "Warning: the \"OrbitalType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "Note: the \"OrbitalType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
         std::cout << "The program will use the default value (OrbitalType=All)." << std::endl << std::endl;
         orbitalType = OrbitalType::ALL;
     }
@@ -264,7 +264,7 @@ void Job::readPartitionMethod(PartitionMethod& partitionMethod)
     std::string strMethod;
     if (!readOneString(_inputFile, "PartitionMethod", strMethod))
     {
-        std::cout << "Warning: the \"PartitionMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "Note: the \"PartitionMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
         std::cout << "The program will use the default value (PartitionMethod=On-Grid)." << std::endl << std::endl;
         partitionMethod = PartitionMethod::AIM_ON_GRID;
     }
@@ -316,7 +316,7 @@ void Job::readRunType(RunType& runType)
     std::string strRunType;
     if (!readOneString(_inputFile, "RunType", strRunType))
     {
-        std::cout << "Warning: the \"RunType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "Note: the \"RunType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
         std::cout << "The program will use the default value (RunType=Help)." << std::endl << std::endl;
         runType = RunType::HELP;
     }
@@ -343,7 +343,7 @@ void Job::readSize(GridSize& gridSize, CustomSizeData& customSizeData)
     std::string strGridSize;
     if (!readOneString(_inputFile, "Size", strGridSize))
     {
-        std::cout << "Warning: the \"Size\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "Note: the \"Size\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
         std::cout << "The program will use the default value (Size=Medium)." << std::endl << std::endl;
 
         gridSize = GridSize::MEDIUM;
@@ -445,7 +445,7 @@ void Job::readSpinType(SpinType& spinType)
     std::string strSpinType;
     if (!readOneString(_inputFile, "SpinType", strSpinType))
     {
-        std::cout << "Warning: the \"SpinType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "Note: the \"SpinType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
         std::cout << "The program will use the default value (SpinType=Alpha-Beta)." << std::endl << std::endl;
 
         spinType = SpinType::ALPHA_BETA;
@@ -1690,7 +1690,8 @@ void Job::run_computeEnergyWithPointCharges()
 
                 if (verbose >= 1)
                 {
-                    std::cout << "< " << i << " | H | " << j << " > = " << std::setprecision(12) << matrixElement << std::endl;
+                    std::cout << "< " << i << " | H | " << j << " > = " << std::setprecision(12) << psi_i_H_psi_j[i][j] << std::endl;
+                    std::cout << "< " << i << " | H - H0| " << j << " > = " << std::setprecision(12) << psi_i_HminusH0_psi_j[i][j] << std::endl;
                 }
                 if (verbose >= 2 && j != i)
                 {
@@ -1812,44 +1813,158 @@ void Job::run_computeEnergyWithPointCharges()
         }
 
 
-        std::cout << std::endl << std::endl << "------ Perturbative approach ------" << std::endl << std::endl;
+        std::cout << std::endl << std::endl << "------ Perturbative approach (cf. Guégan et al., PCCP 2020) ------" << std::endl << std::endl;
 
-        // Compute dpk
-        std::cout << "dp_k values using Eq. (27):" << std::endl;
+        bool warningPrinted = false;
+
+        // Compute dp_k for each state using Eq. (27) in Guégan et al., PCCP 2020
+        std::vector<double> dpk_perturb_state0_withoutRenormalisation(nbStates, 0.0);
+        std::vector<double> normalisationFactors(nbStates, 0.0);
+        std::vector<std::vector<double>> dpk_perturb(nbStates, std::vector<double>(nbStates, 0.0));
+
+        // Compute extra-diagonal dp_k coefficients
+        for (int i = 0; i < nbStates; ++i)
+        {
+            for (int j = 0; j < nbStates; ++j)
+            {
+                if (i != j)
+                {
+                    double Ei_minus_Ej = states[i].get_energy() - states[j].get_energy();
+
+                    // Check for degeneracy to avoid division by zero
+                    if (std::abs(Ei_minus_Ej) >= 1e-10)
+                    {
+                        // psi_i_HminusH0_psi_j is a lower triangular matrix
+                        dpk_perturb[i][j] = (j <= i ? psi_i_HminusH0_psi_j[i][j] : psi_i_HminusH0_psi_j[j][i]) / Ei_minus_Ej;
+                        dpk_perturb[i][j] *= dpk_perturb[i][j];
+
+                        normalisationFactors[i] += dpk_perturb[i][j];
+
+                        // For the first state, we keep the unrenormalised dp_k coefficients so we can compare them with the paper and the variational approach later.
+                        if (i == 0)
+                        {
+                            dpk_perturb_state0_withoutRenormalisation[j] = dpk_perturb[i][j];
+                        }
+
+                        if (dpk_perturb[i][j] > 1.0)
+                        {
+                            dpk_perturb[i][j] = 0.0;
+                            if (i < j) // to avoid printing twice the same warning for the pair (i, j) and (j, i)
+                            {
+                                warningPrinted = true;
+
+                                std::cout << "Warning: the dp_" << j << " coefficient for the state " << i << " and the dp_" << i << " coefficient for the state " << j << " are greater than 1 (dp_" << j << " = " << dpk_perturb[i][j] << ")." << std::endl;
+                                std::cout << "They will be set to 0 to maintain the normalisation condition on dp_k (limitation of the perturbative approach)." << std::endl;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        dpk_perturb[i][j] = 0.0;
+
+                        if (i < j) // to avoid printing twice the same warning for the pair (i, j) and (j, i)
+                        {
+                            warningPrinted = true;
+
+                            std::cout << "Warning: degeneracy detected between states " << i << " and " << j << " (|E_i - E_j| < 1e-10)." << std::endl;
+                            std::cout << "The dp_" << j << "coefficient for the state " << i << "and the dp_" << i << " coefficient for the state " << j << " will be set to zero to avoid division by zero." << std::endl;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Renormalization of dp_k coefficients to ensure that their sum is equal to 1 for each state (normalisation condition)
+        for (int i = 0; i < nbStates; ++i)
+        {
+            if (normalisationFactors[i] > 1.0)
+            {
+                for (int j = 0; j < nbStates; ++j)
+                {
+                    if (i != j)
+                    {
+                        dpk_perturb[i][j] = dpk_perturb[i][j] / (1.0 + normalisationFactors[i]);
+                    }
+                }
+            }
+        }
+
+        // Compute diagonal dp_k coefficients using the normalisation condition
+        for (int i = 0; i < nbStates; ++i)
+        {
+            double sumExtraDiagonal = 0.0;
+            for (int j = 0; j < nbStates; ++j)
+            {
+                sumExtraDiagonal += (i != j ? dpk_perturb[i][j] : 0.0);
+            }
+
+            dpk_perturb[i][i] = 1.0 / (1.0 + sumExtraDiagonal);
+        }
+
+        if (warningPrinted)
+        {
+            std::cout << std::endl;
+        }
+
+        std::cout << "dp_k values using Eq. (27). Excited states are on the columns:" << std::endl;
         std::cout << std::scientific;
         std::cout << std::setprecision(10);
-        std::vector<double> dpk_perturb(nbStates, 0.0);
-        for (int i = 1; i < nbStates; ++i)
+        for (int i = 0; i < nbStates; ++i)
         {
-            dpk_perturb[i] = psi_i_HminusH0_psi_j[i][0] / (states[0].get_energy() - states[i].get_energy());
-            dpk_perturb[i] *= dpk_perturb[i];
-            std::cout << dpk_perturb[i] << ' ';
+            for (int j = 0; j < nbStates; ++j)
+            {
+                std::cout << std::right << std::setw(17) << dpk_perturb[i][j] << '\t';
+            }
+
+            std::cout << std::endl;
         }
         std::cout << std::defaultfloat << std::endl << std::endl;
 
-        // Compute dS
-        double dS_perturb = 0.0;
-        for (int i = 1; i < nbStates; ++i)
+        // Compute E_polarisation and dS for each state using respectively Eq. (26) and Eq. (32) in Guégan et al., PCCP 2020
+        std::vector<double> dS_perturb(nbStates, 0.0);
+        std::vector<double> E_pola_perturb(nbStates, 0.0);
+
+        std::cout << "E_polarisation and dS using respectively Eq. (26) and Eq. (32) in Guégan et al., PCCP 2020:" << std::endl;
+
+        for (int i = 0; i < nbStates; ++i)
         {
-            dS_perturb -= dpk_perturb[i] * std::log(dpk_perturb[i]);
+            double sum_dS = 0.0;
+            double sum_Epola = 0.0;
+            for (int j = 0; j < nbStates; ++j)
+            {
+                if (dpk_perturb[i][j] != 0)
+                {
+                    sum_dS -= dpk_perturb[i][j] * std::log(dpk_perturb[i][j]);
+
+                    if (i != j)
+                    {
+                        // Note : degeneracy is already handled in the computation of dp_k coefficients
+                        // So we can safely compute the energy difference here without checking for division by zero again.
+                        sum_Epola -= dpk_perturb[i][j] * (states[j].get_energy() - states[i].get_energy());
+                    }
+                }
+            }
+
+            dS_perturb[i] = sum_dS * Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
+            E_pola_perturb[i] = sum_Epola * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
         }
-        dS_perturb *= (Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT);
 
-        std::cout << "dS = " << std::scientific << std::setprecision(10) << dS_perturb << " J/mol/K using Eq. (32)" << std::defaultfloat << std::endl;
-
-        // Compute E_polarisation
-        double E_polarisation_perturb = 0.0;
-        for (int i = 1; i < nbStates; ++i)
+        std::cout << "dS (J/mol/K) and |E_polarisation| (J/mol) for each state:" << std::endl;
+        std::cout << std::scientific;
+        std::cout << std::setprecision(10);
+        for (int i = 0; i < nbStates; ++i)
         {
-            E_polarisation_perturb -= dpk_perturb[i] * (states[i].get_energy() - states[0].get_energy());
+            std::cout << std::right << std::setw(17) << dS_perturb[i] << '\t';
         }
-        E_polarisation_perturb *= (Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT);
+        std::cout << std::endl;
+        for (int i = 0; i < nbStates; ++i)
+        {
+            std::cout << std::right << std::setw(17) << E_pola_perturb[i] << '\t';
+        }
+        std::cout << std::defaultfloat << std::endl;
 
-        std::cout << "E_polarisation = " << std::scientific << std::setprecision(10) << E_polarisation_perturb << " J/mol using Eq. (26)" << std::defaultfloat << std::endl << std::endl;
 
-
-
-
+        /*
         std::cout << std::endl << std::endl << "------ Variational approach ------" << std::endl << std::endl;
 
         // Compute dpk
@@ -1864,6 +1979,7 @@ void Job::run_computeEnergyWithPointCharges()
             std::cout << dpk[i] << ' ';
         }
         std::cout << std::defaultfloat << std::endl << std::endl;
+        */
     }
 
     
@@ -1887,20 +2003,12 @@ void Job::run_computeEnergyWithPointCharges()
     // Compute dS and E_polarisation for each state
     
     //std::vector<double> E_polarisation_abs(nbStates, 0.0);
-
     
 
 
     /*
     // Print dS and E_polarisation results
-    std::cout << "dS (J/mol/K) and |E_polarisation| (J/mol) for each state:" << std::endl;
-    std::cout << std::scientific;
-    std::cout << std::setprecision(10);
-    for (int i = 0; i < nbStates; ++i)
-    {
-        std::cout << std::right << std::setw(17) << dS[i] << '\t' << std::right << std::setw(17) << E_polarisation_abs[i] << std::endl;
-    }
-    std::cout << std::defaultfloat << std::endl;
+    
     */
     
 
@@ -2143,7 +2251,7 @@ void Job::run_convertOrbitals()
     }
     else
     {
-        std::cout << "Warning: input and output files have the same format (" << inputFileExtension << "). Nothing to be done." << std::endl;
+        std::cout << "Input and output files have the same format (" << inputFileExtension << "). Nothing to be done." << std::endl;
     }
 }
 
