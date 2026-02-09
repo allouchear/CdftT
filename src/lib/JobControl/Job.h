@@ -49,11 +49,11 @@ class Job
          */
         void readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames);
 
-        /** @brief Reads the charge of the point charge from the "Charge" parameter in the input file.
+        /** @brief Reads the charges of the point charges from the "Charges" parameter in the input file.
          * 
-         * @param[out] charge Reference to a double where the read charge value will be stored.
+         * @param[out] charges Reference to a vector of doubles where the read charge values will be stored.
          */
-        void readCharge(double &charge);
+        void readCharges(std::vector<double>& charges);
 
         /** @brief Reads the numeric cutoff used by some partitioning methods from the "Cutoff" parameter in the input file.
          * 
@@ -118,11 +118,11 @@ class Job
         void readPartitionMethod(PartitionMethod& partitionMethod);
 
         /**
-         * @brief Reads a 3-coordinate position from the "Position" parameter in the input file.
+         * @brief Reads 3-coordinate positions from the "Positions" parameter in the input file.
          *
-         * @param[out] position Reference to an array of three doubles where the read position will be stored.
+         * @param[out] positions Reference to a vector of arrays of three doubles where the read positions will be stored.
          */
-        void readPosition(std::array<double, 3>& position);
+        void readPositions(std::vector<std::array<double, 3>>& positions);
 
         /**
          * @brief Reads the requested run type (job) from the "RunType" parameter in the input file.
@@ -190,9 +190,9 @@ class Job
         void run_computeDescriptors();
 
         /**
-         * @brief Runs the job associated with the "ComputeEnergyWithPointCharge" runtype.
+         * @brief Runs the job associated with the "ComputeEnergyWithPointCharges" runtype.
          */
-        void run_computeEnergyWithPointCharge();
+        void run_computeEnergyWithPointCharges();
 
         /**
          * @brief Runs the job associated with the "ComputeGridDifference" runtype.
