@@ -7,6 +7,9 @@ CFLAGS =  $(COMMONCFLAGS)
 
 all: compiling 
 
+profile: CFLAGS = $(COMMONCFLAGS) $(PROFILEFLAGS)
+profile: compiling
+
 %.o : %.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 

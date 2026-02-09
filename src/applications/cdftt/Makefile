@@ -2,7 +2,7 @@
 
 include $(LIBCDFTTDIR)/CONFIG
 
-CFLAGS =  $(COMMONCFLAGS) 
+CFLAGS =  $(COMMONCFLAGS)
 
 BASIS = $(LIBCDFTTDIR)/src/lib/Basis
 BECKE = $(LIBCDFTTDIR)/src/lib/Becke
@@ -25,6 +25,9 @@ OBJECTS = cdftt.o \
 
 all: compiling  cdftt
 
+profile: CFLAGS = $(COMMONCFLAGS) $(PROFILEFLAGS)
+profile: compiling cdftt
+
 %.o : %.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
@@ -39,7 +42,7 @@ dep :
 	$(CC)  $(CFLAGS) -MM $(SRCS) > Dep.mk
 
 cdftt: 
-	$(CC) $(LDFLAGS) $(OBJECTS) -o cdftt $(OMPLIB) -g -lm $(ACCLIB)  
+	$(CC) $(LDFLAGS) $(PROFILEFLAGS) $(OBJECTS) -o cdftt $(OMPLIB) -g -lm $(ACCLIB)  
 
 
 -include Dep.mk

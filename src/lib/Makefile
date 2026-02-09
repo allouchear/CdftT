@@ -23,8 +23,11 @@ SUBDIRS = \
 OBJECTS = \
 	$(COMMONOBJ) $(CUBEOBJ) $(BASISOBJ) $(BECKEOBJ) $(ORBITALSOBJ) $(UTILSOBJ) $(JOBCONTROLOBJ)
 
-TARGETS = all clean dep
- 
+TARGETS = all clean dep profile
+
+profile: CFLAGS = $(COMMONCFLAGS) $(PROFILEFLAGS)
+profile: all
+
 .PHONY: $(SUBDIRS)
 
 $(TARGETS): $(SUBDIRS)

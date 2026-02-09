@@ -12,6 +12,9 @@ all: compiling
 
 compiling: $(OBJECTS)
 
+profile: CFLAGS = $(COMMONCFLAGS) $(PROFILEFLAGS)
+profile: compiling
+
 clean:
 	@$(RM) *o *.out *.log *.inp *~ *.mk
 
