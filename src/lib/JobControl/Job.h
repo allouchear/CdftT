@@ -9,6 +9,7 @@
 #include <Common/Descriptors.h>
 #include <Common/PeriodicTable.h>
 #include <Cube/GridCP.h>
+#include <Orbitals/ExcitedState.hpp>
 #include <Orbitals/Orbitals.h>
 #include <Utils/Enums.hpp>
 #include <Utils/Utils.h>
@@ -255,6 +256,18 @@ class Job
          */
         void buildBasinsBySign(GridCP& gcp, const std::string& GridFileName,  double cutoff, bool two);
         
+        /**
+         * @brief Computes < psi_i | H | psi_j > and < psi_i | H-H0 | psi_j > for a set of excited states and one or many point charge(s).
+         * 
+         * @param[in] states Vector of excited states for which the computations will be performed.
+         * @param[in] chargesNucleiContributions Values of the < psi_i | V_ion/nuclei | psi_i > contributions (in the order of the charges).
+         * @param[in] ionicMatrixes Matrixes of the < phi_i | V_ion/electrons | phi_j > contributions for the point charges.
+         * @param[out] psi_i_H_psi_j Output lower triangular matrix where the computed < psi_i | H | psi_j > values will be stored.
+         * @param[out] psi_i_HminusH0_psi_j Output lower triangular matrix where the computed < psi_i | H - H0 | psi_j > values will be stored.
+         * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
+         */
+        void computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedState>& excitedStates, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_psi_j, std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, int verbose = 0);
+
         /**
          * @brief Integrates the provided grids over the domain of a Critical Points grid (GridCP).
          *
