@@ -139,7 +139,7 @@ class ExcitedState
          * @param[in] alphaAndBeta Whether beta transitions are the same as alpha ones (true) or not. 
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitionsFromOrcaOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const bool alphaAndBeta);
+        static bool readTransitionsFromOrcaOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
 
         /**
          * @brief Reads transitions from the provided file and populates a vector of ExcitedState objects.
@@ -149,7 +149,7 @@ class ExcitedState
          * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const bool alphaAndBeta = true);
+        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS

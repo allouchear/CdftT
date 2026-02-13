@@ -491,7 +491,7 @@ bool ExcitedState::readTransitionsFromLogFile(const std::string& logFileName, st
     return ok;
 }
 
-bool ExcitedState::readTransitionsFromOrcaOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const bool alphaAndBeta)
+bool ExcitedState::readTransitionsFromOrcaOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy)
 {
     bool ok = true;
 
@@ -544,15 +544,6 @@ bool ExcitedState::readTransitionsFromOrcaOutFile(const std::string& orcaOutFile
                                 double coefficient = std::stod(transitionRegexAlphaBetaMatch[5]);
 
                                 excitedState.addTransition(initialOrbital, finalOrbital, coefficient);
-
-                                // If alphaAndBeta is true, we must also add the beta transition with the same coefficient
-                                if (alphaAndBeta)
-                                {
-                                    initialOrbital.second = SpinType::BETA;
-                                    finalOrbital.second = SpinType::BETA;
-
-                                    excitedState.addTransition(initialOrbital, finalOrbital, coefficient);
-                                }
                             }
                         }
                     } while (!orcaOutFile.eof() && !line.empty());
@@ -595,7 +586,7 @@ bool ExcitedState::readTransitionsFromOrcaOutFile(const std::string& orcaOutFile
     return ok;
 }
 
-bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const bool alphaAndBeta)
+bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy)
 {
     bool ok = true;
 
@@ -605,7 +596,7 @@ bool ExcitedState::readTransitions(const std::string& fileName, std::vector<Exci
     }
     else if (fileName.substr(fileName.length() - 4) == ".out")
     {
-        ok = readTransitionsFromOrcaOutFile(fileName, excitedStates, groundStateEnergy, alphaAndBeta);
+        ok = readTransitionsFromOrcaOutFile(fileName, excitedStates, groundStateEnergy);
     }
     else
     {
