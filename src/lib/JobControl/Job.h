@@ -237,6 +237,10 @@ class Job
         void run_convertOrbitals();
 
 
+        //----------------------------------------------------------------------------------------------------//
+        // OTHER PRIVATE METHODS
+        //----------------------------------------------------------------------------------------------------//
+
         /**
          * @brief Builds basins from a grid using `partitionMethod`.
          *
@@ -254,69 +258,18 @@ class Job
          * @param[in] cutoff Numerical cutoff below which values are considered zero.
          * @param[in] two If true, builds exactly two basins.
          */
-        void buildBasinsBySign(GridCP& gcp, const std::string& GridFileName,  double cutoff, bool two);
-        
-        /**
-         * @brief Computes < psi_i | H | psi_j > and < psi_i | H-H0 | psi_j > for a set of excited states and one or many point charge(s).
-         * 
-         * @param[in] states Vector of excited states for which the computations will be performed.
-         * @param[in] chargesNucleiContributions Values of the < psi_i | V_ion/nuclei | psi_i > contributions (in the order of the charges).
-         * @param[in] ionicMatrixes Matrixes of the < phi_i | V_ion/electrons | phi_j > contributions for the point charges.
-         * @param[out] psi_i_H_psi_j Output lower triangular matrix where the computed < psi_i | H | psi_j > values will be stored.
-         * @param[out] psi_i_HminusH0_psi_j Output lower triangular matrix where the computed < psi_i | H - H0 | psi_j > values will be stored.
-         * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
-         */
-        void computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedState>& excitedStates, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_psi_j, std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, int verbose = 0);
+        void buildBasinsBySign(GridCP& gcp, const std::string& GridFileName, double cutoff, bool two);
 
         /**
-         * @brief Integrates the provided grids over the domain of a Critical Points grid (GridCP).
+         * @brief Builds a `Domain` suitable for cube creation from `orb` and sizing options.
          *
-         * @param[in,out] gcp GridCP reference that defines the integration domain and stores results.
-         * @param[in] GridFileNames Filenames of grids to integrate.
+         * @param[in] orb Orbitals instance used to determine molecular extent.
+         * @param[in] gridSize Grid size token (Coarse/Medium/Fine/Custom).
+         * @param[in] customSizeData Custom size parameters (used when `gridSize==CUSTOM`).
+         * @param[in] Nval Number of values per grid point (used by Domain::set_all).
+         * @return Configured `Domain` instance.
          */
-        void computeLocalIntegrals(GridCP& gcp, const std::vector<std::string>& GridFileNames);
-
-        /**
-         * @brief Prints critical points information from a Critical Points grid (GridCP). (Not implemented yet.)
-         */
-        void printCriticalPoints();
-
-        /**
-         * @brief Computes the difference between two grids and saves the result to an output file.
-         *
-         * @param[in] minuendGridFilename Left (minuend) input grid filename.
-         * @param[in] subtrahendGridFilename Right (subtrahend) input grid filename.
-         * @param[in] outputGridFilename Output filename for the difference grid.
-         */
-        void ComputeGridDifference(const std::string& minuendGridFilename, const std::string& subtrahendGridFilename, const std::string& outputGridFilename);
-
-        /**
-         * @brief Computes partial atomic charges from a grid using the specified method.
-         *
-         * @param[in] gridFilename Input grid filename used for partitioning and integration.
-         * @param[in] partitionMethod Partition method to use (AIM, VDD, Becke, ...).
-         * @return Vector of computed partial charges.
-         */
-        std::vector<double> computePartialCharges(const std::string& gridFilename, PartitionMethod partitionMethod);
-
-        /**
-         * @brief Computes partial charges and energy values from an analytic file.
-         *
-         * @param[out] energies Reference to vector where energy results will be stored.
-         * @param[in] analyticFileName Analytic file path.
-         * @return Vector of computed partial charges.
-         */
-        std::vector<double> computePartialChargesAndEnergy(std::vector<double>& energies, const std::string& analyticFileName);
-            
-        /**
-         * @brief Opens the configured input file.
-         */
-        void openInputFile();
-            
-        /**
-         * @brief Prints the list of available run types and their descriptions.
-         */
-        void printListOfRunTypes();
+        Domain buildDomainForCube(Orbitals& orb, const GridSize gridSize, const CustomSizeData& customSizeData, const int& Nval);
 
         /**
          * @brief Computes descriptors from three grid files using ionization energy and electron affinity.
@@ -344,12 +297,60 @@ class Job
         Descriptors computeDescriptors(const std::string& gridFileName1, const std::string& gridFileName2, const std::string& gridFileName3, const std::vector<double>& energies, PartitionMethod partitionMethod);
 
         /**
-         * @brief Extracts the molecular structure from an analytic file.
+         * @brief Computes descriptors with the finite-difference Becke method from analytic files.
          *
-         * @param[in] analyticFileName Name of the analytic file.
-         * @return Parsed Structure instance.
+         * @param[in] ANAFileName1 First analytic input file.
+         * @param[in] ANAFileName2 Second analytic input file.
+         * @param[in] ANAFileName3 Third analytic input file.
          */
-        Structure returnStruct(const std::string& analyticFileName);
+        void computeDescriptorsFD(const std::string& ANAFileName1, const std::string& ANAFileName2, const std::string& ANAFileName3);
+
+        /**
+         * @brief Computes the difference between two grids and saves the result to an output file.
+         *
+         * @param[in] minuendGridFilename Left (minuend) input grid filename.
+         * @param[in] subtrahendGridFilename Right (subtrahend) input grid filename.
+         * @param[in] outputGridFilename Output filename for the difference grid.
+         */
+        void computeGridDifference(const std::string& minuendGridFilename, const std::string& subtrahendGridFilename, const std::string& outputGridFilename);
+
+        /**
+         * @brief Computes < psi_i | H | psi_j > and < psi_i | H-H0 | psi_j > for a set of excited states and one or many point charge(s).
+         * 
+         * @param[in] states Vector of excited states for which the computations will be performed.
+         * @param[in] chargesNucleiContributions Values of the < psi_i | V_ion/nuclei | psi_i > contributions (in the order of the charges).
+         * @param[in] ionicMatrixes Matrixes of the < phi_i | V_ion/electrons | phi_j > contributions for the point charges.
+         * @param[out] psi_i_H_psi_j Output lower triangular matrix where the computed < psi_i | H | psi_j > values will be stored.
+         * @param[out] psi_i_HminusH0_psi_j Output lower triangular matrix where the computed < psi_i | H - H0 | psi_j > values will be stored.
+         * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
+         */
+        void computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedState>& excitedStates, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_psi_j, std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, int verbose = 0);
+
+        /**
+         * @brief Integrates the provided grids over the domain of a Critical Points grid (GridCP).
+         *
+         * @param[in,out] gcp GridCP reference that defines the integration domain and stores results.
+         * @param[in] GridFileNames Filenames of grids to integrate.
+         */
+        void computeLocalIntegrals(GridCP& gcp, const std::vector<std::string>& GridFileNames);
+
+        /**
+         * @brief Computes partial atomic charges from a grid using the specified method.
+         *
+         * @param[in] gridFilename Input grid filename used for partitioning and integration.
+         * @param[in] partitionMethod Partition method to use (AIM, VDD, Becke, ...).
+         * @return Vector of computed partial charges.
+         */
+        std::vector<double> computePartialCharges(const std::string& gridFilename, PartitionMethod partitionMethod);
+
+        /**
+         * @brief Computes partial charges and energy values from an analytic file.
+         *
+         * @param[out] energies Reference to vector where energy results will be stored.
+         * @param[in] analyticFileName Analytic file path.
+         * @return Vector of computed partial charges.
+         */
+        std::vector<double> computePartialChargesAndEnergy(std::vector<double>& energies, const std::string& analyticFileName);
 
         /**
          * @brief Builds an Orbitals or Becke helper object from an analytic file.
@@ -368,7 +369,8 @@ class Job
          * @param[out] analyticObject Constructed instance of type T, initialised with analytic data.
          * @param[in] analyticFileName Path to analytic file; detection by extension.
          */
-        template<typename T> void computeOrbitalsOrBecke(T& analyticObject, const std::string& analyticFileName);
+        template <typename T>
+        void computeOrbitalsOrBecke(T& analyticObject, const std::string& analyticFileName);
 
         /**
          * @brief Creates and saves a grid file (.cube) from the passed Orbitals instance, over a defined domain.
@@ -384,16 +386,27 @@ class Job
         void createCube(Orbitals& orbitals, const Domain& domain, const std::string& cubeFileName, int TypeFlag, const ELFMethod elfMethod = ELFMethod::SAVIN, std::vector<int> nums = {0}, std::vector<int> typesSpin = {0});
 
         /**
-         * @brief Builds a `Domain` suitable for cube creation from `orb` and sizing options.
-         *
-         * @param[in] orb Orbitals instance used to determine molecular extent.
-         * @param[in] gridSize Grid size token (Coarse/Medium/Fine/Custom).
-         * @param[in] customSizeData Custom size parameters (used when `gridSize==CUSTOM`).
-         * @param[in] Nval Number of values per grid point (used by Domain::set_all).
-         * @return Configured `Domain` instance.
+         * @brief Opens the configured input file.
          */
-        Domain buildDomainForCube(Orbitals& orb, const GridSize gridSize, const CustomSizeData& customSizeData, const int& Nval);
+        void openInputFile();
 
+        /**
+         * @brief Prints the list of available run types and their descriptions.
+         */
+        void printListOfRunTypes();
+
+        /**
+         * @brief Prints critical points information from a Critical Points grid (GridCP). (Not implemented yet.)
+         */
+        void printCriticalPoints();
+
+        /**
+         * @brief Extracts the molecular structure from an analytic file.
+         *
+         * @param[in] analyticFileName Name of the analytic file.
+         * @return Parsed Structure instance.
+         */
+        Structure returnStruct(const std::string& analyticFileName);
 
         /**
          * @brief Configures `orbitalsNumbers` and `orbitalsSpins` based on selection.
@@ -419,47 +432,47 @@ class Job
          */
         void setAllOrb(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType, const int& numberOfOrbitals);
 
-              /**
-               * @brief Selects occupied molecular orbitals according to occupations and spin selection.
-               *
-               * @param[out] orbnums Output vector of occupied orbital indices.
-               * @param[out] orbspin Output vector of spin flags for each selected orbital.
-               * @param[in] o Orbitals instance containing occupation numbers.
-               * @param[in] spinType Requested spin selection.
-               * @param[in] N Number of MOs available.
-               */
-           void setOccOrb(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, SpinType spinType, const int& N);
+        /**
+         * @brief Selects occupied molecular orbitals according to occupations and spin selection.
+         *
+         * @param[out] orbnums Output vector of occupied orbital indices.
+         * @param[out] orbspin Output vector of spin flags for each selected orbital.
+         * @param[in] o Orbitals instance containing occupation numbers.
+         * @param[in] spinType Requested spin selection.
+         * @param[in] N Number of MOs available.
+         */
+        void setOccOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType, const int& N);
         
-              /**
-               * @brief Selects virtual (unoccupied) molecular orbitals according to spin selection.
-               *
-               * @param[out] orbnums Output vector of virtual orbital indices.
-               * @param[out] orbspin Output vector of spin flags for each selected orbital.
-               * @param[in] o Orbitals instance containing occupation numbers.
-               * @param[in] spinType Requested spin selection.
-               * @param[in] N Number of MOs available.
-               */
-           void setVirtOrb(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType, const int &N);
+        /**
+         * @brief Selects virtual (unoccupied) molecular orbitals according to spin selection.
+         *
+         * @param[out] orbnums Output vector of virtual orbital indices.
+         * @param[out] orbspin Output vector of spin flags for each selected orbital.
+         * @param[in] o Orbitals instance containing occupation numbers.
+         * @param[in] spinType Requested spin selection.
+         * @param[in] N Number of MOs available.
+         */
+        void setVirtOrb(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType, const int &N);
 
-              /**
-               * @brief Selects LUMO orbital(s) according to spin selection.
-               *
-               * @param[out] orbnums Output vector set to LUMO index(es).
-               * @param[out] orbspin Output vector set to corresponding spin(s).
-               * @param[in] o Orbitals instance used to query occupations.
-               * @param[in] spinType Requested spin selection.
-               */
-           void setLumo(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType);
+        /**
+         * @brief Selects LUMO orbital(s) according to spin selection.
+         *
+         * @param[out] orbnums Output vector set to LUMO index(es).
+         * @param[out] orbspin Output vector set to corresponding spin(s).
+         * @param[in] o Orbitals instance used to query occupations.
+         * @param[in] spinType Requested spin selection.
+         */
+        void setLumo(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType);
 
-              /**
-               * @brief Selects HOMO orbital(s) according to spin selection.
-               *
-               * @param[out] orbnums Output vector set to HOMO index(es).
-               * @param[out] orbspin Output vector set to corresponding spin(s).
-               * @param[in] o Orbitals instance used to query occupations.
-               * @param[in] spinType Requested spin selection.
-               */
-           void setHomo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType);
+        /**
+         * @brief Selects HOMO orbital(s) according to spin selection.
+         *
+         * @param[out] orbnums Output vector set to HOMO index(es).
+         * @param[out] orbspin Output vector set to corresponding spin(s).
+         * @param[in] o Orbitals instance used to query occupations.
+         * @param[in] spinType Requested spin selection.
+         */
+        void setHomo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType);
 
         /**
          * @brief Selects HOMO and LUMO together according to spin selection.
@@ -471,48 +484,39 @@ class Job
          */
         void setHomoLumo(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType);
 
-              /**
-               * @brief Applies a custom orbital index list and corresponding spin list.
-               *
-               * @param[in,out] orbnums Input orbital indices (1-based expected; converted internally).
-               * @param[out] orbspin Output vector filled with parsed spin flags.
-               * @param[in] spinList Input vector of SpinType values corresponding to custom orbitals.
-               */
-           void setCustom(std::vector<int>& orbnums, std::vector<int>& orbspin, const std::vector<SpinType>& spinList);
-
-              /**
-               * @brief Computes descriptors with the finite-difference Becke method from analytic files.
-               *
-               * @param[in] ANAFileName1 First analytic input file.
-               * @param[in] ANAFileName2 Second analytic input file.
-               * @param[in] ANAFileName3 Third analytic input file.
-               */
-           void computeDescriptorsFD(const std::string& ANAFileName1, const std::string& ANAFileName2, const std::string& ANAFileName3);
+        /**
+         * @brief Applies a custom orbital index list and corresponding spin list.
+         *
+         * @param[in,out] orbnums Input orbital indices (1-based expected; converted internally).
+         * @param[out] orbspin Output vector filled with parsed spin flags.
+         * @param[in] spinList Input vector of SpinType values corresponding to custom orbitals.
+         */
+        void setCustom(std::vector<int>& orbnums, std::vector<int>& orbspin, const std::vector<SpinType>& spinList);
 
 
     public:
-            /**
-             * @brief Default constructor.
-             *
-             * Sets `_inputFileName` to "input.txt", initialises job lists and
-             * opens the input file stream.
-             */
+        /**
+         * @brief Default constructor.
+         *
+         * Sets `_inputFileName` to "input.txt", initialises job lists and
+         * opens the input file stream.
+         */
         Job();
 
-            /**
-             * @brief Construct a Job instance with a custom input filename.
-             * @param inputFileName Path to the input file to use.
-             */
+        /**
+         * @brief Construct a Job instance with a custom input filename.
+         * @param inputFileName Path to the input file to use.
+         */
         Job(std::string inputFileName);
 
-            /**
-             * @brief Destructor closes the input file stream.
-             */
+        /**
+         * @brief Destructor closes the input file stream.
+         */
         ~Job();
 
-            /**
-             * @brief Parse input and run the selected job.
-             */
+        /**
+         * @brief Parse input and run the selected job.
+         */
         void run();
 };
 

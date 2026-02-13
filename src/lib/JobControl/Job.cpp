@@ -166,9 +166,13 @@ void Job::readNuclearCutoff(double& nuclearCutoff)
     if (!readOneType<double>(_inputFile, "NuclearCutoff", nuclearCutoff))
     {
         std::cout << "Note: the \"NuclearCutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (NuclearCutoff=0.1)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (NuclearCutoff=0.0529177210544)." << std::endl << std::endl;
 
         nuclearCutoff = 0.1;
+    }
+    else
+    {
+        nuclearCutoff *= Constants::ANGSTROM_TO_BOHR_RADIUS;
     }
 }
 
@@ -495,24 +499,28 @@ void Job::readVerbose(int& verbose)
 void Job::setJobList()
 {
     _jobsList = { "Help",
-                  "computePartialCharges",
-                  "computeDescriptors",
-                  "computeIntegrals",
-                  "computeGridDifference",
+                  "ComputeDescriptors",
+                  "ComputeEnergyWithPointCharges",
+                  "ComputeGridDifference",
+                  "ComputeIntegrals",
+                  "ComputePartialCharges",
+                  "ConvertOrbitals",
                   "MakeDensityCube",
-                  "MakeOrbitalsCube",
                   "MakeELFCube",
-                  "ConvertOrbitals" };
+                  "MakeOrbitalsCube",
+                  "LambdaDiagnostic" };
     
     _jobDescription = { "Details are given for the available jobs run by this program.\nExample input files for each job are also given. In this format, comment lines are specified by # at the start of the line",
-                        "Grid-based computations of partial charges of the molecule. We provide 5 ways of computing atomic volumes, the first 3 of which are based on Bader's Atoms in molecule.\n\n **on-grid** : follows Tang's algorithm to find Bader volumes.\n **near-grid** : more precise version of on-grid.\n **near-grid-refinement** : even more precise. Requires more time.\n **VDD** topological method : assigns points to volumes by distance to closest atom.\n **Becke** : uses a regular density grid to interpolate Becke's atomic variable grids.\n\n Example format for input file :\n\n#RunType\n#RunType=Help\nRunType=ComputePartialCharges\n#GridFileName\nGrids=h2o_80_0.gcube \nPartitionMethod=on-grid\n\nW. Tang, E. Sanville, G. Henkelman, A grid-based bader analysis algorithm without lattice bias, Journal of Physics: Condensed Matter 21 (8) (2009) 084204.",
                         "Computation of chemical descriptors from analytic or cube files using on-grid, near-grid, near-grid-refinement and Becke. Frontier Molecular Orbitals(FMO) and finite difference(FD) are methods also provided for the computation. FMO requires 1 analytic file (.log, .wfx, .molden,...). FD requires 3 analytic files. The other methods require cube files of nucleophilic, electrophilic and radical attacks for the molecule. Energies must also be given by the user:\nif two are given, they are assumed to be the ionization energy and the electron affinity. If 3 are given they are assumed to be the total energies of each file. \n\n Example format for input file :\n\n#RunType=Help\n#RunType=ComputeDescriptorsFromCubes\n#GridFileName\nGrids=grid1.cube, grid2.cube, grid3.cube\nPartitionMethod=on-grid\nEnergies=I, A or E1,E2,E3",
-                        "Compute local integrals of grids on volumes defined by method of choice. A grid is required to define the volumes.\nThe additional grids provided by the user should contain the quantities to be integrated.\n\n **on-grid** : to define volumes using on-grid AIM. Requires electronic density grid.\n **near-grid** : to define volumes using near-grid AIM. Requires electronic density grid.\n **near-grid-refinement : to define volumes using near-grid-refinement AIM. Requires electronic density grid.\n **VDD** : to define volumes by distance to atoms. Can use any type of density.\n **BBS** : Build Basins By SIGN. Requires a grid of density difference. A job is provided in the program to obtain such a grid. An additional input *Cutoff=* is required for BBS that sets a threshold for insignificant values.\n **B2S** : Build 2 basins by SIGN. Same as BBS but only constructs two volumes.\n\n Example format for input file :\n\n#RunType=Help\n#RunType=ComputeIntegrals\n#GridFileName\nGrids=gridDefiningVolumes.cube, grid1ToBeIntegrated.cube, grid2ToBeIntegrated.cube\nPartitionMethod=BBS\nCutoff=1e-10",
+                        "Computes the new energy levels of a system when one or many point charges are added.",
                         "Computes the differences of values of the first two grids provides and assigns them to the third.\n\n Example format for input file : \n\n#Runtype=Help\nRunType=ComputeDifference\n#GridFileName\nGrids=in1.cube, in2.cube, out.cube ",
+                        "Compute local integrals of grids on volumes defined by method of choice. A grid is required to define the volumes.\nThe additional grids provided by the user should contain the quantities to be integrated.\n\n **on-grid** : to define volumes using on-grid AIM. Requires electronic density grid.\n **near-grid** : to define volumes using near-grid AIM. Requires electronic density grid.\n **near-grid-refinement : to define volumes using near-grid-refinement AIM. Requires electronic density grid.\n **VDD** : to define volumes by distance to atoms. Can use any type of density.\n **BBS** : Build Basins By SIGN. Requires a grid of density difference. A job is provided in the program to obtain such a grid. An additional input *Cutoff=* is required for BBS that sets a threshold for insignificant values.\n **B2S** : Build 2 basins by SIGN. Same as BBS but only constructs two volumes.\n\n Example format for input file :\n\n#RunType=Help\n#RunType=ComputeIntegrals\n#GridFileName\nGrids=gridDefiningVolumes.cube, grid1ToBeIntegrated.cube, grid2ToBeIntegrated.cube\nPartitionMethod=BBS\nCutoff=1e-10",
+                        "Grid-based computations of partial charges of the molecule. We provide 5 ways of computing atomic volumes, the first 3 of which are based on Bader's Atoms in molecule.\n\n **on-grid** : follows Tang's algorithm to find Bader volumes.\n **near-grid** : more precise version of on-grid.\n **near-grid-refinement** : even more precise. Requires more time.\n **VDD** topological method : assigns points to volumes by distance to closest atom.\n **Becke** : uses a regular density grid to interpolate Becke's atomic variable grids.\n\n Example format for input file :\n\n#RunType\n#RunType=Help\nRunType=ComputePartialCharges\n#GridFileName\nGrids=h2o_80_0.gcube \nPartitionMethod=on-grid\n\nW. Tang, E. Sanville, G. Henkelman, A grid-based bader analysis algorithm without lattice bias, Journal of Physics: Condensed Matter 21 (8) (2009) 084204.",
+                        "Convert Analytical file.\nSupported file formats are : wfx, fchk, log, molden, gab.\nOutput supported : wfx, molden, gab\n\n Example format for input file : \n\n#RunType=Help\nRunType=ConvertOrbitals\nAnalyticFiles=input.wfx, output.molden",
                         "Create a density grid and save it in .cube format. .wfx , .fchk , .molden , .gab and .log are supported as input files.\nthe user can choose from 3 standard grid sizes:\ncoarse ( 3 pts / Bohr)\nMedium (6 pts / Bohr)\nFine (12 pts / Bohr)\n\nA custom size is also provided in which the user enters the domain data as follows:\nNx, Ny, Nz, Ox, Oy, Oz, T11, T12, T13, T21, T22, T23, T31, T32, T33\nWhere N is the number of points in the ith direction, Oi are the coordinates of the bottom left corner of the cube and Tij are the coeficients of the translation vector.\n\n Example format for input file : \n\n#RunType=Help\nRunType=MakeDensityCube\n#GridFileName\nAnalyticFile=filename.wfx\nSize=Custom\nCustomSizeData=80,80,80,5,5,5,0.15,0,0,0,0.15,0,0,0,0.15\nGrid=save.cube ",
-                        "Compute a grid of molecular orbitals' values and save it in .cube format. All parameters for the grid domain are the same as MakeDensityCube. Additional input lines are required for the computation of molecular orbitals.\nThe user must specify which orbitals took take into account:\n All : **All**\n Occupied : **Occ**\n Virtual : **Virtual**\n Homo : **Homo**\n Lumo : **Lumo**\n Homo and lumo : **Homo, Lumo**\n Custom : **OrbitalsList=Orbital number specified by user**\nBy default the program will run with all MOs.\n\nThe choice of spin is also given:\n **SpinType=Alpha**\n **SpinType=Beta**\n **SpinType=Alpha, Beta**\n\nIf the user provides a custom list of orbitals the user can provide a list of spins corresponding to each orbital. This is done in **SpinList=alpha, beta, ...**.\nIf SpinList is shorter n length than OrbitalsList the program will fill the rest of the list with the last value read in the list",
                         "Create a grid and compute the Electron Localisation Function (ELF) using either Savin or Becke method. Grid domain is defined the same as the MakeDensityCube.\nBy default the program will run Savin ELF.\n\n Example format for input file : \n\n#RunType=Help\nRunType=MakeELFCube\n#GridFileName\nAnalyticFile=filename.wfx\nSize=Medium\nELFmethod=Becke\nGrid=save.cube",
-                        "Convert Analytical file.\nSupported file formats are : wfx, fchk, log, molden, gab.\nOutput supported : wfx, molden, gab\n\n Example format for input file : \n\n#RunType=Help\nRunType=ConvertOrbitals\nAnalyticFiles=input.wfx, output.molden" };
+                        "Compute a grid of molecular orbitals' values and save it in .cube format. All parameters for the grid domain are the same as MakeDensityCube. Additional input lines are required for the computation of molecular orbitals.\nThe user must specify which orbitals took take into account:\n All : **All**\n Occupied : **Occ**\n Virtual : **Virtual**\n Homo : **Homo**\n Lumo : **Lumo**\n Homo and lumo : **Homo, Lumo**\n Custom : **OrbitalsList=Orbital number specified by user**\nBy default the program will run with all MOs.\n\nThe choice of spin is also given:\n **SpinType=Alpha**\n **SpinType=Beta**\n **SpinType=Alpha, Beta**\n\nIf the user provides a custom list of orbitals the user can provide a list of spins corresponding to each orbital. This is done in **SpinList=alpha, beta, ...**.\nIf SpinList is shorter n length than OrbitalsList the program will fill the rest of the list with the last value read in the list",
+                        "Prints the result of the Lambda diagnostic test, as described by Peach et al., that judges the reliability of TDDFT excited states calculations. It also allows to validate the grid size configuration by computing overlap integrals between the orbitals involved in the excited states." };
 }
 
 void Job::printListOfRunTypes()
@@ -595,7 +603,7 @@ void Job::computeLocalIntegrals(GridCP& gcp, const std::vector<std::string>& Gri
     }
 }
 
-void Job::ComputeGridDifference(const std::string& minuendGridFilename, const std::string& subtrahendGridFilename, const std::string& outputGridFilename)
+void Job::computeGridDifference(const std::string& minuendGridFilename, const std::string& subtrahendGridFilename, const std::string& outputGridFilename)
 {
     std::ifstream minuendFile(minuendGridFilename);
     Grid minuendGrid(minuendFile, _table);
@@ -1523,7 +1531,6 @@ void Job::run_computeEnergyWithPointCharges()
 
     // Keep a const reference on orbitals' atoms
     const std::vector<Atom>& atoms = orbitals.get_struct().get_atoms();
-    size_t nbAtoms = atoms.size();
 
 
     // Read point charges
@@ -1548,10 +1555,11 @@ void Job::run_computeEnergyWithPointCharges()
             chargesPositions.push_back(atom.get_coordinates());
         }
     }
+    size_t nbChargePositions = chargesPositions.size();
 
 
     // Check number of charges positions
-    if (!loopOnAtoms && chargesPositions.size() != charges.size())
+    if (!loopOnAtoms && nbChargePositions != nbCharges)
     {
         std::stringstream errorMessage;
         errorMessage << "Error: incorrect number of point charges positions." << std::endl;
@@ -1576,9 +1584,9 @@ void Job::run_computeEnergyWithPointCharges()
     {
         for (size_t i = 0; i < nbCharges; ++i)
         {
-            for (size_t j = 0; j < nbAtoms; ++j)
+            for (size_t j = 0; j < nbChargePositions; ++j)
             {
-                std::cout << "Run #" << i * nbAtoms + j + 1 << ": point charge #" << i + 1 << " of " << charges[i] << " e, on " << atoms[j].get_name() << " at position (" << std::setprecision(10) << chargesPositions[j][0] << ", " << chargesPositions[j][1] << ", " << chargesPositions[j][2] << ")." << std::defaultfloat << std::endl;
+                std::cout << "Run #" << i * nbChargePositions + j + 1 << ": point charge #" << i + 1 << " of " << charges[i] << " e, on " << atoms[j].get_name() << " at position (" << std::setprecision(10) << chargesPositions[j][0] << ", " << chargesPositions[j][1] << ", " << chargesPositions[j][2] << ")." << std::defaultfloat << std::endl;
             }
         }
     }
@@ -1652,9 +1660,9 @@ void Job::run_computeEnergyWithPointCharges()
 
 
     // Compute ionic matrixes only once.
-    // We build a 5D vector of size [nbLoops][nbCharges][spin][nbStates][0..nbStates] to store the ionic matrixes.
+    // We build a 5D vector of size [nbCharges][nbPositions][spin][nbStates][0..nbStates] to store the ionic matrixes.
     // The first dimension corresponds to the number of point charges.
-    // The second dimension corresponds to the number of loops (in case the program has to loop on atoms positions).
+    // The second dimension corresponds to the number of positions for the point charges (in case the program has to loop on atoms positions).
     // The third dimension corresponds to the spin (0 for alpha, 1 for beta).
     // the fourth and fifth dimensions correspond to the indices of the matrix elements (i and j) with j <= i (lower triangular matrix).
     std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>> ionicMatrixes(nbCharges);
@@ -1663,13 +1671,13 @@ void Job::run_computeEnergyWithPointCharges()
     {
         for (size_t i = 0; i < nbCharges; ++i)
         {
-            ionicMatrixes[i].resize(atoms.size());
+            // In the looping case, each charge has multiple positions (one for each atom).
+            // So we need to compute the ionic matrixes for each position of the charge.
+            ionicMatrixes[i].resize(nbChargePositions);
 
-            size_t j = 0;
-            for (const Atom& atom : atoms)
+            for (size_t j = 0; j < nbChargePositions; ++j)
             {
-                ionicMatrixes[i][j] = orbitals.getIonicPotentialMatrix(atom.get_coordinates(), charges[i]);
-                ++j;
+                ionicMatrixes[i][j] = orbitals.getIonicPotentialMatrix(chargesPositions[j], charges[i]);
             }
         }
     }
@@ -1677,6 +1685,8 @@ void Job::run_computeEnergyWithPointCharges()
     {
         for (size_t i = 0; i < nbCharges; ++i)
         {
+            // In the non-looping case, each charge has only one position.
+            // So we compute the ionic matrixes only once for each charge and store it in the first position of the second dimension of the vector.
             ionicMatrixes[i].resize(1);
             ionicMatrixes[i][0] = orbitals.getIonicPotentialMatrix(chargesPositions[i], charges[i]);
         }
@@ -1689,9 +1699,9 @@ void Job::run_computeEnergyWithPointCharges()
     {
         if (loopOnAtoms)
         {
-            chargeNucleiContributions[i].resize(nbAtoms, 0.0);
+            chargeNucleiContributions[i].resize(nbChargePositions, 0.0);
 
-            for (size_t j = 0; j < chargesPositions.size(); ++j)
+            for (size_t j = 0; j < nbChargePositions; ++j)
             {
                 for (const Atom& atom : atoms)
                 {
@@ -1776,7 +1786,7 @@ void Job::run_computeEnergyWithPointCharges()
             int chargeIndex = runIndex / atoms.size();
             int atomIndex = runIndex % atoms.size();
             
-            std::cout << "====================== LOOP #" << runIndex + 1
+            std::cout << "====================== RUN #" << runIndex + 1
                       << ": charge of " << charges[chargeIndex] 
                       << " e on " << atoms[atomIndex].get_name()
                       << " at position (" << std::setprecision(10) << chargesPositions[atomIndex][0] << ", " << chargesPositions[atomIndex][1] << ", " << chargesPositions[atomIndex][2]
@@ -1890,8 +1900,7 @@ void Job::run_computeEnergyWithPointCharges()
             }
         }
 
-
-        std::cout << std::endl << std::endl << "------ Perturbative approach (cf. Guégan et al., PCCP 2020) ------" << std::endl << std::endl;
+        std::cout << "------ Perturbative approach (cf. Guégan et al., PCCP 2020) ------" << std::endl << std::endl;
 
         bool warningPrinted = false;
 
@@ -2018,6 +2027,8 @@ void Job::run_computeEnergyWithPointCharges()
         // Compute E_polarisation and dS for each state using respectively Eq. (26) and Eq. (32) in Guégan et al., PCCP 2020
         std::vector<double> dS_perturb(nbStates, 0.0);
         std::vector<double> E_pola_perturb(nbStates, 0.0);
+        double dS_perturb_state0_withoutRenormalisation = 0.0;
+        double E_pola_perturb_state0_withoutRenormalisation = 0.0;
 
         std::cout << "E_polarisation and dS using respectively Eq. (26) and Eq. (32) in Guégan et al., PCCP 2020:" << std::endl;
 
@@ -2042,19 +2053,39 @@ void Job::run_computeEnergyWithPointCharges()
 
             dS_perturb[i] = sum_dS * Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
             E_pola_perturb[i] = sum_Epola * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
+
+            // Treating the ground state without renormalisation separately
+            if (dpk_perturb_state0_withoutRenormalisation[i] != 0)
+            {
+                dS_perturb_state0_withoutRenormalisation -= dpk_perturb_state0_withoutRenormalisation[i] * std::log(dpk_perturb_state0_withoutRenormalisation[i]);
+
+                if (i != 0)
+                {
+                    E_pola_perturb_state0_withoutRenormalisation -= dpk_perturb_state0_withoutRenormalisation[i] * (states[0].get_energy() - states[i].get_energy());
+                }
+            }
         }
 
-        std::cout << "dS (J/mol/K) and |E_polarisation| (J/mol) for each state:" << std::endl;
+        dS_perturb_state0_withoutRenormalisation *= Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
+        E_pola_perturb_state0_withoutRenormalisation *= Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
+
+        std::cout << "dS (J/mol/K) and |E_polarisation| (J/mol) for ground state without renormalisation:" << std::endl;
         std::cout << std::scientific;
         std::cout << std::setprecision(10);
+        std::cout << std::right << std::setw(17) << dS_perturb_state0_withoutRenormalisation << '\t';
+        std::cout << std::right << std::setw(17) << std::abs(E_pola_perturb_state0_withoutRenormalisation) << std::endl << std::endl;
+
+        std::cout << "dS (J/mol/K) for each state:" << std::endl;
         for (size_t i = 0; i < nbStates; ++i)
         {
             std::cout << std::right << std::setw(17) << dS_perturb[i] << '\t';
         }
-        std::cout << std::endl;
+        std::cout << std::endl << std::endl;
+
+        std::cout << "|E_polarisation| (J/mol) for each state:" << std::endl;
         for (size_t i = 0; i < nbStates; ++i)
         {
-            std::cout << std::right << std::setw(17) << E_pola_perturb[i] << '\t';
+            std::cout << std::right << std::setw(17) << std::abs(E_pola_perturb[i]) << '\t';
         }
         std::cout << std::defaultfloat << std::endl;
 
@@ -2078,14 +2109,23 @@ void Job::run_computeEnergyWithPointCharges()
 
             std::cout << std::endl;
         }
-        std::cout << std::defaultfloat << std::endl << std::endl;
+        std::cout << std::defaultfloat << std::endl;
 
+        // Search for the excited state that has the maximum contribution from the ground state to compare with the perturbative approach.
+        size_t maxGroundContributionExcitedState = 0;
+        double maxContribution = dpk_varia[0][0];
+        for (size_t i = 1; i < nbStates; ++i)
+        {
+            if (dpk_varia[0][i] > maxContribution)
+            {
+                maxContribution = dpk_varia[0][i];
+                maxGroundContributionExcitedState = i;
+            }
+        }
 
         // Compute E_polarisation and dS for each state
         std::vector<double> dS_varia(nbStates, 0.0);
         std::vector<double> E_pola_varia(nbStates, 0.0);
-
-        std::cout << "E_polarisation and dS:" << std::endl;
 
         for (size_t i = 0; i < nbStates; ++i)
         {
@@ -2093,40 +2133,42 @@ void Job::run_computeEnergyWithPointCharges()
             double sum_Epola = 0.0;
             for (size_t j = 0; j < nbStates; ++j)
             {
-                if (dpk_varia[i][j] != 0)
+                if (dpk_varia[j][i] != 0)
                 {
-                    sum_dS -= dpk_varia[i][j] * std::log(dpk_varia[i][j]);
+                    sum_dS -= dpk_varia[j][i] * std::log(dpk_varia[j][i]);
 
                     if (i != j)
                     {
                         // Note : degeneracy is already handled in the computation of dp_k coefficients
                         // So we can safely compute the energy difference here without checking for division by zero again.
-                        sum_Epola -= dpk_varia[i][j] * (states[j].get_energy() - states[i].get_energy());
+                        sum_Epola -= dpk_varia[j][i] * (states[i].get_energy() - states[j].get_energy());
                     }
                 }
             }
 
-            dS_perturb[i] = sum_dS * Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
-            E_pola_perturb[i] = sum_Epola * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
+            dS_varia[i] = sum_dS * Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
+            E_pola_varia[i] = sum_Epola * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
         }
 
-        std::cout << "dS (J/mol/K) and |E_polarisation| (J/mol) for each state:" << std::endl;
+        std::cout << "dS (J/mol/K) and |E_polarisation| (J/mol) for the excited state with maximum contribution from the ground state | 0 > (| " << maxGroundContributionExcitedState << "' >, with dp_" << maxGroundContributionExcitedState << " = " << std::setprecision(10) << dpk_varia[0][maxGroundContributionExcitedState] << ")." << std::endl;
         std::cout << std::scientific;
         std::cout << std::setprecision(10);
+        std::cout << std::right << std::setw(17) << dS_varia[maxGroundContributionExcitedState] << '\t';
+        std::cout << std::right << std::setw(17) << std::abs(E_pola_varia[maxGroundContributionExcitedState]) << std::endl << std::endl;
+
+        std::cout << "dS (J/mol/K) for each state:" << std::endl;
         for (size_t i = 0; i < nbStates; ++i)
         {
-            std::cout << std::right << std::setw(17) << dS_perturb[i] << '\t';
+            std::cout << std::right << std::setw(17) << dS_varia[i] << '\t';
         }
-        std::cout << std::endl;
+        std::cout << std::endl << std::endl;
+
+        std::cout << "|E_polarisation| (J/mol) for each state:" << std::endl;
         for (size_t i = 0; i < nbStates; ++i)
         {
-            std::cout << std::right << std::setw(17) << E_pola_perturb[i] << '\t';
+            std::cout << std::right << std::setw(17) << std::abs(E_pola_varia[i]) << '\t';
         }
         std::cout << std::defaultfloat << std::endl;
-
-
-
-
 
 
         if (loopOnAtoms)
@@ -2134,35 +2176,7 @@ void Job::run_computeEnergyWithPointCharges()
             std::cout << std::endl;
         }
     }
-
     
-
-
-
-
-
-
-
-
-    
-
-
-
-    
-    
-
-
-
-    // Compute dS and E_polarisation for each state
-    
-    //std::vector<double> E_polarisation_abs(nbStates, 0.0);
-    
-
-
-    /*
-    // Print dS and E_polarisation results
-    
-    */
     
 
     /*
@@ -2273,7 +2287,7 @@ void Job::run_computeGridDifference()
     // Compute grid difference
     std::cout << "Computing difference between " << gridFilesNames[0] << " and " << gridFilesNames[1] << '.' << std::endl;
     
-    ComputeGridDifference(gridFilesNames[0], gridFilesNames[1], gridFilesNames[2]);
+    computeGridDifference(gridFilesNames[0], gridFilesNames[1], gridFilesNames[2]);
     
     std::cout << "Difference grid saved to file " << gridFilesNames[2] << '.' << std::endl;
 }

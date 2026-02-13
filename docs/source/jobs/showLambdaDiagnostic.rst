@@ -17,12 +17,10 @@ This job requires a file containing the list of electronic transitions to analys
     7 B 9 B 0.69993
 
     Energy 9.7919 eV
-    5 A 9 A -0.49831
-    5 B 9 B -0.49831
-    6 A 8 A 0.49831
-    6 B 8 B 0.49831
+    5 9 -0.49831
+    6 8 0.49831
 
-Each excited state starts with a line indicating its energy. Accepted units are ``eV`` (electronvolt) or ``H`` (Hartree). This line is followed by one or more lines describing the electronic transitions that contribute to this excited state. Each transition line contains five space-separated values: the number of the occupied orbital and its spin (``A`` for alpha, ``B`` for beta), the number of the virtual orbital and its spin, and the coefficient of the transition.
+Each excited state starts with a line indicating its energy. Accepted units are ``eV`` (electronvolt) or ``H`` (Hartree). This line is followed by one or more lines describing the electronic transitions that contribute to this excited state. Each transition line contains three or five space-separated values. In the first excited state above, five values are given: the number of the occupied orbital and its spin (``A`` for alpha, ``B`` for beta), the number of the virtual orbital and its spin, and the coefficient of the transition. In the second excited state, only three values are given: the number of the occupied orbital, the number of the virtual orbital and the coefficient. In this case, it is assumed that the line describes both an alpha and a beta electrons (i.e. the first line for this state could be expanded into two lines: ``5 A 9 A -0.49831`` and ``5 B 9 B -0.49831``).
 
 
 Available Grid sizes

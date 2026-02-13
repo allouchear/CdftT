@@ -491,14 +491,121 @@ bool ExcitedState::readTransitionsFromLogFile(const std::string& logFileName, st
     return ok;
 }
 
-bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy)
+bool ExcitedState::readTransitionsFromOrcaOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const bool alphaAndBeta)
+{
+    bool ok = true;
+
+    std::ifstream orcaOutFile(orcaOutFileName);
+    if (orcaOutFile)
+    {
+        std::string line;
+        while (!orcaOutFile.eof())
+        {
+            // Read line
+            std::getline(orcaOutFile, line);
+            line = trim_whitespaces(line, true, true);
+
+            if (line.empty())
+            {
+                continue;
+            }
+            else
+            {
+                // New excited state: read energy
+                std::regex energyRegex("STATE\\s+\\d+:.*\\s+(?:(-?\\d*\\.?\\d+) au).*");
+                std::smatch energyRegexMatch;
+                if (std::regex_search(line, energyRegexMatch, energyRegex))
+                {
+                    double energy = std::stod(energyRegexMatch[1]);
+
+                    ExcitedState excitedState(energy + groundStateEnergy);
+
+                    do
+                    {
+                        std::getline(orcaOutFile, line);
+                        line = trim_whitespaces(line, true, true);
+
+                        if (!line.empty())
+                        {
+                            // First, consider the case where the spins are specified
+                            std::regex transitionRegexAlphaBeta("(\\d+)(a|b)\\s+->\\s+(\\d+)(a|b).+c=\\s+(-?\\d*\\.?\\d+)");
+                            std::smatch transitionRegexAlphaBetaMatch;
+                            if (std::regex_search(line, transitionRegexAlphaBetaMatch, transitionRegexAlphaBeta))
+                            {
+                                std::pair<int, SpinType> initialOrbital;
+                                std::pair<int, SpinType> finalOrbital;
+
+                                initialOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[1]);
+                                initialOrbital.second = (transitionRegexAlphaBetaMatch[2] == "A" ? SpinType::ALPHA : SpinType::BETA);
+
+                                finalOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[3]);
+                                finalOrbital.second = (transitionRegexAlphaBetaMatch[4] == "A" ? SpinType::ALPHA : SpinType::BETA);
+
+                                double coefficient = std::stod(transitionRegexAlphaBetaMatch[5]);
+
+                                excitedState.addTransition(initialOrbital, finalOrbital, coefficient);
+
+                                // If alphaAndBeta is true, we must also add the beta transition with the same coefficient
+                                if (alphaAndBeta)
+                                {
+                                    initialOrbital.second = SpinType::BETA;
+                                    finalOrbital.second = SpinType::BETA;
+
+                                    excitedState.addTransition(initialOrbital, finalOrbital, coefficient);
+                                }
+                            }
+                        }
+                    } while (!orcaOutFile.eof() && !line.empty());
+
+                    // Check that at least one transition was read
+                    if (excitedState.getNumberOfTransitions() > 0)
+                    {
+                        // Add excited state to the list
+                        excitedStates.push_back(excitedState);
+                    }
+                    else
+                    {
+                        ok = false;
+
+                        std::stringstream errorMessage;
+                        errorMessage << "Error: no transition found for excited state with energy " << excitedState.get_energy() << " in Orca .out file " << orcaOutFileName << '.' << std::endl;
+                        errorMessage << "Please check the documentation for the format of the file.";
+
+                        print_error(errorMessage.str());
+
+                        std::exit(1);
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        ok = false;
+
+        std::stringstream errorMessage;
+        errorMessage << "Error: could not open transitions file " << orcaOutFileName << '.' << std::endl;
+        errorMessage << "Please check that the file exists and is readable.";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return ok;
+}
+
+bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const bool alphaAndBeta)
 {
     bool ok = true;
 
     if (fileName.substr(fileName.length() - 4) == ".log")
     {
-        // Read as a .log file
         ok = readTransitionsFromLogFile(fileName, excitedStates, groundStateEnergy);
+    }
+    else if (fileName.substr(fileName.length() - 4) == ".out")
+    {
+        ok = readTransitionsFromOrcaOutFile(fileName, excitedStates, groundStateEnergy, alphaAndBeta);
     }
     else
     {

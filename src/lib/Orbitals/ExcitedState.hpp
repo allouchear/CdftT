@@ -132,6 +132,16 @@ class ExcitedState
         static bool readTransitionsFromLogFile(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
 
         /**
+         * @brief Reads transitions from an Orca .out file and populates a vector of ExcitedState objects. *
+         * @param[in] orcaOutFileName Name of the Orca output file to read.
+         * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
+         * @param[in] groundStateEnergy Energy of the ground state, in Hartree. 
+         * @param[in] alphaAndBeta Whether beta transitions are the same as alpha ones (true) or not. 
+         * @return True if reading was successful, false otherwise.
+         */
+        static bool readTransitionsFromOrcaOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const bool alphaAndBeta);
+
+        /**
          * @brief Reads transitions from the provided file and populates a vector of ExcitedState objects.
          *
          * @param[in] fileName Name of the file to read.
@@ -139,7 +149,7 @@ class ExcitedState
          * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
+        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const bool alphaAndBeta = true);
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS
