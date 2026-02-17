@@ -3,6 +3,8 @@
 # ignore ALL files in ANY directory named temp
 bin/
 Documentation/
+# ignore ALL .cdftt files (output files)
+*.cdftt
 # ignore ALL .o files
 */*/*/*.wfx
 */*/*/*.molden
