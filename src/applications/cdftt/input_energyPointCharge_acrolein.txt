@@ -2,4 +2,5 @@ Charges=-0.1,-0.3
 RunType=ComputeEnergyWithPointCharges
 AnalyticFiles=tests/Guegan2020/acrolein.fchk
 TransitionsFile=tests/Guegan2020/acrolein.log
+OutputPrefix=acrolein_gaussian
 Verbose=0

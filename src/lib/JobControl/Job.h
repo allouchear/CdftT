@@ -84,6 +84,13 @@ class Job
         void readGridFilesNames(std::vector<std::string>& gridFilesNames);
 
         /**
+         * @brief Reads the energy of the ground state from the "GroundStateEnergy" parameter in the input file.
+         * 
+         * @param[out] energy Reference to a double where the read energy value will be stored.
+         */
+        void readGroundStateEnergy(double& energy);
+
+        /**
          * @brief Reads the cutoff distance for nuclear contribution from the "NuclearCutoff" parameter in the input file.
          *
          * @param[out] nuclearCutoff Reference to a double where the read cutoff distance will be stored.
@@ -110,6 +117,13 @@ class Job
          * @param[out] orbitalType Reference to an OrbitalType variable where the parsed selected orbital type will be stored.
          */
         void readOrbitalType(OrbitalType& orbitalType);
+
+        /**
+         * @brief Reads the output filename prefix from the "OutputPrefix" parameter in the input file.
+         *
+         * @param[out] outputPrefix Reference to a string where the read output prefix will be stored.
+         */
+        void readOutputPrefix(std::string& outputPrefix);
 
         /**
          * @brief Reads the partition method from the "PartitionMethod" parameter in the input file.
@@ -324,7 +338,7 @@ class Job
          * @param[out] psi_i_HminusH0_psi_j Output lower triangular matrix where the computed < psi_i | H - H0 | psi_j > values will be stored.
          * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
          */
-        void computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedState>& excitedStates, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_psi_j, std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, int verbose = 0);
+        void computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedState>& excitedStates, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_psi_j, std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, std::ofstream& logFile, int verbose = 0);
 
         /**
          * @brief Integrates the provided grids over the domain of a Critical Points grid (GridCP).
@@ -371,6 +385,12 @@ class Job
          */
         template <typename T>
         void computeOrbitalsOrBecke(T& analyticObject, const std::string& analyticFileName);
+
+        /**
+         * @brief Computes and prints the energy results from Hamiltonian matrix elements with point charges.
+         * 
+         */
+        void computeResultsEnergyWithPointCharges(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, const std::string& outputFilePrefix, std::ofstream& lofFile, int verbose);
 
         /**
          * @brief Creates and saves a grid file (.cube) from the passed Orbitals instance, over a defined domain.

@@ -181,6 +181,149 @@ void ExcitedState::printLambdaDiagnostic(const Grid& grid) const
 // STATIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
+bool ExcitedState::readGroundStateEnergyFromLogFile(const std::string& logFileName, double& groundStateEnergy)
+{
+    bool ok = true;
+    bool found = false;
+
+    std::ifstream logFile(logFileName);
+    if (logFile)
+    {
+        std::string line;
+        std::getline(logFile, line);
+        while (!logFile.eof() && !found)
+        {
+            line = trim_whitespaces(line, true, true);
+
+            if (line.empty())
+            {
+                continue;
+            }
+
+            std::regex energyRegex("E\\(.*\\)\\s*=\\s*(-?\\d+(?:\\.\\d+)?)\\s+A\\.U\\.\\s+after\\s+\\d+\\s+cycles");
+            std::smatch energyRegexMatch;
+            if (std::regex_search(line, energyRegexMatch, energyRegex))
+            {
+                groundStateEnergy = std::stod(energyRegexMatch[1]);
+                found = true;
+            }
+        }
+
+        if (!found)
+        {
+            print_error("Error: could not read energy from LOG file.");
+            std::exit(1);
+        }
+    }
+    else
+    {
+        ok = false;
+    }
+
+    return (ok && found);
+}
+
+bool ExcitedState::readGroundStateEnergyFromOrcaOutFile(const std::string& orcaOutFileName, double& energy)
+{
+    bool ok = true;
+    bool found = false;
+
+    std::ifstream orcaOutFile(orcaOutFileName);
+    if (orcaOutFile)
+    {
+        std::string line;
+        while (!orcaOutFile.eof() && !found)
+        {
+            std::getline(orcaOutFile, line);
+            line = trim_whitespaces(line, true, true);
+
+            if (line.empty())
+            {
+                continue;
+            }
+
+            // Look for the ground state energy in the file
+            std::regex energyRegex("Total Energy\\s+:\\s+(-?\\d*\\.?\\d+)\\s+Eh");
+            std::smatch energyRegexMatch;
+            if (std::regex_search(line, energyRegexMatch, energyRegex))
+            {
+                energy = std::stod(energyRegexMatch[1]);
+                found = true;
+            }
+        }
+
+        if (!found)
+        {
+            print_error("Error: could not read energy from OUT file.");
+            std::exit(1);
+        }
+    }
+    else
+    {
+        ok = false;
+    }
+
+    return (ok && found);
+}
+
+bool ExcitedState::readGroundStateEnergyFromTransitionsFile(const std::string& transitionsFileName, double& groundStateEnergy)
+{
+    bool ok = true;
+    bool found = false;
+
+    std::ifstream transitionsFile(transitionsFileName);
+    if (transitionsFile)
+    {
+        std::string line;
+        while (!transitionsFile.eof() && !found)
+        {
+            std::getline(transitionsFile, line);
+            line = trim_whitespaces(line, true, true);
+
+            if (line.empty())
+            {
+                continue;
+            }
+
+            // Look for the ground state energy in the file
+            std::regex groundStateEnergyRegex("Ground State Energy\\s+:\\s+(-?\\d*\\.?\\d+)\\s+(eV|H)");
+            std::smatch groundStateEnergyRegexMatch;
+            if (std::regex_search(line, groundStateEnergyRegexMatch, groundStateEnergyRegex))
+            {
+                groundStateEnergy = std::stod(groundStateEnergyRegexMatch[1]);
+                found = true;
+            }
+        }
+    }
+    else
+    {
+        ok = false;
+    }
+
+    return (ok && found);
+}
+
+bool ExcitedState::readGroundStateEnergy(const std::string& fileName, double& groundStateEnergy)
+{
+    bool ok = true;
+
+    if (fileName.substr(fileName.length() - 4) == ".log")
+    {
+        ok = readGroundStateEnergyFromLogFile(fileName, groundStateEnergy);
+    }
+    else if (fileName.substr(fileName.length() - 4) == ".out")
+    {
+        ok = readGroundStateEnergyFromOrcaOutFile(fileName, groundStateEnergy);
+    }
+    else
+    {
+        // Try to read as a transitions file
+        ok = readGroundStateEnergyFromTransitionsFile(fileName, groundStateEnergy);
+    }
+    
+    return ok;
+}
+
 bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy)
 {
     bool ok = true;
@@ -346,6 +489,8 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
                 }
             }
         }
+
+        transitionsFile.close();
     }
     else
     {
@@ -474,6 +619,8 @@ bool ExcitedState::readTransitionsFromLogFile(const std::string& logFileName, st
                 }
             }
         }
+
+        logFile.close();
     }
     else
     {
@@ -536,10 +683,10 @@ bool ExcitedState::readTransitionsFromOrcaOutFile(const std::string& orcaOutFile
                                 std::pair<int, SpinType> finalOrbital;
 
                                 initialOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[1]);
-                                initialOrbital.second = (transitionRegexAlphaBetaMatch[2] == "A" ? SpinType::ALPHA : SpinType::BETA);
+                                initialOrbital.second = (transitionRegexAlphaBetaMatch[2] == "a" ? SpinType::ALPHA : SpinType::BETA);
 
                                 finalOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[3]);
-                                finalOrbital.second = (transitionRegexAlphaBetaMatch[4] == "A" ? SpinType::ALPHA : SpinType::BETA);
+                                finalOrbital.second = (transitionRegexAlphaBetaMatch[4] == "a" ? SpinType::ALPHA : SpinType::BETA);
 
                                 double coefficient = std::stod(transitionRegexAlphaBetaMatch[5]);
 
@@ -569,6 +716,8 @@ bool ExcitedState::readTransitionsFromOrcaOutFile(const std::string& orcaOutFile
                 }
             }
         }
+
+        orcaOutFile.close();
     }
     else
     {

@@ -2,9 +2,12 @@
 #include <cctype>
 #include <cmath>
 #include <fstream>
+#include <functional>
+#include <iomanip>
 #include <iostream>
 #include <numeric>
 #include <regex>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -14,6 +17,18 @@
 //----------------------------------------------------------------------------------------------------//
 // STRING MANAGEMENT FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
+
+std::string int_to_string_withLeadingZeros(const int value, const int maxValue)
+{
+    // Count the number of digits in max
+    int nbDigits = std::to_string(std::abs(maxValue)).length();
+    
+    // Format value with leading zeros
+    std::stringstream sstreamWithLeadingZeros;
+    sstreamWithLeadingZeros << std::setfill('0') << std::setw(nbDigits) << value;
+    
+    return sstreamWithLeadingZeros.str();
+}
 
 std::string to_lower(const std::string& str)
 {
@@ -61,6 +76,28 @@ std::string trim_whitespaces(const std::string& str, bool leading, bool trailing
 // PRINT FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
 
+void log(std::stringstream& messageStream, std::ostream& outputStream)
+{
+    std::vector<std::reference_wrapper<std::ostream>> outputStreams;
+
+    outputStreams.emplace_back(outputStream);
+    if (&outputStream != &std::cout)
+    {
+        outputStreams.emplace_back(std::cout);
+    }
+
+    for (auto& output : outputStreams)
+    {
+        if (output.get())
+        {
+            output.get() << messageStream.str();
+        }
+    }
+
+    messageStream.clear();
+    messageStream.str(std::string());
+}
+
 void print_title(const std::string& title)
 {
     std::stringstream sstreamTitle;
@@ -81,13 +118,27 @@ void print_title(const std::string& title)
     std::cout << '\\' << dashes << '/' << std::endl << std::endl;
 }
 
-void print_error(const std::string& errorMessage)
+void print_error(const std::string& errorMessage, std::ostream& outputStream)
 {
-    std::cerr << "!!!!!!!!!" << std::endl;
-    std::cerr << "! ERROR !" << std::endl;
-    std::cerr << "!!!!!!!!!" << std::endl << std::endl;
+    std::vector<std::reference_wrapper<std::ostream>> outputStreams;
+    
+    outputStreams.emplace_back(outputStream);
+    if (&outputStream != &std::cerr)
+    {
+        outputStreams.emplace_back(std::cerr);
+    }
 
-    std::cerr << errorMessage << std::endl;
+    for (auto& output : outputStreams)
+    {
+        if (output.get())
+        {
+            output.get() << "!!!!!!!!!" << std::endl;
+            output.get() << "! ERROR !" << std::endl;
+            output.get() << "!!!!!!!!!" << std::endl << std::endl;
+
+            output.get() << errorMessage << std::endl;
+        }
+    }
 }
 
 

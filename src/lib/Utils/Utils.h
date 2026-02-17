@@ -2,6 +2,8 @@
 #define CDFTT_UTILS_H_INCLUDED
 
 #include <fstream>
+#include <iostream>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -11,6 +13,7 @@
 // STRING MANAGEMENT FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
 
+std::string int_to_string_withLeadingZeros(const int value, const int maxValue);
 std::string to_lower(const std::string &str);
 std::string to_upper(const std::string &str);
 std::string trim_whitespaces(const std::string &str, bool leading, bool trailing);
@@ -20,8 +23,9 @@ std::string trim_whitespaces(const std::string &str, bool leading, bool trailing
 // PRINT FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
 
+void log(std::stringstream& messageStream, std::ostream& outputStream = std::cout);
 void print_title(const std::string& title);
-void print_error(const std::string& errorMessage);
+void print_error(const std::string& errorMessage, std::ostream& outputStream = std::cerr);
 
 
 //----------------------------------------------------------------------------------------------------//

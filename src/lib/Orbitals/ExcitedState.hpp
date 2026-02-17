@@ -113,16 +113,54 @@ class ExcitedState
         //----------------------------------------------------------------------------------------------------//
 
         /**
+         * @brief Reads the energy of the ground state from a Gaussian .log file.
+         * 
+         * @param[in] logFileName Name of the log file to read.
+         * @param[out] energy Energy of the ground state, in Hartree.
+         * @return True if reading was successful, false otherwise.
+         */
+        static bool readGroundStateEnergyFromLogFile(const std::string& logFileName, double& energy);
+
+
+        /**
+         * @brief Reads the energy of the ground state from an Orca .out file.
+         * 
+         * @param[in] orcaOutFileName Name of the Orca output file to read.
+         * @param[out] energy Energy of the ground state, in Hartree.
+         * @return True if reading was successful, false otherwise.
+         */
+        static bool readGroundStateEnergyFromOrcaOutFile(const std::string& orcaOutFileName, double& energy);
+
+        /**
+         * @brief Reads the energy of the ground state from a transitions file.
+         * 
+         * @param[in] transitionsFileName Name of the transitions file to read.
+         * @param[out] groundStateEnergy Energy of the ground state, in Hartree.
+         * @return True if reading was successful, false otherwise.
+         */
+        static bool readGroundStateEnergyFromTransitionsFile(const std::string& transitionsFileName, double& groundStateEnergy);
+
+        /**
+         * @brief Reads the energy of the ground state from a file.
+         * 
+         * @param[in] fileName Name of the file to read.
+         * @param[out] groundStateEnergy Energy of the ground state, in Hartree.
+         * @return True if reading was successful, false otherwise.
+         */
+        static bool readGroundStateEnergy(const std::string& fileName, double& groundStateEnergy);
+
+        /**
          * @brief Reads a transitions file and populates a vector of ExcitedState objects.
          *
          * @param[in] transitionsFileName Name of the transitions file to read.
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
          * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
+         * @return True if reading was successful, false otherwise.
          */
         static bool readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
 
         /**
-         * @brief Reads transitions from a .log file and populates a vector of ExcitedState objects.
+         * @brief Reads transitions from a Gaussian .log file and populates a vector of ExcitedState objects.
          *
          * @param[in] logFileName Name of the log file to read.
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.

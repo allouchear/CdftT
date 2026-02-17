@@ -1,5 +1,6 @@
 Charges=-0.1,-0.3
 RunType=ComputeEnergyWithPointCharges
-AnalyticFiles=tests/Guegan2020/acrolein_orca.molden
+AnalyticFiles=tests/Guegan2020/acrolein_orca.molden,tests/Guegan2020/acrolein_orca.out
 TransitionsFile=tests/Guegan2020/acrolein_orca.out
+OutputPrefix=acrolein_orca
 Verbose=0

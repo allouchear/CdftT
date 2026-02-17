@@ -161,6 +161,20 @@ void Job::readGridFilesNames(std::vector<std::string>& gridFilesNames)
     }
 }
 
+void Job::readGroundStateEnergy(double& energy)
+{
+    if (!readOneType<double>(_inputFile, "GroundStateEnergy", energy))
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: cannot determine the ground state energy." << std::endl;
+        errorMessage << "Please check the documentation and the \"GroundStateEnergy\" parameter value or the \"AnalyticalFiles\" parameter value in the provided input file (" << _inputFileName << ")." << std::endl << std::endl;
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+}
+
 void Job::readNuclearCutoff(double& nuclearCutoff)
 {
     if (!readOneType<double>(_inputFile, "NuclearCutoff", nuclearCutoff))
@@ -233,6 +247,17 @@ void Job::readOrbitalsSpins(std::vector<SpinType>& orbitalsSpins)
         }
 
         orbitalsSpins.push_back(spin);
+    }
+}
+
+void Job::readOutputPrefix(std::string& outputPrefix)
+{
+    if (!readOneString(_inputFile, "OutputPrefix", outputPrefix))
+    {
+        std::cout << "Note: the \"OutputPrefix\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (OutputPrefix=\"output\")." << std::endl << std::endl;
+
+        outputPrefix = "output";
     }
 }
 
@@ -702,8 +727,11 @@ void Job::computeDescriptorsFD(const std::string& ANAFileName1, const std::strin
     std::cout << D;
 }
 
-void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedState>& states, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_psi_j, std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, int verbose)
+void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedState>& states, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_psi_j, std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, std::ofstream& logFile, int verbose)
 {
+    std::stringstream logStream;
+
+
     // Build and initialise two lower triangular matrixes:
     //     (*) < psi_i | H | psi_j > for the variational approach,
     //     (*) < psi_i | H - H_0 | psi_j > for the perturbative approach.
@@ -733,7 +761,8 @@ void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedStat
     size_t i, j;
     if (verbose >= 1)
     {
-        std::cout << "Matrix elements < psi_i | H | psi_j > and < psi_i | H - H_0 | psi_j >:" << std::endl;
+        logStream << "Matrix elements < psi_i | H | psi_j > and < psi_i | H - H_0 | psi_j >:" << std::endl;
+        log(logStream, logFile);
     }
     else
     {
@@ -759,7 +788,8 @@ void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedStat
             matrixElement += h0Contribution;
             if (verbose >= 2)
             {
-                std::cout << "< " << i << " | H_0 | " << j << " > = " << std::setprecision(12) << h0Contribution << std::endl;
+                logStream << "< " << i << " | H_0 | " << j << " > = " << std::setprecision(12) << h0Contribution << std::endl;
+                log(logStream, logFile);
             }
 
             // Compute < psi_i | V_ions/nuclei | psi_j >
@@ -770,13 +800,15 @@ void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedStat
 
                 if (verbose >= 3)
                 {
-                    std::cout << "< " << i << " | V" << chargeIndex + 1 << "_nuclei | " << j << " > = " << std::setprecision(12) << nuclearContribution << std::endl;
+                    logStream << "< " << i << " | V" << chargeIndex + 1 << "_nuclei | " << j << " > = " << std::setprecision(12) << nuclearContribution << std::endl;
+                    log(logStream, logFile);
                 }
             }
             matrixElement += nuclearContribution;
             if (verbose >= 2)
             {
-                std::cout << "< " << i << " | V_ions/nuclei | " << j << " > = " << std::setprecision(12) << nuclearContribution << std::endl;
+                logStream << "< " << i << " | V_ions/nuclei | " << j << " > = " << std::setprecision(12) << nuclearContribution << std::endl;
+                log(logStream, logFile);
             }
 
             // Compute < psi_i | V_ion/electrons | psi_j >
@@ -797,13 +829,15 @@ void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedStat
                 chargeContribution += currentChargeContribution;
                 if (verbose >= 3)
                 {
-                    std::cout << "< " << i << " | V" << chargeIndex + 1 << "_electrons | " << j << " > = " << std::setprecision(12) << currentChargeContribution << std::endl;
+                    logStream << "< " << i << " | V" << chargeIndex + 1 << "_electrons | " << j << " > = " << std::setprecision(12) << currentChargeContribution << std::endl;
+                    log(logStream, logFile);
                 }
             }
             matrixElement += chargeContribution;
             if (verbose >= 2)
             {
-                std::cout << "< " << i << " | V_ions/electrons | " << j << " > = " << chargeContribution << std::endl;
+                logStream << "< " << i << " | V_ions/electrons | " << j << " > = " << chargeContribution << std::endl;
+                log(logStream, logFile);
             }
 
             // Store < psi_i | H | psi_j > matrix element
@@ -812,18 +846,21 @@ void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedStat
 
             if (verbose >= 1)
             {
-                std::cout << "< " << i << " | H | " << j << " > = " << std::setprecision(12) << psi_i_H_psi_j[i][j] << std::endl;
-                std::cout << "< " << i << " | H - H0| " << j << " > = " << std::setprecision(12) << psi_i_HminusH0_psi_j[i][j] << std::endl;
+                logStream << "< " << i << " | H | " << j << " > = " << std::setprecision(12) << psi_i_H_psi_j[i][j] << std::endl;
+                logStream << "< " << i << " | H - H0| " << j << " > = " << std::setprecision(12) << psi_i_HminusH0_psi_j[i][j] << std::endl;
+                log(logStream, logFile);
             }
             if (verbose >= 2 && j != i)
             {
-                std::cout << std::endl;
+                logStream << std::endl;
+                log(logStream, logFile);
             }
         }
 
         if (verbose >= 1)
         {
-            std::cout << std::endl;
+            logStream << std::endl;
+            log(logStream, logFile);
         }
     }
 }
@@ -1296,6 +1333,451 @@ void Job::setCustom(std::vector<int>& orbnums, std::vector<int>& orbspin, const 
 }
 
 
+void Job::computeResultsEnergyWithPointCharges(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, const std::string& outputFilePrefix, std::ofstream& logFile, int verbose)
+{
+    std::stringstream logStream;
+    size_t nbStates = states.size();
+
+
+    // Diagonalize < psi_i | H | psi_j > matrix
+    std::vector<double> eigenvalues;
+    std::vector<std::vector<double>> eigenvectors;
+    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(psi_i_H_psi_j, eigenvalues, eigenvectors);
+
+    if (verbose >= 3)
+    {
+        logStream << "Eigenvalues:" << std::endl;
+        log(logStream, logFile);
+        logStream << std::scientific;
+        logStream << std::setprecision(10);
+        for (size_t k = 0; k < eigenvalues.size(); ++k)
+        {
+            logStream << eigenvalues[k] << ' ';
+        }
+        logStream << std::endl << std::endl;
+        log(logStream, logFile);
+
+        logStream << "Eigenvectors (columns): " << std::endl;
+        log(logStream, logFile);
+        logStream << std::scientific;
+        logStream << std::setprecision(10);
+        for (size_t i = 0; i < eigenvectors.size(); ++i)
+        {
+            for (size_t j = 0; j < eigenvectors[i].size(); ++j)
+            {
+                logStream << std::right << std::setw(17) << eigenvectors[i][j] << '\t';
+            }
+
+            logStream << std::endl;
+        }
+        logStream << std::defaultfloat << std::endl;
+        log(logStream, logFile);
+    }
+    
+
+    // Sort eigenvalues and eigenvectors
+    sortEigenValuesAndEigenVectors(eigenvalues, eigenvectors);
+
+    std::ofstream outputFile(outputFilePrefix + "_energies.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "_energies.cdftt for writing." << std::endl;
+        
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    logStream << "Sorted Eigenvalues:" << std::endl;
+    log(logStream, logFile);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t k = 0; k < eigenvalues.size(); ++k)
+    {
+        logStream << eigenvalues[k] << ' ';
+        outputFile << eigenvalues[k] << std::endl;
+    }
+    logStream << std::endl << std::endl;
+    log(logStream, logFile);
+
+    outputFile.close();
+    outputFile.open(outputFilePrefix + "_eigenvectors.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "_eigenvectors.cdftt for writing." << std::endl;
+        
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    logStream << "Sorted Eigenvectors (columns): " << std::endl;
+    log(logStream, logFile);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t i = 0; i < eigenvectors.size(); ++i)
+    {
+        for (size_t j = 0; j < eigenvectors[i].size(); ++j)
+        {
+            logStream << std::right << std::setw(17) << eigenvectors[i][j] << '\t';
+            outputFile << std::right << std::setw(17) << eigenvectors[i][j] << ' ';
+        }
+
+        logStream << std::endl;
+        outputFile << std::endl;
+    }
+    logStream << std::defaultfloat << std::endl;
+    log(logStream, logFile);
+
+    outputFile.close();
+
+
+    if (verbose >= 3)
+    {
+        // Compute projections of perturbed states onto unperturbed basis
+        logStream << "Projection onto unperturbed basis:" << std::endl;
+        log(logStream, logFile);
+
+        for (size_t i = 0; i < nbStates; ++i)
+        {
+            std::vector<std::pair<double, int>> contributions;
+
+            logStream << "Perturbed state " << i << " (E = " << std::setprecision(10) << eigenvalues[i] << " H):" << std::endl;
+            logStream << "  | " << i << "' > = ";
+            log(logStream, logFile);
+            
+            bool firstTerm = true;
+            for (size_t k = 0; k < nbStates; ++k)
+            {
+                double c_k = eigenvectors[k][i];
+                double c_k_squared = c_k * c_k;
+
+                contributions.push_back({c_k_squared, k});
+
+                if (!firstTerm && c_k > 0)
+                {
+                    logStream << " + ";
+                }
+                else if (c_k < 0)
+                {
+                    logStream << " - ";
+                }
+
+                logStream << std::setprecision(6) << std::abs(c_k) << " | " << k << " >";
+                firstTerm = false;
+            }
+            logStream << std::endl;
+            log(logStream, logFile);
+            
+            // Show dominant contributions
+            std::sort(contributions.begin(), contributions.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
+            logStream << "  Main contributions:" << std::endl;
+            log(logStream, logFile);
+            for (size_t ii = 0; ii < std::min(size_t(5), contributions.size()); ++ii)
+            {
+                if (contributions[ii].first > 1e-6)
+                {
+                    size_t k = contributions[ii].second;
+                    logStream << "    State " << k << ": "
+                              << std::setprecision(6) << std::setw(10) << contributions[ii].first * 100 << " %"
+                              << "  (c_" << k << " = " << std::setprecision(8) << eigenvectors[k][i] << ")" << std::endl;
+                }
+            }
+            logStream << std::endl;
+            log(logStream, logFile);
+        }
+    }
+
+    logStream << "------ Perturbative approach (cf. Guégan et al., PCCP 2020) ------" << std::endl << std::endl;
+    log(logStream, logFile);
+
+    bool warningPrinted = false;
+
+    // Compute dp_k for each state using Eq. (27) in Guégan et al., PCCP 2020
+    std::vector<double> dpk_perturb_state0_withoutRenormalisation(nbStates, 0.0);
+    std::vector<double> normalisationFactors(nbStates, 0.0);
+    std::vector<std::vector<double>> dpk_perturb(nbStates, std::vector<double>(nbStates, 0.0));
+
+    // Compute extra-diagonal dp_k coefficients
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        for (size_t j = 0; j < nbStates; ++j)
+        {
+            if (i != j)
+            {
+                double Ei_minus_Ej = states[i].get_energy() - states[j].get_energy();
+
+                // Check for degeneracy to avoid division by zero
+                if (std::abs(Ei_minus_Ej) >= 1e-10)
+                {
+                    // psi_i_HminusH0_psi_j is a lower triangular matrix
+                    dpk_perturb[i][j] = (j <= i ? psi_i_HminusH0_psi_j[i][j] : psi_i_HminusH0_psi_j[j][i]) / Ei_minus_Ej;
+                    dpk_perturb[i][j] *= dpk_perturb[i][j];
+
+                    normalisationFactors[i] += dpk_perturb[i][j];
+
+                    // For the first state, we keep the unrenormalised dp_k coefficients so we can compare them with the paper and the variational approach later.
+                    if (i == 0)
+                    {
+                        dpk_perturb_state0_withoutRenormalisation[j] = dpk_perturb[i][j];
+                    }
+
+                    if (dpk_perturb[i][j] > 1.0)
+                    {
+                        dpk_perturb[i][j] = 0.0;
+                        if (i < j) // to avoid printing twice the same warning for the pair (i, j) and (j, i)
+                        {
+                            warningPrinted = true;
+
+                            logStream << "Warning: the dp_" << j << " coefficient for the state " << i << " and the dp_" << i << " coefficient for the state " << j << " are greater than 1 (dp_" << j << " = " << dpk_perturb[i][j] << ")." << std::endl;
+                            logStream << "They will be set to 0 to maintain the normalisation condition on dp_k (limitation of the perturbative approach)." << std::endl;
+                            log(logStream, logFile);
+                        }
+                    }
+                }
+                else
+                {
+                    dpk_perturb[i][j] = 0.0;
+
+                    if (i < j) // to avoid printing twice the same warning for the pair (i, j) and (j, i)
+                    {
+                        warningPrinted = true;
+
+                        logStream << "Warning: degeneracy detected between states " << i << " and " << j << " (|E_i - E_j| < 1e-10)." << std::endl;
+                        logStream << "The dp_" << j << "coefficient for the state " << i << "and the dp_" << i << " coefficient for the state " << j << " will be set to zero to avoid division by zero." << std::endl;
+                        log(logStream, logFile);
+                    }
+                }
+            }
+        }
+    }
+
+    // Compute dp_0 without renormalisation
+    double sum = 0.0;
+    for (size_t i = 1; i < nbStates; ++i)
+    {
+        sum += dpk_perturb_state0_withoutRenormalisation[i];
+    }
+    dpk_perturb_state0_withoutRenormalisation[0] = 1.0 -  sum;
+
+    // Renormalization of dp_k coefficients to ensure that their sum is equal to 1 for each state (normalisation condition)
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        if (normalisationFactors[i] > 1.0)
+        {
+            for (size_t j = 0; j < nbStates; ++j)
+            {
+                if (i != j)
+                {
+                    dpk_perturb[i][j] = dpk_perturb[i][j] / (1.0 + normalisationFactors[i]);
+                }
+            }
+        }
+    }
+
+    // Compute diagonal dp_k coefficients using the normalisation condition
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        double sumExtraDiagonal = 0.0;
+        for (size_t j = 0; j < nbStates; ++j)
+        {
+            sumExtraDiagonal += (i != j ? dpk_perturb[i][j] : 0.0);
+        }
+
+        dpk_perturb[i][i] = 1.0 / (1.0 + sumExtraDiagonal);
+    }
+
+    if (warningPrinted)
+    {
+        logStream << std::endl;
+        log(logStream, logFile);
+    }
+
+    logStream << "dp_k values for ground state, using Eq. (27). Excited states are on the columns:" << std::endl;
+    log(logStream, logFile);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        logStream << std::right << std::setw(17) << dpk_perturb_state0_withoutRenormalisation[i] << '\t';
+    }
+    logStream << std::defaultfloat << std::endl << std::endl;
+    log(logStream, logFile);
+
+    logStream << "Renormalized dp_k values. Excited states are on the columns:" << std::endl;
+    log(logStream, logFile);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        for (size_t j = 0; j < nbStates; ++j)
+        {
+            logStream << std::right << std::setw(17) << dpk_perturb[i][j] << '\t';
+        }
+
+        logStream << std::endl;
+    }
+    logStream << std::defaultfloat << std::endl;
+    log(logStream, logFile);
+
+    // Compute E_polarisation and dS for each state using respectively Eq. (26) and Eq. (32) in Guégan et al., PCCP 2020
+    std::vector<double> dS_perturb(nbStates, 0.0);
+    std::vector<double> E_pola_perturb(nbStates, 0.0);
+    double dS_perturb_state0_withoutRenormalisation = 0.0;
+    double E_pola_perturb_state0_withoutRenormalisation = 0.0;
+
+    logStream << "E_polarisation and dS using respectively Eq. (26) and Eq. (32) in Guégan et al., PCCP 2020:" << std::endl;
+    log(logStream, logFile);
+
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        double sum_dS = 0.0;
+        double sum_Epola = 0.0;
+        for (size_t j = 0; j < nbStates; ++j)
+        {
+            if (dpk_perturb[i][j] != 0)
+            {
+                sum_dS -= dpk_perturb[i][j] * std::log(dpk_perturb[i][j]);
+
+                if (i != j)
+                {
+                    // Note : degeneracy is already handled in the computation of dp_k coefficients
+                    // So we can safely compute the energy difference here without checking for division by zero again.
+                    sum_Epola -= dpk_perturb[i][j] * (states[j].get_energy() - states[i].get_energy());
+                }
+            }
+        }
+
+        dS_perturb[i] = sum_dS * Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
+        E_pola_perturb[i] = sum_Epola * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
+
+        // Treating the ground state without renormalisation separately
+        if (dpk_perturb_state0_withoutRenormalisation[i] != 0)
+        {
+            dS_perturb_state0_withoutRenormalisation -= dpk_perturb_state0_withoutRenormalisation[i] * std::log(dpk_perturb_state0_withoutRenormalisation[i]);
+
+            if (i != 0)
+            {
+                E_pola_perturb_state0_withoutRenormalisation -= dpk_perturb_state0_withoutRenormalisation[i] * (states[0].get_energy() - states[i].get_energy());
+            }
+        }
+    }
+
+    dS_perturb_state0_withoutRenormalisation *= Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
+    E_pola_perturb_state0_withoutRenormalisation *= Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
+
+    logStream << "dS (J/mol/K) and |E_polarisation| (J/mol) for ground state without renormalisation:" << std::endl;
+    log(logStream, logFile);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    logStream << std::right << std::setw(17) << dS_perturb_state0_withoutRenormalisation << '\t';
+    logStream << std::right << std::setw(17) << std::abs(E_pola_perturb_state0_withoutRenormalisation) << std::endl << std::endl;
+
+    logStream << "dS (J/mol/K) for each state:" << std::endl;
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        logStream << std::right << std::setw(17) << dS_perturb[i] << '\t';
+    }
+    logStream << std::endl << std::endl;
+
+    logStream << "|E_polarisation| (J/mol) for each state:" << std::endl;
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        logStream << std::right << std::setw(17) << std::abs(E_pola_perturb[i]) << '\t';
+    }
+    logStream << std::defaultfloat << std::endl;
+    log(logStream, logFile);
+
+    
+    logStream << std::endl << "------ Variational approach ------" << std::endl << std::endl;
+
+    // Compute dp_k
+    std::vector<std::vector<double>> dpk_varia(nbStates, std::vector<double>(nbStates, 0.0));
+
+    logStream << "dp_k values:" << std::endl;
+    log(logStream, logFile);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    for (size_t i = 0; i < eigenvectors.size(); ++i)
+    {
+        for (size_t j = 0; j < eigenvectors[i].size(); ++j)
+        {
+            dpk_varia[i][j] = eigenvectors[i][j] * eigenvectors[i][j];
+            logStream << std::right << std::setw(17) << dpk_varia[i][j] << '\t';
+        }
+
+        logStream << std::endl;
+    }
+    logStream << std::defaultfloat << std::endl;
+    log(logStream, logFile);
+
+    // Search for the excited state that has the maximum contribution from the ground state to compare with the perturbative approach.
+    size_t maxGroundContributionExcitedState = 0;
+    double maxContribution = dpk_varia[0][0];
+    for (size_t i = 1; i < nbStates; ++i)
+    {
+        if (dpk_varia[0][i] > maxContribution)
+        {
+            maxContribution = dpk_varia[0][i];
+            maxGroundContributionExcitedState = i;
+        }
+    }
+
+    // Compute E_polarisation and dS for each state
+    std::vector<double> dS_varia(nbStates, 0.0);
+    std::vector<double> E_pola_varia(nbStates, 0.0);
+
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        double sum_dS = 0.0;
+        double sum_Epola = 0.0;
+        for (size_t j = 0; j < nbStates; ++j)
+        {
+            if (dpk_varia[j][i] != 0)
+            {
+                sum_dS -= dpk_varia[j][i] * std::log(dpk_varia[j][i]);
+
+                if (i != j)
+                {
+                    // Note : degeneracy is already handled in the computation of dp_k coefficients
+                    // So we can safely compute the energy difference here without checking for division by zero again.
+                    sum_Epola -= dpk_varia[j][i] * (states[i].get_energy() - states[j].get_energy());
+                }
+            }
+        }
+
+        dS_varia[i] = sum_dS * Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
+        E_pola_varia[i] = sum_Epola * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
+    }
+
+    logStream << "dS (J/mol/K) and |E_polarisation| (J/mol) for the excited state with maximum contribution from the ground state | 0 > (| " << maxGroundContributionExcitedState << "' >, with dp_" << maxGroundContributionExcitedState << " = " << std::setprecision(10) << dpk_varia[0][maxGroundContributionExcitedState] << ")." << std::endl;
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    logStream << std::right << std::setw(17) << dS_varia[maxGroundContributionExcitedState] << '\t';
+    logStream << std::right << std::setw(17) << std::abs(E_pola_varia[maxGroundContributionExcitedState]) << std::endl << std::endl;
+    logStream<< "dS (J/mol/K) for each state:" << std::endl;
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        logStream << std::right << std::setw(17) << dS_varia[i] << '\t';
+    }
+    logStream << std::endl << std::endl;
+
+    logStream << "|E_polarisation| (J/mol) for each state:" << std::endl;
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        logStream << std::right << std::setw(17) << std::abs(E_pola_varia[i]) << '\t';
+    }
+    logStream << std::defaultfloat << std::endl;
+    log(logStream, logFile);
+}
+
+
 //----------------------------------------------------------------------------------------------------//
 // RUN METHOD
 //----------------------------------------------------------------------------------------------------//
@@ -1505,6 +1987,19 @@ void Job::run_computeEnergyWithPointCharges()
     readVerbose(verbose);
 
 
+    // Read output file prefix
+    std::string outputPrefix;
+    readOutputPrefix(outputPrefix);
+    std::ofstream logFile(outputPrefix + "_log.cdftt");
+    if (!logFile)
+    {
+        std::cout << "Warning: could not open log file " << outputPrefix << "_log.cdftt for writing." << std::endl;
+        std::cout << "The program will still print log information on the standard output." << std::endl << std::endl;
+    }
+
+    std::stringstream logStream;
+
+
     // Read analytic file name
     std::vector<std::string> analyticFilesNames;
     readAnalyticFilesNames(analyticFilesNames);
@@ -1513,14 +2008,39 @@ void Job::run_computeEnergyWithPointCharges()
     // Check number of analytic files names
     if (analyticFilesNames.size() != 1)
     {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of analytic files names (one file expected)." << std::endl;
-        errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
+        if (analyticFilesNames[0].substr(analyticFilesNames[0].length() - 4) == ".log"
+            || analyticFilesNames[0].substr(analyticFilesNames[0].length() - 5) == ".fchk")
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error: incorrect number of analytic files names (one file expected)." << std::endl;
+            errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
 
-        print_error(errorMessage.str());
+            print_error(errorMessage.str(), logFile);
 
-        std::exit(1);
+            std::exit(1);
+        }
+        else if (analyticFilesNames.size() != 2)
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error: incorrect number of analytic files names (one or two file(s) expected)." << std::endl;
+            errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
+
+            print_error(errorMessage.str());
+            print_error(errorMessage.str(), logFile);
+
+            std::exit(1);
+        }
     }
+
+
+    // Read cutoff distance for nuclear contribution
+    double nuclearCutoff;
+    readNuclearCutoff(nuclearCutoff);
+    
+    
+    // Read transitions file
+    std::string transitionsFileName;
+    readTransitionsFileName(transitionsFileName);
 
 
     // Loading orbitals
@@ -1528,6 +2048,24 @@ void Job::run_computeEnergyWithPointCharges()
     computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
     std::cout << std::endl;
 
+    if (orbitals.get_energy() == 0.0)
+    {
+        double groundStateEnergy = 0.0;
+
+        if (analyticFilesNames.size() == 2)
+        {
+            ExcitedState::readGroundStateEnergy(analyticFilesNames[1], groundStateEnergy);
+        }
+        else
+        {
+            if (!ExcitedState::readGroundStateEnergy(transitionsFileName, groundStateEnergy))
+            {
+                readGroundStateEnergy(groundStateEnergy);
+            }
+        }
+
+        orbitals.set_energy(groundStateEnergy);
+    }
 
     // Keep a const reference on orbitals' atoms
     const std::vector<Atom>& atoms = orbitals.get_struct().get_atoms();
@@ -1546,8 +2084,9 @@ void Job::run_computeEnergyWithPointCharges()
 
     if (chargesPositions.empty())
     {
-        std::cout << "Note: the \"Positions\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will place the point charge" << (nbCharges > 1 ? "s" : "") << " on each atom successively." << std::endl << std::endl;
+        logStream << "Note: the \"Positions\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        logStream << "The program will place the point charge" << (nbCharges > 1 ? "s" : "") << " on each atom successively." << std::endl << std::endl;
+        log(logStream, logFile);
 
         loopOnAtoms = true;
         for (const Atom& atom : atoms)
@@ -1565,19 +2104,20 @@ void Job::run_computeEnergyWithPointCharges()
         errorMessage << "Error: incorrect number of point charges positions." << std::endl;
         errorMessage << "Please check the documentation and the positions specified in the \"ChargesPositions\" parameter in " << _inputFileName << '.';
 
-        print_error(errorMessage.str());
+        print_error(errorMessage.str(), logFile);
 
         std::exit(1);
     }
 
 
     // Print charges information
-    std::cout << "Number of point charges: " << nbCharges << std::endl;
+    logStream << "Number of point charges: " << nbCharges << std::endl;
+    log(logStream, logFile);
     if (!loopOnAtoms)
     {
         for (size_t i = 0; i < nbCharges; ++i)
         {
-            std::cout << "Point charge #" << i + 1 << ": " << charges[i] << " e at position (" << std::setprecision(10) << chargesPositions[i][0] << ", " << chargesPositions[i][1] << ", " << chargesPositions[i][2] << ")." << std::defaultfloat << std::endl;
+            logStream << "Point charge #" << i + 1 << ": " << charges[i] << " e at position (" << std::setprecision(10) << chargesPositions[i][0] << ", " << chargesPositions[i][1] << ", " << chargesPositions[i][2] << ")." << std::defaultfloat << std::endl;
         }
     }
     else
@@ -1586,27 +2126,19 @@ void Job::run_computeEnergyWithPointCharges()
         {
             for (size_t j = 0; j < nbChargePositions; ++j)
             {
-                std::cout << "Run #" << i * nbChargePositions + j + 1 << ": point charge #" << i + 1 << " of " << charges[i] << " e, on " << atoms[j].get_name() << " at position (" << std::setprecision(10) << chargesPositions[j][0] << ", " << chargesPositions[j][1] << ", " << chargesPositions[j][2] << ")." << std::defaultfloat << std::endl;
+                logStream << "Run #" << i * nbChargePositions + j + 1 << ": point charge #" << i + 1 << " of " << charges[i] << " e, on " << atoms[j].get_name() << " at position (" << std::setprecision(10) << chargesPositions[j][0] << ", " << chargesPositions[j][1] << ", " << chargesPositions[j][2] << ")." << std::defaultfloat << std::endl;
             }
         }
     }
-    std::cout << std::endl;
-
-
-    // Read cutoff distance for nuclear contribution
-    double nuclearCutoff;
-    readNuclearCutoff(nuclearCutoff);
-    
-    
-    // Read transitions file
-    std::string transitionsFileName;
-    readTransitionsFileName(transitionsFileName);
+    logStream << std::endl;
+    log(logStream, logFile);
 
 
     if (verbose >= 3)
     {
-        std::cout << "Molecular orbitals:" << std::endl;
-        std::cout << orbitals << std::endl;
+        logStream << "Molecular orbitals:" << std::endl;
+        logStream << orbitals << std::endl;
+        log(logStream, logFile);
     }
     
 
@@ -1633,7 +2165,8 @@ void Job::run_computeEnergyWithPointCharges()
     }
 
     size_t nbStates = states.size();
-    std::cout << "Total number of states: " << nbStates << std::endl << std::endl;
+    logStream << "Total number of states: " << nbStates << std::endl << std::endl;
+    log(logStream, logFile);
 
 
     // Compute Slater Determinants from electronic transitions for each state
@@ -1643,18 +2176,21 @@ void Job::run_computeEnergyWithPointCharges()
 
         if (verbose >= 1)
         {
-            std::cout << state;
+            logStream << state;
+            log(logStream, logFile);
 
             if (verbose >= 2)
             {
-                std::cout << "  Slater Determinants: " << std::endl;
+                logStream << "  Slater Determinants: " << std::endl;
                 for (const auto& slaterCoeff : state.getSlaterDeterminantsAndCoefficients())
                 {
-                    std::cout << "    " << slaterCoeff.first << "; Coefficient: " << slaterCoeff.second << std::endl;
+                    logStream << "    " << slaterCoeff.first << "; Coefficient: " << slaterCoeff.second << std::endl;
                 }
+                log(logStream, logFile);
             }
 
-            std::cout << std::endl;
+            logStream << std::endl;
+            log(logStream, logFile);
         }
     }
 
@@ -1741,20 +2277,37 @@ void Job::run_computeEnergyWithPointCharges()
 
     if (loopOnAtoms)
     {
+        const int maxRunNumber = nbCharges * nbChargePositions;
+
         for (size_t chargeIndex = 0; chargeIndex < nbCharges; ++chargeIndex)
         {
             for (size_t atomIndex = 0; atomIndex < atoms.size(); ++atomIndex)
             {
+                int runNumber = chargeIndex * nbChargePositions + atomIndex + 1;
+                std::string runNumberStr = int_to_string_withLeadingZeros(runNumber, maxRunNumber);
+                
+                logStream << "====================== RUN #" << runNumberStr
+                          << ": charge of " << charges[chargeIndex] 
+                          << " e on " << atoms[atomIndex].get_name()
+                          << " at position (" << std::setprecision(10) << chargesPositions[atomIndex][0] << ", " << chargesPositions[atomIndex][1] << ", " << chargesPositions[atomIndex][2]
+                          << ") ======================"
+                          << std::defaultfloat << std::endl << std::endl;
+                log(logStream, logFile);
+
                 std::vector<std::vector<std::vector<std::vector<double>>>> currentIonicMatrix(1, ionicMatrixes[chargeIndex][atomIndex]);
                 std::vector<double> currentChargeNucleiContribution = std::vector<double>(1, chargeNucleiContributions[chargeIndex][atomIndex]);
 
                 std::vector<std::vector<double>> psi_i_H_psi_j;
                 std::vector<std::vector<double>> psi_i_HminusH0_psi_j;
-                
-                computeHamiltonianMatrixWithPointCharges(states, currentChargeNucleiContribution, currentIonicMatrix, psi_i_H_psi_j, psi_i_HminusH0_psi_j, verbose);
 
-                psi_i_H_psi_j_matrixes.push_back(psi_i_H_psi_j);
-                psi_i_HminusH0_psi_j_matrixes.push_back(psi_i_HminusH0_psi_j);
+                std::stringstream outputPrefixStream;
+                outputPrefixStream << outputPrefix << "_run" << runNumberStr;
+                
+                computeHamiltonianMatrixWithPointCharges(states, currentChargeNucleiContribution, currentIonicMatrix, psi_i_H_psi_j, psi_i_HminusH0_psi_j, logFile, verbose);
+                computeResultsEnergyWithPointCharges(states, psi_i_H_psi_j, psi_i_HminusH0_psi_j, outputPrefixStream.str(), logFile, verbose);
+
+                logStream << std::endl;
+                log(logStream, logFile);
             }
         }
     }
@@ -1771,410 +2324,8 @@ void Job::run_computeEnergyWithPointCharges()
         std::vector<std::vector<double>> psi_i_H_psi_j;
         std::vector<std::vector<double>> psi_i_HminusH0_psi_j;
 
-        computeHamiltonianMatrixWithPointCharges(states, currentChargeNucleiContribution, currentIonicMatrixes, psi_i_H_psi_j, psi_i_HminusH0_psi_j, verbose);
-
-        psi_i_H_psi_j_matrixes.push_back(psi_i_H_psi_j);
-        psi_i_HminusH0_psi_j_matrixes.push_back(psi_i_HminusH0_psi_j);
-    }
-
-    
-    // Print results
-    for (size_t runIndex = 0; runIndex < psi_i_H_psi_j_matrixes.size(); ++runIndex)
-    {
-        if (loopOnAtoms)
-        {
-            int chargeIndex = runIndex / atoms.size();
-            int atomIndex = runIndex % atoms.size();
-            
-            std::cout << "====================== RUN #" << runIndex + 1
-                      << ": charge of " << charges[chargeIndex] 
-                      << " e on " << atoms[atomIndex].get_name()
-                      << " at position (" << std::setprecision(10) << chargesPositions[atomIndex][0] << ", " << chargesPositions[atomIndex][1] << ", " << chargesPositions[atomIndex][2]
-                      << ") ======================"
-                      << std::defaultfloat << std::endl << std::endl;
-        }
-
-        // Diagonalize < psi_i | H | psi_j > matrix
-        std::vector<double> eigenvalues;
-        std::vector<std::vector<double>> eigenvectors;
-        findEigenValuesAndEigenVectorsOfSymmetricalMatrix(psi_i_H_psi_j_matrixes[runIndex], eigenvalues, eigenvectors);
-
-        if (verbose >= 3)
-        {
-            std::cout << std::scientific;
-            std::cout << std::setprecision(10);
-            std::cout << "Eigenvalues:" << std::endl;
-            for (size_t k = 0; k < eigenvalues.size(); ++k)
-            {
-                std::cout << eigenvalues[k] << ' ';
-            }
-            std::cout << std::endl << std::endl;
-
-            std::cout << "Eigenvectors (columns): " << std::endl;
-            for (size_t i = 0; i < eigenvectors.size(); ++i)
-            {
-                for (size_t j = 0; j < eigenvectors[i].size(); ++j)
-                {
-                    std::cout << std::right << std::setw(17) << eigenvectors[i][j] << '\t';
-                }
-
-                std::cout << std::endl;
-            }
-            std::cout << std::defaultfloat << std::endl;
-        }
-        
-
-        // Sort eigenvalues and eigenvectors
-        sortEigenValuesAndEigenVectors(eigenvalues, eigenvectors);
-
-        std::cout << std::scientific;
-        std::cout << std::setprecision(10);
-        std::cout << "Sorted Eigenvalues:" << std::endl;
-        for (size_t k = 0; k < eigenvalues.size(); ++k)
-        {
-            std::cout << eigenvalues[k] << ' ';
-        }
-        std::cout << std::endl << std::endl;
-
-        std::cout << "Sorted Eigenvectors (columns): " << std::endl;
-        for (size_t i = 0; i < eigenvectors.size(); ++i)
-        {
-            for (size_t j = 0; j < eigenvectors[i].size(); ++j)
-            {
-                std::cout << std::right << std::setw(17) << eigenvectors[i][j] << '\t';
-            }
-
-            std::cout << std::endl;
-        }
-        std::cout << std::defaultfloat << std::endl;
-
-
-        if (verbose >= 3)
-        {
-            // Compute projections of perturbed states onto unperturbed basis
-            std::cout << "Projection onto unperturbed basis:" << std::endl;
-
-            for (size_t i = 0; i < nbStates; ++i)
-            {
-                std::vector<std::pair<double, int>> contributions;
-
-                std::cout << "Perturbed state " << i << " (E = " << std::setprecision(10) << eigenvalues[i] << " H):" << std::endl;
-                std::cout << "  | " << i << "' > = ";
-                
-                bool firstTerm = true;
-                for (size_t k = 0; k < nbStates; ++k)
-                {
-                    double c_k = eigenvectors[k][i];
-                    double c_k_squared = c_k * c_k;
-
-                    contributions.push_back({c_k_squared, k});
-
-                    if (!firstTerm && c_k > 0)
-                    {
-                        std::cout << " + ";
-                    }
-                    else if (c_k < 0)
-                    {
-                        std::cout << " - ";
-                    }
-
-                    std::cout << std::setprecision(6) << std::abs(c_k) << " | " << k << " >";
-                    firstTerm = false;
-                }
-                std::cout << std::endl;
-                
-                // Show dominant contributions
-                std::sort(contributions.begin(), contributions.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
-                std::cout << "  Main contributions:" << std::endl;
-                for (size_t ii = 0; ii < std::min(size_t(5), contributions.size()); ++ii)
-                {
-                    if (contributions[ii].first > 1e-6)
-                    {
-                        size_t k = contributions[ii].second;
-                        std::cout << "    State " << k << ": "
-                                << std::setprecision(6) << std::setw(10) << contributions[ii].first * 100 << " %"
-                                << "  (c_" << k << " = " << std::setprecision(8) << eigenvectors[k][i] << ")" << std::endl;
-                    }
-                }
-                std::cout << std::endl;
-            }
-        }
-
-        std::cout << "------ Perturbative approach (cf. Guégan et al., PCCP 2020) ------" << std::endl << std::endl;
-
-        bool warningPrinted = false;
-
-        // Compute dp_k for each state using Eq. (27) in Guégan et al., PCCP 2020
-        std::vector<double> dpk_perturb_state0_withoutRenormalisation(nbStates, 0.0);
-        std::vector<double> normalisationFactors(nbStates, 0.0);
-        std::vector<std::vector<double>> dpk_perturb(nbStates, std::vector<double>(nbStates, 0.0));
-
-        // Compute extra-diagonal dp_k coefficients
-        for (size_t i = 0; i < nbStates; ++i)
-        {
-            for (size_t j = 0; j < nbStates; ++j)
-            {
-                if (i != j)
-                {
-                    double Ei_minus_Ej = states[i].get_energy() - states[j].get_energy();
-
-                    // Check for degeneracy to avoid division by zero
-                    if (std::abs(Ei_minus_Ej) >= 1e-10)
-                    {
-                        // psi_i_HminusH0_psi_j is a lower triangular matrix
-                        dpk_perturb[i][j] = (j <= i ? psi_i_HminusH0_psi_j_matrixes[runIndex][i][j] : psi_i_HminusH0_psi_j_matrixes[runIndex][j][i]) / Ei_minus_Ej;
-                        dpk_perturb[i][j] *= dpk_perturb[i][j];
-
-                        normalisationFactors[i] += dpk_perturb[i][j];
-
-                        // For the first state, we keep the unrenormalised dp_k coefficients so we can compare them with the paper and the variational approach later.
-                        if (i == 0)
-                        {
-                            dpk_perturb_state0_withoutRenormalisation[j] = dpk_perturb[i][j];
-                        }
-
-                        if (dpk_perturb[i][j] > 1.0)
-                        {
-                            dpk_perturb[i][j] = 0.0;
-                            if (i < j) // to avoid printing twice the same warning for the pair (i, j) and (j, i)
-                            {
-                                warningPrinted = true;
-
-                                std::cout << "Warning: the dp_" << j << " coefficient for the state " << i << " and the dp_" << i << " coefficient for the state " << j << " are greater than 1 (dp_" << j << " = " << dpk_perturb[i][j] << ")." << std::endl;
-                                std::cout << "They will be set to 0 to maintain the normalisation condition on dp_k (limitation of the perturbative approach)." << std::endl;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        dpk_perturb[i][j] = 0.0;
-
-                        if (i < j) // to avoid printing twice the same warning for the pair (i, j) and (j, i)
-                        {
-                            warningPrinted = true;
-
-                            std::cout << "Warning: degeneracy detected between states " << i << " and " << j << " (|E_i - E_j| < 1e-10)." << std::endl;
-                            std::cout << "The dp_" << j << "coefficient for the state " << i << "and the dp_" << i << " coefficient for the state " << j << " will be set to zero to avoid division by zero." << std::endl;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Compute dp_0 without renormalisation
-        double sum = 0.0;
-        for (size_t i = 1; i < nbStates; ++i)
-        {
-            sum += dpk_perturb_state0_withoutRenormalisation[i];
-        }
-        dpk_perturb_state0_withoutRenormalisation[0] = 1.0 -  sum;
-
-        // Renormalization of dp_k coefficients to ensure that their sum is equal to 1 for each state (normalisation condition)
-        for (size_t i = 0; i < nbStates; ++i)
-        {
-            if (normalisationFactors[i] > 1.0)
-            {
-                for (size_t j = 0; j < nbStates; ++j)
-                {
-                    if (i != j)
-                    {
-                        dpk_perturb[i][j] = dpk_perturb[i][j] / (1.0 + normalisationFactors[i]);
-                    }
-                }
-            }
-        }
-
-        // Compute diagonal dp_k coefficients using the normalisation condition
-        for (size_t i = 0; i < nbStates; ++i)
-        {
-            double sumExtraDiagonal = 0.0;
-            for (size_t j = 0; j < nbStates; ++j)
-            {
-                sumExtraDiagonal += (i != j ? dpk_perturb[i][j] : 0.0);
-            }
-
-            dpk_perturb[i][i] = 1.0 / (1.0 + sumExtraDiagonal);
-        }
-
-        if (warningPrinted)
-        {
-            std::cout << std::endl;
-        }
-
-        std::cout << "dp_k values for ground state, using Eq. (27). Excited states are on the columns:" << std::endl;
-        std::cout << std::scientific;
-        std::cout << std::setprecision(10);
-        for (size_t i = 0; i < nbStates; ++i)
-        {
-            std::cout << std::right << std::setw(17) << dpk_perturb_state0_withoutRenormalisation[i] << '\t';
-        }
-        std::cout << std::defaultfloat << std::endl << std::endl;
-
-        std::cout << "Renormalized dp_k values. Excited states are on the columns:" << std::endl;
-        std::cout << std::scientific;
-        std::cout << std::setprecision(10);
-        for (size_t i = 0; i < nbStates; ++i)
-        {
-            for (size_t j = 0; j < nbStates; ++j)
-            {
-                std::cout << std::right << std::setw(17) << dpk_perturb[i][j] << '\t';
-            }
-
-            std::cout << std::endl;
-        }
-        std::cout << std::defaultfloat << std::endl;
-
-        // Compute E_polarisation and dS for each state using respectively Eq. (26) and Eq. (32) in Guégan et al., PCCP 2020
-        std::vector<double> dS_perturb(nbStates, 0.0);
-        std::vector<double> E_pola_perturb(nbStates, 0.0);
-        double dS_perturb_state0_withoutRenormalisation = 0.0;
-        double E_pola_perturb_state0_withoutRenormalisation = 0.0;
-
-        std::cout << "E_polarisation and dS using respectively Eq. (26) and Eq. (32) in Guégan et al., PCCP 2020:" << std::endl;
-
-        for (size_t i = 0; i < nbStates; ++i)
-        {
-            double sum_dS = 0.0;
-            double sum_Epola = 0.0;
-            for (size_t j = 0; j < nbStates; ++j)
-            {
-                if (dpk_perturb[i][j] != 0)
-                {
-                    sum_dS -= dpk_perturb[i][j] * std::log(dpk_perturb[i][j]);
-
-                    if (i != j)
-                    {
-                        // Note : degeneracy is already handled in the computation of dp_k coefficients
-                        // So we can safely compute the energy difference here without checking for division by zero again.
-                        sum_Epola -= dpk_perturb[i][j] * (states[j].get_energy() - states[i].get_energy());
-                    }
-                }
-            }
-
-            dS_perturb[i] = sum_dS * Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
-            E_pola_perturb[i] = sum_Epola * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
-
-            // Treating the ground state without renormalisation separately
-            if (dpk_perturb_state0_withoutRenormalisation[i] != 0)
-            {
-                dS_perturb_state0_withoutRenormalisation -= dpk_perturb_state0_withoutRenormalisation[i] * std::log(dpk_perturb_state0_withoutRenormalisation[i]);
-
-                if (i != 0)
-                {
-                    E_pola_perturb_state0_withoutRenormalisation -= dpk_perturb_state0_withoutRenormalisation[i] * (states[0].get_energy() - states[i].get_energy());
-                }
-            }
-        }
-
-        dS_perturb_state0_withoutRenormalisation *= Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
-        E_pola_perturb_state0_withoutRenormalisation *= Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
-
-        std::cout << "dS (J/mol/K) and |E_polarisation| (J/mol) for ground state without renormalisation:" << std::endl;
-        std::cout << std::scientific;
-        std::cout << std::setprecision(10);
-        std::cout << std::right << std::setw(17) << dS_perturb_state0_withoutRenormalisation << '\t';
-        std::cout << std::right << std::setw(17) << std::abs(E_pola_perturb_state0_withoutRenormalisation) << std::endl << std::endl;
-
-        std::cout << "dS (J/mol/K) for each state:" << std::endl;
-        for (size_t i = 0; i < nbStates; ++i)
-        {
-            std::cout << std::right << std::setw(17) << dS_perturb[i] << '\t';
-        }
-        std::cout << std::endl << std::endl;
-
-        std::cout << "|E_polarisation| (J/mol) for each state:" << std::endl;
-        for (size_t i = 0; i < nbStates; ++i)
-        {
-            std::cout << std::right << std::setw(17) << std::abs(E_pola_perturb[i]) << '\t';
-        }
-        std::cout << std::defaultfloat << std::endl;
-
-
-        
-        std::cout << std::endl << "------ Variational approach ------" << std::endl << std::endl;
-
-        // Compute dp_k
-        std::vector<std::vector<double>> dpk_varia(nbStates, std::vector<double>(nbStates, 0.0));
-
-        std::cout << "dp_k values:" << std::endl;
-        std::cout << std::scientific;
-        std::cout << std::setprecision(10);
-        for (size_t i = 0; i < eigenvectors.size(); ++i)
-        {
-            for (size_t j = 0; j < eigenvectors[i].size(); ++j)
-            {
-                dpk_varia[i][j] = eigenvectors[i][j] * eigenvectors[i][j];
-                std::cout << std::right << std::setw(17) << dpk_varia[i][j] << '\t';
-            }
-
-            std::cout << std::endl;
-        }
-        std::cout << std::defaultfloat << std::endl;
-
-        // Search for the excited state that has the maximum contribution from the ground state to compare with the perturbative approach.
-        size_t maxGroundContributionExcitedState = 0;
-        double maxContribution = dpk_varia[0][0];
-        for (size_t i = 1; i < nbStates; ++i)
-        {
-            if (dpk_varia[0][i] > maxContribution)
-            {
-                maxContribution = dpk_varia[0][i];
-                maxGroundContributionExcitedState = i;
-            }
-        }
-
-        // Compute E_polarisation and dS for each state
-        std::vector<double> dS_varia(nbStates, 0.0);
-        std::vector<double> E_pola_varia(nbStates, 0.0);
-
-        for (size_t i = 0; i < nbStates; ++i)
-        {
-            double sum_dS = 0.0;
-            double sum_Epola = 0.0;
-            for (size_t j = 0; j < nbStates; ++j)
-            {
-                if (dpk_varia[j][i] != 0)
-                {
-                    sum_dS -= dpk_varia[j][i] * std::log(dpk_varia[j][i]);
-
-                    if (i != j)
-                    {
-                        // Note : degeneracy is already handled in the computation of dp_k coefficients
-                        // So we can safely compute the energy difference here without checking for division by zero again.
-                        sum_Epola -= dpk_varia[j][i] * (states[i].get_energy() - states[j].get_energy());
-                    }
-                }
-            }
-
-            dS_varia[i] = sum_dS * Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
-            E_pola_varia[i] = sum_Epola * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
-        }
-
-        std::cout << "dS (J/mol/K) and |E_polarisation| (J/mol) for the excited state with maximum contribution from the ground state | 0 > (| " << maxGroundContributionExcitedState << "' >, with dp_" << maxGroundContributionExcitedState << " = " << std::setprecision(10) << dpk_varia[0][maxGroundContributionExcitedState] << ")." << std::endl;
-        std::cout << std::scientific;
-        std::cout << std::setprecision(10);
-        std::cout << std::right << std::setw(17) << dS_varia[maxGroundContributionExcitedState] << '\t';
-        std::cout << std::right << std::setw(17) << std::abs(E_pola_varia[maxGroundContributionExcitedState]) << std::endl << std::endl;
-
-        std::cout << "dS (J/mol/K) for each state:" << std::endl;
-        for (size_t i = 0; i < nbStates; ++i)
-        {
-            std::cout << std::right << std::setw(17) << dS_varia[i] << '\t';
-        }
-        std::cout << std::endl << std::endl;
-
-        std::cout << "|E_polarisation| (J/mol) for each state:" << std::endl;
-        for (size_t i = 0; i < nbStates; ++i)
-        {
-            std::cout << std::right << std::setw(17) << std::abs(E_pola_varia[i]) << '\t';
-        }
-        std::cout << std::defaultfloat << std::endl;
-
-
-        if (loopOnAtoms)
-        {
-            std::cout << std::endl;
-        }
+        computeHamiltonianMatrixWithPointCharges(states, currentChargeNucleiContribution, currentIonicMatrixes, psi_i_H_psi_j, psi_i_HminusH0_psi_j, logFile, verbose);
+        computeResultsEnergyWithPointCharges(states, psi_i_H_psi_j, psi_i_HminusH0_psi_j, outputPrefix, logFile, verbose);
     }
     
     
@@ -2478,7 +2629,7 @@ void Job::run_lambdaDiagnostic()
 
     // Reading transitions file
     std::vector<ExcitedState> excitedStates;
-    ExcitedState::readTransitionsFile(transitionsFileName, excitedStates, orbitals.get_energy());
+    ExcitedState::readTransitions(transitionsFileName, excitedStates, orbitals.get_energy());
     std::cout << "Number of excited states read: " << excitedStates.size() << std::endl << std::endl;
 
 
