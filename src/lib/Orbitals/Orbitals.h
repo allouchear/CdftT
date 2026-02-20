@@ -45,6 +45,12 @@ class Orbitals
         std::vector<double> _coordinates;
         bool _mixte;
 
+        // debug
+        std::vector<std::vector<double>> __debug_AOMatrix;
+        std::vector<std::vector<std::vector<double>>> __debug_MOMatrix;
+        double __debug_totalSumAO = 0.0;
+        std::vector<double> __debug_totalSumMO = std::vector<double>(2, 0.0);
+
 
     public:
         //----------------------------------------------------------------------------------------------------//
@@ -198,7 +204,7 @@ class Orbitals
          * @param[in] charge The charge of the ion.
          * @return The matrix < phi_i | V_ion | phi_j > (the first index corresponds to alpha spin, the second to beta spin).
          */
-        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, bool debug = false);
+        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, bool debug = false, bool printAOMatrix = false, bool printMOMatrix = false);
 
         //! A normal member taking no arguments and returning a double value.
         /*! \return The value of the integral of Orbitals * Orbitals. */
@@ -272,13 +278,18 @@ class Orbitals
             /*! Calculates and returns the electronic density from molecular orbitals */
         double density(double x, double y, double z);
             
-            //! Make a grid of Molecular orbitals
-            /*! Creates a grid of molecular orbitals. Values are calculated with Orbitals::phis()*/
-        Grid makeOrbGrid(const Domain& d, const std::vector<int>& nums, const std::vector<int>& typesSpin);
+        /**
+         * @brief Builds the Grid associated with the orbitals object.
+         * 
+         * @param[in] domain The domain of the grid.
+         * @param[in] orbitalsNumbers The numbers of the orbitals to be included in the grid.
+         * @param[in] orbitalsSpins The spins of the orbitals to be included in the grid.
+         */
+        Grid makeOrbGrid(const Domain& domain, const std::vector<int>& orbitalsNumbers, const std::vector<SpinType>& orbitalsSpins);
 
             //! Electronic density
             /*! Calculates and returns the electronic density from molecular orbitals */
-        std::vector<double> phis(double x, double y, double z, const std::vector<int>& nums, const std::vector<int>& typesSpin);
+        std::vector<double> phis(double x, double y, double z, const std::vector<int>& nums, const std::vector<SpinType>& typesSpin);
             
             //! Electron localisation function
             /*! Calculates and returns the ELF*/

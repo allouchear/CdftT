@@ -23,9 +23,9 @@ Grid.o: Grid.cpp /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Grid.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Domain.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Enums.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Constants.h
 GridCP.o: GridCP.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Constants.h \

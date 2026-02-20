@@ -25,6 +25,13 @@ enum class GridSize
     UNKNOWN
 };
 
+enum class HFType
+{
+    RHF,
+    UHF,
+    UNKNOWN
+};
+
 enum class OrbitalType
 {
     ALL,
@@ -83,6 +90,7 @@ namespace EnumConversionMaps
 {
     extern std::unordered_map<ELFMethod, std::string> elfMethod_string;
     extern std::unordered_map<GridSize, std::string> gridSize_string;
+    extern std::unordered_map<HFType, std::string> hfType_string;
     extern std::unordered_map<OrbitalType, std::string> orbitalType_string;
     extern std::unordered_map<PartitionMethod, std::string> partitionMethod_string;
     extern std::unordered_map<RunType, std::string> runType_string;
@@ -107,8 +115,10 @@ std::string to_string(ELFMethod method);
 ELFMethod elfMethod_from_string(const std::string& strMethod);
 std::string to_string(GridSize size);
 GridSize gridSize_from_string(const std::string& strSize);
-std::string to_string(OrbitalType type);
-OrbitalType orbitalType_from_string(const std::string& strType);
+std::string to_string(HFType hfType);
+HFType hfType_from_string(const std::string& strHfType);
+std::string to_string(OrbitalType orbitalType);
+OrbitalType orbitalType_from_string(const std::string& strOrbitalType);
 std::string to_string(PartitionMethod method);
 PartitionMethod partitionMethod_from_string(const std::string& strMethod);
 std::string to_string(RunType runType);

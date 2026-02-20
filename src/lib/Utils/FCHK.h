@@ -58,7 +58,7 @@ class FCHK
         vector<double> _beta_mo_coefficients; // or vector<vector<double>> --> ??
 
         /** @brief Total energy of the system. */
-        double _total_energy;
+        double _scf_energy;
 
         /** @brief Mulliken charges for all atoms. */
         vector<double> _mulliken_charges;
@@ -206,7 +206,7 @@ class FCHK
         /**
          * @brief Returns the total energy of the system.
          */
-        double TotalEnergy() { return _total_energy; }
+        double ScfEnergy() { return _scf_energy; }
 
         /**
          * @brief Returns the Mulliken charges for all atoms.

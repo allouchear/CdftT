@@ -401,9 +401,9 @@ class Job
          * @param[in] TypeFlag 0=density, 1=orbitals, else ELF.
          * @param[in] elfMethod ELF method selection (SAVIN/BECKE) when creating ELF.
          * @param[in] nums Orbital indices used for orbital grids.
-         * @param[in] typesSpin Spin flags for orbital grids.
+         * @param[in] typesSpin Spin type for orbital grids.
          */
-        void createCube(Orbitals& orbitals, const Domain& domain, const std::string& cubeFileName, int TypeFlag, const ELFMethod elfMethod = ELFMethod::SAVIN, std::vector<int> nums = {0}, std::vector<int> typesSpin = {0});
+        void createCube(Orbitals& orbitals, const Domain& domain, const std::string& cubeFileName, int TypeFlag, const ELFMethod elfMethod = ELFMethod::SAVIN, std::vector<int> nums = {0}, std::vector<SpinType> typesSpin = { SpinType::ALPHA });
 
         /**
          * @brief Opens the configured input file.
@@ -439,40 +439,40 @@ class Job
          * @param[in] spinType Spin selection (Alpha/Beta/Alpha-Beta).
          * @param[in] spinList Optional custom spin list for custom orbital selections.
          */
-        void setOrbitals(Orbitals& o, const int numberOfOrbitals, std::vector<int>& orbitalsNumbers, std::vector<int>& orbitalsSpins, const OrbitalType orbitalType, SpinType spinType, const std::vector<SpinType>& spinList = {});
+        void setOrbitals(Orbitals& o, const int numberOfOrbitals, std::vector<int>& orbitalsNumbers, std::vector<SpinType>& orbitalsSpins, const OrbitalType orbitalType, SpinType spinType, const std::vector<SpinType>& spinList = {});
 
         /**
          * @brief Selects all molecular orbitals for the requested spin configuration.
          *
          * @param[out] orbnums Output vector of orbital indices.
-         * @param[out] orbspin Output vector of spin flags corresponding to `orbnums`.
+         * @param[out] orbspin Output vector of spin types corresponding to `orbnums`.
          * @param[in] o Orbitals instance for occupation info.
          * @param[in] spinType Requested spin selection.
          * @param[in] numberOfOrbitals Number of MOs available.
          */
-        void setAllOrb(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType, const int& numberOfOrbitals);
+        void setAllOrb(std::vector<int> &orbnums, std::vector<SpinType> &orbspin, Orbitals &o, SpinType spinType, const int& numberOfOrbitals);
 
         /**
          * @brief Selects occupied molecular orbitals according to occupations and spin selection.
          *
          * @param[out] orbnums Output vector of occupied orbital indices.
-         * @param[out] orbspin Output vector of spin flags for each selected orbital.
+         * @param[out] orbspin Output vector of spin types for each selected orbital.
          * @param[in] o Orbitals instance containing occupation numbers.
          * @param[in] spinType Requested spin selection.
          * @param[in] N Number of MOs available.
          */
-        void setOccOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType, const int& N);
+        void setOccOrb(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, const int& N);
         
         /**
          * @brief Selects virtual (unoccupied) molecular orbitals according to spin selection.
          *
          * @param[out] orbnums Output vector of virtual orbital indices.
-         * @param[out] orbspin Output vector of spin flags for each selected orbital.
+         * @param[out] orbspin Output vector of spin types for each selected orbital.
          * @param[in] o Orbitals instance containing occupation numbers.
          * @param[in] spinType Requested spin selection.
          * @param[in] N Number of MOs available.
          */
-        void setVirtOrb(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType, const int &N);
+        void setVirtOrb(std::vector<int> &orbnums, std::vector<SpinType> &orbspin, Orbitals &o, SpinType spinType, const int &N);
 
         /**
          * @brief Selects LUMO orbital(s) according to spin selection.
@@ -482,7 +482,7 @@ class Job
          * @param[in] o Orbitals instance used to query occupations.
          * @param[in] spinType Requested spin selection.
          */
-        void setLumo(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType);
+        void setLumo(std::vector<int> &orbnums, std::vector<SpinType> &orbspin, Orbitals &o, SpinType spinType);
 
         /**
          * @brief Selects HOMO orbital(s) according to spin selection.
@@ -492,26 +492,26 @@ class Job
          * @param[in] o Orbitals instance used to query occupations.
          * @param[in] spinType Requested spin selection.
          */
-        void setHomo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType);
+        void setHomo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType);
 
         /**
          * @brief Selects HOMO and LUMO together according to spin selection.
          *
          * @param[out] orbnums Output vector containing HOMO and LUMO indices.
-         * @param[out] orbspin Output vector of corresponding spin flags.
+         * @param[out] orbspin Output vector of corresponding spin types.
          * @param[in] o Orbitals instance for occupation info.
          * @param[in] spinType Requested spin selection.
          */
-        void setHomoLumo(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType);
+        void setHomoLumo(std::vector<int> &orbnums, std::vector<SpinType> &orbspin, Orbitals &o, SpinType spinType);
 
         /**
          * @brief Applies a custom orbital index list and corresponding spin list.
          *
          * @param[in,out] orbnums Input orbital indices (1-based expected; converted internally).
-         * @param[out] orbspin Output vector filled with parsed spin flags.
+         * @param[out] orbspin Output vector filled with parsed spin types.
          * @param[in] spinList Input vector of SpinType values corresponding to custom orbitals.
          */
-        void setCustom(std::vector<int>& orbnums, std::vector<int>& orbspin, const std::vector<SpinType>& spinList);
+        void setCustom(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, const std::vector<SpinType>& spinList);
 
 
     public:

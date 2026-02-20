@@ -66,7 +66,7 @@ void CGTF::normaliseCGTF()
     }
     else
     {
-        std::cout<<"A Contacted Gaussian Type function is nul"<<std::endl;
+        print_error("A Contracted Gaussian Type Function is null.");
         exit(1);
     }
 }

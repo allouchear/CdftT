@@ -27,6 +27,13 @@ namespace EnumConversionMaps
         { GridSize::UNKNOWN, "UNKNOWN" }
     };
 
+    std::unordered_map<HFType, std::string> hfType_string =
+    {
+        { HFType::RHF, "RHF" },
+        { HFType::UHF, "UHF" },
+        { HFType::UNKNOWN, "UNKNOWN" }
+    };
+
     std::unordered_map<OrbitalType, std::string> orbitalType_string =
     {
         { OrbitalType::ALL, "All" },
@@ -112,14 +119,25 @@ GridSize gridSize_from_string(const std::string& strSize)
 }
 
 
-std::string to_string(OrbitalType type)
+std::string to_string(HFType hfType)
 {
-    return enum_to_string(type, EnumConversionMaps::orbitalType_string);
+    return enum_to_string(hfType, EnumConversionMaps::hfType_string);
 }
 
-OrbitalType orbitalType_from_string(const std::string& strType)
+HFType hfType_from_string(const std::string& strHfType)
 {
-    return enum_from_string(strType, EnumConversionMaps::orbitalType_string, OrbitalType::UNKNOWN);
+    return enum_from_string(strHfType, EnumConversionMaps::hfType_string, HFType::UNKNOWN);
+}
+
+
+std::string to_string(OrbitalType orbitalType)
+{
+    return enum_to_string(orbitalType, EnumConversionMaps::orbitalType_string);
+}
+
+OrbitalType orbitalType_from_string(const std::string& strOrbitalType)
+{
+    return enum_from_string(strOrbitalType, EnumConversionMaps::orbitalType_string, OrbitalType::UNKNOWN);
 }
 
 

@@ -920,7 +920,7 @@ template<typename T> void Job::computeOrbitalsOrBecke(T& analyticObject, const s
 
 
 //TypeFlag specifies the type of grid you wnat to make. For now there are 3 types available. electronic density, ELF and orbitals. Others can be added in the else ifs. additional parameters shoud be added before the default values.
-void Job::createCube(Orbitals& orbitals, const Domain& domain, const std::string& cubeFileName, int TypeFlag, const ELFMethod elfMethod, std::vector<int> nums, std::vector<int> typesSpin)
+void Job::createCube(Orbitals& orbitals, const Domain& domain, const std::string& cubeFileName, int TypeFlag, const ELFMethod elfMethod, std::vector<int> nums, std::vector<SpinType> typesSpin)
 {
     Grid g;
     if (TypeFlag == 0)
@@ -940,7 +940,7 @@ void Job::createCube(Orbitals& orbitals, const Domain& domain, const std::string
         }
         else // SAVIN
         {
-            g=orbitals.makeELFgrid(domain); 
+            g=orbitals.makeELFgrid(domain);
         }
 
     }
@@ -1003,7 +1003,7 @@ Domain Job::buildDomainForCube(Orbitals& orb, const GridSize gridSize, const Cus
 }    
 /******************************************************************************************/
 
-void Job::setOrbitals(Orbitals& o, const int numberOfOrbitals, vector<int>& orbitalsNumbers, vector<int>& orbitalsSpins, const OrbitalType orbitalType, SpinType spinType, const std::vector<SpinType>& spinList)
+void Job::setOrbitals(Orbitals& o, const int numberOfOrbitals, std::vector<int>& orbitalsNumbers, std::vector<SpinType>& orbitalsSpins, const OrbitalType orbitalType, SpinType spinType, const std::vector<SpinType>& spinList)
 {
     switch (orbitalType)
     {
@@ -1050,7 +1050,7 @@ void Job::setOrbitals(Orbitals& o, const int numberOfOrbitals, vector<int>& orbi
     }
 }
 
-void Job::setAllOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType, const int& N)
+void Job::setAllOrb(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, const int& N)
 {
     orbnums.resize(N);
     for(int i = 0; i < N; ++i)
@@ -1058,25 +1058,28 @@ void Job::setAllOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbita
         orbnums[i] = i;
     }
 
-    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
+    if (spinType == SpinType::ALPHA)
     {
-        orbspin.resize(N, 0);
+        orbspin.resize(N, SpinType::ALPHA);
     }
-    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
+    else if (!o.get_alphaAndBeta() || spinType == SpinType::ALPHA_BETA)
     {
-        orbspin.resize(N, 0);
+        //orbspin.resize(N, 0);
+        orbspin.resize(2 * N, SpinType::ALPHA);
         orbnums.resize(2 * N, 1);
         for(int i = N; i < 2 * N; ++i)
         {
             orbnums[i] = i - N;
+            orbspin[i] = SpinType::BETA; // TO BE TESTED
         }
     }
     else
     {
-        orbspin.resize(N, 1);
+        orbspin.resize(N, SpinType::BETA);
     }
 }
-void Job::setOccOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType, const int& N)
+
+void Job::setOccOrb(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, const int& N)
 {
     std::vector<std::vector<double>> occ=o.get_occupationNumber();
     if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA) 
@@ -1091,7 +1094,7 @@ void Job::setOccOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbita
             }
         }
         orbnums.resize(k);
-        orbspin.resize(k, 0);
+        orbspin.resize(k, SpinType::ALPHA);
     }
     else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
@@ -1105,7 +1108,7 @@ void Job::setOccOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbita
                 k++;
             }
         }
-        orbspin.resize(k, 0);
+        orbspin.resize(k, SpinType::ALPHA);
         int j = k;
         for(int i = 0; i < N; ++i)
         {
@@ -1116,7 +1119,7 @@ void Job::setOccOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbita
             }
         }
         orbnums.resize(j);
-        orbspin.resize(j, 1);    
+        orbspin.resize(j, SpinType::BETA);    
     }
     else
     {
@@ -1130,11 +1133,11 @@ void Job::setOccOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbita
             }
         }
         orbnums.resize(j);
-        orbspin.resize(j, 1);
+        orbspin.resize(j, SpinType::BETA);
     }
 
 }
-void Job::setVirtOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType, const int& N)
+void Job::setVirtOrb(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, const int& N)
 {
     std::vector<std::vector<double>> occ=o.get_occupationNumber();
     if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
@@ -1149,7 +1152,7 @@ void Job::setVirtOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbit
             }
         }
         orbnums.resize(k);
-        orbspin.resize(k, 0);
+        orbspin.resize(k, SpinType::ALPHA);
     }
     else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
@@ -1163,7 +1166,7 @@ void Job::setVirtOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbit
                 k++;
             }
         }
-        orbspin.resize(k, 0);
+        orbspin.resize(k, SpinType::ALPHA);
         int j = k;
         for(int i = 0; i < N; ++i)
         {
@@ -1174,7 +1177,7 @@ void Job::setVirtOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbit
             }
         }
         orbnums.resize(j);
-        orbspin.resize(j, 1);    
+        orbspin.resize(j, SpinType::BETA);    
     }
     else
     {
@@ -1188,10 +1191,10 @@ void Job::setVirtOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbit
             }
         }
         orbnums.resize(j);
-        orbspin.resize(j, 1);
+        orbspin.resize(j, SpinType::BETA);
     }
 }
-void Job::setHomo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType)
+void Job::setHomo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType)
 {
     int i = 0;
     std::vector<std::vector<double>> occ = o.get_occupationNumber();
@@ -1201,8 +1204,8 @@ void Job::setHomo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals
         {
             i++;
         }
-        orbnums = {i - 1};
-        orbspin = {0};
+        orbnums = { i - 1 };
+        orbspin = { SpinType::ALPHA };
     }
     else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
@@ -1216,7 +1219,7 @@ void Job::setHomo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals
             j++;
         }
         orbnums = {i - 1, j - 1};
-        orbspin = {0, 1};
+        orbspin = { SpinType::ALPHA, SpinType::BETA };
     }
     else
     {
@@ -1226,10 +1229,10 @@ void Job::setHomo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals
             j++;
         }
         orbnums = {j - 1};
-        orbspin = {1};
+        orbspin = { SpinType::BETA };
     }
 }
-void Job::setLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType)
+void Job::setLumo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType)
 {
     int i = 0;
     std::vector<std::vector<double>> occ = o.get_occupationNumber();
@@ -1239,8 +1242,8 @@ void Job::setLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals
         {
             i++;
         }
-        orbnums = {i};
-        orbspin = {0};
+        orbnums = { i };
+        orbspin = { SpinType::ALPHA };
     }
     else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
@@ -1253,8 +1256,8 @@ void Job::setLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals
         {
             j++;
         }
-        orbnums = {i, j};
-        orbspin = {0, 1};
+        orbnums = { i, j };
+        orbspin = { SpinType::ALPHA, SpinType::BETA };
     }
     else
     {
@@ -1263,11 +1266,11 @@ void Job::setLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals
         {
             j++;
         }
-        orbnums = {j};
-        orbspin = {1};
+        orbnums = { j };
+        orbspin = { SpinType::BETA };
     }
 }
-void Job::setHomoLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType) 
+void Job::setHomoLumo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType) 
 {
     int i = 0;
     std::vector<std::vector<double>> occ = o.get_occupationNumber();
@@ -1277,8 +1280,8 @@ void Job::setHomoLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbi
         {
             i++;
         }        
-        orbnums = {i - 1, i};
-        orbspin = {0, 0};
+        orbnums = { i - 1, i };
+        orbspin = { SpinType::ALPHA, SpinType::ALPHA };
     }
     else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
@@ -1291,8 +1294,8 @@ void Job::setHomoLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbi
         {
             j++;
         }
-        orbnums = {i - 1, j - 1, i, j};
-        orbspin = {0, 1, 0, 1};
+        orbnums = { i - 1, j - 1, i, j };
+        orbspin = { SpinType::ALPHA, SpinType::BETA, SpinType::ALPHA, SpinType::BETA };
     }
     else
     {
@@ -1301,31 +1304,33 @@ void Job::setHomoLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbi
         {
             j++;
         }
-        orbnums = {j - 1, j};
-        orbspin = {1, 1};
+        orbnums = { j - 1, j };
+        orbspin = { SpinType::BETA, SpinType::BETA };
     }
 }
-void Job::setCustom(std::vector<int>& orbnums, std::vector<int>& orbspin, const std::vector<SpinType>& spinList) 
+void Job::setCustom(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, const std::vector<SpinType>& spinList) 
 {
-    for(size_t i=0; i < spinList.size();i++)
+    for(size_t i = 0; i < spinList.size(); ++i)
     {
         if (spinList[i] == SpinType::ALPHA)
         {
-            orbspin.push_back(0);
+            orbspin.push_back(SpinType::ALPHA);
         }
         else if (spinList[i] == SpinType::BETA)
         {
-            orbspin.push_back(1);
+            orbspin.push_back(SpinType::BETA);
         }
     }
-    for(size_t i=0; i<orbnums.size(); i++)
+
+    for(size_t i = 0; i < orbnums.size(); ++i)
     {
         orbnums[i] -= 1;
     }
-    if (orbspin.size()<orbnums.size())
+
+    if (orbspin.size() < orbnums.size())
     {    
-        int last=orbspin.back();
-        for(size_t i=orbspin.size(); i<orbnums.size(); i++)
+        SpinType last = orbspin.back();
+        for(size_t i = orbspin.size(); i < orbnums.size(); ++i)
         {
             orbspin.push_back(last);
         }
@@ -2270,7 +2275,7 @@ void Job::run_computeEnergyWithPointCharges()
         }
     }
 
-
+/*
     // Compute Hamiltonian matrixes
     std::vector<std::vector<std::vector<double>>> psi_i_H_psi_j_matrixes;
     std::vector<std::vector<std::vector<double>>> psi_i_HminusH0_psi_j_matrixes;
@@ -2327,12 +2332,113 @@ void Job::run_computeEnergyWithPointCharges()
         computeHamiltonianMatrixWithPointCharges(states, currentChargeNucleiContribution, currentIonicMatrixes, psi_i_H_psi_j, psi_i_HminusH0_psi_j, logFile, verbose);
         computeResultsEnergyWithPointCharges(states, psi_i_H_psi_j, psi_i_HminusH0_psi_j, outputPrefix, logFile, verbose);
     }
-    
-    
+*/   
 
-    /*
+
+    ////////////////////////////////////
+    // Debug - V_nuclear calculations //
+    ////////////////////////////////////
+    std::cout << std::endl << std::endl << std::endl;
+    std::cout << "==============================================================================================" << std::endl;
+    std::cout << "====================== DEBUG - Computation of < ϕ_0 | V_nuclear | ϕ_0 > ======================" << std::endl;
+    std::cout << "==============================================================================================" << std::endl << std::endl;
+
+    std::cout << "====================== ANALYTIC COMPUTATION ======================" << std::endl << std::endl;
+
+    // Compute Nuclear Matrices for each atom (print AO matrix elements)
+    std::cout << "AO / MO basis:" <<std::endl;
+    std::cout << "--------------" << std::endl << std::endl;
+
+    std::vector<std::vector<std::vector<std::vector<double>>>> nuclearMatrices(orbitals.get_numberOfAtoms());
+    int atomIndex = 0;
+    int nbAtoms = static_cast<int>(orbitals.get_struct().get_atoms().size());
+    for (const Atom& atom : orbitals.get_struct().get_atoms())
+    {
+        std::cout << "Computing nuclear matrix for atom " << atom.get_name() << ": Z = " << atom.get_atomicNumber() << " ; position = (" << atom.get_coordinates()[0] << ", " << atom.get_coordinates()[1] << ", " << atom.get_coordinates()[2] << ")..." << std::endl;
+
+        nuclearMatrices[atomIndex] = orbitals.getIonicPotentialMatrix(atom.get_coordinates(), atom.get_atomicNumber(), true, atomIndex == nbAtoms - 1, atomIndex == nbAtoms - 1);
+        ++atomIndex;
+    }
+    std::cout << std::endl;
+
+    double sum_phi_i_Vnuclear_phi_j = 0.0;
+    for (int atomIndex = 0; atomIndex < orbitals.get_numberOfAtoms(); ++atomIndex)
+    {
+        for (size_t spin = 0; spin < nuclearMatrices[atomIndex].size(); ++spin)
+        {
+            for (size_t i = 0; i < nuclearMatrices[atomIndex][spin].size(); ++i)
+            {
+                for (size_t j = 0; j <= i; ++j)
+                {
+                    sum_phi_i_Vnuclear_phi_j += (i == j ? nuclearMatrices[atomIndex][spin][i][j] : 2.0 * nuclearMatrices[atomIndex][spin][i][j]);
+                }
+            }
+        }
+    }
+    std::cout << "Total sum of MO matrix elements for Alpha and Beta spins (analytic): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl << std::endl;
+
+    double sum_psi_i_Vnuclear_psi_j = 0.0;
+    double V_ij = 0.0;
+
+    // Print Slater determinant matrix elements
+    std::cout << "-------------------------------------------------------------------------------------------" << std::endl << std::endl;
+    std::cout << "States basis:" << std::endl;
+    std::cout << "-------------" << std::endl << std::endl;
+
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        std::cout << "ψ_" << i << ": energy = " << std::setprecision(10) << states[i].get_energy() << " Hartree" << std::endl;
+        for (const auto& slaterCoeff : states[i].getSlaterDeterminantsAndCoefficients())
+        {
+            std::cout << "    " << slaterCoeff.first << "; Coefficient: " << slaterCoeff.second << std::endl;
+        }
+        std::cout << std::endl;
+    }
+
+    for (size_t i = 0; i < nbStates; ++i)
+    {
+        // Get Slater Determinants for state i
+        std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_i(states[i].getSlaterDeterminantsAndCoefficients());
+
+        for (size_t j = 0; j <= i; ++j)
+        {
+            std::cout << "Computing < ψ_" << i << " | V_nuclear | ψ_" << j << " > matrix element..." << std::endl;
+
+            // Initialize < D_k | V_nuclear | D_l > matrix element
+            V_ij = 0.0;
+
+            // Get Slater Determinants for state j
+            std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].getSlaterDeterminantsAndCoefficients());
+
+            std::cout << "    Computing < D_k | V_nuclear | D_l > matrix elements:" << std::endl;
+            // Compute < D_k | V_nuclear | D_l >
+            for (const std::pair<SlaterDeterminant, double>& slaterCoeff_k : slaterDeterminants_i)
+            {
+                for (const std::pair<SlaterDeterminant, double>& slaterCoeff_l : slaterDeterminants_j)
+                {
+                    double D_kl = 0.0;
+
+                    for (int atomIndex = 0; atomIndex < orbitals.get_numberOfAtoms(); ++atomIndex)
+                    {
+                        D_kl += SlaterDeterminant::ionicPotential(slaterCoeff_k.first, slaterCoeff_l.first, nuclearMatrices[atomIndex]) * (slaterCoeff_k.second * slaterCoeff_l.second);
+                    }
+
+                    V_ij += D_kl;
+                    std::cout << std::right << std::setw(17) << D_kl << '\t';
+                }
+                std::cout << std::endl;
+            }
+
+            sum_psi_i_Vnuclear_psi_j += (i == j ? V_ij : 2.0 * V_ij);
+            std::cout << std::endl;
+        }
+    }
+
+
+/*
+
     // COMPARAISON AVEC CALCUL SUR GRILLE
-    std::cout << std::endl << std::endl << "====================== CALCUL SUR GRILLE ======================" << std::endl << std::endl;
+    std::cout << std::endl << std::endl << "====================== REGULAR GRID COMPUTATION ======================" << std::endl << std::endl;
 
     // Read grid size
     GridSize gridSize;
@@ -2340,79 +2446,115 @@ void Job::run_computeEnergyWithPointCharges()
     readSize(gridSize, customSizeData);
 
     // Setting orbitals
-    std::vector<int> orbitalsSpins;
+    std::vector<SpinType> orbitalsSpins;
     std::vector<int> orbitalsNumbers;
-    setOrbitals(orbitals, orbitals.get_numberOfMo(), orbitalsNumbers, orbitalsSpins, OrbitalType::ALL, SpinType::ALPHA);
+    setOrbitals(orbitals, orbitals.get_numberOfMo(), orbitalsNumbers, orbitalsSpins, OrbitalType::ALL, SpinType::ALPHA_BETA);
 
     // Building domain and grid
     std::cout << "Building domain and grid, please wait..." << std::endl;
     Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, orbitalsNumbers.size());
     Grid orbitalsGrid = orbitals.makeOrbGrid(domain, orbitalsNumbers, orbitalsSpins);
 
-    double sum_phi0_Vnuclear_phi0 = 0.0;
-    double V_ij = 0.0;
-    for (i = 0; i < orbitals.get_numberOfMo(); ++i)
+    double sum_phi_i_Vnuclear_phi_j_alpha = 0.0;
+    double sum_phi_i_Vnuclear_phi_j_beta = 0.0;
+    V_ij = 0.0;
+
+    std::cout << "Ionic potential matrix in MO basis for Alpha spin:" << std::endl;
+    std::cout << std::scientific;
+    std::cout << std::setprecision(10);
+    for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
     {
-        for (j = 0; j <= i; ++j)
+        for (int j = 0; j <= i; ++j)
         {
+            V_ij = 0.0;
             for (const Atom& atom : orbitals.get_struct().get_atoms())
             {
-                V_ij = orbitalsGrid.phiStarVionicStarPhi(i, j, atom.get_coordinates(), atom.get_atomicNumber());
-                sum_phi0_Vnuclear_phi0 += (i == j ? V_ij : 2.0 * V_ij);
+                V_ij += orbitalsGrid.phiStarVionicStarPhi(i, j, SpinType::ALPHA, atom.get_coordinates(), atom.get_atomicNumber());
             }
-        }
-    }
 
-    std::cout << "< psi_0 | V_nuclear | psi_0 > = " << sum_phi0_Vnuclear_phi0 << std::endl;
-    
+            sum_phi_i_Vnuclear_phi_j_alpha += (i == j ? V_ij : 2.0 * V_ij);
+            std::cout << std::right << std::setw(17) << V_ij << '\t';
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::defaultfloat << "Total sum of MO matrix elements for Alpha spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_alpha << std::endl;
+
+    std::cout << "Ionic potential matrix in MO basis for Beta spin:" << std::endl;
+    std::cout << std::scientific;
+    std::cout << std::setprecision(10);
+    for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
+    {
+        for (int j = 0; j <= i; ++j)
+        {
+            V_ij = 0.0;
+            for (const Atom& atom : orbitals.get_struct().get_atoms())
+            {
+                V_ij += orbitalsGrid.phiStarVionicStarPhi(i, j, SpinType::BETA, atom.get_coordinates(), atom.get_atomicNumber());
+            }
+
+            sum_phi_i_Vnuclear_phi_j_beta += (i == j ? V_ij : 2.0 * V_ij);
+            std::cout << std::right << std::setw(17) << V_ij << '\t';
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::defaultfloat << "Total sum of MO matrix elements for Beta spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_beta << std::endl << std::endl;
+
+    sum_phi_i_Vnuclear_phi_j = sum_phi_i_Vnuclear_phi_j_alpha + sum_phi_i_Vnuclear_phi_j_beta;
+    std::cout << "Total sum of MO matrix elements for Alpha and Beta spins (regular Grid): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl;
+*/
 
     // COMPARAISON AVEC BECKE
-    std::cout << std::endl << std::endl << "====================== CALCUL AVEC BECKE ======================" << std::endl << std::endl;
+    std::cout << std::endl << std::endl << "====================== BECKE GRID COMPUTATION ======================" << std::endl << std::endl;
 
     Becke becke;
     computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
 
-    sum_phi0_Vnuclear_phi0 = 0.0;
-    //double V_ij = 0.0;
-    for (i = 0; i < orbitals.get_numberOfMo(); ++i)
+    double sum_phi_i_Vnuclear_phi_j_alpha = 0.0;
+    double sum_phi_i_Vnuclear_phi_j_beta = 0.0;
+    V_ij = 0.0;
+
+    std::cout << "Ionic potential matrix in MO basis for Alpha spin:" << std::endl;
+    std::cout << std::scientific;
+    std::cout << std::setprecision(10);
+    for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
     {
-        std::cout << "i = " << i << std::endl;
-        for (j = 0; j <= i; ++j)
+        for (int j = 0; j <= i; ++j)
         {
-            std::cout << "    j = " << j << std::endl;
+            V_ij = 0.0;
             for (const Atom& atom : orbitals.get_struct().get_atoms())
             {
-                V_ij = becke.ionic_potential(i, j, SpinType::ALPHA_BETA, atom.get_coordinates(), atom.get_atomicNumber(), 1, 9, 1);
-                sum_phi0_Vnuclear_phi0 += (i == j ? V_ij : 2.0 * V_ij);
+                V_ij += becke.ionic_potential(i, j, SpinType::ALPHA, atom.get_coordinates(), atom.get_atomicNumber(), 1, 5, 1);
             }
+
+            sum_phi_i_Vnuclear_phi_j_alpha += (i == j ? V_ij : 2.0 * V_ij);
+            std::cout << std::right << std::setw(17) << V_ij << '\t';
         }
+        std::cout << std::endl;
     }
+    std::cout << std::defaultfloat << "Total sum of MO matrix elements for Alpha spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_alpha << std::endl;
 
-    std::cout << "< psi_0 | V_nuclear | psi_0 > = " << sum_phi0_Vnuclear_phi0 << std::endl;
-    */
-
-    
-    /*
-    ////////////////////////////////////
-    // Debug - V_nuclear calculations //
-    ////////////////////////////////////
-    std::cout << std::endl << std::endl << std::endl;
-    std::cout << "==================================================================================================" << std::endl;
-    std::cout << "====================== DEBUG - Computation of < phi_0 | V_nuclear | phi_0 > ======================" << std::endl;
-    std::cout << "==================================================================================================" << std::endl << std::endl;
-
-    // Compute Nuclear Matrices for each atom
-    std::vector<std::vector<std::vector<std::vector<double>>>> nuclearMatrices(orbitals.get_numberOfAtoms());
-    int atomIndex = 0;
-    for (const Atom& atom : orbitals.get_struct().get_atoms())
+    std::cout << "Ionic potential matric in MO basis for Beta spin:" << std::endl;
+    std::cout << std::scientific;
+    std::cout << std::setprecision(10);
+    for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
     {
-        std::cout << "Computing nuclear matrix for atom " << atom.get_name() << ": Z = " << atom.get_atomicNumber() << " ; position = (" << atom.get_coordinates()[0] << ", " << atom.get_coordinates()[1] << ", " << atom.get_coordinates()[2] << ")..." << std::endl;
-        
-        nuclearMatrices[atomIndex] = orbitals.getIonicPotentialMatrix(atom.get_coordinates(), atom.get_atomicNumber(), true);
-        ++atomIndex;
+        for (int j = 0; j <= i; ++j)
+        {
+            V_ij = 0.0;
+            for (const Atom& atom : orbitals.get_struct().get_atoms())
+            {
+                V_ij += becke.ionic_potential(i, j, SpinType::BETA, atom.get_coordinates(), atom.get_atomicNumber(), 1, 5, 1);
+            }
+
+            sum_phi_i_Vnuclear_phi_j_beta += (i == j ? V_ij : 2.0 * V_ij);
+            std::cout << std::right << std::setw(17) << V_ij << '\t';
+        }
+        std::cout << std::endl;
     }
-    std::cout << std::endl;
-    */
+    std::cout << std::defaultfloat << "Total sum of MO matrix elements for Beta spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_beta << std::endl;
+    
+    sum_phi_i_Vnuclear_phi_j = sum_phi_i_Vnuclear_phi_j_alpha + sum_phi_i_Vnuclear_phi_j_beta;
+    std::cout << "Total sum of MO matrix elements for Alpha and Beta spins (Becke Grid): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl;
 }
 
 void Job::run_computeGridDifference()
@@ -2615,7 +2757,7 @@ void Job::run_lambdaDiagnostic()
 
 
     // Setting orbitals
-    std::vector<int> orbitalsSpins;
+    std::vector<SpinType> orbitalsSpins;
     std::vector<int> orbitalsNumbers;
     setOrbitals(orbitals, orbitals.get_numberOfMo(), orbitalsNumbers, orbitalsSpins, OrbitalType::ALL, SpinType::ALPHA_BETA);
 
@@ -2766,7 +2908,7 @@ void Job::run_makeOrbitalsCube()
 
     // Setting orbitals
     int numberOfOrbitals = o.get_numberOfMo();
-    std::vector<int> orbitalsSpins;
+    std::vector<SpinType> orbitalsSpins;
     std::vector<int> orbitalsNumbers;
     std::vector<SpinType> spinList;
     

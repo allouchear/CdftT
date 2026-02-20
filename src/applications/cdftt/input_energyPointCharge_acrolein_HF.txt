@@ -1,0 +1,9 @@
+Charges=0.0
+Positions=-3.310992925,0.2693710106,0.0002003109693
+RunType=ComputeEnergyWithPointCharges
+AnalyticFiles=tests/Guegan2020/acrolein_HF.log
+TransitionsFile=tests/Guegan2020/acrolein_orca_HF.out
+#GroundStateEnergy=-190.76858861395897
+TransitionsFile=blank
+OutputPrefix=acrolein_orca_HF
+Verbose=0

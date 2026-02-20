@@ -68,7 +68,7 @@ Becke::Becke(FCHK& fchk, Binomial& bin, const PeriodicTable& table)
     _grid_weights = std::vector<std::vector<double>> ();
     _grid_volumes = std::vector<std::vector<double>> ();
     _multigrid = false;
-    _energy = fchk.TotalEnergy();
+    _energy = fchk.ScfEnergy();
 }
 
 Becke::Becke(MOLDENGAB& moldengab, Binomial& bin, const PeriodicTable& table)
@@ -753,13 +753,18 @@ double Becke::ionic_potential(int i, int j, SpinType spinType, const std::array<
 {
     double sum = 0.0;
 
-    if (spinType == SpinType::ALPHA || spinType == SpinType::ALPHA_BETA)
+    if (spinType == SpinType::ALPHA)
     {
         sum += multicenter_integration(&phiStarVionicStarPhi, i, j, SpinType::ALPHA, chargePosition, charge, kmax, lebedev_order, radial_grid_factor);
     }
     else if (spinType == SpinType::BETA)
     {
         sum += multicenter_integration(&phiStarVionicStarPhi, i, j, SpinType::BETA, chargePosition, charge, kmax, lebedev_order, radial_grid_factor);
+    }
+    else
+    {
+        sum += (multicenter_integration(&phiStarVionicStarPhi, i, j, SpinType::ALPHA, chargePosition, charge, kmax, lebedev_order, radial_grid_factor)
+                + multicenter_integration(&phiStarVionicStarPhi, i, j, SpinType::BETA, chargePosition, charge, kmax, lebedev_order, radial_grid_factor));
     }
 
     return sum;
@@ -810,6 +815,7 @@ double Becke::phi(Orbitals& orbitals, int i, double x, double y, double z, SpinT
 double Becke::phiStarPhi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType)
 {
     double phi_star_phi = 0.0;
+    int spin = static_cast<int>(spinType);
 
     if (i == j)
     {
@@ -817,7 +823,7 @@ double Becke::phiStarPhi(Orbitals& orbitals, int i, int j, double x, double y, d
 
         for (size_t k = 0; k < orbitals.get_vcgtf().size(); k++)
         {
-            phi_i += orbitals.get_coefficients()[static_cast<int>(spinType)][i][k] * orbitals.get_vcgtf()[k].func(x, y, z);
+            phi_i += orbitals.get_coefficients()[spin][i][k] * orbitals.get_vcgtf()[k].func(x, y, z);
         }
 
         phi_star_phi = phi_i * phi_i;
@@ -829,8 +835,10 @@ double Becke::phiStarPhi(Orbitals& orbitals, int i, int j, double x, double y, d
 
         for (size_t k = 0; k < orbitals.get_vcgtf().size(); k++)
         {
-            phi_i += orbitals.get_coefficients()[static_cast<int>(spinType)][i][k] * orbitals.get_vcgtf()[k].func(x, y, z);
-            phi_j += orbitals.get_coefficients()[static_cast<int>(spinType)][j][k] * orbitals.get_vcgtf()[k].func(x, y, z);
+            double v_k = orbitals.get_vcgtf()[k].func(x, y, z);
+
+            phi_i += orbitals.get_coefficients()[spin][i][k] * v_k;
+            phi_j += orbitals.get_coefficients()[spin][j][k] * v_k;
         }
 
         phi_star_phi = phi_i * phi_j;
@@ -841,9 +849,11 @@ double Becke::phiStarPhi(Orbitals& orbitals, int i, int j, double x, double y, d
 
 double Becke::phiStarVionicStarPhi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType, const std::array<double, 3>& chargePosition, double charge)
 {
-    return phiStarPhi(orbitals, i, j, x, y, z, spinType) * (- charge / std::sqrt((x - chargePosition[0]) * (x - chargePosition[0])
-                                                                                 + (y - chargePosition[1]) * (y - chargePosition[1])
-                                                                                 + (z - chargePosition[2]) * (z - chargePosition[2])));
+    double distance = std::sqrt((chargePosition[0] - x) * (chargePosition[0] - x)
+                                + (chargePosition[1] - y) * (chargePosition[1] - y)
+                                + (chargePosition[2] - z) * (chargePosition[2] - z));
+
+    return (distance > 1e-10 ? - charge * phiStarPhi(orbitals, i, j, x, y, z, spinType) / distance : 0.0);
 }
 
 double Becke::multicenter_integration(const Grid& g, int kmax, int lebedev_order, int radial_grid_factor)

@@ -20,7 +20,7 @@ FCHK::FCHK()
     _alpha_mo_coefficients=vector<double> (); // or vector<vector<double>>
     _beta_orbital_energies=vector<double> ();
     _beta_mo_coefficients=vector<double> (); // or vector<vector<double>>
-    _total_energy=0.0;
+    _scf_energy=0.0;
     _mulliken_charges=vector<double> ();
     _npa_charges=vector<double> ();
     _dipole_moment=vector<double> ();
@@ -215,7 +215,7 @@ void FCHK::read_file_fchk(std::ifstream& file)
     string k = "Alpha MO coefficients";
     string l = "Beta Orbital Energies";
     string m = "Beta MO coefficients";
-    string n = "Total Energy";
+    string n = "SCF Energy";
     string o = "Mulliken Charges";
     string p = "NPA Charges";
     string q = "Dipole Moment";
@@ -242,7 +242,7 @@ void FCHK::read_file_fchk(std::ifstream& file)
     _alpha_mo_coefficients=read_one_block_real(file, k); // or vector<vector<double>>
     _beta_orbital_energies=read_one_block_real(file, l);
     _beta_mo_coefficients=read_one_block_real(file, m); // or vector<vector<double>>
-    _total_energy=read_one_real(file, n);
+    _scf_energy=read_one_real(file, n);
     _mulliken_charges=read_one_block_real(file, o);
     _npa_charges=read_one_block_real(file, p);
     _dipole_moment=read_one_block_real(file, q);
@@ -336,7 +336,7 @@ void FCHK::PrintData()
         std::cout<<"Beta orbital energies "<<i<<" : "<<_beta_orbital_energies[i]<<std::endl;
     for(size_t i=0; i<_beta_mo_coefficients.size(); i++)
         std::cout<<"Beta MO coefficients "<<i<<" : "<<_beta_mo_coefficients[i]<<std::endl;
-    std::cout<<"Total energy : "<<_total_energy<<std::endl;
+    std::cout<<"SCF energy : "<<_scf_energy<<std::endl;
     for(size_t i=0; i<_mulliken_charges.size(); i++)
         std::cout<<"Mulliken charges "<<i<<" : "<<_mulliken_charges[i]<<std::endl;
     for(size_t i=0; i<_npa_charges.size(); i++)

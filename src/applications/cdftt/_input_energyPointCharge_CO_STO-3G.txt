@@ -1,0 +1,8 @@
+Charges=0.0
+RunType=ComputeEnergyWithPointCharges
+AnalyticFiles=tests/STO-3G/CO_TDDFT_STO-3G.molden,tests/STO-3G/CO_TDDFT_STO-3G.log
+TransitionsFile=tests/transitionsFiles/transitions_C_STO-3G_firstState.txt
+Positions=2.0,2.0,2.0
+Size=Custom
+CustomSizeData=512,512,512,5,5,5,1.955034213098728e-02,0,0,0,1.955034213098728e-02,0,0,0,1.955034213098728e-02
+

@@ -17,9 +17,9 @@ ExcitedState.o: ExcitedState.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Domain.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Enums.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/SlaterDeterminant.hpp
 Orbitals.o: Orbitals.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/GTF.h \
@@ -38,9 +38,9 @@ Orbitals.o: Orbitals.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Domain.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Enums.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LM.h
 OrbitalsSave.o: OrbitalsSave.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/Orbitals.h \
@@ -59,9 +59,9 @@ OrbitalsSave.o: OrbitalsSave.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Domain.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Enums.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LM.h
 SlaterDeterminant.o: SlaterDeterminant.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/Orbitals.h \
@@ -80,7 +80,7 @@ SlaterDeterminant.o: SlaterDeterminant.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Domain.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Enums.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/SlaterDeterminant.hpp

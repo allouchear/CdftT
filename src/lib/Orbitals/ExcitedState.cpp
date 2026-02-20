@@ -190,22 +190,24 @@ bool ExcitedState::readGroundStateEnergyFromLogFile(const std::string& logFileNa
     if (logFile)
     {
         std::string line;
-        std::getline(logFile, line);
         while (!logFile.eof() && !found)
         {
+            std::getline(logFile, line);
             line = trim_whitespaces(line, true, true);
 
             if (line.empty())
             {
                 continue;
             }
-
-            std::regex energyRegex("E\\(.*\\)\\s*=\\s*(-?\\d+(?:\\.\\d+)?)\\s+A\\.U\\.\\s+after\\s+\\d+\\s+cycles");
-            std::smatch energyRegexMatch;
-            if (std::regex_search(line, energyRegexMatch, energyRegex))
+            else
             {
-                groundStateEnergy = std::stod(energyRegexMatch[1]);
-                found = true;
+                std::regex energyRegex("E\\(.*\\)\\s*=\\s*(-?\\d+(?:\\.\\d+)?)\\s+A\\.U\\.\\s+after\\s+\\d+\\s+cycles");
+                std::smatch energyRegexMatch;
+                if (std::regex_search(line, energyRegexMatch, energyRegex))
+                {
+                    groundStateEnergy = std::stod(energyRegexMatch[1]);
+                    found = true;
+                }
             }
         }
 
@@ -217,7 +219,8 @@ bool ExcitedState::readGroundStateEnergyFromLogFile(const std::string& logFileNa
     }
     else
     {
-        ok = false;
+        print_error("Error: could not read file " + logFileName + ".");
+        std::exit(1);
     }
 
     return (ok && found);
@@ -260,7 +263,8 @@ bool ExcitedState::readGroundStateEnergyFromOrcaOutFile(const std::string& orcaO
     }
     else
     {
-        ok = false;
+        print_error("Error: could not read file " + orcaOutFileName + ".");
+        std::exit(1);
     }
 
     return (ok && found);
@@ -297,7 +301,8 @@ bool ExcitedState::readGroundStateEnergyFromTransitionsFile(const std::string& t
     }
     else
     {
-        ok = false;
+        print_error("Error: could not read file " + transitionsFileName + ".");
+        std::exit(1);
     }
 
     return (ok && found);
@@ -641,6 +646,8 @@ bool ExcitedState::readTransitionsFromLogFile(const std::string& logFileName, st
 bool ExcitedState::readTransitionsFromOrcaOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy)
 {
     bool ok = true;
+    bool hfTypeFound = false;
+    HFType hfType = HFType::UNKNOWN;
 
     std::ifstream orcaOutFile(orcaOutFileName);
     if (orcaOutFile)
@@ -652,9 +659,19 @@ bool ExcitedState::readTransitionsFromOrcaOutFile(const std::string& orcaOutFile
             std::getline(orcaOutFile, line);
             line = trim_whitespaces(line, true, true);
 
-            if (line.empty())
+            if (line.empty() || line[0] == '#')
             {
                 continue;
+            }
+            else if (!hfTypeFound)
+            {
+                std::regex hfTypeRegex("Hartree-Fock type\\s+HFTyp\\s+\\.*\\s+(RHF|UHF)", std::regex_constants::icase);
+                std::smatch hfTypeRegexMatch;
+                if (std::regex_search(line, hfTypeRegexMatch, hfTypeRegex))
+                {
+                    hfTypeFound = true;
+                    hfType = hfType_from_string(hfTypeRegexMatch[1]);
+                }
             }
             else
             {
@@ -682,15 +699,30 @@ bool ExcitedState::readTransitionsFromOrcaOutFile(const std::string& orcaOutFile
                                 std::pair<int, SpinType> initialOrbital;
                                 std::pair<int, SpinType> finalOrbital;
 
-                                initialOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[1]);
+                                initialOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[1]) + 1; // +1 because Orca orbitals are 0-indexed, while we use 1-indexing for orbitals here
                                 initialOrbital.second = (transitionRegexAlphaBetaMatch[2] == "a" ? SpinType::ALPHA : SpinType::BETA);
 
-                                finalOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[3]);
+                                finalOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[3]) + 1; // +1 because Orca orbitals are 0-indexed, while we use 1-indexing for orbitals here
                                 finalOrbital.second = (transitionRegexAlphaBetaMatch[4] == "a" ? SpinType::ALPHA : SpinType::BETA);
 
                                 double coefficient = std::stod(transitionRegexAlphaBetaMatch[5]);
 
+                                // For RHF, we assume that alpha and beta transitions have the same coefficient
+                                if (hfType == HFType::RHF)
+                                {
+                                    coefficient /= std::sqrt(2.0);
+                                }
+
                                 excitedState.addTransition(initialOrbital, finalOrbital, coefficient);
+
+                                // For RHF, also add the beta transition
+                                if (hfType == HFType::RHF)
+                                {
+                                    initialOrbital.second = SpinType::BETA;
+                                    finalOrbital.second = SpinType::BETA;
+
+                                    excitedState.addTransition(initialOrbital, finalOrbital, coefficient);
+                                }
                             }
                         }
                     } while (!orcaOutFile.eof() && !line.empty());

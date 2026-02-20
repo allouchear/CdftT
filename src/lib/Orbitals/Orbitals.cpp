@@ -167,7 +167,7 @@ Orbitals::Orbitals(FCHK& fchkParser, Binomial& bino, const PeriodicTable& period
 {
     _numberOfMo = fchkParser.NumberOfBasisFunctions();
     _coordinates = fchkParser.CurrentCartesianCoordinates();
-    _energy = fchkParser.TotalEnergy();
+    _energy = fchkParser.ScfEnergy();
     _mixte = fchkParser.Mixte();
 
     int lmax = fchkParser.HighestAngularMomentum();
@@ -665,6 +665,8 @@ Orbitals::Orbitals(MOLDENGAB& moldengabParser, Binomial& bino, const PeriodicTab
         _primitiveCenters.push_back(_vcgtf[i].NumCenter());
     }
 
+    std::cout << (*this);
+
     NormaliseAllBasis();
 
     for(size_t i = 0; i < _vcgtf.size(); ++i)
@@ -785,7 +787,7 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
 
         if(Ltypes[nS] < -1)
         {
-            nM = 2 * std::abs(Ltypes[nS]) + 1; /* Sperical D, F, G, ...*/
+            nM = 2 * std::abs(Ltypes[nS]) + 1; /* Spherical D, F, G, ...*/
             format = "Sphe";
         }
         else if(Ltypes[nS] == -1)
@@ -911,6 +913,8 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
     {
         _primitiveCenters.push_back(_vcgtf[i].NumCenter());
     }
+
+    std::cout << (*this);
 
     NormaliseAllBasis();
 
@@ -1105,15 +1109,12 @@ double Orbitals::kinetic()
     return sum;
 }
 
-std::vector<std::vector<double>> displayM;
-double totalSumM = 0.0;
-
-std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, bool debug)
+std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, bool debug,bool printAOMatrix, bool printMOMatrix)
 {
     // debug
-    if (displayM.size() == 0)
+    if (__debug_AOMatrix.size() == 0)
     {
-        displayM = std::vector<std::vector<double>>(_numberOfAo, std::vector<double>());
+        __debug_AOMatrix = std::vector<std::vector<double>>(_numberOfAo, std::vector<double>());
     }
 
     // Build ionic potential matrix in AO basis    
@@ -1123,7 +1124,7 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
         ionicMatrixAO[i].resize(i + 1, 0.0);
 
         // debug
-        displayM[i].resize(i + 1, 0.0);
+        __debug_AOMatrix[i].resize(i + 1, 0.0);
     }
 
     // Compute ionic potential matrix elements in AO basis
@@ -1132,26 +1133,32 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
         for (int j = 0; j <= i; ++j)
         {
             ionicMatrixAO[i][j] = _vcgtf[i].ionicPotentialCGTF(_vcgtf[j], chargePosition, charge);
-
-            // debug
-            // ionicMatrixAO[i][j] = _vcgtf[i].ionicPotentialCGTF(_vcgtf[j], chargePosition, charge, (i == 9 && j == 0));
         }
     }
 
     // debug
     if (debug)
     {
+        std::cout << std::scientific;
+        std::cout << std::setprecision(10);
+        if (printAOMatrix) std::cout << "Ionic potential matrix in AO basis:" << std::endl;
         for (int ii = 0; ii < _numberOfAo; ++ii)
         {
             for (int jj = 0; jj <= ii; ++jj)
             {
-                displayM[ii][jj] += ionicMatrixAO[ii][jj];
-                totalSumM += (ii == jj ? ionicMatrixAO[ii][jj] : 2.0 * ionicMatrixAO[ii][jj]);
-                std::cout << std::setprecision(6) << std::setw(10) << displayM[ii][jj] << '\t';
+                __debug_AOMatrix[ii][jj] += ionicMatrixAO[ii][jj];
+                __debug_totalSumAO += (ii == jj ? ionicMatrixAO[ii][jj] : 2.0 * ionicMatrixAO[ii][jj]);
+                if (printAOMatrix) std::cout << std::right << std::setw(17) << __debug_AOMatrix[ii][jj] << '\t';
             }
-            std::cout << std::endl;
+            if (printAOMatrix) std::cout << std::endl;
         }
-        std::cout << "Total sum: " << totalSumM << std::endl << std::endl;
+        if (printAOMatrix) std::cout << std::defaultfloat << "Total sum of AO matrix elements: " << std::setprecision(10) << __debug_totalSumAO << std::endl << std::endl;
+    }
+
+    // debug
+    if (__debug_MOMatrix.size() == 0)
+    {
+        __debug_MOMatrix = std::vector<std::vector<std::vector<double>>>(2, std::vector<std::vector<double>>(_numberOfMo, std::vector<double>()));
     }
 
     // Build ionic potential matrix in MO basis
@@ -1161,6 +1168,9 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
         for (int i = 0; i < _numberOfMo; ++i)
         {
             ionicMatrixMO[spin][i].resize(i + 1, 0.0);
+
+            // debug
+            __debug_MOMatrix[spin][i].resize(i + 1, 0.0);
         }
     }
 
@@ -1187,6 +1197,31 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
 
                 ionicMatrixMO[spin][i][j] = sum;
             }
+        }
+    }
+
+    // debug
+    if (debug)
+    {
+        for (spin = 0; spin < 2; ++spin)
+        {
+            std::cout << std::scientific;
+            std::cout << std::setprecision(10);
+            
+            if (printMOMatrix) std::cout << "Ionic potential matrix in MO basis for " << to_string(static_cast<SpinType>(spin)) << " spin:" << std::endl;
+            for (int ii = 0; ii < _numberOfMo; ++ii)
+            {
+                for (int jj = 0; jj <= ii; ++jj)
+                {
+                    __debug_MOMatrix[spin][ii][jj] += ionicMatrixMO[spin][ii][jj];
+                    __debug_totalSumMO[spin] += (ii == jj ? ionicMatrixMO[spin][ii][jj] : 2.0 * ionicMatrixMO[spin][ii][jj]);
+
+                    if (printMOMatrix) std::cout << std::right << std::setw(17) << __debug_MOMatrix[spin][ii][jj] << '\t';
+                }
+                if (printMOMatrix) std::cout << std::endl;
+            }
+            
+            if (printMOMatrix) std::cout << std::defaultfloat <<  "Total sum of MO matrix elements for " << to_string(static_cast<SpinType>(spin)) << " spin: " << std::setprecision(10) << __debug_totalSumMO[spin] << std::endl;
         }
     }
 
@@ -1226,10 +1261,11 @@ double Orbitals::OrbxyzOrb(int ix, int iy, int iz)
 
 void Orbitals::NormaliseAllBasis()
 {
-    int k;
-
-    for(k=0;k<_numberOfAo;k++)
+    for(int k = 0; k < _numberOfAo; ++k)
+    {
+        std::cout << "Normalising CGTF " << k << "..." << std::endl;
         _vcgtf[k].normaliseCGTF();
+    }
 }
 
 void Orbitals::DenormaliseAllBasis()
@@ -1505,7 +1541,7 @@ double Orbitals::density(double x, double y, double z)
     return rho;
 }
 
-Grid Orbitals::makeOrbGrid(const Domain& d, const std::vector<int>& nums, const std::vector<int>& typesSpin)
+Grid Orbitals::makeOrbGrid(const Domain& d, const std::vector<int>& nums, const std::vector<SpinType>& typesSpin)
 {
     Grid g;
     g.set_structure(_struct);
@@ -1534,24 +1570,18 @@ Grid Orbitals::makeOrbGrid(const Domain& d, const std::vector<int>& nums, const 
     return g;
 }
 
-std::vector<double> Orbitals::phis(double x, double y, double z, const std::vector<int>& nums, const std::vector<int>& typesSpin)
+std::vector<double> Orbitals::phis(double x, double y, double z, const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins)
 {
-    std::vector<double> v(_vcgtf.size());
-    for(size_t k = 0; k < _vcgtf.size(); ++k)
+    std::vector<double> values(orbitalIndexes.size(), 0.0);
+    for (size_t i = 0; i < orbitalIndexes.size(); ++i)
     {
-        v[k] = _vcgtf[k].func(x, y, z);
-    }
-
-    std::vector<double> values(nums.size(), 0);
-    for(size_t jj = 0; jj < nums.size(); ++jj)
-    {
-        int j = nums[jj];
-        int i = typesSpin[jj];
-        values[jj] = 0;
+        int orbitalIndex = orbitalIndexes[i];
+        int spin = static_cast<int>(orbitalSpins[i]);
+        values[i] = 0;
 
         for(size_t k = 0; k < _vcgtf.size(); ++k)
         {
-            values[jj] += _coefficients[i][j][k] * v[k];
+            values[i] += _coefficients[spin][orbitalIndex][k] * _vcgtf[k].func(x, y, z);
         }
     }
 

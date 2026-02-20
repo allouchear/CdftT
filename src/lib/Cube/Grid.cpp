@@ -10,6 +10,7 @@
 #include <Cube/Grid.h>
 #include <Cube/GridCP.h>
 #include <Common/Constants.h>
+#include <Utils/Enums.hpp>
 
 
 //----------------------------------------------------------------------------------------------------//
@@ -1927,7 +1928,7 @@ double Grid::value(double x, double y, double z) const
     return S;
 }
 
-double Grid::phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, const std::array<double, 3>& chargePosition, const double charge)
+double Grid::phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge)
 {
     double phiStarVionicStarPhi = 0.0;
 
@@ -1944,9 +1945,27 @@ double Grid::phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, c
                                             + (chargePosition[1] - _domain.y(i, j, k)) * (chargePosition[1] - _domain.y(i, j, k))
                                             + (chargePosition[2] - _domain.z(i, j, k)) * (chargePosition[2] - _domain.z(i, j, k)));
 
-                if (distance > 1e-6)
+                if (distance > 1e-10)
                 {
-                    phiStarVionicStarPhi += _values[i][j][k][leftOrbitalIndex] * _values[i][j][k][rightOrbitalIndex] / distance;
+                    if (spinType == SpinType::ALPHA)
+                    {
+                        phiStarVionicStarPhi += _values[i][j][k][leftOrbitalIndex] * _values[i][j][k][rightOrbitalIndex] / distance;
+                    }
+                    else if (spinType == SpinType::BETA)
+                    {
+                        // Beta spins are stored in the second half of the values.
+                        int betaSpinsOffset = _domain.get_Nval() / 2;
+                        
+                        phiStarVionicStarPhi += _values[i][j][k][leftOrbitalIndex + betaSpinsOffset] * _values[i][j][k][rightOrbitalIndex + betaSpinsOffset] / distance;
+                    }
+                    else
+                    {
+                        // Beta spins are stored in the second half of the values.
+                        int betaSpinsOffset = _domain.get_Nval() / 2;
+
+                        phiStarVionicStarPhi += ((_values[i][j][k][leftOrbitalIndex] * _values[i][j][k][rightOrbitalIndex]
+                                                  + _values[i][j][k][leftOrbitalIndex + betaSpinsOffset] * _values[i][j][k][rightOrbitalIndex + betaSpinsOffset]) / distance);
+                    }
                 }
             }
         }

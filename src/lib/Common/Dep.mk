@@ -31,9 +31,9 @@ Descriptors.o: Descriptors.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Domain.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Enums.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Becke/Becke.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Becke/GridPoints.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/Orbitals.h \
