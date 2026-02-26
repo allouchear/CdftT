@@ -5,10 +5,12 @@
 #include <vector>
 
 #include <Common/Atom.h>
-#include <Utils/WFX.h>
-#include <Utils/FCHK.h>
-#include <Utils/MOLDENGAB.h>
-#include <Utils/LOG.h>
+
+// Forward declarations to avoid circular dependencies
+class FCHK;
+class LOG;
+class MOLDENGAB;
+class WFX;
 
 
 /** @brief Structure class.

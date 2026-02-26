@@ -26,6 +26,7 @@ std::string trim_whitespaces(const std::string &str, bool leading, bool trailing
 void log(std::stringstream& messageStream, std::ostream& outputStream = std::cout);
 void print_title(const std::string& title);
 void print_error(const std::string& errorMessage, std::ostream& outputStream = std::cerr);
+void print_progressBar(int currentStep, int totalSteps, int& lastProgress);
 
 
 //----------------------------------------------------------------------------------------------------//

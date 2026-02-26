@@ -4,6 +4,10 @@
 #include <vector>
 
 #include <Common/Structure.h>
+#include <Utils/FCHK.h>
+#include <Utils/LOG.h>
+#include <Utils/MOLDENGAB.h>
+#include <Utils/WFX.h>
 
 
 //----------------------------------------------------------------------------------------------------//
@@ -89,7 +93,7 @@ Structure Structure::add(const Structure& S)
             }
             if(b)
             {
-                    cout<<"added"<<endl;
+                    std::cout<<"added"<<std::endl;
                     _atoms.push_back(S._atoms[j]);
             }
         }
@@ -97,8 +101,8 @@ Structure Structure::add(const Structure& S)
     }
     catch(std::string error)
     {
-        cout<<error<<endl;
-        exit(1);
+        std::cerr<<error<<std::endl;
+        std::exit(1);
     }
 }
 

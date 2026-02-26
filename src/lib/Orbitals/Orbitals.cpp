@@ -1,4 +1,6 @@
+#include <atomic>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -328,7 +330,7 @@ Orbitals::Orbitals(FCHK& fchkParser, Binomial& bino, const PeriodicTable& period
 
         print_error(errorMessage.str());
 
-        exit(1);
+        std::exit(1);
     }
 
     _numberOfAlphaElectrons = fchkParser.NumberOfAlphaElectrons();
@@ -520,7 +522,7 @@ Orbitals::Orbitals(MOLDENGAB& moldengabParser, Binomial& bino, const PeriodicTab
 
     std::vector<double> FactorCoefs = moldengabParser.FactorCoefficients();
     std::vector<double> CgtfCoefs = moldengabParser.CgtfCoefficients();
-    std::vector<std::vector<double>> coordinatesForShells;
+    std::vector<std::array<double, 3>> coordinatesForShells;
     std::vector<int> NatBasis = moldengabParser.NatBasis();
 
     for(int i = 0; i < _numberOfAtoms; ++i)
@@ -628,13 +630,13 @@ Orbitals::Orbitals(MOLDENGAB& moldengabParser, Binomial& bino, const PeriodicTab
                         std::vector<int> l_(3);
                         for(int c = 0; c < 3; ++c)
                         {
-                            coord_[c] = coordinatesForShells[nS][c];
+                            coord_[c] = coordinatesForShells[kPrimitive + ip][c];
                             l_[c] = l[c][m][n];
                         }
 
                         GTF gtf (primitiveExponents[kPrimitive+ip], 1, coord_, l_, _bino);
                         _vcgtf[kOrb].push_back(gtf);
-                        _vcgtf[kOrb].setCoef(FactorCoefs[kOrb]*CgtfCoefs[kPrimitive+ip]*coefs[m][n]);
+                        _vcgtf[kOrb].setCoef(FactorCoefs[kPrimitive + ip] * CgtfCoefs[kPrimitive + ip] * coefs[m][n]);
                     }
                 }
 
@@ -655,7 +657,7 @@ Orbitals::Orbitals(MOLDENGAB& moldengabParser, Binomial& bino, const PeriodicTab
 
         print_error(errorMessage.str());
 
-        exit(1);
+        std::exit(1);
     }
 
     _vcgtfNonNormalise = _vcgtf;
@@ -664,8 +666,6 @@ Orbitals::Orbitals(MOLDENGAB& moldengabParser, Binomial& bino, const PeriodicTab
     {
         _primitiveCenters.push_back(_vcgtf[i].NumCenter());
     }
-
-    std::cout << (*this);
 
     NormaliseAllBasis();
 
@@ -864,13 +864,16 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
                         std::vector<int> l_(3);
                         for(int c = 0; c < 3; ++c)
                         {
-                            coord_[c] = coordinatesForShells[nS][c];
+                            //coord_[c] = coordinatesForShells[nS][c];
+                            coord_[c] = coordinatesForShells[kPrimitive + ip][c];
                             l_[c] = l[c][m][n];
                         }
 
                         GTF gtf(primitiveExponents[kPrimitive + ip], 1.0, coord_, l_, _bino);
                         _vcgtf[kOrb].push_back(gtf);
-                        _vcgtf[kOrb].setCoef(FactorCoefs[kOrb] * CgtfSpCoefs[kPrimitive + ip] * coefs[m][n]);
+
+                        //_vcgtf[kOrb].setCoef(FactorCoefs[kOrb] * CgtfSpCoefs[kPrimitive + ip] * coefs[m][n]);
+                        _vcgtf[kOrb].setCoef(FactorCoefs[kPrimitive + ip] * CgtfSpCoefs[kPrimitive + ip] * coefs[m][n]);
                         _vcgtf[kOrb].setNumCenter(logParser.NumCenter()[kPrimitive + ip]);
                         _vcgtf[kOrb].setLtype(getLType(l_));
                         _vcgtf[kOrb].setFormat(format);
@@ -889,13 +892,13 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
 
     if(_numberOfAo != _numberOfMo)
     {
-        cout << "Error : There are " << _vcgtf.size() << " CGTFs for " << _numberOfMo << " basis in file." << endl;
-        cout << "Please check your file." << endl;
+        std::cout << "Error : There are " << _vcgtf.size() << " CGTFs for " << _numberOfMo << " basis in file." << std::endl;
+        std::cout << "Please check your file." << std::endl;
 
-        exit(1);
+        std::exit(1);
     }
 
-    if(logParser.NumberOfBasisFunctions() < _numberOfMo)
+    if (logParser.NumberOfBasisFunctions() < _numberOfMo)
     {
         for(int i = 0; i < _numberOfMo - logParser.NumberOfBasisFunctions(); ++i)
         {
@@ -913,8 +916,6 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
     {
         _primitiveCenters.push_back(_vcgtf[i].NumCenter());
     }
-
-    std::cout << (*this);
 
     NormaliseAllBasis();
 
@@ -1036,7 +1037,7 @@ double Orbitals::overlap(const int i, const int j, const SpinType spinType)
     if (spinType == SpinType::ALPHA_BETA)
     {
         print_error("Error in Orbitals::overlap(): spinType must be either ALPHA or BETA but not ALPHA_BETA.");
-        exit(1);
+        std::exit(1);
     }
 
     int alpha = static_cast<int>(spinType);
@@ -1263,7 +1264,6 @@ void Orbitals::NormaliseAllBasis()
 {
     for(int k = 0; k < _numberOfAo; ++k)
     {
-        std::cout << "Normalising CGTF " << k << "..." << std::endl;
         _vcgtf[k].normaliseCGTF();
     }
 }
@@ -1292,9 +1292,9 @@ double Orbitals::func(double x, double y, double z) const
         {
             if(_coefficients[i][j].size()!=_vcgtf.size())
             {
-                cout<<"Error, their is "<<_coefficients[i][j].size()<<" coefficients for "<<_vcgtf.size()<<" CGTF."<<endl;
-                cout<<"Please, check the code or your file !"<<endl;
-                exit(1);
+                std::cout<<"Error, their is "<<_coefficients[i][j].size()<<" coefficients for "<<_vcgtf.size()<<" CGTF."<<std::endl;
+                std::cout<<"Please, check the code or your file !"<<std::endl;
+                std::exit(1);
             }
             for(int k=0; k<_numberOfMo; k++)
             {
@@ -1320,10 +1320,9 @@ void Orbitals::LUMO()
     _numOrb[1] = _numOrb[0]+1;
     if(_numOrb[1] +1 >_numberOfMo)
     {
-        cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-        cerr<<" Lumo is not available in your file orbitals file"<<endl;
-        cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-        exit(1);
+        print_error("Lumo is not available in your file orbitals file");
+
+        std::exit(1);
     }
 }
 
@@ -1410,12 +1409,12 @@ void Orbitals::HOMO_LUMO(int i, int j)
 void Orbitals::PrintDescriptors()
 {
     HOMO_LUMO();
-    cout<<"end HOMOLUMO"<<endl;
+    std::cout<<"end HOMOLUMO"<<std::endl;
     get_f();
-    cout<<"end get_f"<<endl;
+    std::cout<<"end get_f"<<std::endl;
     _descriptors.set_mu_fk_data(_all_f, eHOMO(), eLUMO());
     _descriptors.compute_all();
-    cout<<_descriptors<<endl;
+    std::cout<<_descriptors<<std::endl;
 }
 
 void Orbitals::PrintDescriptors(int i, int j)
@@ -1424,7 +1423,7 @@ void Orbitals::PrintDescriptors(int i, int j)
     get_f();
     _descriptors.set_mu_fk_data(_all_f, eHOMO(), eLUMO());
     _descriptors.compute_all();
-    cout<<_descriptors<<endl;
+    std::cout<<_descriptors<<std::endl;
 }
 
 double operator*(const Orbitals& a, const std::vector<double>& coord)
@@ -1541,30 +1540,67 @@ double Orbitals::density(double x, double y, double z)
     return rho;
 }
 
-Grid Orbitals::makeOrbGrid(const Domain& d, const std::vector<int>& nums, const std::vector<SpinType>& typesSpin)
+Grid Orbitals::makeOrbGrid(const Domain& domain, const std::vector<int>& orbitalsNumbers, const std::vector<SpinType>& orbitalsSpins, bool showProgress)
 {
     Grid g;
     g.set_structure(_struct);
-    g.set_domain(d);
+    g.set_domain(domain);
     g.reset();
+
+    int N1 = domain.get_N1();
+    int N2 = domain.get_N2();
+    int N3 = domain.get_N3();
+
+    const int nbStepsTotal = N1 * N2 * N3;
+    std::atomic<int> progress(0);
+    int lastProgress = -1;
+
+    // Afficher la barre de progression à 0% dès le début
+    if(showProgress)
+    {
+        print_progressBar(0, nbStepsTotal, lastProgress);
+    }
 
     #ifdef ENABLE_OMP
     #pragma omp parallel
     #endif
-    for(int i = 0; i < d.get_N1() ; ++i)
     {
-        for(int j = 0; j < d.get_N2(); ++j)
+        #ifdef ENABLE_OMP
+        #pragma omp for collapse(2)
+        #endif
+        for (int i = 0; i < N1; ++i)
         {
-            for(int k = 0; k < d.get_N3(); ++k)
+            for(int j = 0; j < N2; ++j)
             {
-                std::vector<double> phy = phis(d.x(i,j,k), d.y(i,j,k), d.z(i,j,k), nums, typesSpin);
-
-                for(int l = 0; l < d.get_Nval(); ++l)
+                for(int k = 0; k < N3; ++k)
                 {
-                    g.set_Vijkl(phy[l],i,j,k,l);
+                    std::vector<double> phy = phis(domain.x(i, j, k), domain.y(i, j, k), domain.z(i, j, k), orbitalsNumbers, orbitalsSpins);
+
+                    for(int l = 0; l < domain.get_Nval(); ++l)
+                    {
+                        g.set_Vijkl(phy[l],i,j,k,l);
+                    }
+                }
+                
+                if(showProgress)
+                {
+                    // Mise à jour à chaque itération de N2 pour un affichage plus fluide
+                    int currentStep = progress.fetch_add(N3) + N3;
+                    
+                    #ifdef ENABLE_OMP
+                    #pragma omp critical
+                    #endif
+                    {
+                        print_progressBar(currentStep, nbStepsTotal, lastProgress);
+                    }
                 }
             }
         }
+    }
+    
+    if(showProgress)
+    {
+        std::cout << std::endl;
     }
 
     return g;

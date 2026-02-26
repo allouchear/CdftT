@@ -161,18 +161,9 @@ void Job::readGridFilesNames(std::vector<std::string>& gridFilesNames)
     }
 }
 
-void Job::readGroundStateEnergy(double& energy)
+bool Job::readGroundStateEnergy(double& energy)
 {
-    if (!readOneType<double>(_inputFile, "GroundStateEnergy", energy))
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: cannot determine the ground state energy." << std::endl;
-        errorMessage << "Please check the documentation and the \"GroundStateEnergy\" parameter value or the \"AnalyticalFiles\" parameter value in the provided input file (" << _inputFileName << ")." << std::endl << std::endl;
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
+    return readOneType<double>(_inputFile, "GroundStateEnergy", energy);
 }
 
 void Job::readNuclearCutoff(double& nuclearCutoff)
@@ -364,6 +355,17 @@ void Job::readRunType(RunType& runType)
         print_error(errorMessage.str());
 
         std::exit(1);
+    }
+}
+
+void Job::readShowProgress(bool& showProgress)
+{
+    showProgress = false;
+
+    std::string strShowProgress;
+    if (readOneString(_inputFile, "ShowProgress", strShowProgress) && to_lower(strShowProgress) == "true")
+    {
+        showProgress = true;
     }
 }
 
@@ -753,7 +755,7 @@ void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedStat
         std::string errorMessage = "Error in Job::computeHamiltonianMatrixWithPointCharges(): the first dimension of ionicMatrixes does not match the dimension of chargesNucleiContributions.";
         print_error(errorMessage);
 
-        exit(1);
+        std::exit(1);
     }
 
     
@@ -873,7 +875,7 @@ template<typename T, typename U> U Job::computeOrbitalsOrBecke(const std::string
     std::ifstream analyticFile(analyticFileName);
     T analyticFileParser(analyticFile);
     analyticFile.close();
-    
+
     U analyticObject(analyticFileParser, bino, _table);
     
     return analyticObject;
@@ -1992,6 +1994,11 @@ void Job::run_computeEnergyWithPointCharges()
     readVerbose(verbose);
 
 
+    // Read progress bar display option
+    bool showProgress;
+    readShowProgress(showProgress);
+
+
     // Read output file prefix
     std::string outputPrefix;
     readOutputPrefix(outputPrefix);
@@ -2053,24 +2060,46 @@ void Job::run_computeEnergyWithPointCharges()
     computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
     std::cout << std::endl;
 
-    if (orbitals.get_energy() == 0.0)
-    {
-        double groundStateEnergy = 0.0;
+    double groundStateEnergy = orbitals.get_energy();
+    std::string groundStateEnergySource = "analytic file " + analyticFilesNames[0];
 
+    // The "GroundStateEnergy" parameter in the input file has priority over the other ways of reading the ground state energy.
+    // This allows to use a different ground state energy than the one in the orbitals file if needed.
+    if (readGroundStateEnergy(groundStateEnergy))
+    {
+        groundStateEnergySource = "input file " + _inputFileName;
+        orbitals.set_energy(groundStateEnergy);
+    }
+    else if (orbitals.get_energy() == 0.0)
+    {
         if (analyticFilesNames.size() == 2)
         {
             ExcitedState::readGroundStateEnergy(analyticFilesNames[1], groundStateEnergy);
+            groundStateEnergySource = "analytic file " + analyticFilesNames[1];
         }
         else
         {
-            if (!ExcitedState::readGroundStateEnergy(transitionsFileName, groundStateEnergy))
+            if (ExcitedState::readGroundStateEnergy(transitionsFileName, groundStateEnergy))
             {
-                readGroundStateEnergy(groundStateEnergy);
+                groundStateEnergySource = "transitions file " + transitionsFileName;
+            }
+            else
+            {
+                std::stringstream errorMessage;
+                errorMessage << "Error: cannot determine the ground state energy." << std::endl;
+                errorMessage << "Please check the documentation and the \"GroundStateEnergy\" parameter value or the \"AnalyticalFiles\" parameter value in the provided input file (" << _inputFileName << ")." << std::endl << std::endl;
+
+                print_error(errorMessage.str(), logFile);
+
+                std::exit(1);
             }
         }
 
         orbitals.set_energy(groundStateEnergy);
     }
+
+    logStream << "Ground State Energy read from " << groundStateEnergySource << ": " << std::setprecision(10) << groundStateEnergy << " H." << std::endl;
+    log(logStream, logFile);
 
     // Keep a const reference on orbitals' atoms
     const std::vector<Atom>& atoms = orbitals.get_struct().get_atoms();
@@ -2145,7 +2174,7 @@ void Job::run_computeEnergyWithPointCharges()
         logStream << orbitals << std::endl;
         log(logStream, logFile);
     }
-    
+
 
     // Get Ground Slater Determinant
     SlaterDeterminant groundStateSlaterDeterminant(orbitals);
@@ -2166,7 +2195,7 @@ void Job::run_computeEnergyWithPointCharges()
     else
     {
         std::cout << "Reading transitions from analytic file: " << analyticFilesNames[0] << ". Please wait..." << std::endl;
-        ExcitedState::readTransitionsFromLogFile(analyticFilesNames[0], states, groundState.get_energy());
+        ExcitedState::readTransitions(analyticFilesNames[0], states, groundState.get_energy());
     }
 
     size_t nbStates = states.size();
@@ -2275,7 +2304,7 @@ void Job::run_computeEnergyWithPointCharges()
         }
     }
 
-/*
+
     // Compute Hamiltonian matrixes
     std::vector<std::vector<std::vector<double>>> psi_i_H_psi_j_matrixes;
     std::vector<std::vector<std::vector<double>>> psi_i_HminusH0_psi_j_matrixes;
@@ -2332,34 +2361,37 @@ void Job::run_computeEnergyWithPointCharges()
         computeHamiltonianMatrixWithPointCharges(states, currentChargeNucleiContribution, currentIonicMatrixes, psi_i_H_psi_j, psi_i_HminusH0_psi_j, logFile, verbose);
         computeResultsEnergyWithPointCharges(states, psi_i_H_psi_j, psi_i_HminusH0_psi_j, outputPrefix, logFile, verbose);
     }
-*/   
+
 
 
     ////////////////////////////////////
     // Debug - V_nuclear calculations //
     ////////////////////////////////////
-    std::cout << std::endl << std::endl << std::endl;
-    std::cout << "==============================================================================================" << std::endl;
-    std::cout << "====================== DEBUG - Computation of < ϕ_0 | V_nuclear | ϕ_0 > ======================" << std::endl;
-    std::cout << "==============================================================================================" << std::endl << std::endl;
+    logStream << std::endl << std::endl << std::endl;
+    logStream << "==============================================================================================" << std::endl;
+    logStream << "====================== DEBUG - Computation of < ϕ_0 | V_nuclear | ϕ_0 > ======================" << std::endl;
+    logStream << "==============================================================================================" << std::endl << std::endl;
 
-    std::cout << "====================== ANALYTIC COMPUTATION ======================" << std::endl << std::endl;
+    logStream << "====================== ANALYTIC COMPUTATION ======================" << std::endl << std::endl;
+    log(logStream, logFile);
 
     // Compute Nuclear Matrices for each atom (print AO matrix elements)
-    std::cout << "AO / MO basis:" <<std::endl;
-    std::cout << "--------------" << std::endl << std::endl;
+    logStream << "AO / MO basis:" <<std::endl;
+    logStream << "--------------" << std::endl << std::endl;
+    log(logStream, logFile);
 
     std::vector<std::vector<std::vector<std::vector<double>>>> nuclearMatrices(orbitals.get_numberOfAtoms());
     int atomIndex = 0;
     int nbAtoms = static_cast<int>(orbitals.get_struct().get_atoms().size());
     for (const Atom& atom : orbitals.get_struct().get_atoms())
     {
-        std::cout << "Computing nuclear matrix for atom " << atom.get_name() << ": Z = " << atom.get_atomicNumber() << " ; position = (" << atom.get_coordinates()[0] << ", " << atom.get_coordinates()[1] << ", " << atom.get_coordinates()[2] << ")..." << std::endl;
+        logStream << "Computing nuclear matrix for atom " << atom.get_name() << ": Z = " << atom.get_atomicNumber() << " ; position = (" << atom.get_coordinates()[0] << ", " << atom.get_coordinates()[1] << ", " << atom.get_coordinates()[2] << ")..." << std::endl;
 
         nuclearMatrices[atomIndex] = orbitals.getIonicPotentialMatrix(atom.get_coordinates(), atom.get_atomicNumber(), true, atomIndex == nbAtoms - 1, atomIndex == nbAtoms - 1);
         ++atomIndex;
     }
-    std::cout << std::endl;
+    logStream << std::endl;
+    log(logStream, logFile);
 
     double sum_phi_i_Vnuclear_phi_j = 0.0;
     for (int atomIndex = 0; atomIndex < orbitals.get_numberOfAtoms(); ++atomIndex)
@@ -2375,25 +2407,28 @@ void Job::run_computeEnergyWithPointCharges()
             }
         }
     }
-    std::cout << "Total sum of MO matrix elements for Alpha and Beta spins (analytic): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl << std::endl;
+    logStream << "Total sum of MO matrix elements for Alpha and Beta spins (analytic): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl << std::endl;
+    log(logStream, logFile);
 
     double sum_psi_i_Vnuclear_psi_j = 0.0;
     double V_ij = 0.0;
 
     // Print Slater determinant matrix elements
-    std::cout << "-------------------------------------------------------------------------------------------" << std::endl << std::endl;
-    std::cout << "States basis:" << std::endl;
-    std::cout << "-------------" << std::endl << std::endl;
+    logStream << "-------------------------------------------------------------------------------------------" << std::endl << std::endl;
+    logStream << "States basis:" << std::endl;
+    logStream << "-------------" << std::endl << std::endl;
+    log(logStream, logFile);
 
     for (size_t i = 0; i < nbStates; ++i)
     {
-        std::cout << "ψ_" << i << ": energy = " << std::setprecision(10) << states[i].get_energy() << " Hartree" << std::endl;
+        logStream << "ψ_" << i << ": energy = " << std::setprecision(10) << states[i].get_energy() << " Hartree" << std::endl;
         for (const auto& slaterCoeff : states[i].getSlaterDeterminantsAndCoefficients())
         {
-            std::cout << "    " << slaterCoeff.first << "; Coefficient: " << slaterCoeff.second << std::endl;
+            logStream << "    " << slaterCoeff.first << "; Coefficient: " << slaterCoeff.second << std::endl;
         }
-        std::cout << std::endl;
+        logStream << std::endl;
     }
+    log(logStream, logFile);
 
     for (size_t i = 0; i < nbStates; ++i)
     {
@@ -2402,7 +2437,7 @@ void Job::run_computeEnergyWithPointCharges()
 
         for (size_t j = 0; j <= i; ++j)
         {
-            std::cout << "Computing < ψ_" << i << " | V_nuclear | ψ_" << j << " > matrix element..." << std::endl;
+            logStream << "Computing < ψ_" << i << " | V_nuclear | ψ_" << j << " > matrix element..." << std::endl;
 
             // Initialize < D_k | V_nuclear | D_l > matrix element
             V_ij = 0.0;
@@ -2410,7 +2445,7 @@ void Job::run_computeEnergyWithPointCharges()
             // Get Slater Determinants for state j
             std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].getSlaterDeterminantsAndCoefficients());
 
-            std::cout << "    Computing < D_k | V_nuclear | D_l > matrix elements:" << std::endl;
+            logStream << "    Computing < D_k | V_nuclear | D_l > matrix elements:" << std::endl;
             // Compute < D_k | V_nuclear | D_l >
             for (const std::pair<SlaterDeterminant, double>& slaterCoeff_k : slaterDeterminants_i)
             {
@@ -2424,21 +2459,21 @@ void Job::run_computeEnergyWithPointCharges()
                     }
 
                     V_ij += D_kl;
-                    std::cout << std::right << std::setw(17) << D_kl << '\t';
+                    logStream << std::right << std::setw(17) << D_kl << '\t';
                 }
-                std::cout << std::endl;
+                logStream << std::endl;
             }
 
             sum_psi_i_Vnuclear_psi_j += (i == j ? V_ij : 2.0 * V_ij);
-            std::cout << std::endl;
+            logStream << std::endl;
         }
     }
+    log(logStream, logFile);
 
-
-/*
 
     // COMPARAISON AVEC CALCUL SUR GRILLE
-    std::cout << std::endl << std::endl << "====================== REGULAR GRID COMPUTATION ======================" << std::endl << std::endl;
+    logStream << std::endl << std::endl << "====================== REGULAR GRID COMPUTATION ======================" << std::endl << std::endl;
+    log(logStream, logFile);
 
     // Read grid size
     GridSize gridSize;
@@ -2453,15 +2488,28 @@ void Job::run_computeEnergyWithPointCharges()
     // Building domain and grid
     std::cout << "Building domain and grid, please wait..." << std::endl;
     Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, orbitalsNumbers.size());
-    Grid orbitalsGrid = orbitals.makeOrbGrid(domain, orbitalsNumbers, orbitalsSpins);
+    Grid orbitalsGrid = orbitals.makeOrbGrid(domain, orbitalsNumbers, orbitalsSpins, showProgress);
+    std::cout << std::endl;
 
     double sum_phi_i_Vnuclear_phi_j_alpha = 0.0;
     double sum_phi_i_Vnuclear_phi_j_beta = 0.0;
     V_ij = 0.0;
 
-    std::cout << "Ionic potential matrix in MO basis for Alpha spin:" << std::endl;
+    logStream << "Computing ionic potential matrix in MO basis for Alpha spin..." << std::endl;
+    log(logStream, logFile);
+
+    int nbStepsTotal = orbitals.get_numberOfMo() * (orbitals.get_numberOfMo() + 1) / 2;
+    int currentStep = 0;
+    int lastProgress = -1;
+    if (showProgress)
+    {
+        print_progressBar(0, nbStepsTotal, lastProgress);
+    }
+
     std::cout << std::scientific;
     std::cout << std::setprecision(10);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
     for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
     {
         for (int j = 0; j <= i; ++j)
@@ -2473,15 +2521,38 @@ void Job::run_computeEnergyWithPointCharges()
             }
 
             sum_phi_i_Vnuclear_phi_j_alpha += (i == j ? V_ij : 2.0 * V_ij);
-            std::cout << std::right << std::setw(17) << V_ij << '\t';
+            logStream << std::right << std::setw(17) << V_ij << '\t';
+            currentStep++;
         }
+        logStream << std::endl;
+
+        if (showProgress)
+        {
+            print_progressBar(currentStep, nbStepsTotal, lastProgress);
+        }
+    }
+    if (showProgress)
+    {
         std::cout << std::endl;
     }
-    std::cout << std::defaultfloat << "Total sum of MO matrix elements for Alpha spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_alpha << std::endl;
+    logStream << std::defaultfloat << "Total sum of MO matrix elements for Alpha spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_alpha << std::endl;
+    log(logStream, logFile);
 
-    std::cout << "Ionic potential matrix in MO basis for Beta spin:" << std::endl;
+    logStream << "Ionic potential matrix in MO basis for Beta spin:" << std::endl;
+    log(logStream, logFile);
+
+    currentStep = 0;
+    lastProgress = -1;
+    if (showProgress)
+    {
+        print_progressBar(0, nbStepsTotal, lastProgress);
+    }
+
     std::cout << std::scientific;
     std::cout << std::setprecision(10);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+
     for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
     {
         for (int j = 0; j <= i; ++j)
@@ -2493,29 +2564,43 @@ void Job::run_computeEnergyWithPointCharges()
             }
 
             sum_phi_i_Vnuclear_phi_j_beta += (i == j ? V_ij : 2.0 * V_ij);
-            std::cout << std::right << std::setw(17) << V_ij << '\t';
+            logStream << std::right << std::setw(17) << V_ij << '\t';
+            currentStep++;
         }
+        logStream << std::endl;
+
+        if (showProgress)
+        {
+            print_progressBar(currentStep, nbStepsTotal, lastProgress);
+        }
+    }
+    if (showProgress)
+    {
         std::cout << std::endl;
     }
-    std::cout << std::defaultfloat << "Total sum of MO matrix elements for Beta spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_beta << std::endl << std::endl;
+    logStream << std::defaultfloat << "Total sum of MO matrix elements for Beta spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_beta << std::endl << std::endl;
+    log(logStream, logFile);
 
     sum_phi_i_Vnuclear_phi_j = sum_phi_i_Vnuclear_phi_j_alpha + sum_phi_i_Vnuclear_phi_j_beta;
-    std::cout << "Total sum of MO matrix elements for Alpha and Beta spins (regular Grid): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl;
-*/
+    logStream << "Total sum of MO matrix elements for Alpha and Beta spins (regular Grid): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl;
+    log(logStream, logFile);
 
     // COMPARAISON AVEC BECKE
-    std::cout << std::endl << std::endl << "====================== BECKE GRID COMPUTATION ======================" << std::endl << std::endl;
+    logStream << std::endl << std::endl << "====================== BECKE GRID COMPUTATION ======================" << std::endl << std::endl;
+    log(logStream, logFile);
 
     Becke becke;
     computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
 
-    double sum_phi_i_Vnuclear_phi_j_alpha = 0.0;
-    double sum_phi_i_Vnuclear_phi_j_beta = 0.0;
+    sum_phi_i_Vnuclear_phi_j_alpha = 0.0;
+    sum_phi_i_Vnuclear_phi_j_beta = 0.0;
     V_ij = 0.0;
 
-    std::cout << "Ionic potential matrix in MO basis for Alpha spin:" << std::endl;
+    logStream << "Ionic potential matrix in MO basis for Alpha spin:" << std::endl;
     std::cout << std::scientific;
     std::cout << std::setprecision(10);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
     for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
     {
         for (int j = 0; j <= i; ++j)
@@ -2523,19 +2608,22 @@ void Job::run_computeEnergyWithPointCharges()
             V_ij = 0.0;
             for (const Atom& atom : orbitals.get_struct().get_atoms())
             {
-                V_ij += becke.ionic_potential(i, j, SpinType::ALPHA, atom.get_coordinates(), atom.get_atomicNumber(), 1, 5, 1);
+                V_ij += becke.ionic_potential(i, j, SpinType::ALPHA, atom.get_coordinates(), atom.get_atomicNumber());
             }
 
             sum_phi_i_Vnuclear_phi_j_alpha += (i == j ? V_ij : 2.0 * V_ij);
-            std::cout << std::right << std::setw(17) << V_ij << '\t';
+            logStream << std::right << std::setw(17) << V_ij << '\t';
         }
-        std::cout << std::endl;
+        logStream << std::endl;
     }
-    std::cout << std::defaultfloat << "Total sum of MO matrix elements for Alpha spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_alpha << std::endl;
+    logStream << std::defaultfloat << "Total sum of MO matrix elements for Alpha spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_alpha << std::endl;
+    log(logStream, logFile);
 
-    std::cout << "Ionic potential matric in MO basis for Beta spin:" << std::endl;
+    logStream << "Ionic potential matrix in MO basis for Beta spin:" << std::endl;
     std::cout << std::scientific;
     std::cout << std::setprecision(10);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
     for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
     {
         for (int j = 0; j <= i; ++j)
@@ -2543,18 +2631,20 @@ void Job::run_computeEnergyWithPointCharges()
             V_ij = 0.0;
             for (const Atom& atom : orbitals.get_struct().get_atoms())
             {
-                V_ij += becke.ionic_potential(i, j, SpinType::BETA, atom.get_coordinates(), atom.get_atomicNumber(), 1, 5, 1);
+                V_ij += becke.ionic_potential(i, j, SpinType::BETA, atom.get_coordinates(), atom.get_atomicNumber());
             }
 
             sum_phi_i_Vnuclear_phi_j_beta += (i == j ? V_ij : 2.0 * V_ij);
-            std::cout << std::right << std::setw(17) << V_ij << '\t';
+            logStream << std::right << std::setw(17) << V_ij << '\t';
         }
-        std::cout << std::endl;
+        logStream << std::endl;
     }
-    std::cout << std::defaultfloat << "Total sum of MO matrix elements for Beta spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_beta << std::endl;
+    logStream << std::defaultfloat << "Total sum of MO matrix elements for Beta spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_beta << std::endl;
+    log(logStream, logFile);
     
     sum_phi_i_Vnuclear_phi_j = sum_phi_i_Vnuclear_phi_j_alpha + sum_phi_i_Vnuclear_phi_j_beta;
-    std::cout << "Total sum of MO matrix elements for Alpha and Beta spins (Becke Grid): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl;
+    logStream << "Total sum of MO matrix elements for Alpha and Beta spins (Becke Grid): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl;
+    log(logStream, logFile);
 }
 
 void Job::run_computeGridDifference()

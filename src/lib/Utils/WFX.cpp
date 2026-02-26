@@ -1,9 +1,13 @@
-#include<iostream>
-#include<iomanip>
-#include<sstream>
-#include <Utils/WFX.h>
+#include <cstdlib>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+#include <string>
+#include <vector>
 
-using namespace std;
+#include <Utils/WFX.h>
+#include <Utils/Utils.h>
+
 
 //****************************************//
 //************ MOPC class ****************//
@@ -15,7 +19,7 @@ MOPC::MOPC()
     _Coefficients.resize(0);
 }
 
-void MOPC::push_back(int a, vector<double> b)
+void MOPC::push_back(int a, std::vector<double> b)
 {
     _MO_Number=a;
     _Coefficients=b;
@@ -32,7 +36,7 @@ NCEG::NCEG()
     _gradient.resize(0);
 }
 
-void NCEG::push_back(string a, vector<double> b)
+void NCEG::push_back(std::string a, std::vector<double> b)
 {
     _symbol=a;
     _gradient=b;
@@ -52,7 +56,7 @@ AEDF::AEDF()
     _EDF_Primitives_Coefficients.resize(0);
 }
 
-void AEDF::push_back(int a, vector<int> b, vector<int> c, vector<double> d, vector<double> e)
+void AEDF::push_back(int a, std::vector<int> b, std::vector<int> c, std::vector<double> d, std::vector<double> e)
 {
     _Number_of_EDF_Primitives=a;
     _EDF_Primitives_Centers=b;
@@ -86,7 +90,7 @@ WFX::WFX()
     _Model="None";                            
     _Primitive_Centers.resize(0);                                        
     _Primitive_Types.resize(0);
-    _Lxyz =vector<vector<int>>();                                        
+    _Lxyz =std::vector<std::vector<int>>();                                        
     _Primitive_Exponents.resize(0);                                    
     _Molecular_Orbital_Occupation_Numbers.resize(0);                
     _Molecular_Orbital_Energies.resize(0);
@@ -101,11 +105,11 @@ WFX::WFX()
     _Additionnal_Electron_Density_Function=AEDF();
 }
 
-WFX::WFX(ifstream& file)
+WFX::WFX(std::ifstream& file)
 {
     _alpha_and_beta = false;
     read_file_wfx(file);
-    vector<int> l(3);
+    std::vector<int> l(3);
     _Lxyz.resize(_Number_of_Primitives, l);
     int i;
     for(i=0; i<_Number_of_Primitives; i++)
@@ -113,23 +117,26 @@ WFX::WFX(ifstream& file)
 
 }
 
-vector<int> WFX::read_one_block_int(ifstream& f, string b, bool r, int nint)
+std::vector<int> WFX::read_one_block_int(std::ifstream& f, std::string b, bool r, int nint)
 {
     int data;
-    vector<int> block_of_data(0);
+    std::vector<int> block_of_data(0);
     long int pos;
     int i,n;
     pos=LocaliseBlock(f, n, b);
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
+        std::cout<<b+" : data not found"<<std::endl;
         if(r)
         {
-            cout<<"Data required, please check your file"<<endl;
-            exit(1);
+            std::stringstream errorMessage;
+            errorMessage << b << " : data not found. Data required, please check your file." << std::endl;
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
         else
-            return vector<int> (0);
+            return std::vector<int> (0);
     }
     f.seekg(pos);
     for(i=0; i<nint; i++)
@@ -140,23 +147,26 @@ vector<int> WFX::read_one_block_int(ifstream& f, string b, bool r, int nint)
     return block_of_data;
 }
 
-vector<double> WFX::read_one_block_real(ifstream& f, string b, bool r)
+std::vector<double> WFX::read_one_block_real(std::ifstream& f, std::string b, bool r)
 {
     double data;
-    vector<double> block_of_data(0);
+    std::vector<double> block_of_data(0);
     long int pos;
     int i,n;
     pos=LocaliseBlock(f, n, b);
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
+        std::cout<<b+" : data not found"<<std::endl;
         if(r)
         {
-            cout<<"Data required, please check your file"<<endl;
-            exit(1);
+            std::stringstream errorMessage;
+            errorMessage << b << " : data not found. Data required, please check your file." << std::endl;
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
         else
-            return vector<double> (0);
+            return std::vector<double> (0);
     }
     f.seekg(pos);
     for(i=0; i<n; i++)
@@ -168,23 +178,26 @@ vector<double> WFX::read_one_block_real(ifstream& f, string b, bool r)
     return block_of_data;
 }
 
-vector<double> WFX::read_one_block_real(ifstream& f, string b, bool r, int ndouble)
+std::vector<double> WFX::read_one_block_real(std::ifstream& f, std::string b, bool r, int ndouble)
 {
     double data;
-    vector<double> block_of_data(0);
+    std::vector<double> block_of_data(0);
     long int pos;
     int i,n;
     pos=LocaliseBlock(f, n, b);
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
+        std::cout<<b+" : data not found"<<std::endl;
         if(r)
         {
-            cout<<"Data required, please check your file"<<endl;
-            exit(1);
+            std::stringstream errorMessage;
+            errorMessage << b << " : data not found. Data required, please check your file." << std::endl;
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
         else
-            return vector<double> (0);
+            return std::vector<double> (0);
     }
     f.seekg(pos);
     for(i=0; i<ndouble; i++)
@@ -196,23 +209,26 @@ vector<double> WFX::read_one_block_real(ifstream& f, string b, bool r, int ndoub
     return block_of_data;
 }
 
-vector<string> WFX::read_one_block_string(ifstream& f, string b, bool r)
+std::vector<std::string> WFX::read_one_block_string(std::ifstream& f, std::string b, bool r)
 {
-    string data;
-    vector<string> block_of_data(0);
+    std::string data;
+    std::vector<std::string> block_of_data(0);
     long int pos;
     int i,n;
     pos=LocaliseBlock(f, n, b);
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
+        std::cout<<b+" : data not found"<<std::endl;
         if(r)
         {
-            cout<<"Data required, please check your file"<<endl;
-            exit(1);
+            std::stringstream errorMessage;
+            errorMessage << b << " : data not found. Data required, please check your file." << std::endl;
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
         else
-            return vector<string> (0);
+            return std::vector<std::string> (0);
     }
     f.seekg(pos);
     for(i=0; i<n; i++)
@@ -224,18 +240,21 @@ vector<string> WFX::read_one_block_string(ifstream& f, string b, bool r)
     return block_of_data;
 }
 
-int WFX::read_int(ifstream& f, string b, bool r)
+int WFX::read_int(std::ifstream& f, std::string b, bool r)
 {
     int data,i,n;
     long int pos;
     pos=LocaliseBlock(f, n, b);
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
+        std::cout<<b+" : data not found"<<std::endl;
         if(r)
         {
-            cout<<"Data required, please check your file"<<endl;
-            exit(1);
+            std::stringstream errorMessage;
+            errorMessage << b << " : data not found. Data required, please check your file." << std::endl;
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
         else
             return 0;
@@ -247,7 +266,7 @@ int WFX::read_int(ifstream& f, string b, bool r)
     return data;
 }
 
-double WFX::read_real(ifstream& f, string b, bool r)
+double WFX::read_real(std::ifstream& f, std::string b, bool r)
 {
     double data;
     int i,n;
@@ -255,11 +274,14 @@ double WFX::read_real(ifstream& f, string b, bool r)
     pos=LocaliseBlock(f, n, b);
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
+        std::cout<<b+" : data not found"<<std::endl;
         if(r)
         {
-            cout<<"Data required, please check your file"<<endl;
-            exit(1);
+            std::stringstream errorMessage;
+            errorMessage << b << " : data not found. Data required, please check your file." << std::endl;
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
         else
             return 0.0;
@@ -271,19 +293,22 @@ double WFX::read_real(ifstream& f, string b, bool r)
     return data;
 }
 
-string WFX::read_string(ifstream& f, string b, bool r)
+std::string WFX::read_string(std::ifstream& f, std::string b, bool r)
 {
-    string data;
+    std::string data;
     int i,n;
     long int pos;
     pos=LocaliseBlock(f, n, b);
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
+        std::cout<<b+" : data not found"<<std::endl;
         if(r)
         {
-            cout<<"Data required, please check your file"<<endl;
-            exit(1);
+            std::stringstream errorMessage;
+            errorMessage << b << " : data not found. Data required, please check your file." << std::endl;
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
         else
             return "None";
@@ -295,29 +320,32 @@ string WFX::read_string(ifstream& f, string b, bool r)
     return data;
 }
 
-vector<MOPC> WFX::read_MOPC_block(ifstream& f, string b, bool r)
+std::vector<MOPC> WFX::read_MOPC_block(std::ifstream& f, std::string b, bool r)
 {
     int i,j,n,nMO,ndat;
     double c;
-    vector<double> cdat(0);
+    std::vector<double> cdat(0);
     MOPC data;
-    vector<MOPC> block_of_data(0);
-    string MO="MO Number";
-    string p;
-    string test;
+    std::vector<MOPC> block_of_data(0);
+    std::string MO="MO Number";
+    std::string p;
+    std::string test;
     long int pos;
     pos=LocaliseMO(f,n,nMO,b);
 
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
+        std::cout<<b+" : data not found"<<std::endl;
         if(r)
         {
-            cout<<"Data required, please check your file"<<endl;
-            exit(1);
+            std::stringstream errorMessage;
+            errorMessage << b << " : data not found. Data required, please check your file." << std::endl;
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
         else
-            return vector<MOPC> (0);
+            return std::vector<MOPC> (0);
     }
 
     f.clear();
@@ -345,28 +373,31 @@ vector<MOPC> WFX::read_MOPC_block(ifstream& f, string b, bool r)
     return block_of_data;
 }
 
-vector<NCEG> WFX::read_NCEG_block(ifstream& f, string b, bool r)
+std::vector<NCEG> WFX::read_NCEG_block(std::ifstream& f, std::string b, bool r)
 {
     int i,j,n;
     long int pos;
 
-    string s;
+    std::string s;
     double g;
-    vector<double> gdat(0);
+    std::vector<double> gdat(0);
     NCEG data;
-    vector<NCEG> block_of_data(0);
+    std::vector<NCEG> block_of_data(0);
 
     pos=LocaliseBlock(f,n,b);
     if(pos==-1)
     {
-        cout<<b+" : data not found"<<endl;
+        std::cout<<b+" : data not found"<<std::endl;
         if(r)
         {
-            cout<<"Data required, please check your file"<<endl;
-            exit(1);
+            std::stringstream errorMessage;
+            errorMessage << b << " : data not found. Data required, please check your file." << std::endl;
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
         else
-            return vector<NCEG> (0);
+            return std::vector<NCEG> (0);
     }
 
     f.seekg(pos);
@@ -385,18 +416,18 @@ vector<NCEG> WFX::read_NCEG_block(ifstream& f, string b, bool r)
     return block_of_data;
 }
 
-AEDF WFX::read_AEDF_block(ifstream& f, string b, bool r)
+AEDF WFX::read_AEDF_block(std::ifstream& f, std::string b, bool r)
 {
-    string snp="Number of EDF Primitives";
-    string spc="EDF Primitive Centers";
-    string spt="EDF Primitive Types";
-    string spe="EDF Primitive Exponents";
-    string spcoef="EDF Primitive Coefficients";
+    std::string snp="Number of EDF Primitives";
+    std::string spc="EDF Primitive Centers";
+    std::string spt="EDF Primitive Types";
+    std::string spe="EDF Primitive Exponents";
+    std::string spcoef="EDF Primitive Coefficients";
     int n=read_int(f, snp, r);
-    vector<int> pc=read_one_block_int(f, spc, r, n);
-    vector<int> pt=read_one_block_int(f, spt, r, n);
-    vector<double> pe=read_one_block_real(f, spe, r);
-    vector<double> pcoef=read_one_block_real(f, spcoef, r);
+    std::vector<int> pc=read_one_block_int(f, spc, r, n);
+    std::vector<int> pt=read_one_block_int(f, spt, r, n);
+    std::vector<double> pe=read_one_block_real(f, spe, r);
+    std::vector<double> pcoef=read_one_block_real(f, spcoef, r);
 
     AEDF block_of_data;
     block_of_data.push_back(n, pc, pt, pe, pcoef);
@@ -404,18 +435,18 @@ AEDF WFX::read_AEDF_block(ifstream& f, string b, bool r)
     return block_of_data;
 }
 
-long int LocaliseBlock(ifstream& f, int& n, string b)
+long int LocaliseBlock(std::ifstream& f, int& n, std::string b)
 {
     n=0;
     long int position;
     f.clear();
     f.seekg(0,f.beg);
-    string test;
+    std::string test;
     bool ok=false;
     while(!f.eof())
     {    
         getline(f, test);
-        if(test.find(b)!=string::npos)
+        if(test.find(b)!=std::string::npos)
         {
             ok=true;
             position=f.tellg();
@@ -429,7 +460,7 @@ long int LocaliseBlock(ifstream& f, int& n, string b)
     while(!f.eof())
     {    
         getline(f, test);
-        if(test.find(b)!=string::npos)
+        if(test.find(b)!=std::string::npos)
         {
             ok=true;
             break;
@@ -442,23 +473,23 @@ long int LocaliseBlock(ifstream& f, int& n, string b)
     return position;
 }
 
-long int LocaliseMO(ifstream& f, int& n, int& n_MO, string b)
+long int LocaliseMO(std::ifstream& f, int& n, int& n_MO, std::string b)
 {
     n=0;
     n_MO=0;
-    string m="MO Number";
+    std::string m="MO Number";
     long int position;
     position=LocaliseBlock(f,n,b);
     f.clear();
     f.seekg(position);
-    string test;
+    std::string test;
 
     while(!f.eof())
     {
         getline(f,test);
-        if(test.find(m)!=string::npos)
+        if(test.find(m)!=std::string::npos)
             n_MO++;
-        else if(test.find(b)!=string::npos)
+        else if(test.find(b)!=std::string::npos)
             break;
     }
     if(n==0 || n_MO==0)
@@ -467,42 +498,42 @@ long int LocaliseMO(ifstream& f, int& n, int& n_MO, string b)
     return position;
 }
 
-void WFX::read_file_wfx(ifstream& file)
+void WFX::read_file_wfx(std::ifstream& file)
 {
-    string a="Title";
-    string b="Keywords";
-    string c="Number of Nuclei";
-    string d="Number of Primitives";
-    string e="Number of Occupied Molecular Orbitals";
-    string f="Number of Perturbations";
-    string g="Nuclear Names";
-    string h="Atomic Number";
-    string i="Nuclear Charges";
-    string j="Nuclear Cartesian Coordinates";
-    string k="Net Charge";
-    string l="Number of Electrons";
-    string m="Number of Alpha Electrons";
-    string n="Number of Beta Electrons";
-    string o="Electronic Spin Multiplicity";
-    string p="Model";
-    string q="Primitive Centers";
-    string r="Primitive Types";
-    string s="Primitive Exponents";
-    string t="Molecular Orbital Occupation Numbers";
-    string u="Molecular Orbital Energies";
-    string v="Molecular Orbital Spin Types";
-    string w="Molecular Orbital Primitive Coefficients";
-    string x="Energy = T + Vne + Vee + Vnn";
-    string y="Virial Ratio (-V/T)";
-    string z="Nuclear Cartesian Energy Gradients";
-    string aa="Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W";
-    string bb="Full Virial Ratio, -(V - W)/T";
-    string cc="Number of Core Electrons";
-    string dd="Additional Electron Density Function (EDF)";
+    std::string a="Title";
+    std::string b="Keywords";
+    std::string c="Number of Nuclei";
+    std::string d="Number of Primitives";
+    std::string e="Number of Occupied Molecular Orbitals";
+    std::string f="Number of Perturbations";
+    std::string g="Nuclear Names";
+    std::string h="Atomic Number";
+    std::string i="Nuclear Charges";
+    std::string j="Nuclear Cartesian Coordinates";
+    std::string k="Net Charge";
+    std::string l="Number of Electrons";
+    std::string m="Number of Alpha Electrons";
+    std::string n="Number of Beta Electrons";
+    std::string o="Electronic Spin Multiplicity";
+    std::string p="Model";
+    std::string q="Primitive Centers";
+    std::string r="Primitive Types";
+    std::string s="Primitive Exponents";
+    std::string t="Molecular Orbital Occupation Numbers";
+    std::string u="Molecular Orbital Energies";
+    std::string v="Molecular Orbital Spin Types";
+    std::string w="Molecular Orbital Primitive Coefficients";
+    std::string x="Energy = T + Vne + Vee + Vnn";
+    std::string y="Virial Ratio (-V/T)";
+    std::string z="Nuclear Cartesian Energy Gradients";
+    std::string aa="Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W";
+    std::string bb="Full Virial Ratio, -(V - W)/T";
+    std::string cc="Number of Core Electrons";
+    std::string dd="Additional Electron Density Function (EDF)";
 
-    _Molecular_Orbital_Occupation_Numbers=vector<vector<double>> (2);
-    _Molecular_Orbital_Energies=vector<vector<double>> (2);
-    _Molecular_Orbital_Primitive_Coefficients=vector<vector<MOPC>> (2);
+    _Molecular_Orbital_Occupation_Numbers=std::vector<std::vector<double>> (2);
+    _Molecular_Orbital_Energies=std::vector<std::vector<double>> (2);
+    _Molecular_Orbital_Primitive_Coefficients=std::vector<std::vector<MOPC>> (2);
 
     _Title=read_string(file, a, true);
     _Keywords=read_string(file, b, true);
@@ -545,9 +576,9 @@ void WFX::read_file_wfx(ifstream& file)
     
     else
     {    
-        _Molecular_Orbital_Occupation_Numbers[1]=vector<double> (0);
-        _Molecular_Orbital_Energies[1]=vector<double> (0);
-        _Molecular_Orbital_Primitive_Coefficients[1]=vector<MOPC> (0);
+        _Molecular_Orbital_Occupation_Numbers[1]=std::vector<double> (0);
+        _Molecular_Orbital_Energies[1]=std::vector<double> (0);
+        _Molecular_Orbital_Primitive_Coefficients[1]=std::vector<MOPC> (0);
 
         for(size_t np=0; np<_Molecular_Orbital_Spin_Types.size(); np++)
         {
@@ -573,118 +604,118 @@ void WFX::read_file_wfx(ifstream& file)
     for(int i=0; i<_Number_of_Nuclei; i++)
     {
         _Nuclear_Names[i].erase(0,1);
-        stringstream s;
+        std::stringstream s;
         s<<i+1;
-        string p=s.str();
-        if(_Nuclear_Names[i].find(p)!=string::npos)
+        std::string p=s.str();
+        if(_Nuclear_Names[i].find(p)!=std::string::npos)
             for(size_t j=0; j<p.size(); j++)
                 _Nuclear_Names[i].pop_back();
     }
 }
 
-void WFX::write_one_block_int(ofstream& f, vector<int> v, string b, bool r, int nint)
+void WFX::write_one_block_int(std::ofstream& f, std::vector<int> v, std::string b, bool r, int nint)
 {
     if(!r && v.size()==0)
         return;
-    f<<b<<endl;
+    f<<b<<std::endl;
     int i;
     for(i=0; i<int(v.size()); i++)
         f<<" "<<v[i];
     b.insert(1,"\\");
-    f<<endl<<b<<endl;;
+    f<<std::endl<<b<<std::endl;;
 }
 
-void WFX::write_one_block_real(ofstream& f, vector<double> v, string b, bool r)
+void WFX::write_one_block_real(std::ofstream& f, std::vector<double> v, std::string b, bool r)
 {
     if(!r && v.size()==0)
         return;
-    f<<b<<endl;
+    f<<b<<std::endl;
     int i;
     for(i=0; i<int(v.size()); i++)
         f<<" "<<v[i]<<"\t";
     b.insert(1,"\\");
-    f<<endl<<b<<endl;
+    f<<std::endl<<b<<std::endl;
 }
 
-void WFX::write_one_block_real(ofstream& f, vector<double> v, string b, bool r, int ndouble)
+void WFX::write_one_block_real(std::ofstream& f, std::vector<double> v, std::string b, bool r, int ndouble)
 {
     if(!r && v.size()==0)
         return;
-    f<<b<<endl;
+    f<<b<<std::endl;
     int i;
     for(i=0; i<ndouble; i++)
         f<<" "<<v[i]<<"\t";
     b.insert(1,"\\");
-    f<<endl<<b<<endl;
+    f<<std::endl<<b<<std::endl;
 }
 
-void WFX::write_one_block_string(ofstream& f, vector<string> v, string b, bool r)
+void WFX::write_one_block_string(std::ofstream& f, std::vector<std::string> v, std::string b, bool r)
 {
     if(!r && v.size()==0)
         return;
-    f<<b<<endl;
+    f<<b<<std::endl;
     int i;
     for(i=0; i<int(v.size()); i++)
-        f<<v[i]<<endl;
+        f<<v[i]<<std::endl;
     b.insert(1,"\\");
-    f<<b<<endl;
+    f<<b<<std::endl;
 }
 
-void WFX::write_one_matrix_real(ofstream& f, vector<vector<double>> v, string b, bool r)
+void WFX::write_one_matrix_real(std::ofstream& f, std::vector<std::vector<double>> v, std::string b, bool r)
 {
     if(!r && v.size()==0)
         return;
-    f<<b<<endl;
+    f<<b<<std::endl;
     int i,j;
     for(i=0; i<int(v.size()); i++)
         for(j=0; j<int(v[i].size()); j++)
             f<<" "<<v[i][j]<<"\t";
     b.insert(1,"\\");
-    f<<endl<<b<<endl;
+    f<<std::endl<<b<<std::endl;
 }
 
-void WFX::write_int(ofstream& f, int i, string b, bool r)
+void WFX::write_int(std::ofstream& f, int i, std::string b, bool r)
 {
     if(!r && i==0)
         return;
-    f<<b<<endl;
-    f<<" "<<i<<endl;
+    f<<b<<std::endl;
+    f<<" "<<i<<std::endl;
     b.insert(1,"\\");
-    f<<b<<endl;
+    f<<b<<std::endl;
 }
 
-void WFX::write_real(ofstream& f, double d, string b, bool r)
+void WFX::write_real(std::ofstream& f, double d, std::string b, bool r)
 {
     if(!r && d==0.0)
         return;
-    f<<b<<endl;
-    f<<" "<<d<<endl;
+    f<<b<<std::endl;
+    f<<" "<<d<<std::endl;
     b.insert(1,"\\");
-    f<<b<<endl;
+    f<<b<<std::endl;
 }
 
-void WFX::write_string(ofstream& f, string s, string b, bool r)
+void WFX::write_string(std::ofstream& f, std::string s, std::string b, bool r)
 {
     if(!r && s=="None")
         return;
-    f<<b<<endl;
-    f<<" "<<s<<endl;
+    f<<b<<std::endl;
+    f<<" "<<s<<std::endl;
     b.insert(1,"\\");
-    f<<b<<endl;
+    f<<b<<std::endl;
 }
 
-void WFX::write_MOPC_block(ofstream& f, vector<vector<MOPC>> v, bool r)
+void WFX::write_MOPC_block(std::ofstream& f, std::vector<std::vector<MOPC>> v, bool r)
 {
     if(!r && v.size()==0)
         return;
-    string b="<Molecular Orbital Primitive Coefficients>";
-    string m1="<MO Number>";
-    string m2=m1;
+    std::string b="<Molecular Orbital Primitive Coefficients>";
+    std::string m1="<MO Number>";
+    std::string m2=m1;
     m2.insert(1,"\\");
-    f<<b<<endl;
+    f<<b<<std::endl;
     int i,j,k;
     int n=_Number_of_Primitives;
-    vector<int> nMO (2);
+    std::vector<int> nMO (2);
     
     nMO[0]=v[0].size();
     nMO[1]=v[1].size();
@@ -693,28 +724,28 @@ void WFX::write_MOPC_block(ofstream& f, vector<vector<MOPC>> v, bool r)
     {
         for(j=0; j<nMO[i]; j++)
         {
-            f<<m1<<endl;
-            f<<" "<<v[i][j].MO_Number()<<endl;
-            f<<m2<<endl;
+            f<<m1<<std::endl;
+            f<<" "<<v[i][j].MO_Number()<<std::endl;
+            f<<m2<<std::endl;
             for(k=0; k<n; k++)
             {
                 f<<" "<<v[i][j].Coefficients()[k];
             }
-            f<<endl;
+            f<<std::endl;
         }
         if(_alpha_and_beta)
             break;
     }
     b.insert(1,"\\");
-    f<<b<<endl;
+    f<<b<<std::endl;
 }
 
-void WFX::write_NCEG_block(ofstream& f, vector<NCEG> v, bool r)
+void WFX::write_NCEG_block(std::ofstream& f, std::vector<NCEG> v, bool r)
 {
     if(!r && v.size()==0)
         return;
-    string b="<Nuclear Cartesian Energy Gradients>";
-    f<<b<<endl;
+    std::string b="<Nuclear Cartesian Energy Gradients>";
+    f<<b<<std::endl;
     int i,j;
     for(i=0; i<int(v.size()); i++)
     {
@@ -723,63 +754,63 @@ void WFX::write_NCEG_block(ofstream& f, vector<NCEG> v, bool r)
             f<<" "<<v[i].gradient()[i];
     }
     b.insert(1,"\\");
-    f<<endl<<b<<endl;
+    f<<std::endl<<b<<std::endl;
 }
 
-void WFX::write_AEDF_block(ofstream& f, AEDF a, bool r)
+void WFX::write_AEDF_block(std::ofstream& f, AEDF a, bool r)
 {
     if(!r && a.EDF_Primitives_Coefficients().size()==0)
         return;
-    string b="<Additional Electron Density Function (EDF)>";
-    string ub1="<Number of EDF Primitives>";
-    string ub2="<EDF Primitive Centers>";
-    string ub3="<EDF Primitive Types>";
-    string ub4="<EDF Primitive Exponents>";
-    string ub5="<EDF Primitive Coefficients>";
-    f<<b<<endl;
+    std::string b="<Additional Electron Density Function (EDF)>";
+    std::string ub1="<Number of EDF Primitives>";
+    std::string ub2="<EDF Primitive Centers>";
+    std::string ub3="<EDF Primitive Types>";
+    std::string ub4="<EDF Primitive Exponents>";
+    std::string ub5="<EDF Primitive Coefficients>";
+    f<<b<<std::endl;
     write_int(f, a.Number_of_EDF_Primitives(), ub1, r);
     write_one_block_int(f, a.EDF_Primitives_Centers(), ub2, r, a.Number_of_EDF_Primitives());
     write_one_block_int(f, a.EDF_Primitives_Types(), ub3, r, a.Number_of_EDF_Primitives());
     write_one_block_real(f, a.EDF_Primitives_Exponents(), ub4, r);
     write_one_block_real(f, a.EDF_Primitives_Coefficients(), ub5, r);
     b.insert(1,"\\");
-    f<<b<<endl;
+    f<<b<<std::endl;
 }
 
-void WFX::write_file_wfx(ofstream& file)
+void WFX::write_file_wfx(std::ofstream& file)
 {
     file<<std::scientific;
     file<<std::setprecision(15);
-    //cout<<std::left<<std::setw(20);
+    //std::cout<<std::left<<std::setw(20);
 
 
-    string a="<Title>";
-    string b="<Keywords>";
-    string c="<Number of Nuclei>";
-    string d="<Number of Primitives>";
-    string e="<Number of Occupied Molecular Orbitals>";
-    string f="<Number of Perturbations>";
-    string g="<Nuclear Names>";
-    string h="<Atomic Number>";
-    string i="<Nuclear Charges>";
-    string j="<Nuclear Cartesian Coordinates>";
-    string k="<Net Charge>";
-    string l="<Number of Electrons>";
-    string m="<Number of Alpha Electrons>";
-    string n="<Number of Beta Electrons>";
-    string o="<Electronic Spin Multiplicity>";
-    string p="<Model>";
-    string q="<Primitive Centers>";
-    string r="<Primitive Types>";
-    string s="<Primitive Exponents>";
-    string t="<Molecular Orbital Occupation Numbers>";
-    string u="<Molecular Orbital Energies>";
-    string v="<Molecular Orbital Spin Types>";
-    string w="<Energy = T + Vne + Vee + Vnn>";
-    string x="<Virial Ratio (-V/T)>";
-    string y="<Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>";
-    string z="<Full Virial Ratio, -(V - W)/T>";
-    string aa="<Number of Core Electrons>";
+    std::string a="<Title>";
+    std::string b="<Keywords>";
+    std::string c="<Number of Nuclei>";
+    std::string d="<Number of Primitives>";
+    std::string e="<Number of Occupied Molecular Orbitals>";
+    std::string f="<Number of Perturbations>";
+    std::string g="<Nuclear Names>";
+    std::string h="<Atomic Number>";
+    std::string i="<Nuclear Charges>";
+    std::string j="<Nuclear Cartesian Coordinates>";
+    std::string k="<Net Charge>";
+    std::string l="<Number of Electrons>";
+    std::string m="<Number of Alpha Electrons>";
+    std::string n="<Number of Beta Electrons>";
+    std::string o="<Electronic Spin Multiplicity>";
+    std::string p="<Model>";
+    std::string q="<Primitive Centers>";
+    std::string r="<Primitive Types>";
+    std::string s="<Primitive Exponents>";
+    std::string t="<Molecular Orbital Occupation Numbers>";
+    std::string u="<Molecular Orbital Energies>";
+    std::string v="<Molecular Orbital Spin Types>";
+    std::string w="<Energy = T + Vne + Vee + Vnn>";
+    std::string x="<Virial Ratio (-V/T)>";
+    std::string y="<Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>";
+    std::string z="<Full Virial Ratio, -(V - W)/T>";
+    std::string aa="<Number of Core Electrons>";
 
     write_string(file, _Title, a, true);
     write_string(file, _Keywords, b, true);
@@ -813,9 +844,9 @@ void WFX::write_file_wfx(ofstream& file)
     write_AEDF_block(file, _Additionnal_Electron_Density_Function, false);
 }
 
-vector<int> setLxyz(int iType)
+std::vector<int> setLxyz(int iType)
 {
-    vector<int> l (3);
+    std::vector<int> l (3);
     l[0]=l[1]=l[2]=0;
     if(iType==1) 
         return l; // 1S

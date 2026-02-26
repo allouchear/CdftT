@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include <Cube/Grid.h>
 #include <Orbitals/Orbitals.h>
 #include <Orbitals/SlaterDeterminant.hpp>
 #include <Utils/Enums.hpp>
@@ -113,23 +114,13 @@ class ExcitedState
         //----------------------------------------------------------------------------------------------------//
 
         /**
-         * @brief Reads the energy of the ground state from a Gaussian .log file.
-         * 
-         * @param[in] logFileName Name of the log file to read.
-         * @param[out] energy Energy of the ground state, in Hartree.
-         * @return True if reading was successful, false otherwise.
-         */
-        static bool readGroundStateEnergyFromLogFile(const std::string& logFileName, double& energy);
-
-
-        /**
          * @brief Reads the energy of the ground state from an Orca .out file.
          * 
          * @param[in] orcaOutFileName Name of the Orca output file to read.
          * @param[out] energy Energy of the ground state, in Hartree.
          * @return True if reading was successful, false otherwise.
          */
-        static bool readGroundStateEnergyFromOrcaOutFile(const std::string& orcaOutFileName, double& energy);
+        static bool readGroundStateEnergyFromOutFile(const std::string& orcaOutFileName, double& energy);
 
         /**
          * @brief Reads the energy of the ground state from a transitions file.
@@ -160,16 +151,6 @@ class ExcitedState
         static bool readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
 
         /**
-         * @brief Reads transitions from a Gaussian .log file and populates a vector of ExcitedState objects.
-         *
-         * @param[in] logFileName Name of the log file to read.
-         * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
-         * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
-         * @return True if reading was successful, false otherwise.
-         */
-        static bool readTransitionsFromLogFile(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
-
-        /**
          * @brief Reads transitions from an Orca .out file and populates a vector of ExcitedState objects. *
          * @param[in] orcaOutFileName Name of the Orca output file to read.
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
@@ -177,7 +158,7 @@ class ExcitedState
          * @param[in] alphaAndBeta Whether beta transitions are the same as alpha ones (true) or not. 
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitionsFromOrcaOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
+        static bool readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
 
         /**
          * @brief Reads transitions from the provided file and populates a vector of ExcitedState objects.

@@ -1,9 +1,12 @@
 #ifndef CDFTT_SLATERDETERMINANT_HPP_INCLUDED
 #define CDFTT_SLATERDETERMINANT_HPP_INCLUDED
 
+#include <iostream>
+#include <utility>
 #include <vector>
 
 #include <Orbitals/Orbitals.h>
+#include <Utils/Enums.hpp>
 
 
 /** @brief SlaterDeterminant class.

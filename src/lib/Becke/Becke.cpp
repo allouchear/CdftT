@@ -1,9 +1,9 @@
-#include<cmath>
-#include<cstdlib>
-#include<functional>
-#include<iomanip>
-#include<iostream>
-#include<vector>
+#include <cmath>
+#include <cstdlib>
+#include <functional>
+#include <iomanip>
+#include <iostream>
+#include <vector>
 
 #include <Cube/Grid.h>
 #include <Becke/Becke.h>

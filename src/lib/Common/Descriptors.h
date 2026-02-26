@@ -55,15 +55,16 @@
     J. Phys. Chem. A 2005, 109, 205-212, DOI: 10.1021/jp046577a
 ------------------------------------------------------------------------------------------------------------------------------
 */
-#include <Cube/Grid.h>
-#include <Cube/GridCP.h>
 
+#include <fstream>
 #include <vector>
+
 #include <Common/PeriodicTable.h>
 #include <Common/Structure.h>
+#include <Cube/Grid.h>
+#include <Cube/GridCP.h>
 #include <Utils/Enums.hpp>
 
-using namespace std;
 
 class Descriptors
 {    
@@ -87,24 +88,24 @@ class Descriptors
         double _DEmin;
         
         /******************************************LOCAL DESCRIPTORS**************************************************/
-        vector<double> _Q0;
-        vector<double> _Qm;
-        vector<double> _Qp;
+        std::vector<double> _Q0;
+        std::vector<double> _Qm;
+        std::vector<double> _Qp;
         
-        vector<double> _fk0;
-        vector<double> _fkm;
-        vector<double> _fkp;
+        std::vector<double> _fk0;
+        std::vector<double> _fkm;
+        std::vector<double> _fkp;
         
-        vector<double> _Deltafk;
-        vector<double> _wkm;
-        vector<double> _wkp;
-        vector<double> _Skm;
-        vector<double> _Skp;
-        vector<double> _Skfrac;
-        vector<double> _hardnessk;
-        vector<double> _hardnesskm;
-        vector<double> _hardnesskp;
-        void sortCharges(vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E, double& I, double& A);
+        std::vector<double> _Deltafk;
+        std::vector<double> _wkm;
+        std::vector<double> _wkp;
+        std::vector<double> _Skm;
+        std::vector<double> _Skp;
+        std::vector<double> _Skfrac;
+        std::vector<double> _hardnessk;
+        std::vector<double> _hardnesskm;
+        std::vector<double> _hardnesskp;
+        void sortCharges(std::vector<double> Q1, std::vector<double> Q2, std::vector<double> Q3, std::vector<double> E, double& I, double& A);
     
     public:
         //! Default Constructor
@@ -112,8 +113,8 @@ class Descriptors
         Descriptors();
 
         //! Constructor
-        /*! Build an object from charge vectors*/
-        Descriptors(const Structure& S, vector<double> Q0, vector<double> Qm, vector<double> Qp, double I, double A);
+        /*! Build an object from charge std::vectors*/
+        Descriptors(const Structure& S, std::vector<double> Q0, std::vector<double> Qm, std::vector<double> Qp, double I, double A);
 
         //! Constructor
         /*! Build an object from grids*/
@@ -129,25 +130,25 @@ class Descriptors
         /*! Aimmethod = 0: On grid method*/
         /*! Aimmethod = 1: Near grid method, no refinement*/
         /*! Aimmethod = 2: Near grid method, with refinement*/
-        Descriptors(ifstream& file0, ifstream& fileM, ifstream& fileP, double I, double A, PartitionMethod partitionMethod);
+        Descriptors(std::ifstream& file0, std::ifstream& fileM, std::ifstream& fileP, double I, double A, PartitionMethod partitionMethod);
 
         //! Constructor
         /*! Construct and computes descriptors calling compute_all_from_grid()*/
-        Descriptors(ifstream& file0, ifstream& fileM, ifstream& fileP, vector<double> E, PartitionMethod partitionMethod);
+        Descriptors(std::ifstream& file0, std::ifstream& fileM, std::ifstream& fileP, std::vector<double> E, PartitionMethod partitionMethod);
         
         //! Constructor
         /*! Construct and computes descriptors calling compute_all_from_charge()*/
-        Descriptors(const Structure& S, vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E);
+        Descriptors(const Structure& S, std::vector<double> Q1, std::vector<double> Q2, std::vector<double> Q3, std::vector<double> E);
 
         //! Destructor
         ~Descriptors() {}
 
-      //! reset vectors
-      /*! sets the vector attributes to size 0*/
+      //! reset std::vectors
+      /*! sets the std::vector attributes to size 0*/
       void reset();
 
       //! Compute chemical descriptors
-      /*! Calculates all descriptors from partial charge vectors and stores the data in the class attributes.*/
+      /*! Calculates all descriptors from partial charge std::vectors and stores the data in the class attributes.*/
       /*! Q0 no charge change*/
       /*! Qm electron added*/
       /*! Qp electron removed*/
@@ -173,7 +174,7 @@ class Descriptors
       /*! Aimmethod = 0: On grid method*/
       /*! Aimmethod = 1: Near grid method, no refinement*/
       /*! Aimmethod = 2: Near grid method, with refinement*/
-      void compute_All_From_Cube(ifstream& file0, ifstream& fileM, ifstream& fileP, double I, double A, PartitionMethod partitionMethod);
+      void compute_All_From_Cube(std::ifstream& file0, std::ifstream& fileM, std::ifstream& fileP, double I, double A, PartitionMethod partitionMethod);
 
       //! Compute chemical descriptors
       /*! Compute all descriptors given fukui and chemical potential*/
@@ -189,23 +190,23 @@ class Descriptors
 
       //! Compute charges
       /*! Compute and return partial charges given a grid and an integration method*/
-      vector<double> compute_Charges_From_Grid(const Grid& AIM, PartitionMethod partitionMethod);
+      std::vector<double> compute_Charges_From_Grid(const Grid& AIM, PartitionMethod partitionMethod);
 
       //! Compute charges
       /*! Compute and return partial charges given a cube file and an integration method*/
-      vector<double> compute_Charges_From_File(ifstream& file, PartitionMethod partitionMethod);
+      std::vector<double> compute_Charges_From_File(std::ifstream& file, PartitionMethod partitionMethod);
 
       //! Compute all descriptors
-      /*! Calls compute charges to calculate all descriptors from cube files. Requires 3 cube files and a vector containing the energies of each cube files*/
-      void compute_All_From_Cube(ifstream& file1, ifstream& file2, ifstream& file3, vector<double> E, PartitionMethod partitionMethod);
+      /*! Calls compute charges to calculate all descriptors from cube files. Requires 3 cube files and a std::vector containing the energies of each cube files*/
+      void compute_All_From_Cube(std::ifstream& file1, std::ifstream& file2, std::ifstream& file3, std::vector<double> E, PartitionMethod partitionMethod);
       
       //! Compute charges
       /*! Creates a Becke grid from a cube grid and computes Becke charges*/
-      vector<double> compute_Charges_From_Becke(const Grid& grid);
+      std::vector<double> compute_Charges_From_Becke(const Grid& grid);
 
       //! Compute all
-      /*! compute all descriptors from 3 vectors of partial charges. Sorts the vector by total charge*/
-      void compute_All_From_Charges(const Structure& S, vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E);
+      /*! compute all descriptors from 3 std::vectors of partial charges. Sorts the std::vector by total charge*/
+      void compute_All_From_Charges(const Structure& S, std::vector<double> Q1, std::vector<double> Q2, std::vector<double> Q3, std::vector<double> E);
 
       
 
@@ -213,7 +214,7 @@ class Descriptors
 
       //! print
       /*! overload of flux operator. Prints out the data in a table*/
-      friend ostream& operator<<(ostream& flux, const Descriptors&);
+      friend std::ostream& operator<<(std::ostream& flux, const Descriptors&);
 
       //! Constructor
       /*! Build an object from WFX file*/
@@ -237,11 +238,11 @@ class Descriptors
 
       //! fukui
       /*! Sets the values of the descriptors functions*/
-      void set_mu_fk_data(vector<vector<double>> f, double eH, double eL);
+      void set_mu_fk_data(std::vector<std::vector<double>> f, double eH, double eL);
 
       //! fukui
       /*! Sets the values of the descriptors functions*/
-      void set_mu_fk_data(vector<vector<double>> data);
+      void set_mu_fk_data(std::vector<std::vector<double>> data);
 };
 
 #endif

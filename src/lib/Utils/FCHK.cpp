@@ -1,5 +1,7 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <sstream>
 
 #include <Utils/FCHK.h>
@@ -75,9 +77,12 @@ int FCHK::read_one_int(std::ifstream& f, string b)
 
     if(pos==-1)
     {
-        std::cout<<b+" : data not found"<<std::endl;
-        std::cout<<"Data required, please check your file"<<std::endl;
-        exit(1);
+        std::stringstream errorMessage;
+        errorMessage << "Error in FCHK::read_one_int(): " << b << " : data not found." << std::endl;
+        errorMessage << "Data required, please check your file.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
     }
 
     f.seekg(pos);
@@ -102,9 +107,12 @@ double FCHK::read_one_real(std::ifstream& f, string b)
 
     if(pos==-1)
     {
-        std::cout<<b+" : data not found"<<std::endl;
-        std::cout<<"Data required, please check your file"<<std::endl;
-        exit(1);
+        std::stringstream errorMessage;
+        errorMessage << "Error in FCHK::read_one_real(): " << b << " : data not found." << std::endl;
+        errorMessage << "Data required, please check your file.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
     }
 
     f.seekg(pos);
@@ -130,9 +138,12 @@ vector<int> FCHK::read_one_block_int(std::ifstream& f, string b)
 
     if(pos==-1)
     {
-        std::cout<<b+" : data not found"<<std::endl;
-        std::cout<<"Data required, please check your file"<<std::endl;
-        exit(1);
+        std::stringstream errorMessage;
+        errorMessage << "Error in FCHK::read_one_block_int(): " << b << " : data not found." << std::endl;
+        errorMessage << "Data required, please check your file.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
     }
 
     f.seekg(pos);
@@ -172,8 +183,12 @@ vector<double> FCHK::read_one_block_real(std::ifstream& f, string b)
             return vector<double> ();
         else
         {
-            std::cout << b + " : data not found, but required. Please check your file." << std::endl;
-            exit(1);
+            std::stringstream errorMessage;
+            errorMessage << "Error in FCHK::read_one_block_real(): " << b << " : data not found." << std::endl;
+            errorMessage << "Data required, please check your file.";
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
     }
 
@@ -362,4 +377,56 @@ void FCHK::PrintData()
     std::cout<<"Number of contracted shells : "<<_number_of_contracted_shells<<std::endl;
     std::cout<<"Number of primitive shells : "<<_number_of_primitive_shells<<std::endl;
     std::cout<<"Highest angular momentum : "<<_highest_angular_momentum<<std::endl;
+}
+
+
+//----------------------------------------------------------------------------------------------------//
+// STATIC METHODS
+//----------------------------------------------------------------------------------------------------//
+
+bool FCHK::readGroundStateEnergy(const std::string& fchkFileName, double& groundStateEnergy)
+{
+    bool ok = true;
+    bool found = false;
+
+    std::ifstream logFile(fchkFileName);
+    if (logFile)
+    {
+        std::string line;
+        while (!logFile.eof() && !found)
+        {
+            std::getline(logFile, line);
+            line = trim_whitespaces(line, true, true);
+
+            if (line.empty())
+            {
+                continue;
+            }
+            else
+            {
+                std::regex energyRegex("SCF Energy\\s+R\\s+(-?\\d+(?:\\.\\d+)?(?:E(?:\\+|-)\\d+)?)");
+                std::smatch energyRegexMatch;
+                if (std::regex_search(line, energyRegexMatch, energyRegex))
+                {
+                    groundStateEnergy = std::stod(energyRegexMatch[1]);
+                    found = true;
+                }
+            }
+        }
+
+        if (!found)
+        {
+            print_error("Error: could not read energy from FCHK file.");
+            std::exit(1);
+        }
+
+        logFile.close();
+    }
+    else
+    {
+        print_error("Error: could not read file " + fchkFileName + ".");
+        std::exit(1);
+    }
+
+    return (ok && found);
 }

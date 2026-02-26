@@ -284,8 +284,9 @@ class Orbitals
          * @param[in] domain The domain of the grid.
          * @param[in] orbitalsNumbers The numbers of the orbitals to be included in the grid.
          * @param[in] orbitalsSpins The spins of the orbitals to be included in the grid.
+         * @param[in] showProgress If true, shows progress of the grid creation.
          */
-        Grid makeOrbGrid(const Domain& domain, const std::vector<int>& orbitalsNumbers, const std::vector<SpinType>& orbitalsSpins);
+        Grid makeOrbGrid(const Domain& domain, const std::vector<int>& orbitalsNumbers, const std::vector<SpinType>& orbitalsSpins, bool showProgress = false);
 
             //! Electronic density
             /*! Calculates and returns the electronic density from molecular orbitals */

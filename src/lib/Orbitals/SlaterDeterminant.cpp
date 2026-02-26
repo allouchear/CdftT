@@ -1,11 +1,12 @@
 #include <algorithm>
 #include <cstdlib>
+#include <iostream>
+#include <utility>
 #include <vector>
 
 #include <Orbitals/Orbitals.h>
 #include <Orbitals/SlaterDeterminant.hpp>
-
-#include <iostream>
+#include <Utils/Enums.hpp>
 
 //----------------------------------------------------------------------------------------------------//
 // STATIC FIELDS
@@ -106,7 +107,7 @@ void SlaterDeterminant::updateFromTransition(int initialOrbitalNumber, SpinType 
         errorMessage << "For transition from " << initialOrbitalNumber << " " << to_char(initialSpin) << " to " << finalOrbitalNumber << " " << to_char(finalSpin) << '.' << std::endl;
         print_error(errorMessage.str());
 
-        exit(1);
+        std::exit(1);
     }
 }
 
@@ -132,7 +133,7 @@ std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(
         errorMessage << "Error in SlaterDeterminant::getDifferences(): Slater determinants have different numbers of occupied orbitals." << std::endl;
         print_error(errorMessage.str());
 
-        exit(1);
+        std::exit(1);
     }
 
     // Check for differences in occupied orbitals for each spin type

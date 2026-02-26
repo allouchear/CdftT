@@ -6,6 +6,7 @@
 
 #include <Common/Atom.h>
 #include <Common/Constants.h>
+#include <Common/Structure.h>
 #include <Cube/Domain.h>
 
 
@@ -31,7 +32,7 @@ Domain::Domain() :
     _dv(0)
 { }
 
-Domain::Domain(ifstream& nameFile) :
+Domain::Domain(std::ifstream& nameFile) :
     _Nval(1),
     _N1(0),
     _N2(0),
@@ -204,7 +205,7 @@ void Domain::set_Tij(double value, int i, int j)
     _T[i][j] = value;
 }
 
-void Domain::set_all(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax, const array<array<double, 3>, 3>& T)
+void Domain::set_all(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax, const std::array<std::array<double, 3>, 3>& T)
 {
     _Nval = Nval;
 
@@ -254,7 +255,7 @@ int Domain::k(double x, double y, double z) const
     return floor((x - _origin[0]) * _inv_T[2][0] + (y - _origin[1]) * _inv_T[2][1] + (z - _origin[2]) * _inv_T[2][2]);
 }
 
-void Domain::readFromCube(ifstream& nameFile)
+void Domain::readFromCube(std::ifstream& nameFile)
 {
     std::string s;
     getline(nameFile,s);

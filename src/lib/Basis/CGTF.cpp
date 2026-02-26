@@ -1,5 +1,6 @@
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -50,7 +51,7 @@ void CGTF::normaliseCGTF()
 
     for(n=0 ; n<_numberOfFunctions ; n++)
         _gtf[n].normaliseRadialGTF();
-
+    
     for(n=0 ; n<_numberOfFunctions ; n++)
         sum += _coefficients[n]*_coefficients[n]* _gtf[n].overlapGTF(_gtf[n]);
 
@@ -67,7 +68,8 @@ void CGTF::normaliseCGTF()
     else
     {
         print_error("A Contracted Gaussian Type Function is null.");
-        exit(1);
+
+        std::exit(1);
     }
 }
 

@@ -1,7 +1,8 @@
-using namespace std;
-
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
+#include <string>
+#include <vector>
 
 #include <Common/Constants.h>
 #include <Common/PeriodicTable.h>
@@ -12,6 +13,7 @@ using namespace std;
 #ifdef ENABLE_OMP
 #include <omp.h>
 #endif
+
 
 /* Point with a volume number :
  * i>0 : point of volume # i
@@ -54,11 +56,11 @@ CriticalPoint  GridCP::newCriticalPoint(int i, int j, int k, int numV)
 /**************************************************************************/
 void GridCP::reset()
 {
-    _volumeNumberOfPoints = vector< vector< vector<int>> > ();
-    _known = vector< vector<vector<int>>  > ();
+    _volumeNumberOfPoints = std::vector< std::vector< std::vector<int>> > ();
+    _known = std::vector< std::vector<std::vector<int>>  > ();
     _integral = 0;
     _nuclearCharge = 0;
-    _criticalPoints=vector< CriticalPoint > ();
+    _criticalPoints=std::vector< CriticalPoint > ();
     _domain = Domain();
     _str = Structure();
 }
@@ -68,11 +70,11 @@ GridCP::GridCP()
     reset();
 }
 /**************************************************************************/
-vector< vector < vector<int>> > GridCP::get3DIntVector()
+std::vector< std::vector < std::vector<int>> > GridCP::get3DIntVector()
 {
-    vector<int> V(_domain.get_N3(),0);
-    vector<vector<int>> M(_domain.get_N2(), V);
-    vector<vector<vector<int>>> V3D(_domain.get_N1(), M);
+    std::vector<int> V(_domain.get_N3(),0);
+    std::vector<std::vector<int>> M(_domain.get_N2(), V);
+    std::vector<std::vector<std::vector<int>>> V3D(_domain.get_N1(), M);
     return V3D;
 }
 /**************************************************************************/
@@ -96,9 +98,9 @@ void GridCP::initGridCP(const Grid& grid, bool ongrid)
     int nval = _V[0][0][0].size();
     if (nval<4 && !ongrid)
     {
-        cout<<"begin grad"<<endl;
+        std::cout<<"begin grad"<<std::endl;
         Grid g= grid.gradient(1);
-        cout<<"end grad"<<endl;
+        std::cout<<"end grad"<<std::endl;
         _V = g.get_values();
         _domain = g.get_domain();
         _str = g.get_structure();
@@ -139,9 +141,9 @@ bool GridCP::isVolumeEdge(int current[])
     int j = current[1];
     int k = current[2];
     // Initialize indices for neighboring points
-    int I[3] = { max(0, i-1), i, min(i+1, _domain.get_N1()-1) };
-    int J[3] = { max(0, j-1), j, min(j+1, _domain.get_N2()-1) };
-    int K[3] = { max(0, k-1), k, min(k+1, _domain.get_N3()-1) };
+    int I[3] = { std::max(0, i-1), i, std::min(i+1, _domain.get_N1()-1) };
+    int J[3] = { std::max(0, j-1), j, std::min(j+1, _domain.get_N2()-1) };
+    int K[3] = { std::max(0, k-1), k, std::min(k+1, _domain.get_N3()-1) };
 
     for(size_t ic=0;ic<3;ic++)
     for(size_t jc=0;jc<3;jc++)
@@ -160,9 +162,9 @@ int GridCP::setArroundTo(int current[], int kn)
     int j = current[1];
     int k = current[2];
     // Initialize indices for neighboring points
-    int I[3] = { max(0, i-1), i, min(i+1, _domain.get_N1()-1) };
-    int J[3] = { max(0, j-1), j, min(j+1, _domain.get_N2()-1) };
-    int K[3] = { max(0, k-1), k, min(k+1, _domain.get_N3()-1) };
+    int I[3] = { std::max(0, i-1), i, std::min(i+1, _domain.get_N1()-1) };
+    int J[3] = { std::max(0, j-1), j, std::min(j+1, _domain.get_N2()-1) };
+    int K[3] = { std::max(0, k-1), k, std::min(k+1, _domain.get_N3()-1) };
     int n = 0;
 
 
@@ -187,9 +189,9 @@ bool GridCP::isMax(int current[])
     int j = current[1];
     int k = current[2];
     // Initialize indices for neighboring points
-    int I[3] = { max(0, i-1), i, min(i+1, _domain.get_N1()-1) };
-    int J[3] = { max(0, j-1), j, min(j+1, _domain.get_N2()-1) };
-    int K[3] = { max(0, k-1), k, min(k+1, _domain.get_N3()-1) };
+    int I[3] = { std::max(0, i-1), i, std::min(i+1, _domain.get_N1()-1) };
+    int J[3] = { std::max(0, j-1), j, std::min(j+1, _domain.get_N2()-1) };
+    int K[3] = { std::max(0, k-1), k, std::min(k+1, _domain.get_N3()-1) };
 
 
     for(size_t ic=0;ic<3;ic++)
@@ -207,9 +209,9 @@ bool GridCP::nextPointOnGrid(int current[], int next[])
     int j = current[1];
     int k = current[2];
     // Initialize indices for neighboring points
-    int I[3] = { max(0, i-1), i, min(i+1, _domain.get_N1()-1) };
-    int J[3] = { max(0, j-1), j, min(j+1, _domain.get_N2()-1) };
-    int K[3] = { max(0, k-1), k, min(k+1, _domain.get_N3()-1) };
+    int I[3] = { std::max(0, i-1), i, std::min(i+1, _domain.get_N1()-1) };
+    int J[3] = { std::max(0, j-1), j, std::min(j+1, _domain.get_N2()-1) };
+    int K[3] = { std::max(0, k-1), k, std::min(k+1, _domain.get_N3()-1) };
 
     double dx;
     double dy;
@@ -312,15 +314,15 @@ bool GridCP::nextPoint(double deltaR[], int current[], int next[])
     return true;
 }
 /**************************************************************************/
-bool GridCP::addSurroundingEqualPoints(int current[], vector<vector<int>>& listOfVisitedPoints)
+bool GridCP::addSurroundingEqualPoints(int current[], std::vector<std::vector<int>>& listOfVisitedPoints)
 {
     int i = current[0];
     int j = current[1];
     int k = current[2];
     // Initialize indices for neighboring points
-    int I[3] = { max(0, i-1), i, min(i+1, _domain.get_N1()-1) };
-    int J[3] = { max(0, j-1), j, min(j+1, _domain.get_N2()-1) };
-    int K[3] = { max(0, k-1), k, min(k+1, _domain.get_N3()-1) };
+    int I[3] = { std::max(0, i-1), i, std::min(i+1, _domain.get_N1()-1) };
+    int J[3] = { std::max(0, j-1), j, std::min(j+1, _domain.get_N2()-1) };
+    int K[3] = { std::max(0, k-1), k, std::min(k+1, _domain.get_N3()-1) };
 
     double rho0 = 0;
     double dRho = 0;
@@ -336,7 +338,7 @@ bool GridCP::addSurroundingEqualPoints(int current[], vector<vector<int>>& listO
         dRho =_V[I[ic]][J[jc]][K[kc]][0]-rho0;
         if (fabs(dRho)<TOL)
         {
-            vector<int>  data = { I[ic], J[jc], K[kc]};
+            std::vector<int>  data = { I[ic], J[jc], K[kc]};
             listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
             _known[I[ic]][J[jc]][K[kc]] = 1;
         }
@@ -344,12 +346,12 @@ bool GridCP::addSurroundingEqualPoints(int current[], vector<vector<int>>& listO
     return true;
 }
 /**************************************************************************/
-vector<vector<int>> GridCP::assentTrajectory(int current[], bool ongrid, bool refine)
+std::vector<std::vector<int>> GridCP::assentTrajectory(int current[], bool ongrid, bool refine)
 {
-    vector<vector<int>> listOfVisitedPoints;
+    std::vector<std::vector<int>> listOfVisitedPoints;
     if (!okDomain()) return listOfVisitedPoints;
 
-    vector<int>  data = { current[0], current[1], current[2]};
+    std::vector<int>  data = { current[0], current[1], current[2]};
     listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
 
     size_t imax = _domain.get_N1()* _domain.get_N2()* _domain.get_N3();
@@ -362,7 +364,7 @@ vector<vector<int>> GridCP::assentTrajectory(int current[], bool ongrid, bool re
             nextPointOnGrid(current, next);
         else
             nextPoint(deltaR, current, next);
-        vector<int>  data = { next[0], next[1], next[2]};
+        std::vector<int>  data = { next[0], next[1], next[2]};
         listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
 
         if ((next[0] == current[0] && next[1] == current[1] && next[2] == current[2])
@@ -459,7 +461,7 @@ void GridCP::computeVolCenters()
 /**************************************************************************/
 void GridCP::removeBasins0()
 {
-    vector< CriticalPoint > newCriticalPoints;
+    std::vector< CriticalPoint > newCriticalPoints;
     for(size_t ip=0;ip<_criticalPoints.size();ip++)
     {
         CriticalPoint  cp = _criticalPoints[ip];
@@ -482,17 +484,17 @@ void GridCP::removeNonSignificantBasins()
     if (nCP==nAtoms) return;
     if (nCP<nAtoms)
     {
-        cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-        cout<<"WARNING : Number of attractors < number of atoms    "<<endl;
-        cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+        std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
+        std::cout<<"WARNING : Number of attractors < number of atoms    "<<std::endl;
+        std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
         return;
     }
-    cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-    cout<<"WARNING : Number of attractors > number of atoms    "<<endl;
-    cout<<"        : We will remove "<<nCP-nAtoms<<" attractor(s)"<<endl;
-    cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+    std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
+    std::cout<<"WARNING : Number of attractors > number of atoms    "<<std::endl;
+    std::cout<<"        : We will remove "<<nCP-nAtoms<<" attractor(s)"<<std::endl;
+    std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
 
-    vector< double > nPoints(_criticalPoints.size(),0);
+    std::vector< double > nPoints(_criticalPoints.size(),0);
     for(size_t ip=0;ip<_criticalPoints.size();ip++)
     {
 
@@ -527,7 +529,7 @@ int GridCP::refineEdgeNearGrad()
     if (!okDomain()) return 0;
     size_t N[3] ={ size_t(_domain.get_N1()), size_t(_domain.get_N2()), size_t(_domain.get_N3())};
 
-    string str ="Refining grid points adjacent to Bader surface... Please wait";
+    std::string str ="Refining grid points adjacent to Bader surface... Please wait";
     int current[3];
     int ne = 0;
 
@@ -570,21 +572,21 @@ int GridCP::refineEdgeNearGrad()
     }
 
     //double scal = 1.0/(N[0]-1);
-    cout<<str<<endl;
+    std::cout<<str<<std::endl;
 #ifdef ENABLE_OMP
 #pragma omp parallel for
 #endif
     for(size_t i=0;i<N[0];i++)
     {
 
-        //cout<<setw(10)<<fixed<<setprecision(5)<<i*scal*100<<"%";
-        //cout<<" ; Number of critical points = "<<_criticalPoints.size()<<endl;
+        //std::cout<<std::setw(10)<<std::fixed<<std::setprecision(5)<<i*scal*100<<"%";
+        //std::cout<<" ; Number of critical points = "<<_criticalPoints.size()<<std::endl;
         for(size_t j=0;j<N[1];j++)
         {
             for(size_t k=0;k<N[2];k++)
             {
                 int current[3];
-                vector<vector<int>> listOfVisitedPoints;
+                std::vector<std::vector<int>> listOfVisitedPoints;
                 current[0] = i;
                 current[1] = j;
                 current[2] = k;
@@ -608,7 +610,7 @@ int GridCP::refineEdgeNearGrad()
 void GridCP::assignPointsByGradient(bool ongrid)
 {
     double scal;
-    string str ="Assigning points to volumes... Please wait";
+    std::string str ="Assigning points to volumes... Please wait";
 
     if (!okDomain()) return;
 
@@ -619,7 +621,7 @@ void GridCP::assignPointsByGradient(bool ongrid)
     int numberOfCriticalPoints = 0;
 
     scal = 1.0/(_domain.get_N1()-1);
-    cout<<str<<endl;
+    std::cout<<str<<std::endl;
 #ifdef ENABLE_OMP
 #pragma omp parallel for
 #endif
@@ -631,13 +633,13 @@ void GridCP::assignPointsByGradient(bool ongrid)
 #pragma omp critical
 #endif
 #endif
-        cout<<setw(10)<<fixed<<setprecision(5)<<i*scal*100<<"%";
-        cout<<" ; Number of critical points = "<<_criticalPoints.size()<<endl;
+        std::cout<<std::setw(10)<<std::fixed<<std::setprecision(5)<<i*scal*100<<"%";
+        std::cout<<" ; Number of critical points = "<<_criticalPoints.size()<<std::endl;
         for(int j=0;j<_domain.get_N2();j++)
         {
             for(int k=0;k<_domain.get_N3();k++)
             {
-                vector<vector<int>> listOfVisitedPoints;
+                std::vector<std::vector<int>> listOfVisitedPoints;
                 current[0] = i;
                 current[1] = j;
                 current[2] = k;
@@ -659,7 +661,7 @@ void GridCP::assignPointsByGradient(bool ongrid)
                 else
                 {
                     numberOfCriticalPoints++;
-                    vector<int> data;
+                    std::vector<int> data;
                     int icp = numberOfCriticalPoints;
                     for(size_t ip=0;ip<listOfVisitedPoints.size();ip++)
                         _volumeNumberOfPoints[listOfVisitedPoints[ip][0]] [listOfVisitedPoints[ip][1]] [listOfVisitedPoints[ip][2]] = icp;
@@ -697,7 +699,7 @@ void GridCP::buildBasins(const Grid& grid, PartitionMethod partitionMethod)
         int nold = refineEdgeNearGrad();
         int n = refineEdgeNearGrad();
         int iter = 0;
-        //cout<<"n-nold="<<abs(n-nold)<<" => N max="<<N<<endl;
+        //std::cout<<"n-nold="<<abs(n-nold)<<" => N max="<<N<<std::endl;
         while(abs(n - nold) > N)
         {
             iter++;
@@ -708,7 +710,7 @@ void GridCP::buildBasins(const Grid& grid, PartitionMethod partitionMethod)
 
             nold = n;
             n = refineEdgeNearGrad();
-            //cout<<"n-nold="<<abs(n-nold)<<" => N max="<<N<<endl;
+            //std::cout<<"n-nold="<<abs(n-nold)<<" => N max="<<N<<std::endl;
         }
     }
 
@@ -717,27 +719,27 @@ void GridCP::buildBasins(const Grid& grid, PartitionMethod partitionMethod)
         || partitionMethod == PartitionMethod::AIM_NEAR_GRID_REFINEMENT) 
     {
         resetKnown();
-        //cout<<"Begin computeNumCenters"<<endl;
+        //std::cout<<"Begin computeNumCenters"<<std::endl;
         computeNumCenters();
-        //cout<<"End computeNumCenters"<<endl;
+        //std::cout<<"End computeNumCenters"<<std::endl;
         computeVolumes();
-        //cout<<"End computeVolumes"<<endl;
+        //std::cout<<"End computeVolumes"<<std::endl;
         removeBasins0();
-        //cout<<"End removeBasins0"<<endl;
+        //std::cout<<"End removeBasins0"<<std::endl;
         removeNonSignificantBasins();
         computeVolCenters();
-        //cout<<"End removeNonSignificantBasins"<<endl;
+        //std::cout<<"End removeNonSignificantBasins"<<std::endl;
         
         int nt=0;
         for(size_t ip = 0; ip < _criticalPoints.size(); ++ip)
         {
             int i = int(_criticalPoints[ip].volume / _domain.get_dv());
             nt += i;
-            cout << "Point n " << ip << " nPoints=" << i << endl;
+            std::cout << "Point n " << ip << " nPoints=" << i << std::endl;
         }
 
-        cout << "ntot=" << nt << endl;
-        cout << "N1*N2*n3=" << _domain.get_N1() * _domain.get_N2() * _domain.get_N3() << endl;
+        std::cout << "ntot=" << nt << std::endl;
+        std::cout << "N1*N2*n3=" << _domain.get_N1() * _domain.get_N2() * _domain.get_N3() << std::endl;
     }
 
     if (partitionMethod == PartitionMethod::VDD)
@@ -749,7 +751,7 @@ void GridCP::buildBasins(const Grid& grid, PartitionMethod partitionMethod)
 /**************************************************************************/
 void GridCP::printCriticalPoints()
 {
-    cout<<"Number of critical points = "<<_criticalPoints.size()<<endl;
+    std::cout<<"Number of critical points = "<<_criticalPoints.size()<<std::endl;
     for(size_t ip=0;ip<_criticalPoints.size();ip++)
     {
         CriticalPoint cp = _criticalPoints[ip];
@@ -759,9 +761,9 @@ void GridCP::printCriticalPoints()
         int I = cp.volCenter[0];
         int J = cp.volCenter[1];
         int K = cp.volCenter[2];
-        cout<<" Index = "<<left<<setw(10)<<i<<", "<<setw(10)<<j<<", "<<setw(10)<<k
-        <<" value = "<<setw(15)<<cp.value<<" Z="<< setw(15)<<cp.nuclearCharge
-        <<" Integral = "<<setw(15)<< cp.integral<<", "<<right<<"  Volume center = "<<left<<setw(10)<<I<<", "<<setw(10)<<J<<", "<<setw(10)<<K<<"; "<<" x = "<<setw(10)<<_domain.x(I,J,K)<<", "<<" y= "<<setw(10)<<_domain.y(I,J,K)<<", "<<" z = "<<setw(10)<<_domain.z(I,J,K)<<endl;
+        std::cout<<" Index = "<<std::left<<std::setw(10)<<i<<", "<<std::setw(10)<<j<<", "<<std::setw(10)<<k
+        <<" value = "<<std::setw(15)<<cp.value<<" Z="<< std::setw(15)<<cp.nuclearCharge
+        <<" Integral = "<<std::setw(15)<< cp.integral<<", "<<std::right<<"  Volume center = "<<std::left<<std::setw(10)<<I<<", "<<std::setw(10)<<J<<", "<<std::setw(10)<<K<<"; "<<" x = "<<std::setw(10)<<_domain.x(I,J,K)<<", "<<" y= "<<std::setw(10)<<_domain.y(I,J,K)<<", "<<" z = "<<std::setw(10)<<_domain.z(I,J,K)<<std::endl;
     }
 }
 /**************************************************************************/
@@ -784,13 +786,13 @@ void GridCP::computeIntegrals(const Grid& grid)
     }
 }
 /**************************************************************************/
-vector<double> GridCP::computeAIMCharges(const Grid& grid)
+std::vector<double> GridCP::computeAIMCharges(const Grid& grid)
 {
     computeIntegrals(grid);
-    cout<<"Partial charges (Pos in Angstrom) "<<endl;
+    std::cout<<"Partial charges (Pos in Angstrom) "<<std::endl;
     double r[3];
     double totalCharge = 0;
-    vector<double> PartCharges(_criticalPoints.size());
+    std::vector<double> PartCharges(_criticalPoints.size());
     for(size_t ip=0;ip<_criticalPoints.size();ip++)
     {
         CriticalPoint cp = _criticalPoints[ip];
@@ -805,17 +807,17 @@ vector<double> GridCP::computeAIMCharges(const Grid& grid)
         for(int c=0; c<3;c++)
             r[c] = _str.atom(ia).get_coordinates()[c] * Constants::BOHR_RADIUS_TO_ANGSTROM;
 
-        cout<<" Center = "<<fixed<<setprecision(6)<<right<<setw(10)<<x<<", "<<setw(10)<<y<<", "<<setw(10)<<z;
-        cout<<left<<" Atom = "<<right<<setw(10)<<r[0]<<", "<<setw(10)<<r[1]<<", "<<setw(10)<<r[2]<<", "<< setw(10)<<cp.nuclearCharge;
-        cout<<left<<" Integral = "<<setw(10)<<cp.integral;
-        cout<<left<<" Charge = "<<fixed<<setprecision(10)<< setw(15)<<PartCharge <<endl;
+        std::cout<<" Center = "<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(10)<<x<<", "<<std::setw(10)<<y<<", "<<std::setw(10)<<z;
+        std::cout<<std::left<<" Atom = "<<std::right<<std::setw(10)<<r[0]<<", "<<std::setw(10)<<r[1]<<", "<<std::setw(10)<<r[2]<<", "<< std::setw(10)<<cp.nuclearCharge;
+        std::cout<<std::left<<" Integral = "<<std::setw(10)<<cp.integral;
+        std::cout<<std::left<<" Charge = "<<std::fixed<<std::setprecision(10)<< std::setw(15)<<PartCharge <<std::endl;
         PartCharges[ia]=PartCharge;
         totalCharge +=  PartCharge;
     }
-    cout<<"Total charge = "<<totalCharge<<endl;
+    std::cout<<"Total charge = "<<totalCharge<<std::endl;
     for(size_t ia=0;ia<PartCharges.size();ia++)
     {
-        cout<<"ia "<<ia<<" Q "<<PartCharges[ia]<<endl;
+        std::cout<<"ia "<<ia<<" Q "<<PartCharges[ia]<<std::endl;
     }
     return PartCharges;
     
@@ -832,7 +834,7 @@ void GridCP::buildVDD()
 {
     PeriodicTable pTable;
     double scal;
-    string str ="Assigning points to volumes... Please wait";
+    std::string str ="Assigning points to volumes... Please wait";
     int N[3]={_domain.get_N1(),_domain.get_N2(), _domain.get_N3()};
 
     if (!okDomain()) return;
@@ -841,16 +843,16 @@ void GridCP::buildVDD()
         _criticalPoints.clear();
 
     int nAtoms=_str.number_of_atoms();
-    //cout<<"nAtoms="<<nAtoms<<endl;
+    //std::cout<<"nAtoms="<<nAtoms<<std::endl;
     for(int ia=0;ia<nAtoms;ia++)
     {
             CriticalPoint  cp = newCriticalPoint(0,0,0,ia+1);
             cp.value= 0;
             _criticalPoints.push_back(cp);
     }
-    vector< double > V(3,0);
-    vector< vector<double> > coordinates(nAtoms,V);
-    vector< double > rcov2(nAtoms,0);
+    std::vector< double > V(3,0);
+    std::vector< std::vector<double> > coordinates(nAtoms,V);
+    std::vector< double > rcov2(nAtoms,0);
     for(int ia=0;ia<nAtoms;ia++)
     {
             //double rcov =   _str.atom(ia).element().covalent_radii();
@@ -860,16 +862,16 @@ void GridCP::buildVDD()
             for(int c=0;c<3;c++)
                 coordinates[ia][c] = _str.atom(ia).get_coordinates()[c];
     }
-    vector< double > r2minAtom(nAtoms,-1);
+    std::vector< double > r2minAtom(nAtoms,-1);
 
     scal = 1.0/(_domain.get_N1()-1);
-    cout<<str<<endl;
+    std::cout<<str<<std::endl;
 #ifdef ENABLE_OMP
 #pragma omp parallel for
 #endif
     for(int i=0;i<N[0];i++)
     {
-        cout<<setw(10)<<fixed<<setprecision(5)<<i*scal*100<<"%"<<endl;
+        std::cout<<std::setw(10)<<std::fixed<<std::setprecision(5)<<i*scal*100<<"%"<<std::endl;
         for(int j=0;j<N[1];j++)
         {
             for(int k=0;k<N[2];k++)
@@ -914,21 +916,21 @@ void GridCP::buildVDD()
     {
         int i=int(_criticalPoints[ip].volume/_domain.get_dv());
         nt+=i;
-        cout<<"Point n "<<ip<<" nPoints="<<i<<endl;
+        std::cout<<"Point n "<<ip<<" nPoints="<<i<<std::endl;
     }
-    cout<<"ntot="<<nt<<endl;
-    cout<<"N1*N2*n3="<<_domain.get_N1()*_domain.get_N2()*_domain.get_N3()<<endl;
+    std::cout<<"ntot="<<nt<<std::endl;
+    std::cout<<"N1*N2*n3="<<_domain.get_N1()*_domain.get_N2()*_domain.get_N3()<<std::endl;
 }
 /**************************************************************************/
-bool GridCP::addSurroundingSignPoints(int current[], vector<vector<int>>& listOfVisitedPoints, double cutoff)
+bool GridCP::addSurroundingSignPoints(int current[], std::vector<std::vector<int>>& listOfVisitedPoints, double cutoff)
 {
     int i = current[0];
     int j = current[1];
     int k = current[2];
     // Initialize indices for neighboring points
-    int I[3] = { max(0, i-1), i, min(i+1, _domain.get_N1()-1) };
-    int J[3] = { max(0, j-1), j, min(j+1, _domain.get_N2()-1) };
-    int K[3] = { max(0, k-1), k, min(k+1, _domain.get_N3()-1) };
+    int I[3] = { std::max(0, i-1), i, std::min(i+1, _domain.get_N1()-1) };
+    int J[3] = { std::max(0, j-1), j, std::min(j+1, _domain.get_N2()-1) };
+    int K[3] = { std::max(0, k-1), k, std::min(k+1, _domain.get_N3()-1) };
 
     if (!okDomain()) return false;
 
@@ -944,7 +946,7 @@ bool GridCP::addSurroundingSignPoints(int current[], vector<vector<int>>& listOf
         //if (abs(v)<TOL) continue;
         if (abs(v)>cutoff && v*v0>0)
         {
-            vector<int>  data = { I[ic], J[jc], K[kc]};
+            std::vector<int>  data = { I[ic], J[jc], K[kc]};
             listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
             _known[I[ic]][J[jc]][K[kc]] = 1;
         }
@@ -958,7 +960,7 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
     if (abs(cutoff)<TOL) cutoff=TOL;
     cutoff=abs(cutoff);
     //double scal;
-    string str ="Assigning points to volumes... Please wait";
+    std::string str ="Assigning points to volumes... Please wait";
 
     if (!okDomain()) return;
 
@@ -967,7 +969,7 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
 
     resetKnown();
     //scal = 1.0/(_domain.N1()-1);
-    cout<<str<<endl;
+    std::cout<<str<<std::endl;
     int numberOfCriticalPoints=0;
 #ifdef ENABLE_OMP
 #pragma omp parallel for
@@ -975,21 +977,21 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
     for(int i=0;i<_domain.get_N1();i++)
     {
         int current[3];
-        //cout<<setw(10)<<fixed<<setprecision(5)<<i*scal*100<<"%";
+        //std::cout<<std::setw(10)<<std::fixed<<std::setprecision(5)<<i*scal*100<<"%";
         for(int j=0;j<_domain.get_N2();j++)
         {
             for(int k=0;k<_domain.get_N3();k++)
             {
                 double v0 = _V[i][j][k][0];
                 if (abs(v0)<cutoff) continue;
-                vector<vector<int>> listOfVisitedPoints;
+                std::vector<std::vector<int>> listOfVisitedPoints;
                 current[0] = i;
                 current[1] = j;
                 current[2] = k;
-                vector<int>  data = { current[0], current[1], current[2]};
+                std::vector<int>  data = { current[0], current[1], current[2]};
                 listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
                 addSurroundingSignPoints(current, listOfVisitedPoints,cutoff);
-                //cout<<"Number of visited points ="<<listOfVisitedPoints.size()<<endl;
+                //std::cout<<"Number of visited points ="<<listOfVisitedPoints.size()<<std::endl;
                 if (_volumeNumberOfPoints [current[0]][current[1]][current[2]] != 0)
                 {
                     int icp = _volumeNumberOfPoints[current[0]][current[1]][current[2]];
@@ -1016,10 +1018,10 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
             {
                 double v0 = _V[i][j][k][0];
                 if (abs(v0)<cutoff) continue;
-                vector<vector<int>> listOfVisitedPoints;
-                int I[3] = { max(0, i-1), i, min(i+1, _domain.get_N1()-1) };
-                int J[3] = { max(0, j-1), j, min(j+1, _domain.get_N2()-1) };
-                int K[3] = { max(0, k-1), k, min(k+1, _domain.get_N3()-1) };
+                std::vector<std::vector<int>> listOfVisitedPoints;
+                int I[3] = { std::max(0, i-1), i, std::min(i+1, _domain.get_N1()-1) };
+                int J[3] = { std::max(0, j-1), j, std::min(j+1, _domain.get_N2()-1) };
+                int K[3] = { std::max(0, k-1), k, std::min(k+1, _domain.get_N3()-1) };
                 for(size_t ic=0;ic<3;ic++)
                 for(size_t jc=0;jc<3;jc++)
                 for(size_t kc=0;kc<3;kc++)
@@ -1028,7 +1030,7 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
                     double v =_V[I[ic]][J[jc]][K[kc]][0];
                     if (abs(v)>cutoff && v*v0>0 && _volumeNumberOfPoints[i][j][k] != _volumeNumberOfPoints[I[ic]][J[jc]][K[kc]])
                     {
-                        vector<int>  data = { I[ic], J[jc], K[kc]};
+                        std::vector<int>  data = { I[ic], J[jc], K[kc]};
                         listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
                     }
                 }
@@ -1040,7 +1042,7 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
                         _volumeNumberOfPoints[listOfVisitedPoints[ip][0]] [listOfVisitedPoints[ip][1]] [listOfVisitedPoints[ip][2]] = icp;
                 }
             }
-    cout<<"Number of changed points : ======>"<<n<<endl;
+    std::cout<<"Number of changed points : ======>"<<n<<std::endl;
     n=0;
     for(int k=0;k<_domain.get_N3();k++)
         for(int i=0;i<_domain.get_N1();i++)
@@ -1048,10 +1050,10 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
             {
                 double v0 = _V[i][j][k][0];
                 if (abs(v0)<cutoff) continue;
-                vector<vector<int>> listOfVisitedPoints;
-                int I[3] = { max(0, i-1), i, min(i+1, _domain.get_N1()-1) };
-                int J[3] = { max(0, j-1), j, min(j+1, _domain.get_N2()-1) };
-                int K[3] = { max(0, k-1), k, min(k+1, _domain.get_N3()-1) };
+                std::vector<std::vector<int>> listOfVisitedPoints;
+                int I[3] = { std::max(0, i-1), i, std::min(i+1, _domain.get_N1()-1) };
+                int J[3] = { std::max(0, j-1), j, std::min(j+1, _domain.get_N2()-1) };
+                int K[3] = { std::max(0, k-1), k, std::min(k+1, _domain.get_N3()-1) };
                 for(size_t ic=0;ic<3;ic++)
                 for(size_t jc=0;jc<3;jc++)
                 for(size_t kc=0;kc<3;kc++)
@@ -1060,20 +1062,20 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
                     double v =_V[I[ic]][J[jc]][K[kc]][0];
                     if (abs(v)>cutoff && v*v0>0 && _volumeNumberOfPoints[i][j][k] != _volumeNumberOfPoints[I[ic]][J[jc]][K[kc]])
                     {
-                        vector<int>  data = { I[ic], J[jc], K[kc]};
+                        std::vector<int>  data = { I[ic], J[jc], K[kc]};
                         listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
                     }
                 }
                 if (listOfVisitedPoints.size()>0) 
                 {
                     n+=listOfVisitedPoints.size();
-                    //cout<<"Number of visited points======>"<<listOfVisitedPoints.size()<<endl;
+                    //std::cout<<"Number of visited points======>"<<listOfVisitedPoints.size()<<std::endl;
                     int icp = _volumeNumberOfPoints[i][j][k];
                     for(size_t ip=0;ip<listOfVisitedPoints.size();ip++)
                         _volumeNumberOfPoints[listOfVisitedPoints[ip][0]] [listOfVisitedPoints[ip][1]] [listOfVisitedPoints[ip][2]] = icp;
                 }
             }
-    cout<<"Number of changed points : ======>"<<n<<endl;
+    std::cout<<"Number of changed points : ======>"<<n<<std::endl;
     n=0;
         for(int i=0;i<_domain.get_N1();i++)
             for(int j=0;j<_domain.get_N2();j++)
@@ -1081,10 +1083,10 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
             {
                 double v0 = _V[i][j][k][0];
                 if (abs(v0)<cutoff) continue;
-                vector<vector<int>> listOfVisitedPoints;
-                int I[3] = { max(0, i-1), i, min(i+1, _domain.get_N1()-1) };
-                int J[3] = { max(0, j-1), j, min(j+1, _domain.get_N2()-1) };
-                int K[3] = { max(0, k-1), k, min(k+1, _domain.get_N3()-1) };
+                std::vector<std::vector<int>> listOfVisitedPoints;
+                int I[3] = { std::max(0, i-1), i, std::min(i+1, _domain.get_N1()-1) };
+                int J[3] = { std::max(0, j-1), j, std::min(j+1, _domain.get_N2()-1) };
+                int K[3] = { std::max(0, k-1), k, std::min(k+1, _domain.get_N3()-1) };
                 for(size_t ic=0;ic<3;ic++)
                 for(size_t jc=0;jc<3;jc++)
                 for(size_t kc=0;kc<3;kc++)
@@ -1093,31 +1095,31 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
                     double v =_V[I[ic]][J[jc]][K[kc]][0];
                     if (abs(v)>cutoff && v*v0>0 && _volumeNumberOfPoints[i][j][k] != _volumeNumberOfPoints[I[ic]][J[jc]][K[kc]])
                     {
-                        vector<int>  data = { I[ic], J[jc], K[kc]};
+                        std::vector<int>  data = { I[ic], J[jc], K[kc]};
                         listOfVisitedPoints.insert (listOfVisitedPoints.begin(),data);
                     }
                 }
                 if (listOfVisitedPoints.size()>0) 
                 {
                     n+=listOfVisitedPoints.size();
-                    //cout<<"Number of visited points======>"<<listOfVisitedPoints.size()<<endl;
+                    //std::cout<<"Number of visited points======>"<<listOfVisitedPoints.size()<<std::endl;
                     int icp = _volumeNumberOfPoints[i][j][k];
                     for(size_t ip=0;ip<listOfVisitedPoints.size();ip++)
                         _volumeNumberOfPoints[listOfVisitedPoints[ip][0]] [listOfVisitedPoints[ip][1]] [listOfVisitedPoints[ip][2]] = icp;
                 }
             }
-    cout<<"Number of changed points : ======>"<<n<<endl;
+    std::cout<<"Number of changed points : ======>"<<n<<std::endl;
 
 
 
-    cout<<"build CP "<<endl;
+    std::cout<<"build CP "<<std::endl;
     for(int i=0;i<_domain.get_N1();i++)
         for(int j=0;j<_domain.get_N2();j++)
             for(int k=0;k<_domain.get_N3();k++)
             {
                 int icp=_volumeNumberOfPoints[i][j][k];
                 if (icp==0) continue;
-                //cout<<"CP size = "<<_criticalPoints.size()<<endl;
+                //std::cout<<"CP size = "<<_criticalPoints.size()<<std::endl;
                 if (_criticalPoints.size()==0)
                 {
                     CriticalPoint  cp = newCriticalPoint(i,j,k,icp);
@@ -1170,17 +1172,17 @@ void GridCP::buildBasinsBySign(const Grid& grid, double cutoff)
     {
         int i=int(_criticalPoints[ip].volume/_domain.get_dv());
         nt+=i;
-        cout<<"Point n "<<ip<<" nPoints="<<i<<endl;
+        std::cout<<"Point n "<<ip<<" nPoints="<<i<<std::endl;
     }
-    cout<<"ntot="<<nt<<endl;
-    cout<<"N1*N2*n3="<<_domain.get_N1()*_domain.get_N2()*_domain.get_N3()<<endl;
+    std::cout<<"ntot="<<nt<<std::endl;
+    std::cout<<"N1*N2*n3="<<_domain.get_N1()*_domain.get_N2()*_domain.get_N3()<<std::endl;
 }
 /**************************************************************************/
 void GridCP::build2BasinSign(const Grid& grid)
 {
     initGridCP(grid, 0);
     //double scal;
-    string str ="Assigning points to volumes... Please wait";
+    std::string str ="Assigning points to volumes... Please wait";
     int N[3]={_domain.get_N1(),_domain.get_N2(), _domain.get_N3()};
 
     if (!okDomain()) return;
@@ -1189,7 +1191,7 @@ void GridCP::build2BasinSign(const Grid& grid)
         _criticalPoints.clear();
 
     //int nAtoms=_str.number_of_atoms();
-    //cout<<"nAtoms="<<nAtoms<<endl;
+    //std::cout<<"nAtoms="<<nAtoms<<std::endl;
     CriticalPoint  cp;
     cp = newCriticalPoint(0,0,0,1);
     cp.value= 0;
@@ -1199,13 +1201,13 @@ void GridCP::build2BasinSign(const Grid& grid)
     _criticalPoints.push_back(cp);
 
     //scal = 1.0/(_domain.N1()-1);
-    cout<<str<<endl;
+    std::cout<<str<<std::endl;
 #ifdef ENABLE_OMP
 #pragma omp parallel for
 #endif
     for(int i=0;i<N[0];i++)
     {
-        //cout<<setw(10)<<fixed<<setprecision(5)<<i*scal*100<<"%"<<endl;
+        //std::cout<<std::setw(10)<<std::fixed<<std::setprecision(5)<<i*scal*100<<"%"<<std::endl;
         for(int j=0;j<N[1];j++)
         {
             for(int k=0;k<N[2];k++)
@@ -1235,8 +1237,8 @@ void GridCP::build2BasinSign(const Grid& grid)
     {
         int i=int(_criticalPoints[ip].volume/_domain.get_dv());
         nt+=i;
-        cout<<"Point n "<<ip<<" nPoints="<<i<<endl;
+        std::cout<<"Point n "<<ip<<" nPoints="<<i<<std::endl;
     }
-    cout<<"ntot="<<nt<<endl;
-    cout<<"N1*N2*n3="<<_domain.get_N1()*_domain.get_N2()*_domain.get_N3()<<endl;
+    std::cout<<"ntot="<<nt<<std::endl;
+    std::cout<<"N1*N2*n3="<<_domain.get_N1()*_domain.get_N2()*_domain.get_N3()<<std::endl;
 }

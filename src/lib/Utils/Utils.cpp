@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -141,6 +142,36 @@ void print_error(const std::string& errorMessage, std::ostream& outputStream)
     }
 }
 
+void print_progressBar(int currentStep, int totalSteps, int& lastProgress)
+{
+    int currentProgress = (currentStep * 100) / totalSteps;
+
+    if (currentProgress > lastProgress)
+    {
+        lastProgress = currentProgress;
+
+        std::cout << "\rProgress: [";
+
+        for (int p = 0; p < 100; ++p)
+        {
+            if (p < currentProgress)
+            {
+                std::cout << "=";
+            }
+            else if (p == currentProgress)
+            {
+                std::cout << ">";
+            }
+            else
+            {
+                std::cout << " ";
+            }
+        }
+
+        std::cout << "] " << currentProgress << "%" << std::flush;
+    }
+}
+
 
 //----------------------------------------------------------------------------------------------------//
 // FILE PARSING FUNCTIONS
@@ -183,7 +214,8 @@ bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string
             std::size_t pos = t2.find(TAG);
 
             // If tag not found, continue to next line
-            if (pos == std::string::npos)
+            // Or if tag found but not as a parameter name (i.e. not at the beginning of the line), continue to next line
+            if (pos == std::string::npos || pos != 0)
             {
                 continue;
             }
@@ -194,11 +226,13 @@ bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string
                 pos = t2.find("=");
                 value = t.substr(pos + 1);
             }
+            /*
             else // if no '=' is found, we assume a space separates tag and value
             {
                 pos = t2.find(" ");
                 value = t.substr(pos + 1);
             }
+            */
 
             if (value.length() > 0)
             {
@@ -462,7 +496,8 @@ void sortEigenValuesAndEigenVectors(std::vector<double>& eigenValues, std::vecto
     if (eigenVectors.size() != dimension)
     {
         print_error("Error in sortEigenValuesAndEigenVectors(): eigenVectors size does not match eigenValues size.");
-        exit(1);
+        
+        std::exit(1);
     }
 
     // Create a vector of indices
@@ -769,7 +804,7 @@ double F(int n, double t, Factorial& factorial)
             if (n + i >= MAXFACT)
             {
                 std::cout << "Divergence in F, Ionic integrals" << std::endl;
-                exit(1);
+                std::exit(1);
             }
 
             T *= et;
@@ -837,13 +872,15 @@ std::vector<double> getFTable(int nuMax, double t, bool debug)
     if (nuMax < 0)
     {
         print_error("Error in getFTable(int nuMax, double t): nuMax must be non-negative.");
-        exit(1);
+        
+        std::exit(1);
     }
 
     if (t < 0.0)
     {
         print_error("Error in getFTable(int nuMax, double t): t must be non-negative.");
-        exit(1);
+        
+        std::exit(1);
     }
 
     if (debug)

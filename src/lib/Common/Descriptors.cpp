@@ -1,47 +1,50 @@
+#include <cstdlib>
 #include <iomanip>
+#include <iostream>
+#include <vector>
+
 #include <Common/Descriptors.h>
 #include <Common/PeriodicTable.h>
 #include <Becke/Becke.h>
 
-using namespace std;
 
 void Descriptors::reset()
 {
     if (_str.number_of_atoms()<1 )
     {
-        _Q0 = vector<double>();
-        _Qm = vector<double>();
-        _Qp = vector<double>();
-        _fk0 = vector<double>();
-        _fkm = vector<double>();
-        _fkp = vector<double>();
-        _Deltafk = vector<double>();
-        _wkm = vector<double>();
-        _wkp = vector<double>();
-        _Skm = vector<double>();
-        _Skp = vector<double>();
-        _Skfrac = vector<double>();
-        _hardnessk = vector<double>();
-        _hardnesskm = vector<double>();
-        _hardnesskp = vector<double>();
+        _Q0 = std::vector<double>();
+        _Qm = std::vector<double>();
+        _Qp = std::vector<double>();
+        _fk0 = std::vector<double>();
+        _fkm = std::vector<double>();
+        _fkp = std::vector<double>();
+        _Deltafk = std::vector<double>();
+        _wkm = std::vector<double>();
+        _wkp = std::vector<double>();
+        _Skm = std::vector<double>();
+        _Skp = std::vector<double>();
+        _Skfrac = std::vector<double>();
+        _hardnessk = std::vector<double>();
+        _hardnesskm = std::vector<double>();
+        _hardnesskp = std::vector<double>();
     }
     else 
     {
-        _Q0 = vector<double>(_str.number_of_atoms());
-        _Qm = vector<double>(_str.number_of_atoms());
-        _Qp = vector<double>(_str.number_of_atoms());
-        _fk0 = vector<double>(_str.number_of_atoms());
-        _fkm = vector<double>(_str.number_of_atoms());
-        _fkp = vector<double>(_str.number_of_atoms());
-        _Deltafk = vector<double>(_str.number_of_atoms());
-        _wkm = vector<double>(_str.number_of_atoms());
-        _wkp = vector<double>(_str.number_of_atoms());
-        _Skm = vector<double>(_str.number_of_atoms());
-        _Skp = vector<double>(_str.number_of_atoms());
-        _Skfrac = vector<double>(_str.number_of_atoms());
-        _hardnessk = vector<double>(_str.number_of_atoms());
-        _hardnesskm = vector<double>(_str.number_of_atoms());
-        _hardnesskp = vector<double>(_str.number_of_atoms());
+        _Q0 = std::vector<double>(_str.number_of_atoms());
+        _Qm = std::vector<double>(_str.number_of_atoms());
+        _Qp = std::vector<double>(_str.number_of_atoms());
+        _fk0 = std::vector<double>(_str.number_of_atoms());
+        _fkm = std::vector<double>(_str.number_of_atoms());
+        _fkp = std::vector<double>(_str.number_of_atoms());
+        _Deltafk = std::vector<double>(_str.number_of_atoms());
+        _wkm = std::vector<double>(_str.number_of_atoms());
+        _wkp = std::vector<double>(_str.number_of_atoms());
+        _Skm = std::vector<double>(_str.number_of_atoms());
+        _Skp = std::vector<double>(_str.number_of_atoms());
+        _Skfrac = std::vector<double>(_str.number_of_atoms());
+        _hardnessk = std::vector<double>(_str.number_of_atoms());
+        _hardnesskm = std::vector<double>(_str.number_of_atoms());
+        _hardnesskp = std::vector<double>(_str.number_of_atoms());
     }
 }
 
@@ -71,28 +74,28 @@ void Descriptors::compute_All_From_Charge(double I, double A )
     compute_all();    
 }
 
-Descriptors::Descriptors(const Structure& S, vector<double> Q1, vector<double> Q2, vector<double> Q3, double I, double A )
+Descriptors::Descriptors(const Structure& S, std::vector<double> Q1, std::vector<double> Q2, std::vector<double> Q3, double I, double A )
 {
     _okCharge=true;
     _str=S;
     reset();
-    vector<double> E(3,0);
+    std::vector<double> E(3,0);
     double i=0;
     double a=0;
     sortCharges(Q1, Q2, Q3, E, i, a);
     compute_All_From_Charge(I,A);
 }
-vector<double> Descriptors::compute_Charges_From_Becke(const Grid& grid)
+std::vector<double> Descriptors::compute_Charges_From_Becke(const Grid& grid)
 {
     Factorial fact(100);
     Binomial bino (100, fact);
     Becke B(grid);
     B.partial_charge(grid);
-    vector<double> Bint=B.get_Partial_Charge();
+    std::vector<double> Bint=B.get_Partial_Charge();
     return B.get_Partial_Charge();
 }
 
-vector<double> Descriptors::compute_Charges_From_Grid(const Grid &AIM, PartitionMethod partitionMethod)
+std::vector<double> Descriptors::compute_Charges_From_Grid(const Grid &AIM, PartitionMethod partitionMethod)
 {
     GridCP gridcp;
     gridcp.buildBasins(AIM, partitionMethod);
@@ -100,13 +103,13 @@ vector<double> Descriptors::compute_Charges_From_Grid(const Grid &AIM, Partition
     return Q;
 }
 
-vector<double> Descriptors::compute_Charges_From_File(ifstream &file, PartitionMethod partitionMethod)
+std::vector<double> Descriptors::compute_Charges_From_File(std::ifstream &file, PartitionMethod partitionMethod)
 {
     PeriodicTable Table;
     Grid AIM(file, Table);
     _str=AIM.get_structure();
     reset();
-    vector<double> Q;
+    std::vector<double> Q;
     if(partitionMethod == PartitionMethod::BECKE)
     {
         Q=compute_Charges_From_Becke(AIM);
@@ -125,10 +128,10 @@ void Descriptors::compute_All_From_Grid(const Grid& AIM1,const Grid& AIM2,const 
     _okCharge=true;
     _str=AIM1.get_structure();
     reset();
-    vector<double> Q1 = compute_Charges_From_Grid(AIM1, partitionMethod );
-    vector<double> Q2 = compute_Charges_From_Grid(AIM2, partitionMethod );
-    vector<double> Q3 = compute_Charges_From_Grid(AIM3, partitionMethod );
-    vector<double> E(3,0);
+    std::vector<double> Q1 = compute_Charges_From_Grid(AIM1, partitionMethod );
+    std::vector<double> Q2 = compute_Charges_From_Grid(AIM2, partitionMethod );
+    std::vector<double> Q3 = compute_Charges_From_Grid(AIM3, partitionMethod );
+    std::vector<double> E(3,0);
     double i=0;
     double a=0;
     sortCharges(Q1, Q2, Q3, E, i, a);
@@ -142,20 +145,20 @@ Descriptors::Descriptors(const Grid &AIM1, const Grid &AIM2, const Grid &AIM3, d
     compute_All_From_Grid(AIM1, AIM2, AIM3, I, A, partitionMethod);
 }
 
-void Descriptors::compute_All_From_Cube(ifstream& file1, ifstream& file2, ifstream& file3, double I, double A, PartitionMethod partitionMethod )
+void Descriptors::compute_All_From_Cube(std::ifstream& file1, std::ifstream& file2, std::ifstream& file3, double I, double A, PartitionMethod partitionMethod )
 {
     _okCharge=true;
-    vector<double> Q1 = compute_Charges_From_File(file1, partitionMethod);
-    vector<double> Q2 = compute_Charges_From_File(file2, partitionMethod);
-    vector<double> Q3 = compute_Charges_From_File(file3, partitionMethod);
-    vector<double> E(3,0);
+    std::vector<double> Q1 = compute_Charges_From_File(file1, partitionMethod);
+    std::vector<double> Q2 = compute_Charges_From_File(file2, partitionMethod);
+    std::vector<double> Q3 = compute_Charges_From_File(file3, partitionMethod);
+    std::vector<double> E(3,0);
     double i=0;
     double a=0;
     sortCharges(Q1, Q2, Q3, E, i, a);
     compute_All_From_Charge(I,A);
 }
 
-Descriptors::Descriptors(ifstream &file0, ifstream &fileM, ifstream &fileP, double I, double A, PartitionMethod partitionMethod)
+Descriptors::Descriptors(std::ifstream &file0, std::ifstream &fileM, std::ifstream &fileP, double I, double A, PartitionMethod partitionMethod)
 {
     compute_All_From_Cube(file0, fileM, fileP, I, A, partitionMethod);
 
@@ -197,8 +200,9 @@ void Descriptors::compute_fk_From_Charge()
 {    
     if(int(_Qm.size())!=_str.number_of_atoms() or int(_Qp.size())!=_str.number_of_atoms() or int(_Q0.size())!=_str.number_of_atoms())
     {
-        cout<<" number of atoms in _str inconsistent with vector sizes.. Please check vectors"<<endl;
-        exit(1);
+        print_error("Error in Descriptors::compute_fk_From_Charge(): the number of atoms in _str is inconsistent with std::vector sizes... Please check the vectors.");
+        
+        std::exit(1);
     }
     else
     {
@@ -223,7 +227,7 @@ void Descriptors::compute_fk()
     }
 }
 
-void Descriptors::set_mu_fk_data(vector<vector<double>> f, double eH, double eL)
+void Descriptors::set_mu_fk_data(std::vector<std::vector<double>> f, double eH, double eL)
 {
     _mum=eH;
     _mup=eL;
@@ -232,7 +236,7 @@ void Descriptors::set_mu_fk_data(vector<vector<double>> f, double eH, double eL)
     _fkp=f[1];
 }
 
-void Descriptors::set_mu_fk_data(vector<vector<double>> data)
+void Descriptors::set_mu_fk_data(std::vector<std::vector<double>> data)
 {
     _fk0.resize(_str.number_of_atoms());
     _fkp.resize(_str.number_of_atoms());
@@ -253,104 +257,104 @@ void Descriptors::set_mu_fk_data(vector<vector<double>> data)
 
 /********************************************************************************************/
 
-ostream& operator<<(ostream& flux, const Descriptors& desc)
+std::ostream& operator<<(std::ostream& flux, const Descriptors& desc)
 {
     double HeV=27.21138469;
     
-    flux<<scientific;
-    flux<<setprecision(6);
-    flux<<setw(15);
+    flux<<std::scientific;
+    flux<<std::setprecision(6);
+    flux<<std::setw(15);
     if(desc._okCharge)
     {
         
-        flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
-        flux<<left<<setw(7)<<"Symbol"<<setw(4)<<"k"<<setw(15)<<right<<"Qk-"<<setw(15)<<right<<"Qk+"<<setw(15)<<right<<"Qk0"<<endl;
+        flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
+        flux<<std::left<<std::setw(7)<<"Symbol"<<std::setw(4)<<"k"<<std::setw(15)<<std::right<<"Qk-"<<std::setw(15)<<std::right<<"Qk+"<<std::setw(15)<<std::right<<"Qk0"<<std::endl;
         for(int i=0; i<desc._str.number_of_atoms(); i++)
-            flux<<left<<setw(7)<<desc._str.atom(i).get_symbol()<<setw(4)<<i+1<<setw(15)<<right<<desc._Qm[i]<<setw(15)<<right<<desc._Qp[i]<<setw(15)<<right<<desc._Q0[i]<<endl;
-        flux<<endl;
+            flux<<std::left<<std::setw(7)<<desc._str.atom(i).get_symbol()<<std::setw(4)<<i+1<<std::setw(15)<<std::right<<desc._Qm[i]<<std::setw(15)<<std::right<<desc._Qp[i]<<std::setw(15)<<std::right<<desc._Q0[i]<<std::endl;
+        flux<<std::endl;
     }
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    flux<<left<<setw(7)<<"Symbol"<<setw(4)<<"k"<<setw(15)<<right<<"f-"<<setw(15)<< right<< "f+"<<setw(15)<<right<<"f0"<<setw(15)<<right<<"Delta f"<<endl;
+    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
+    flux<<std::left<<std::setw(7)<<"Symbol"<<std::setw(4)<<"k"<<std::setw(15)<<std::right<<"f-"<<std::setw(15)<< std::right<< "f+"<<std::setw(15)<<std::right<<"f0"<<std::setw(15)<<std::right<<"Delta f"<<std::endl;
     for(int i=0; i<desc._str.number_of_atoms(); i++)
-        flux<<left<<setw(7)<<desc._str.atom(i).get_symbol()<<setw(4)<<i+1<<setw(15)<<right<<desc._fkm[i]<<setw(15)<<right<<desc._fkp[i]<<setw(15)<<right<<desc._fk0[i]<<setw(15)<<right<<desc._Deltafk[i]<<endl;
-    flux<<endl;    
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    flux<<left<<setw(15)<<right<<"w-"<<setw(15)<<right<<"w+"<<setw(15)<<right<<"s-"<<setw(15)<<right<<"s+"<<setw(15)<<right<<"s-/s+"<<setw(15)<<right<<"hardness-"<<setw(15)<<right<<"hardness+"<<setw(15)<<right<<"hardness"<<endl;
+        flux<<std::left<<std::setw(7)<<desc._str.atom(i).get_symbol()<<std::setw(4)<<i+1<<std::setw(15)<<std::right<<desc._fkm[i]<<std::setw(15)<<std::right<<desc._fkp[i]<<std::setw(15)<<std::right<<desc._fk0[i]<<std::setw(15)<<std::right<<desc._Deltafk[i]<<std::endl;
+    flux<<std::endl;    
+    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
+    flux<<std::left<<std::setw(15)<<std::right<<"w-"<<std::setw(15)<<std::right<<"w+"<<std::setw(15)<<std::right<<"s-"<<std::setw(15)<<std::right<<"s+"<<std::setw(15)<<std::right<<"s-/s+"<<std::setw(15)<<std::right<<"hardness-"<<std::setw(15)<<std::right<<"hardness+"<<std::setw(15)<<std::right<<"hardness"<<std::endl;
     for(int i=0; i<desc._str.number_of_atoms(); i++)
-        flux<<setw(15)<<right<<desc._wkm[i]*HeV<<setw(15)<<right<<desc._wkp[i]*HeV<<setw(15)<<right<<desc._Skm[i]/HeV<<setw(15)<<right<<desc._Skp[i]/HeV<<setw(15)<<right<<desc._Skfrac[i]<<setw(15)<<right<<desc._hardnesskm[i]*HeV<<setw(15)<<right<<desc._hardnesskp[i]*HeV<<setw(15)<<right<<desc._hardnessk[i]*HeV<<endl;
-    flux<<endl;
+        flux<<std::setw(15)<<std::right<<desc._wkm[i]*HeV<<std::setw(15)<<std::right<<desc._wkp[i]*HeV<<std::setw(15)<<std::right<<desc._Skm[i]/HeV<<std::setw(15)<<std::right<<desc._Skp[i]/HeV<<std::setw(15)<<std::right<<desc._Skfrac[i]<<std::setw(15)<<std::right<<desc._hardnesskm[i]*HeV<<std::setw(15)<<std::right<<desc._hardnesskp[i]*HeV<<std::setw(15)<<std::right<<desc._hardnessk[i]*HeV<<std::endl;
+    flux<<std::endl;
     
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    flux<<left<<setw(10)<<"mu+ "<<setw(2)<<"="<<setw(16)<<right<<desc._mup*HeV<<endl;
-    flux<<left<<setw(10)<<"mu- "<<setw(2)<<"="<<setw(16)<<right<<desc._mum*HeV<<endl;
-    flux<<left<<setw(10)<<"mu "<<setw(2)<<"="<<setw(16)<<right<<desc._mu*HeV<<endl;
-    flux<<left<<setw(10)<<"Xi "<<setw(2)<<"="<<setw(16)<<right<<desc._xi*HeV<<endl;
-    flux<<left<<setw(10)<<"hardness "<<setw(2)<<"="<<setw(16)<<right<<desc._hardness*HeV<<endl;
-    flux<<left<<setw(10)<<"w "<<setw(2)<<"="<<setw(16)<<right<<desc._w*HeV<<endl;
-    flux<<left<<setw(10)<<"S "<<setw(2)<<"="<<setw(16)<<right<<desc._S/HeV<<endl;
-    flux<<left<<setw(10)<<"Qmax "<<setw(2)<<"="<<setw(16)<<right<<desc._Qmax<<endl;
-    flux<<left<<setw(10)<<"DEmin "<<setw(2)<<"="<<setw(16)<<right<<desc._DEmin*HeV<<endl;
-    flux<<left<<setw(10)<<"w+ "<<setw(2)<<"="<<setw(16)<<right<<desc._wp*HeV<<endl;
-    flux<<left<<setw(10)<<"w- "<<setw(2)<<"="<<setw(16)<<right<<desc._wm*HeV<<endl;
-    flux<<endl;
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    flux<<"Energies (hardness, mu, w, Xi, DEmin, wk-, wk+, hardnessk-, hardnessk+, hardnessk) are given in eV"<<endl;
-    flux<<"Softnesses (S, sk-, sk+) are given in eV^-1"<<endl;
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    flux<<left<<setw(12)<<"mu-"<<"= -I"<<endl;
-    flux<<left<<setw(12)<<"mu+"<<"= A"<<endl;
-    flux<<left<<setw(12)<<"mu"<<"= Chemical potential = (mu+ + mu-)/2"<<endl;
-    flux<<left<<setw(12)<<"hardness"<<"= Chemical hardness = (mu+  -  mu-)"<<endl;
-    flux<<left<<setw(12)<<"Xi"<<"= Electronegativity = -mu"<<endl;
-    flux<<left<<setw(12)<<"w"<<"= Electrophilicity index = mu^2/(2 hardness)"<<endl;
-    flux<<left<<setw(12)<<"w-"<<"= propensity to donate electron = mu-^2/(2 hardness)"<<endl;
-    flux<<left<<setw(12)<<"w+"<<"= propensity to accept electron = mu+^2/(2 hardness)"<<endl; 
-    flux<<left<<setw(12)<<"S"<<"= Global softness = 1/hardness"<<endl;
-    flux<<left<<setw(12)<<"Qmax"<<"= Maximal electronic charge accepted by an electrophile = -mu/hardness"<<endl;
-    flux<<left<<setw(12)<<"DEmin"<<"= Energy decrease if the electrophile take Qmax = -mu^2/(2 hardness)"<<endl; 
-    flux<<left<<setw(12)<<"fk-"<<"= Local Fukui electrophilic attack"<<endl;
-    flux<<left<<setw(12)<<"fk+"<<"= Local Fukui nucleophilic attack"<<endl;
-    flux<<left<<setw(12)<<"sk-"<<"= Local softness electrophilic attack = S fk-"<<endl;
-    flux<<left<<setw(12)<<"sk+"<<"= Local softness nucleophilic attack = S fk+"<<endl;
-    flux<<left<<setw(12)<<"wk-"<<"= Local philicity index of electrophilic attack = w fk-"<<endl;
-    flux<<left<<setw(12)<<"wk+"<<"= Local philicity index of nucleophilic attack = w fk+"<<endl;
-    flux<<left<<setw(12)<<"hardnessk-"<<"= Local hardness = mu+ fk+ - mu- fk- - (mu+- mu-)*(fk+-fk-)"<<endl;
-    flux<<left<<setw(12)<<"hardnessk+"<<"= Local hardness = mu+ fk+ - mu- fk- + (mu+- mu-)*(fk+-fk-)"<<endl;
-    flux<<left<<setw(12)<<"hardnessk"<<"= Local hardness = mu+ fk+ - mu- fk-"<<endl;
-    flux<<left<<setw(12)<<"Deltafk"<<"= Dual descripor = (fk+ - fk-) : "<<endl;
-    flux<<left<<setw(9)<<" "<<">0 => site favored for a nucleophilic attack"<<endl;
-    flux<<left<<setw(9)<<" "<<"<0 => site favored for an electrophilic attack"<<endl;
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    flux<<left<<setw(12)<<"References:"<<endl;
-    flux<<left<<setw(12)<<" "<<"- Revisiting the definition of local hardness and hardness kernel"<<endl; 
-    flux<<left<<setw(12)<<" "<<"C. A. Polanco-Ramrez et al"<<endl;
-    flux<<left<<setw(12)<<" "<<"Phys. Chem. Chem. Phys., 2017, 19, 12355-12364"<<endl;
-    flux<<left<<setw(12)<<" "<<"DOI: 10.1039/c7cp00691h"<<endl;
-    flux<<endl;
-    flux<<left<<setw(12)<<" "<<"- Applications of the Conceptual Density Functional Theory"<<endl;
-    flux<<left<<setw(12)<<" "<<"Indices to Organic Chemistry Reactivity"<<endl;
-    flux<<left<<setw(12)<<" "<<"Luis R. Domingo, Mar Ríos-Gutiérrez and Patricia Pérez"<<endl;
-    flux<<left<<setw(12)<<" "<<"Molecules 2016, 21, 748; doi:10.3390/molecules21060748"<<endl;
-    flux<<endl;
-    flux<<left<<setw(12)<<" "<<"- Electrodonating and Electroaccepting Powers"<<endl;
-    flux<<left<<setw(12)<<" "<<"José L. Gazquez, André Cedillo, and Alberto Vela"<<endl;
-    flux<<left<<setw(12)<<" "<<"J. Phys. Chem. A 2007, 111, 1966-1970, DOI: 10.1021/jp065459f"<<endl;
-    flux<<endl;
-    flux<<left<<setw(12)<<" "<<"- Introducing “UCA-FUKUI” software: reactivity-index calculations"<<endl;
-    flux<<left<<setw(12)<<" "<<"Jesús Sánchez-Márquez et al."<<endl;
-    flux<<left<<setw(12)<<" "<<"J Mol Model (2014) 20:2492, DOI 10.1007/s00894-014-2492-1"<<endl;
-    flux<<endl;
-    flux<<left<<setw(12)<<" "<<"- Dual descriptor and molecular electrostatic potential:"<<endl; 
-    flux<<left<<setw(12)<<" "<<"complementary tools for the study of the coordination"<<endl; 
-    flux<<left<<setw(12)<<" "<<"chemistry of ambiphilic ligands"<<endl;
-    flux<<left<<setw(12)<<" "<<"F.  Guégan et al."<<endl;
-    flux<<left<<setw(12)<<" "<<"Phys.Chem.Chem.Phys., 2014, 16 , 15558-15569,"<<endl; 
-    flux<<left<<setw(12)<<" "<<"DOI: 10.1039/c4cp01613k"<<endl;
-    flux<<endl;
-    flux<<left<<setw(12)<<" "<<"- New Dual Descriptor for Chemical Reactivity"<<endl;
-    flux<<left<<setw(12)<<" "<<"Ch. Morell et al."<<endl;
-    flux<<left<<setw(12)<<" "<<"J. Phys. Chem. A 2005, 109, 205-212, DOI: 10.1021/jp046577a"<<endl;
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<endl;
+    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
+    flux<<std::left<<std::setw(10)<<"mu+ "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._mup*HeV<<std::endl;
+    flux<<std::left<<std::setw(10)<<"mu- "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._mum*HeV<<std::endl;
+    flux<<std::left<<std::setw(10)<<"mu "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._mu*HeV<<std::endl;
+    flux<<std::left<<std::setw(10)<<"Xi "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._xi*HeV<<std::endl;
+    flux<<std::left<<std::setw(10)<<"hardness "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._hardness*HeV<<std::endl;
+    flux<<std::left<<std::setw(10)<<"w "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._w*HeV<<std::endl;
+    flux<<std::left<<std::setw(10)<<"S "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._S/HeV<<std::endl;
+    flux<<std::left<<std::setw(10)<<"Qmax "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._Qmax<<std::endl;
+    flux<<std::left<<std::setw(10)<<"DEmin "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._DEmin*HeV<<std::endl;
+    flux<<std::left<<std::setw(10)<<"w+ "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._wp*HeV<<std::endl;
+    flux<<std::left<<std::setw(10)<<"w- "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._wm*HeV<<std::endl;
+    flux<<std::endl;
+    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
+    flux<<"Energies (hardness, mu, w, Xi, DEmin, wk-, wk+, hardnessk-, hardnessk+, hardnessk) are given in eV"<<std::endl;
+    flux<<"Softnesses (S, sk-, sk+) are given in eV^-1"<<std::endl;
+    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"mu-"<<"= -I"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"mu+"<<"= A"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"mu"<<"= Chemical potential = (mu+ + mu-)/2"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"hardness"<<"= Chemical hardness = (mu+  -  mu-)"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"Xi"<<"= Electronegativity = -mu"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"w"<<"= Electrophilicity index = mu^2/(2 hardness)"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"w-"<<"= propensity to donate electron = mu-^2/(2 hardness)"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"w+"<<"= propensity to accept electron = mu+^2/(2 hardness)"<<std::endl; 
+    flux<<std::left<<std::setw(12)<<"S"<<"= Global softness = 1/hardness"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"Qmax"<<"= Maximal electronic charge accepted by an electrophile = -mu/hardness"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"DEmin"<<"= Energy decrease if the electrophile take Qmax = -mu^2/(2 hardness)"<<std::endl; 
+    flux<<std::left<<std::setw(12)<<"fk-"<<"= Local Fukui electrophilic attack"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"fk+"<<"= Local Fukui nucleophilic attack"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"sk-"<<"= Local softness electrophilic attack = S fk-"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"sk+"<<"= Local softness nucleophilic attack = S fk+"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"wk-"<<"= Local philicity index of electrophilic attack = w fk-"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"wk+"<<"= Local philicity index of nucleophilic attack = w fk+"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"hardnessk-"<<"= Local hardness = mu+ fk+ - mu- fk- - (mu+- mu-)*(fk+-fk-)"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"hardnessk+"<<"= Local hardness = mu+ fk+ - mu- fk- + (mu+- mu-)*(fk+-fk-)"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"hardnessk"<<"= Local hardness = mu+ fk+ - mu- fk-"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"Deltafk"<<"= Dual descripor = (fk+ - fk-) : "<<std::endl;
+    flux<<std::left<<std::setw(9)<<" "<<">0 => site favored for a nucleophilic attack"<<std::endl;
+    flux<<std::left<<std::setw(9)<<" "<<"<0 => site favored for an electrophilic attack"<<std::endl;
+    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
+    flux<<std::left<<std::setw(12)<<"References:"<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"- Revisiting the definition of local hardness and hardness kernel"<<std::endl; 
+    flux<<std::left<<std::setw(12)<<" "<<"C. A. Polanco-Ramrez et al"<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"Phys. Chem. Chem. Phys., 2017, 19, 12355-12364"<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"DOI: 10.1039/c7cp00691h"<<std::endl;
+    flux<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"- Applications of the Conceptual Density Functional Theory"<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"Indices to Organic Chemistry Reactivity"<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"Luis R. Domingo, Mar Ríos-Gutiérrez and Patricia Pérez"<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"Molecules 2016, 21, 748; doi:10.3390/molecules21060748"<<std::endl;
+    flux<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"- Electrodonating and Electroaccepting Powers"<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"José L. Gazquez, André Cedillo, and Alberto Vela"<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"J. Phys. Chem. A 2007, 111, 1966-1970, DOI: 10.1021/jp065459f"<<std::endl;
+    flux<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"- Introducing “UCA-FUKUI” software: reactivity-index calculations"<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"Jesús Sánchez-Márquez et al."<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"J Mol Model (2014) 20:2492, DOI 10.1007/s00894-014-2492-1"<<std::endl;
+    flux<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"- Dual descriptor and molecular electrostatic potential:"<<std::endl; 
+    flux<<std::left<<std::setw(12)<<" "<<"complementary tools for the study of the coordination"<<std::endl; 
+    flux<<std::left<<std::setw(12)<<" "<<"chemistry of ambiphilic ligands"<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"F.  Guégan et al."<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"Phys.Chem.Chem.Phys., 2014, 16 , 15558-15569,"<<std::endl; 
+    flux<<std::left<<std::setw(12)<<" "<<"DOI: 10.1039/c4cp01613k"<<std::endl;
+    flux<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"- New Dual Descriptor for Chemical Reactivity"<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"Ch. Morell et al."<<std::endl;
+    flux<<std::left<<std::setw(12)<<" "<<"J. Phys. Chem. A 2005, 109, 205-212, DOI: 10.1021/jp046577a"<<std::endl;
+    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
     return flux;
 }
 
@@ -421,24 +425,24 @@ Descriptors::Descriptors(LOG& log, const PeriodicTable& Table)
 
     _fk0.resize(_str.number_of_atoms());
 }
-void Descriptors::compute_All_From_Cube(ifstream &file1, ifstream &file2, ifstream &file3, vector<double> E, PartitionMethod partitionMethod)
+void Descriptors::compute_All_From_Cube(std::ifstream &file1, std::ifstream &file2, std::ifstream &file3, std::vector<double> E, PartitionMethod partitionMethod)
 {
     _okCharge=true;
-    vector<double> Q1 = compute_Charges_From_File(file1, partitionMethod);
-    vector<double> Q2 = compute_Charges_From_File(file2, partitionMethod);
-    vector<double> Q3 = compute_Charges_From_File(file3, partitionMethod);
+    std::vector<double> Q1 = compute_Charges_From_File(file1, partitionMethod);
+    std::vector<double> Q2 = compute_Charges_From_File(file2, partitionMethod);
+    std::vector<double> Q3 = compute_Charges_From_File(file3, partitionMethod);
     double I=0;
     double A=0;    
     sortCharges(Q1, Q2, Q3, E, I, A);
     compute_All_From_Charge(I,A);
 }
-void Descriptors::sortCharges(vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E, double& I, double& A)
+void Descriptors::sortCharges(std::vector<double> Q1, std::vector<double> Q2, std::vector<double> Q3, std::vector<double> E, double& I, double& A)
 {
-    vector<vector<double>> Q(3);
+    std::vector<std::vector<double>> Q(3);
     Q[0]=Q1;
     Q[1]=Q2;
     Q[2]=Q3;
-    vector<double> S(3,0);
+    std::vector<double> S(3,0);
     for(size_t i=0; i<Q1.size();i++)
         for(size_t c=0; c<3;c++)
             S[c]+=Q[c][i];
@@ -456,7 +460,7 @@ void Descriptors::sortCharges(vector<double> Q1, vector<double> Q2, vector<doubl
             double e=E[k];
             E[k] = E[i];
             E[i] = e;
-            vector<double> q=Q[k];
+            std::vector<double> q=Q[k];
             Q[k] = Q[i];
             Q[i] = q;
         }
@@ -468,7 +472,7 @@ void Descriptors::sortCharges(vector<double> Q1, vector<double> Q2, vector<doubl
     I=E[2]-E[1];
     A=E[1]-E[0];
 }
-void Descriptors::compute_All_From_Charges(const Structure& Str,vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E)
+void Descriptors::compute_All_From_Charges(const Structure& Str,std::vector<double> Q1, std::vector<double> Q2, std::vector<double> Q3, std::vector<double> E)
 {
     _okCharge=true;
     _str=Str;
@@ -478,12 +482,12 @@ void Descriptors::compute_All_From_Charges(const Structure& Str,vector<double> Q
     sortCharges(Q1, Q2, Q3, E, I, A);
     compute_All_From_Charge(I,A);
 }
-Descriptors::Descriptors(ifstream &file0, ifstream &fileM, ifstream &fileP, vector<double> E, PartitionMethod partitionMethod)
+Descriptors::Descriptors(std::ifstream &file0, std::ifstream &fileM, std::ifstream &fileP, std::vector<double> E, PartitionMethod partitionMethod)
 {
     compute_All_From_Cube(file0, fileM, fileP, E, partitionMethod);
 
 }
-Descriptors::Descriptors(const Structure& S, vector<double> Q1, vector<double> Q2, vector<double> Q3, vector<double> E)
+Descriptors::Descriptors(const Structure& S, std::vector<double> Q1, std::vector<double> Q2, std::vector<double> Q3, std::vector<double> E)
 {
     compute_All_From_Charges(S,Q1,Q2,Q3,E);
 }

@@ -88,7 +88,7 @@ class Job
          * 
          * @param[out] energy Reference to a double where the read energy value will be stored.
          */
-        void readGroundStateEnergy(double& energy);
+        bool readGroundStateEnergy(double& energy);
 
         /**
          * @brief Reads the cutoff distance for nuclear contribution from the "NuclearCutoff" parameter in the input file.
@@ -145,6 +145,13 @@ class Job
          * @param[out] runType Reference to a RunType variable where the parsed run type will be stored.
          */
         void readRunType(RunType& runType);
+
+        /**
+         * @brief Reads the show progress option from the "ShowProgress" parameter in the input file.
+         * 
+         * @param[out] showProgress Reference to a boolean where the read option value will be stored.
+         */
+        void readShowProgress(bool& showProgress);
 
         /**
          * @brief Reads the selected grid size from the "GridSize" parameter in the input file.
