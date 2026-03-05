@@ -1,0 +1,10 @@
+Charges=0.0
+Positions=0.0,0.0,0.0
+RunType=ComputeEnergyWithPointCharges
+AnalyticFiles=../tests/Guegan2020/acrolein_HF.log
+TransitionsFile=../tests/Guegan2020/acrolein_orca.out
+Size=Custom
+CustomSizeData=512,512,512,8,8,8,3.131115459882583e-2,0,0,0,3.131115459882583e-2,0,0,0,3.131115459882583e-2
+OutputPrefix=acroleinHF_enePC_16_512_0
+#Verbose=3
+#ShowProgress=True

@@ -1110,7 +1110,7 @@ double Orbitals::kinetic()
     return sum;
 }
 
-std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, bool debug,bool printAOMatrix, bool printMOMatrix)
+std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, bool debug, bool printAOMatrix, bool printMOMatrix)
 {
     // debug
     if (__debug_AOMatrix.size() == 0)

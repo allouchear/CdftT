@@ -23,7 +23,7 @@ class Grid
         /** @brief Structure object describing the molecule/structure on the grid. */
         Structure _structure;
 
-        /** @brief Values for each grid point. The first three dimensions are spatial dimensions (x,y,z). The fourth dimensions stores the values. */
+        /** @brief Values for each grid point. The first three dimensions are spatial dimensions (x,y,z). The fourth dimensions stores the values (e.g. one value per orbital). */
         std::vector<std::vector<std::vector<std::vector<double>>>> _values;
 
         //----------------------------------------------------------------------------------------------------//
@@ -150,10 +150,10 @@ class Grid
          * @brief Sets the value at grid indices (i,j,k,l).
          * 
          * @param rho Value to set
-         * @param i Grid index i
-         * @param j Grid index j
-         * @param k Grid index k
-         * @param l Value index l
+         * @param i Grid index i (first spatial dimension).
+         * @param j Grid index j (second spatial dimension).
+         * @param k Grid index k (third spatial dimension).
+         * @param l Value index l (e.g. orbital index).
          */
         void set_Vijkl(double rho, int i, int j, int k, int l);
 

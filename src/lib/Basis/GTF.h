@@ -152,7 +152,7 @@ class GTF
         
             //! A normal member taking three arguments and returning a double value.
             /*! \return The eri ???. */
-        double ERIGTF(GTF&, GTF&, GTF&);
+        double ERIGTF(const GTF&, const GTF&,const GTF&);
             
         double func(double x, double y, double z) const;
         

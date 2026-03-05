@@ -32,7 +32,7 @@ class ExcitedState
         std::vector<std::tuple<OrbitalState, OrbitalState, double>> _electronicTransitions;
 
         /** @brief Slater determinants associated with the excited state (one for each transition). */
-        std::vector<SlaterDeterminant> _slaterDeterminants;
+        std::vector<std::pair<SlaterDeterminant, double>> _slaterDeterminants;
     
 
     public:
@@ -65,6 +65,11 @@ class ExcitedState
         double get_energy() const;
 
         /**
+         * @brief Returns the Slater determinants associated with the excited state along with their respective coefficient.
+         */
+        const std::vector<std::pair<SlaterDeterminant, double>>& get_slaterDeterminants() const;
+
+        /**
          * @brief Returns whether the state is the ground state.
          */
         bool isGroundState() const;
@@ -83,7 +88,7 @@ class ExcitedState
         void addTransition(const OrbitalState& initialOrbital, const OrbitalState& finalOrbital, const double coefficient);
 
         /**
-         * @brief Computes the Slater determinant of the excited state.
+         * @brief Computes the Slater determinant of the excited state from the electronic transitions.
          *
          * @param[in]  SlaterDeterminant Reference to the ground state Slater determinant.
          */
@@ -93,11 +98,6 @@ class ExcitedState
          * @brief Returns the number of electronic transitions associated with the excited state.
          */
         int getNumberOfTransitions() const;
-
-        /**
-         * @brief Returns the Slater determinants associated with the excited state along with their respective coefficient.
-         */
-        std::vector<std::pair<SlaterDeterminant, double>> getSlaterDeterminantsAndCoefficients() const;
 
         /** @brief Prints lambda diagnostic for the excited state.
          *
@@ -112,6 +112,17 @@ class ExcitedState
         //----------------------------------------------------------------------------------------------------//
         // STATIC METHODS
         //----------------------------------------------------------------------------------------------------//
+
+        /** @brief Builds a vector of states after a perturbation, based on the unperturbed states and the eigenvalues and eigenvectors.
+         * 
+         * The method assumes that the first unperturbed state is the ground state.
+         *
+         * @param[in] unperturbedStates Vector of unperturbed excited states.
+         * @param[in] energies Vector of energy values (eigenvalues).
+         * @param[in] eigenvectors Matrix of eigenvectors.
+         * @return Vector of perturbed excited states.
+         */
+        static std::vector<ExcitedState> buildPerturbedStates(const std::vector<ExcitedState>& unperturbedStates, const std::vector<double>& energies, const std::vector<std::vector<double>>& eigenvectors);
 
         /**
          * @brief Reads the energy of the ground state from an Orca .out file.

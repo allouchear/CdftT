@@ -1,0 +1,7 @@
+Energy 3.7038 eV
+15 16  0.69922
+
+# Excited state modified to have an other 15->16 transition and test the expansion in terms of Slater Determinants.
+Energy 6.9699 eV
+14 17 -0.35141
+15 16  0.57841

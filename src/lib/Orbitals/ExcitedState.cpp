@@ -36,7 +36,7 @@ ExcitedState::ExcitedState(const double energy, const SlaterDeterminant& slaterD
     _energy(energy),
     _isGroundState(true),
     _electronicTransitions(),
-    _slaterDeterminants(1, slaterDeterminant)
+    _slaterDeterminants({ { slaterDeterminant, 1.0 } })
 { }
 
 
@@ -47,6 +47,11 @@ ExcitedState::ExcitedState(const double energy, const SlaterDeterminant& slaterD
 double ExcitedState::get_energy() const
 {
     return _energy;
+}
+
+const std::vector<std::pair<SlaterDeterminant, double>>& ExcitedState::get_slaterDeterminants() const
+{
+    return _slaterDeterminants;
 }
 
 bool ExcitedState::isGroundState() const
@@ -77,38 +82,19 @@ void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStat
         SpinType initialOrbitalSpin = std::get<0>(transition).second;
         int finalOrbitalNumber = std::get<1>(transition).first;
         SpinType finalOrbitalSpin = std::get<1>(transition).second;
+        double coefficient = std::get<2>(transition);
 
         // Update Slater determinant based on the transition
         slaterDeterminantTransition.updateFromTransition(initialOrbitalNumber, initialOrbitalSpin, finalOrbitalNumber, finalOrbitalSpin);
 
         // Store Slater determinant
-        _slaterDeterminants.push_back(slaterDeterminantTransition);
+        _slaterDeterminants.emplace_back(slaterDeterminantTransition, coefficient);
     }
 }
 
 int ExcitedState::getNumberOfTransitions() const
 {
     return static_cast<int>(_electronicTransitions.size());
-}
-
-std::vector<std::pair<SlaterDeterminant, double>> ExcitedState::getSlaterDeterminantsAndCoefficients() const
-{
-    std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminantsAndCoefficients;
-
-    // Handle ground state case
-    if (_electronicTransitions.empty())
-    {
-        slaterDeterminantsAndCoefficients.emplace_back(_slaterDeterminants[0], 1.0);
-    }
-    else // Excited state case
-    {
-        for (size_t i = 0; i < _slaterDeterminants.size(); ++i)
-        {
-            slaterDeterminantsAndCoefficients.emplace_back(_slaterDeterminants[i], std::get<2>(_electronicTransitions[i]));
-        }
-    }
-
-    return slaterDeterminantsAndCoefficients;
 }
 
 void ExcitedState::printLambdaDiagnostic(const Grid& grid) const
@@ -184,6 +170,61 @@ void ExcitedState::printLambdaDiagnostic(const Grid& grid) const
 //----------------------------------------------------------------------------------------------------//
 // STATIC METHODS
 //----------------------------------------------------------------------------------------------------//
+
+std::vector<ExcitedState> ExcitedState::buildPerturbedStates(const std::vector<ExcitedState>& unperturbedStates, const std::vector<double>& energies, const std::vector<std::vector<double>>& eigenvectors)
+{
+    const SlaterDeterminant& groundStateSlaterDeterminant = unperturbedStates[0].get_slaterDeterminants()[0].first;
+
+    std::vector<ExcitedState> perturbedStates;
+    perturbedStates.reserve(unperturbedStates.size());
+
+    for (size_t i = 0; i < unperturbedStates.size(); ++i)
+    {
+        perturbedStates.emplace_back(energies[i]);
+        ExcitedState& currentPerturbedState = perturbedStates.back();
+
+        for (size_t k = 0; k < unperturbedStates.size(); ++k)
+        {
+            double c_k = eigenvectors[k][i];
+
+            if (c_k != 0.0)
+            {
+                // First handle the case where the unperturbed state is the ground state (i.e., has no electronic transitions)
+                if (unperturbedStates[k].isGroundState())
+                {
+                    // Add the ground state Slater determinant with its contribution
+                    currentPerturbedState._slaterDeterminants.emplace_back(unperturbedStates[k]._slaterDeterminants[0].first, c_k);
+                }
+                else
+                {
+                    // Then handle the case where the unperturbed state is an excited state (i.e., has one or more electronic transitions)
+                    for (const auto& electronicTransition : unperturbedStates[k]._electronicTransitions)
+                    {
+                        // Search for the electronic transition in the _electronicTransitions vector
+                        auto it = std::find_if(currentPerturbedState._electronicTransitions.begin(),
+                                            currentPerturbedState._electronicTransitions.end(),
+                                            [&electronicTransition](const auto& element) { return (std::get<0>(element) == std::get<0>(electronicTransition) && std::get<1>(element) == std::get<1>(electronicTransition)); });
+
+                        // If it is not found, add it to the electronic transitions with its contribution.
+                        if (it == currentPerturbedState._electronicTransitions.end())
+                        {
+                            currentPerturbedState._electronicTransitions.emplace_back(std::get<0>(electronicTransition), std::get<1>(electronicTransition), c_k * std::get<2>(electronicTransition));
+                        }
+                        else
+                        {
+                            std::get<2>(*it) += c_k * std::get<2>(electronicTransition);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Compute the Slater determinants associated with the perturbed state based on its electronic transitions
+        currentPerturbedState.computeSlaterDeterminants(groundStateSlaterDeterminant);
+    }
+
+    return perturbedStates;
+}
 
 bool ExcitedState::readGroundStateEnergyFromOutFile(const std::string& orcaOutFileName, double& energy)
 {
@@ -631,7 +672,7 @@ std::ostream& operator<<(std::ostream& stream, const ExcitedState& excitedState)
 
     if (!excitedState._isGroundState)
     {
-        stream << "  Transitions:" << std::endl;
+        stream << "  Electronic transitions:" << std::endl;
 
         for (const auto& transition : excitedState._electronicTransitions)
         {
@@ -642,6 +683,12 @@ std::ostream& operator<<(std::ostream& stream, const ExcitedState& excitedState)
             stream << "    " << initialOrbital.first << to_char(initialOrbital.second)
                              << " -> " << finalOrbital.first << to_char(finalOrbital.second)
                              << ", coefficient: " << coefficient << std::endl;
+        }
+
+        stream << "  Slater determinants:" << std::endl;
+        for (const auto& slaterCoeff : excitedState._slaterDeterminants)
+        {
+            stream << "    " << slaterCoeff.first << "; Coefficient: " << slaterCoeff.second << std::endl;
         }
     }
 

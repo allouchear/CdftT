@@ -1,0 +1,8 @@
+Charges=0.0
+Positions=0.0,0.0,0.0
+RunType=ComputeEnergyWithPointCharges
+AnalyticFiles=../tests/Guegan2020/acrolein_HF.log
+TransitionsFile=../tests/Guegan2020/acrolein_orca.out
+OutputPrefix=acroleinHF_enePC_3_41_5_0
+Becke=3,41,5
+#Verbose=3

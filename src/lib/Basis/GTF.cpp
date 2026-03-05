@@ -467,7 +467,7 @@ double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, 
     return -Z * sum;
 }
 
-double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)    
+double GTF::ERIGTF(const GTF& q, const GTF& r, const GTF& s)
 {
     int I,Ip,R,Rp,U;
     int J,Jp,S,Sp,N;

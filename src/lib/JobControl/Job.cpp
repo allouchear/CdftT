@@ -66,6 +66,23 @@ void Job::readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames)
     }
 }
 
+void Job::readBecke(std::vector<int>& beckeParameters)
+{
+    if (readListType<int>(_inputFile, "Becke", beckeParameters))
+    {
+        if (beckeParameters.size() != 3)
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error: incorrect number of values for the \"Becke\" parameter (three values expected)." << std::endl;
+            errorMessage << "Please check documentation and the \"Becke\" parameter values in " << _inputFileName << '.';
+
+            print_error(errorMessage.str());
+
+            std::exit(1);
+        }
+    }
+}
+
 void Job::readCharges(std::vector<double>& charges)
 {
     if (!readListType<double>(_inputFile, "Charges", charges))
@@ -775,7 +792,7 @@ void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedStat
     for (i = 0; i < nbStates; ++i)
     {
         // Get Slater Determinants for state i
-        std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_i(states[i].getSlaterDeterminantsAndCoefficients());
+        std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_i(states[i].get_slaterDeterminants());
 
         for (j = 0; j <= i; ++j)
         {
@@ -783,7 +800,7 @@ void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedStat
             double matrixElement = 0.0;
 
             // Get Slater Determinants for state j
-            std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].getSlaterDeterminantsAndCoefficients());
+            std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].get_slaterDeterminants());
 
             // Compute < psi_i | H_0 | psi_j >
             double h0Contribution = (i == j ? states[i].get_energy() : 0.0);
@@ -1447,13 +1464,16 @@ void Job::computeResultsEnergyWithPointCharges(const std::vector<ExcitedState>& 
 
     if (verbose >= 3)
     {
-        // Compute projections of perturbed states onto unperturbed basis
+        // Compute projections of perturbed states onto unperturbed basis and in terms of Slater determinants
         logStream << "Projection onto unperturbed basis:" << std::endl;
         log(logStream, logFile);
 
         for (size_t i = 0; i < nbStates; ++i)
         {
             std::vector<std::pair<double, int>> contributions;
+            contributions.reserve(nbStates);
+
+            std::vector<std::pair<double, SlaterDeterminant>> contributions_SD;
 
             logStream << "Perturbed state " << i << " (E = " << std::setprecision(10) << eigenvalues[i] << " H):" << std::endl;
             logStream << "  | " << i << "' > = ";
@@ -1465,19 +1485,41 @@ void Job::computeResultsEnergyWithPointCharges(const std::vector<ExcitedState>& 
                 double c_k = eigenvectors[k][i];
                 double c_k_squared = c_k * c_k;
 
-                contributions.push_back({c_k_squared, k});
-
-                if (!firstTerm && c_k > 0)
+                if (c_k != 0.0)
                 {
-                    logStream << " + ";
-                }
-                else if (c_k < 0)
-                {
-                    logStream << " - ";
-                }
+                    contributions.emplace_back(c_k_squared, k);
 
-                logStream << std::setprecision(6) << std::abs(c_k) << " | " << k << " >";
-                firstTerm = false;
+                    if (!firstTerm && c_k > 0)
+                    {
+                        logStream << " + ";
+                    }
+                    else if (c_k < 0)
+                    {
+                        logStream << " - ";
+                    }
+
+                    logStream << std::setprecision(6) << std::abs(c_k) << " | " << k << " >";
+                    firstTerm = false;
+
+                    for (const std::pair<SlaterDeterminant, double>& slaterCoef : states[k].get_slaterDeterminants())
+                    {
+                        // Search for the Slater determinant in the contributions_SD vector
+                        auto it = std::find_if(contributions_SD.begin(),
+                                               contributions_SD.end(),
+                                               [&slaterCoef](const std::pair<double, SlaterDeterminant>& element)
+                                               { return element.second == slaterCoef.first; });
+
+                        // If it is not found, add it to the contributions with its contribution.
+                        if (it == contributions_SD.end())
+                        {
+                            contributions_SD.emplace_back(c_k * slaterCoef.second, slaterCoef.first);
+                        }
+                        else
+                        {
+                            it->first += c_k * slaterCoef.second;
+                        }
+                    }
+                }
             }
             logStream << std::endl;
             log(logStream, logFile);
@@ -1498,8 +1540,53 @@ void Job::computeResultsEnergyWithPointCharges(const std::vector<ExcitedState>& 
             }
             logStream << std::endl;
             log(logStream, logFile);
+
+            logStream << "Expansion in terms of Slater determinants:" << std::endl;
+            logStream << "  | " << i << "' > = ";
+            log(logStream, logFile);
+
+            firstTerm = true;
+            for (size_t l = 0; l < contributions_SD.size(); ++l)
+            {
+                double c_l = contributions_SD[l].first;
+                //double c_l_squared = c_l * c_l;
+
+                if (!firstTerm && c_l >= 0)
+                {
+                    logStream << " + ";
+                }
+                else if (c_l < 0)
+                {
+                    logStream << " - ";
+                }
+
+                logStream << std::setprecision(6) << std::abs(c_l) << " | D_" << l << " >";
+                firstTerm = false;
+            }
+            logStream << std::endl << "  where:" << std::endl;
+            for (size_t l = 0; l < contributions_SD.size(); ++l)
+            {
+                logStream << "    | D_" << l << " > = " << contributions_SD[l].second << std::endl;
+            }
+            
+            logStream << std::endl;
+            log(logStream, logFile);
         }
     }
+
+    
+    logStream << "Test ExcitedStates::buildPerturbedStates():" << std::endl;
+    log(logStream, logFile);
+    std::vector<ExcitedState> perturbedStates = ExcitedState::buildPerturbedStates(states, eigenvalues, eigenvectors);
+    for (size_t i = 0; i < perturbedStates.size(); ++i)
+    {
+        logStream << perturbedStates[i] << std::endl;
+        log(logStream, logFile);
+    }
+    logStream << std::endl;
+    log(logStream, logFile);
+
+
 
     logStream << "------ Perturbative approach (cf. Guégan et al., PCCP 2020) ------" << std::endl << std::endl;
     log(logStream, logFile);
@@ -2210,20 +2297,7 @@ void Job::run_computeEnergyWithPointCharges()
 
         if (verbose >= 1)
         {
-            logStream << state;
-            log(logStream, logFile);
-
-            if (verbose >= 2)
-            {
-                logStream << "  Slater Determinants: " << std::endl;
-                for (const auto& slaterCoeff : state.getSlaterDeterminantsAndCoefficients())
-                {
-                    logStream << "    " << slaterCoeff.first << "; Coefficient: " << slaterCoeff.second << std::endl;
-                }
-                log(logStream, logFile);
-            }
-
-            logStream << std::endl;
+            logStream << state << std::endl;
             log(logStream, logFile);
         }
     }
@@ -2422,7 +2496,7 @@ void Job::run_computeEnergyWithPointCharges()
     for (size_t i = 0; i < nbStates; ++i)
     {
         logStream << "ψ_" << i << ": energy = " << std::setprecision(10) << states[i].get_energy() << " Hartree" << std::endl;
-        for (const auto& slaterCoeff : states[i].getSlaterDeterminantsAndCoefficients())
+        for (const auto& slaterCoeff : states[i].get_slaterDeterminants())
         {
             logStream << "    " << slaterCoeff.first << "; Coefficient: " << slaterCoeff.second << std::endl;
         }
@@ -2433,7 +2507,7 @@ void Job::run_computeEnergyWithPointCharges()
     for (size_t i = 0; i < nbStates; ++i)
     {
         // Get Slater Determinants for state i
-        std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_i(states[i].getSlaterDeterminantsAndCoefficients());
+        std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_i(states[i].get_slaterDeterminants());
 
         for (size_t j = 0; j <= i; ++j)
         {
@@ -2443,7 +2517,7 @@ void Job::run_computeEnergyWithPointCharges()
             V_ij = 0.0;
 
             // Get Slater Determinants for state j
-            std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].getSlaterDeterminantsAndCoefficients());
+            std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].get_slaterDeterminants());
 
             logStream << "    Computing < D_k | V_nuclear | D_l > matrix elements:" << std::endl;
             // Compute < D_k | V_nuclear | D_l >
@@ -2469,8 +2543,7 @@ void Job::run_computeEnergyWithPointCharges()
         }
     }
     log(logStream, logFile);
-
-
+    /*
     // COMPARAISON AVEC CALCUL SUR GRILLE
     logStream << std::endl << std::endl << "====================== REGULAR GRID COMPUTATION ======================" << std::endl << std::endl;
     log(logStream, logFile);
@@ -2522,6 +2595,7 @@ void Job::run_computeEnergyWithPointCharges()
 
             sum_phi_i_Vnuclear_phi_j_alpha += (i == j ? V_ij : 2.0 * V_ij);
             logStream << std::right << std::setw(17) << V_ij << '\t';
+
             currentStep++;
         }
         logStream << std::endl;
@@ -2565,6 +2639,7 @@ void Job::run_computeEnergyWithPointCharges()
 
             sum_phi_i_Vnuclear_phi_j_beta += (i == j ? V_ij : 2.0 * V_ij);
             logStream << std::right << std::setw(17) << V_ij << '\t';
+
             currentStep++;
         }
         logStream << std::endl;
@@ -2584,19 +2659,73 @@ void Job::run_computeEnergyWithPointCharges()
     sum_phi_i_Vnuclear_phi_j = sum_phi_i_Vnuclear_phi_j_alpha + sum_phi_i_Vnuclear_phi_j_beta;
     logStream << "Total sum of MO matrix elements for Alpha and Beta spins (regular Grid): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl;
     log(logStream, logFile);
+    
 
     // COMPARAISON AVEC BECKE
     logStream << std::endl << std::endl << "====================== BECKE GRID COMPUTATION ======================" << std::endl << std::endl;
     log(logStream, logFile);
 
+    // Read Becke grid parameters
+    std::vector<int> beckeParams;
+    readBecke(beckeParams);
+
+    if (beckeParams.size() == 0)
+    {
+        beckeParams = { 3, 41, 5 };
+    }
+
     Becke becke;
     computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
 
-    sum_phi_i_Vnuclear_phi_j_alpha = 0.0;
-    sum_phi_i_Vnuclear_phi_j_beta = 0.0;
-    V_ij = 0.0;
+    // Compute Nuclear Matrices for each atom (print AO matrix elements)
+    logStream << "AO / MO basis:" << std::endl;
+    logStream << "--------------" << std::endl << std::endl;
+    log(logStream, logFile);
 
+    std::vector<std::vector<std::vector<std::vector<double>>>> nuclearMatricesBecke(orbitals.get_numberOfAtoms());
+    atomIndex = 0;
+    for (const Atom& atom : orbitals.get_struct().get_atoms())
+    {
+        logStream << "Computing nuclear matrix for atom " << atom.get_name() << ": Z = " << atom.get_atomicNumber() << " ; position = (" << atom.get_coordinates()[0] << ", " << atom.get_coordinates()[1] << ", " << atom.get_coordinates()[2] << ")..." << std::endl;
+        log(logStream, logFile);
+        
+        nuclearMatricesBecke[atomIndex] = becke.getIonicPotentialMatrix(atom.get_coordinates(), atom.get_atomicNumber(), beckeParams[0], beckeParams[1], beckeParams[2]);
+        ++atomIndex;
+    }
+    logStream << std::endl;
+    log(logStream, logFile);
+
+    sum_phi_i_Vnuclear_phi_j = 0.0;
+    for (int atomIndex = 0; atomIndex < orbitals.get_numberOfAtoms(); ++atomIndex)
+    {
+        for (size_t spin = 0; spin < nuclearMatricesBecke[atomIndex].size(); ++spin)
+        {
+            for (size_t i = 0; i < nuclearMatricesBecke[atomIndex][spin].size(); ++i)
+            {
+                for (size_t j = 0; j <= i; ++j)
+                {
+                    sum_phi_i_Vnuclear_phi_j += (i == j ? nuclearMatricesBecke[atomIndex][spin][i][j] : 2.0 * nuclearMatricesBecke[atomIndex][spin][i][j]);
+                }
+            }
+        }
+    }
+    logStream << "Total sum of MO matrix elements for Alpha and Beta spins (Becke): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl << std::endl;
+    log(logStream, logFile);
+    */
+
+
+    /* OLD
     logStream << "Ionic potential matrix in MO basis for Alpha spin:" << std::endl;
+    log(logStream, logFile);
+
+    int nbStepsTotal = orbitals.get_numberOfMo() * (orbitals.get_numberOfMo() + 1) / 2;
+    int currentStep = 0;
+    int lastProgress = -1;
+    if (showProgress)
+    {
+        print_progressBar(0, nbStepsTotal, lastProgress);
+    }
+
     std::cout << std::scientific;
     std::cout << std::setprecision(10);
     logStream << std::scientific;
@@ -2608,18 +2737,38 @@ void Job::run_computeEnergyWithPointCharges()
             V_ij = 0.0;
             for (const Atom& atom : orbitals.get_struct().get_atoms())
             {
-                V_ij += becke.ionic_potential(i, j, SpinType::ALPHA, atom.get_coordinates(), atom.get_atomicNumber());
+                V_ij += becke.ionic_potential(i, j, SpinType::ALPHA, atom.get_coordinates(), atom.get_atomicNumber(), beckeParams[0], beckeParams[1], beckeParams[2]);
             }
 
             sum_phi_i_Vnuclear_phi_j_alpha += (i == j ? V_ij : 2.0 * V_ij);
             logStream << std::right << std::setw(17) << V_ij << '\t';
+
+            currentStep++;
         }
         logStream << std::endl;
+
+        if (showProgress)
+        {
+            print_progressBar(currentStep, nbStepsTotal, lastProgress);
+        }
+    }
+    if (showProgress)
+    {
+        std::cout << std::endl;
     }
     logStream << std::defaultfloat << "Total sum of MO matrix elements for Alpha spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_alpha << std::endl;
     log(logStream, logFile);
 
     logStream << "Ionic potential matrix in MO basis for Beta spin:" << std::endl;
+    log(logStream, logFile);
+
+    currentStep = 0;
+    lastProgress = -1;
+    if (showProgress)
+    {
+        print_progressBar(0, nbStepsTotal, lastProgress);
+    }
+
     std::cout << std::scientific;
     std::cout << std::setprecision(10);
     logStream << std::scientific;
@@ -2631,13 +2780,24 @@ void Job::run_computeEnergyWithPointCharges()
             V_ij = 0.0;
             for (const Atom& atom : orbitals.get_struct().get_atoms())
             {
-                V_ij += becke.ionic_potential(i, j, SpinType::BETA, atom.get_coordinates(), atom.get_atomicNumber());
+                V_ij += becke.ionic_potential(i, j, SpinType::BETA, atom.get_coordinates(), atom.get_atomicNumber(), beckeParams[0], beckeParams[1], beckeParams[2]);
             }
 
             sum_phi_i_Vnuclear_phi_j_beta += (i == j ? V_ij : 2.0 * V_ij);
             logStream << std::right << std::setw(17) << V_ij << '\t';
+            
+            currentStep++;
         }
         logStream << std::endl;
+
+        if (showProgress)
+        {
+            print_progressBar(currentStep, nbStepsTotal, lastProgress);
+        }
+    }
+    if (showProgress)
+    {
+        std::cout << std::endl;
     }
     logStream << std::defaultfloat << "Total sum of MO matrix elements for Beta spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_beta << std::endl;
     log(logStream, logFile);
@@ -2645,6 +2805,7 @@ void Job::run_computeEnergyWithPointCharges()
     sum_phi_i_Vnuclear_phi_j = sum_phi_i_Vnuclear_phi_j_alpha + sum_phi_i_Vnuclear_phi_j_beta;
     logStream << "Total sum of MO matrix elements for Alpha and Beta spins (Becke Grid): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl;
     log(logStream, logFile);
+    */
 }
 
 void Job::run_computeGridDifference()

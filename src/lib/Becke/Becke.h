@@ -49,6 +49,12 @@ class Becke
         /** @brief Indicates whether multigrid mode is active (true) or not (false). */
         bool _multigrid;
 
+        // debug
+        std::vector<std::vector<double>> __debug_AOMatrix;
+        std::vector<std::vector<std::vector<double>>> __debug_MOMatrix;
+        double __debug_totalSumAO = 0.0;
+        std::vector<double> __debug_totalSumMO = std::vector<double>(2, 0.0);
+
 
     public:
         /** 
@@ -283,6 +289,9 @@ class Becke
          */
         void partial_charge(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
+
+        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, bool debug = false, bool printAOMatrix = false, bool printMOMatrix = false);
+        
         /**
          * @brief Calculates and returns the ionic potential energy.
          */

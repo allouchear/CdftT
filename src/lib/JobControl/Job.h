@@ -50,6 +50,13 @@ class Job
          */
         void readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames);
 
+        /**
+         * @brief Reads the Becke parameters from the "Becke" parameter in the input file.
+         *
+         * @param[out] beckeParameters Reference to a vector where the read Becke parameters will be stored.
+         */
+        void readBecke(std::vector<int>& beckeParameters);
+
         /** @brief Reads the charges of the point charges from the "Charges" parameter in the input file.
          * 
          * @param[out] charges Reference to a vector of doubles where the read charge values will be stored.
