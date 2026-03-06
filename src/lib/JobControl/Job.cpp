@@ -791,16 +791,14 @@ void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedStat
     }
     for (i = 0; i < nbStates; ++i)
     {
-        // Get Slater Determinants for state i
-        std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_i(states[i].get_slaterDeterminants());
+        const ExcitedState& psi_i = states[i];
 
         for (j = 0; j <= i; ++j)
         {
+            const ExcitedState& psi_j = states[j];
+
             // Initialize < psi_i | H | psi_j > matrix element
             double matrixElement = 0.0;
-
-            // Get Slater Determinants for state j
-            std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].get_slaterDeterminants());
 
             // Compute < psi_i | H_0 | psi_j >
             double h0Contribution = (i == j ? states[i].get_energy() : 0.0);
@@ -834,17 +832,7 @@ void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedStat
             double chargeContribution = 0.0;
             for (size_t chargeIndex = 0; chargeIndex < nbCharges; ++chargeIndex)
             {
-                double currentChargeContribution = 0.0;
-
-                for (const std::pair<SlaterDeterminant, double>& slaterCoeff_i : slaterDeterminants_i)
-                {
-                    for (const std::pair<SlaterDeterminant, double>& slaterCoeff_j : slaterDeterminants_j)
-                    {
-                        // Compute < D_i | V_ion/electrons | D_j > contribution in < psi_i | V_ion/electrons | psi_j >
-                        currentChargeContribution += SlaterDeterminant::ionicPotential(slaterCoeff_i.first, slaterCoeff_j.first, ionicMatrixes[chargeIndex]) * (slaterCoeff_i.second * slaterCoeff_j.second);
-                    }
-                }
-
+                double currentChargeContribution = ExcitedState::ionicPotential(psi_i, psi_j, ionicMatrixes[chargeIndex]);
                 chargeContribution += currentChargeContribution;
                 if (verbose >= 3)
                 {
@@ -886,13 +874,18 @@ void Job::computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedStat
 
 template<typename T, typename U> U Job::computeOrbitalsOrBecke(const std::string& analyticFileName)
 {
-    Factorial fact(100);
-    Binomial bino(100, fact);
-
     std::ifstream analyticFile(analyticFileName);
+    if (!analyticFile)
+    {
+        print_error("Error: could not read file " + analyticFileName + ".");
+        std::exit(1);
+    }
+
     T analyticFileParser(analyticFile);
     analyticFile.close();
 
+    Factorial fact(100);
+    Binomial bino(100, fact);
     U analyticObject(analyticFileParser, bino, _table);
     
     return analyticObject;
@@ -2437,7 +2430,7 @@ void Job::run_computeEnergyWithPointCharges()
     }
 
 
-
+    
     ////////////////////////////////////
     // Debug - V_nuclear calculations //
     ////////////////////////////////////
@@ -2543,7 +2536,8 @@ void Job::run_computeEnergyWithPointCharges()
         }
     }
     log(logStream, logFile);
-    /*
+
+
     // COMPARAISON AVEC CALCUL SUR GRILLE
     logStream << std::endl << std::endl << "====================== REGULAR GRID COMPUTATION ======================" << std::endl << std::endl;
     log(logStream, logFile);
@@ -2659,7 +2653,7 @@ void Job::run_computeEnergyWithPointCharges()
     sum_phi_i_Vnuclear_phi_j = sum_phi_i_Vnuclear_phi_j_alpha + sum_phi_i_Vnuclear_phi_j_beta;
     logStream << "Total sum of MO matrix elements for Alpha and Beta spins (regular Grid): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl;
     log(logStream, logFile);
-    
+
 
     // COMPARAISON AVEC BECKE
     logStream << std::endl << std::endl << "====================== BECKE GRID COMPUTATION ======================" << std::endl << std::endl;
@@ -2711,7 +2705,6 @@ void Job::run_computeEnergyWithPointCharges()
     }
     logStream << "Total sum of MO matrix elements for Alpha and Beta spins (Becke): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl << std::endl;
     log(logStream, logFile);
-    */
 
 
     /* OLD

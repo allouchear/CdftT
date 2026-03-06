@@ -113,16 +113,17 @@ class ExcitedState
         // STATIC METHODS
         //----------------------------------------------------------------------------------------------------//
 
-        /** @brief Builds a vector of states after a perturbation, based on the unperturbed states and the eigenvalues and eigenvectors.
+        ////////////////////////////////////////
+        // GROUND STATE ENERGY READING METHODS
+
+        /**
+         * @brief Reads the energy of the ground state from a file.
          * 
-         * The method assumes that the first unperturbed state is the ground state.
-         *
-         * @param[in] unperturbedStates Vector of unperturbed excited states.
-         * @param[in] energies Vector of energy values (eigenvalues).
-         * @param[in] eigenvectors Matrix of eigenvectors.
-         * @return Vector of perturbed excited states.
+         * @param[in] fileName Name of the file to read.
+         * @param[out] groundStateEnergy Energy of the ground state, in Hartree.
+         * @return True if reading was successful, false otherwise.
          */
-        static std::vector<ExcitedState> buildPerturbedStates(const std::vector<ExcitedState>& unperturbedStates, const std::vector<double>& energies, const std::vector<std::vector<double>>& eigenvectors);
+        static bool readGroundStateEnergy(const std::string& fileName, double& groundStateEnergy);
 
         /**
          * @brief Reads the energy of the ground state from an Orca .out file.
@@ -142,14 +143,18 @@ class ExcitedState
          */
         static bool readGroundStateEnergyFromTransitionsFile(const std::string& transitionsFileName, double& groundStateEnergy);
 
+        ////////////////////////////////
+        // TRANSITIONS READING METHODS
+
         /**
-         * @brief Reads the energy of the ground state from a file.
-         * 
+         * @brief Reads transitions from the provided file and populates a vector of ExcitedState objects.
+         *
          * @param[in] fileName Name of the file to read.
-         * @param[out] groundStateEnergy Energy of the ground state, in Hartree.
+         * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
+         * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
          * @return True if reading was successful, false otherwise.
          */
-        static bool readGroundStateEnergy(const std::string& fileName, double& groundStateEnergy);
+        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
 
         /**
          * @brief Reads a transitions file and populates a vector of ExcitedState objects.
@@ -171,15 +176,30 @@ class ExcitedState
          */
         static bool readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
 
+        /////////////////////////
+        // OTHER STATIC METHODS
+
         /**
-         * @brief Reads transitions from the provided file and populates a vector of ExcitedState objects.
+         * @brief Builds a vector of states after a perturbation, based on the unperturbed states and the eigenvalues and eigenvectors.
          *
-         * @param[in] fileName Name of the file to read.
-         * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
-         * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
-         * @return True if reading was successful, false otherwise.
+         * The method assumes that the first unperturbed state is the ground state.
+         *
+         * @param[in] unperturbedStates Vector of unperturbed excited states.
+         * @param[in] energies Vector of energy values (eigenvalues).
+         * @param[in] eigenvectors Matrix of eigenvectors.
+         * @return Vector of perturbed excited states.
          */
-        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
+        static std::vector<ExcitedState> buildPerturbedStates(const std::vector<ExcitedState>& unperturbedStates, const std::vector<double>& energies, const std::vector<std::vector<double>>& eigenvectors);
+
+        /**
+         * @brief Calculates the ionic potential between two excited states.
+         *
+         * @param[in] psi_i First excited state.
+         * @param[in] psi_j Second excited state.
+         * @param[in] ionicMatrixes Ionic matrix < phi_i | V_ion/electrons | phi_j > (the first index corresponds to alpha spin, the second to beta spin).
+         * @return The ionic potential matrix element < psi_i | V_ion/electrons | psi_j >.
+         */
+        static double ionicPotential(const ExcitedState& psi_i, const ExcitedState& psi_j, const std::vector<std::vector<std::vector<double>>>& ionicMatrixes);
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS

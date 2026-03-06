@@ -116,7 +116,7 @@ void SlaterDeterminant::updateFromTransition(int initialOrbitalNumber, SpinType 
 // STATIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(const SlaterDeterminant& di, const SlaterDeterminant& dj)
+std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(const SlaterDeterminant& d_i, const SlaterDeterminant& d_j)
 {
     std::vector<std::vector<std::pair<int, int>>> differences(2, std::vector<std::pair<int, int>>());
 
@@ -126,8 +126,8 @@ std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(
     std::array<int, 2> spins = { ALPHA, BETA };
 
     // Check that the determinants have the same number of occupied orbitals
-    if (di._occupiedOrbitals[ALPHA].size() != dj._occupiedOrbitals[ALPHA].size()
-        || di._occupiedOrbitals[BETA].size() != dj._occupiedOrbitals[BETA].size())
+    if (d_i._occupiedOrbitals[ALPHA].size() != d_j._occupiedOrbitals[ALPHA].size()
+        || d_i._occupiedOrbitals[BETA].size() != d_j._occupiedOrbitals[BETA].size())
     {
         std::stringstream errorMessage;
         errorMessage << "Error in SlaterDeterminant::getDifferences(): Slater determinants have different numbers of occupied orbitals." << std::endl;
@@ -139,11 +139,11 @@ std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(
     // Check for differences in occupied orbitals for each spin type
     for (int spin : spins)
     {
-        for (size_t i = 0; i < di._occupiedOrbitals[spin].size(); ++i)
+        for (size_t i = 0; i < d_i._occupiedOrbitals[spin].size(); ++i)
         {
-            if (di._occupiedOrbitals[spin][i].first != dj._occupiedOrbitals[spin][i].first)
+            if (d_i._occupiedOrbitals[spin][i].first != d_j._occupiedOrbitals[spin][i].first)
             {
-                differences[spin].emplace_back(di._occupiedOrbitals[spin][i].first, dj._occupiedOrbitals[spin][i].first);
+                differences[spin].emplace_back(d_i._occupiedOrbitals[spin][i].first, d_j._occupiedOrbitals[spin][i].first);
             }
         }
     }
@@ -151,13 +151,12 @@ std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(
     return differences;
 }
 
-double SlaterDeterminant::overlap(const SlaterDeterminant& di, const SlaterDeterminant& dj)
+double SlaterDeterminant::overlap(const SlaterDeterminant& d_i, const SlaterDeterminant& d_j)
 {
-    return di == dj ? 1.0 : 0.0;
+    return d_i == d_j ? 1.0 : 0.0;
 }
 
-bool printedOnce = false;
-double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::vector<std::vector<std::vector<double>>>& ionicMatrix)
+double SlaterDeterminant::ionicPotential(const SlaterDeterminant& d_i, const SlaterDeterminant& d_j, const std::vector<std::vector<std::vector<double>>>& ionicMatrix)
 {
     double sum = 0.0;
 
@@ -167,21 +166,21 @@ double SlaterDeterminant::ionicPotential(const SlaterDeterminant& di, const Slat
     std::array<int, 2> spins = {ALPHA, BETA};
 
     // Apply Slater-Condon rules
-    if (di == dj)
+    if (d_i == d_j)
     {
         // Interaction with the electrons
         for (int spin : spins)
         {
-            for (size_t i = 0; i < di._occupiedOrbitals[spin].size(); ++i)
+            for (size_t i = 0; i < d_i._occupiedOrbitals[spin].size(); ++i)
             {
-                int orbitalIndex = di._occupiedOrbitals[spin][i].first - 1;
+                int orbitalIndex = d_i._occupiedOrbitals[spin][i].first - 1;
                 sum += ionicMatrix[spin][orbitalIndex][orbitalIndex];
             }
         }
     }
     else
     {
-        std::vector<std::vector<std::pair<int, int>>> differences = getDifferences(di, dj);
+        std::vector<std::vector<std::pair<int, int>>> differences = getDifferences(d_i, d_j);
 
         // Check that there is only one difference in total
         if (differences[ALPHA].size() + differences[BETA].size() == 1)

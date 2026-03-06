@@ -73,17 +73,17 @@ class SlaterDeterminant
         /**
          * @brief Computes the differences in occupied orbitals between two Slater determinants.
          * 
-         * @param di First Slater determinant.
-         * @param dj Second Slater determinant.
+         * @param d_i First Slater determinant.
+         * @param d_j Second Slater determinant.
          * @return A vector containing the differences in occupied orbitals for each spin type (first index corresponds to alpha spin, second to beta spin)
          */
-        static std::vector<std::vector<std::pair<int, int>>> getDifferences(const SlaterDeterminant& di, const SlaterDeterminant& dj);
+        static std::vector<std::vector<std::pair<int, int>>> getDifferences(const SlaterDeterminant& d_i, const SlaterDeterminant& d_j);
 
         /**
          * @brief Computes the overlap between two Slater determinants.
          *
-         * @param[in] di First Slater determinant.
-         * @param[in] dj Second Slater determinant.
+         * @param[in] d_i First Slater determinant.
+         * @param[in] d_j Second Slater determinant.
          * @return The overlap < D_i | D_j > between the two Slater determinants.
          */
         static double overlap(const SlaterDeterminant& di, const SlaterDeterminant& dj);
@@ -91,12 +91,12 @@ class SlaterDeterminant
         /**
          * @brief Computes the ionic potential matrix element between two Slater determinants.
          *
-         * @param[in] di First Slater determinant.
-         * @param[in] dj Second Slater determinant.
+         * @param[in] d_i First Slater determinant.
+         * @param[in] d_j Second Slater determinant.
          * @param[in] ionicMatrix Ionic matrix < phi_i | V_ion/electrons | phi_j > (the first index corresponds to alpha spin, the second to beta spin).
-         * @return The ionic potential matrix element < D_k | V_ion/electrons | D_l >.
+         * @return The ionic potential matrix element < D_i | V_ion/electrons | D_j >.
          */
-        static double ionicPotential(const SlaterDeterminant& di, const SlaterDeterminant& dj, const std::vector<std::vector<std::vector<double>>>& ionicMatrix);
+        static double ionicPotential(const SlaterDeterminant& d_i, const SlaterDeterminant& d_j, const std::vector<std::vector<std::vector<double>>>& ionicMatrix);
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS

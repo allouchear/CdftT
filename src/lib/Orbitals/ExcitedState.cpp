@@ -171,59 +171,32 @@ void ExcitedState::printLambdaDiagnostic(const Grid& grid) const
 // STATIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-std::vector<ExcitedState> ExcitedState::buildPerturbedStates(const std::vector<ExcitedState>& unperturbedStates, const std::vector<double>& energies, const std::vector<std::vector<double>>& eigenvectors)
+////////////////////////////////////////
+// GROUND STATE ENERGY READING METHODS
+
+bool ExcitedState::readGroundStateEnergy(const std::string& fileName, double& groundStateEnergy)
 {
-    const SlaterDeterminant& groundStateSlaterDeterminant = unperturbedStates[0].get_slaterDeterminants()[0].first;
+    bool ok = true;
 
-    std::vector<ExcitedState> perturbedStates;
-    perturbedStates.reserve(unperturbedStates.size());
-
-    for (size_t i = 0; i < unperturbedStates.size(); ++i)
+    if (to_lower(fileName.substr(fileName.length() - 5)) == ".fchk")
     {
-        perturbedStates.emplace_back(energies[i]);
-        ExcitedState& currentPerturbedState = perturbedStates.back();
-
-        for (size_t k = 0; k < unperturbedStates.size(); ++k)
-        {
-            double c_k = eigenvectors[k][i];
-
-            if (c_k != 0.0)
-            {
-                // First handle the case where the unperturbed state is the ground state (i.e., has no electronic transitions)
-                if (unperturbedStates[k].isGroundState())
-                {
-                    // Add the ground state Slater determinant with its contribution
-                    currentPerturbedState._slaterDeterminants.emplace_back(unperturbedStates[k]._slaterDeterminants[0].first, c_k);
-                }
-                else
-                {
-                    // Then handle the case where the unperturbed state is an excited state (i.e., has one or more electronic transitions)
-                    for (const auto& electronicTransition : unperturbedStates[k]._electronicTransitions)
-                    {
-                        // Search for the electronic transition in the _electronicTransitions vector
-                        auto it = std::find_if(currentPerturbedState._electronicTransitions.begin(),
-                                            currentPerturbedState._electronicTransitions.end(),
-                                            [&electronicTransition](const auto& element) { return (std::get<0>(element) == std::get<0>(electronicTransition) && std::get<1>(element) == std::get<1>(electronicTransition)); });
-
-                        // If it is not found, add it to the electronic transitions with its contribution.
-                        if (it == currentPerturbedState._electronicTransitions.end())
-                        {
-                            currentPerturbedState._electronicTransitions.emplace_back(std::get<0>(electronicTransition), std::get<1>(electronicTransition), c_k * std::get<2>(electronicTransition));
-                        }
-                        else
-                        {
-                            std::get<2>(*it) += c_k * std::get<2>(electronicTransition);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Compute the Slater determinants associated with the perturbed state based on its electronic transitions
-        currentPerturbedState.computeSlaterDeterminants(groundStateSlaterDeterminant);
+        ok = FCHK::readGroundStateEnergy(fileName, groundStateEnergy);
+    }
+    else if (to_lower(fileName.substr(fileName.length() - 4)) == ".log")
+    {
+        ok = LOG::readGroundStateEnergy(fileName, groundStateEnergy);
+    }
+    else if (to_lower(fileName.substr(fileName.length() - 4)) == ".out")
+    {
+        ok = readGroundStateEnergyFromOutFile(fileName, groundStateEnergy);
+    }
+    else
+    {
+        // Try to read as a transitions file
+        ok = readGroundStateEnergyFromTransitionsFile(fileName, groundStateEnergy);
     }
 
-    return perturbedStates;
+    return ok;
 }
 
 bool ExcitedState::readGroundStateEnergyFromOutFile(const std::string& orcaOutFileName, double& energy)
@@ -308,28 +281,27 @@ bool ExcitedState::readGroundStateEnergyFromTransitionsFile(const std::string& t
     return (ok && found);
 }
 
-bool ExcitedState::readGroundStateEnergy(const std::string& fileName, double& groundStateEnergy)
+/////////////////////////////////////
+// TRANSITIONS FILE READING METHODS
+
+bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy)
 {
     bool ok = true;
 
-    if (to_lower(fileName.substr(fileName.length() - 5)) == ".fchk")
+    if (to_lower(fileName.substr(fileName.length() - 4)) == ".log")
     {
-        ok = FCHK::readGroundStateEnergy(fileName, groundStateEnergy);
-    }
-    else if (to_lower(fileName.substr(fileName.length() - 4)) == ".log")
-    {
-        ok = LOG::readGroundStateEnergy(fileName, groundStateEnergy);
+        ok = LOG::readTransitions(fileName, excitedStates, groundStateEnergy);
     }
     else if (to_lower(fileName.substr(fileName.length() - 4)) == ".out")
     {
-        ok = readGroundStateEnergyFromOutFile(fileName, groundStateEnergy);
+        ok = readTransitionsFromOutFile(fileName, excitedStates, groundStateEnergy);
     }
     else
     {
         // Try to read as a transitions file
-        ok = readGroundStateEnergyFromTransitionsFile(fileName, groundStateEnergy);
+        ok = readTransitionsFile(fileName, excitedStates, groundStateEnergy);
     }
-    
+
     return ok;
 }
 
@@ -641,25 +613,79 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
     return ok;
 }
 
-bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy)
+/////////////////////////
+// OTHER STATIC METHODS
+
+std::vector<ExcitedState> ExcitedState::buildPerturbedStates(const std::vector<ExcitedState>& unperturbedStates, const std::vector<double>& energies, const std::vector<std::vector<double>>& eigenvectors)
 {
-    bool ok = true;
+    const SlaterDeterminant& groundStateSlaterDeterminant = unperturbedStates[0].get_slaterDeterminants()[0].first;
 
-    if (to_lower(fileName.substr(fileName.length() - 4)) == ".log")
+    std::vector<ExcitedState> perturbedStates;
+    perturbedStates.reserve(unperturbedStates.size());
+
+    for (size_t i = 0; i < unperturbedStates.size(); ++i)
     {
-        ok = LOG::readTransitions(fileName, excitedStates, groundStateEnergy);
-    }
-    else if (to_lower(fileName.substr(fileName.length() - 4)) == ".out")
-    {
-        ok = readTransitionsFromOutFile(fileName, excitedStates, groundStateEnergy);
-    }
-    else
-    {
-        // Try to read as a transitions file
-        ok = readTransitionsFile(fileName, excitedStates, groundStateEnergy);
+        perturbedStates.emplace_back(energies[i]);
+        ExcitedState& currentPerturbedState = perturbedStates.back();
+
+        for (size_t k = 0; k < unperturbedStates.size(); ++k)
+        {
+            double c_k = eigenvectors[k][i];
+
+            if (c_k != 0.0)
+            {
+                // First handle the case where the unperturbed state is the ground state (i.e., has no electronic transitions)
+                if (unperturbedStates[k].isGroundState())
+                {
+                    // Add the ground state Slater determinant with its contribution
+                    currentPerturbedState._slaterDeterminants.emplace_back(unperturbedStates[k]._slaterDeterminants[0].first, c_k);
+                }
+                else
+                {
+                    // Then handle the case where the unperturbed state is an excited state (i.e., has one or more electronic transitions)
+                    for (const auto& electronicTransition : unperturbedStates[k]._electronicTransitions)
+                    {
+                        // Search for the electronic transition in the _electronicTransitions vector
+                        auto it = std::find_if(currentPerturbedState._electronicTransitions.begin(),
+                                               currentPerturbedState._electronicTransitions.end(),
+                                               [&electronicTransition](const auto& element)
+                                               { return (std::get<0>(element) == std::get<0>(electronicTransition) && std::get<1>(element) == std::get<1>(electronicTransition)); });
+
+                        // If it is not found, add it to the electronic transitions with its contribution.
+                        if (it == currentPerturbedState._electronicTransitions.end())
+                        {
+                            currentPerturbedState._electronicTransitions.emplace_back(std::get<0>(electronicTransition), std::get<1>(electronicTransition), c_k * std::get<2>(electronicTransition));
+                        }
+                        else
+                        {
+                            std::get<2>(*it) += c_k * std::get<2>(electronicTransition);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Compute the Slater determinants associated with the perturbed state based on its electronic transitions
+        currentPerturbedState.computeSlaterDeterminants(groundStateSlaterDeterminant);
     }
 
-    return ok;
+    return perturbedStates;
+}
+
+double ExcitedState::ionicPotential(const ExcitedState& psi_i, const ExcitedState& psi_j, const std::vector<std::vector<std::vector<double>>>& ionicMatrixes)
+{
+    double sum = 0.0;
+
+    for (const std::pair<SlaterDeterminant, double>& slaterCoeff_i : psi_i._slaterDeterminants)
+    {
+        for (const std::pair<SlaterDeterminant, double>& slaterCoeff_j : psi_j._slaterDeterminants)
+        {
+            // Compute < D_i | V_ion/electrons | D_j > contribution in < psi_i | V_ion/electrons | psi_j >
+            sum += SlaterDeterminant::ionicPotential(slaterCoeff_i.first, slaterCoeff_j.first, ionicMatrixes) * (slaterCoeff_i.second * slaterCoeff_j.second);
+        }
+    }
+
+    return sum;
 }
 
 //----------------------------------------------------------------------------------------------------//
