@@ -1,23 +1,22 @@
-# ignore ALL .log files
-*.log
-# ignore ALL files in ANY directory named temp
+# Directories
 bin/
 Documentation/
-# ignore ALL .cdftt files (output files)
+
+# Files
+
 *.cdftt
-# ignore ALL .o files
-*/*/*/*.wfx
-*/*/*/*.molden
-*/*/*/*.gab
-*/*/*/*.log
-*/*/*/*.fchk
-*/*/*.cube
-*/*/*.gcube
-*/*/*.chk
-*/*/*/*.cube
-*.cube
+*.chk
 *.com
-*.o
+*.cube
 *.exe
-# p
-p
+*.fchk
+*.gab
+*.gcube
+*.log
+*.molden
+*.o
+*.out
+*.sh
+*.serr
+*.sout
+*.wfx
