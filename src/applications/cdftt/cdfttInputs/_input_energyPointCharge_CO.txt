@@ -1,6 +1,6 @@
 Charges=-0.1
 RunType=ComputeEnergyWithPointCharges
-AnalyticFiles=tests/CC-pvtz/CO_TDDFT.log
+AnalyticFiles=tests/CC-pvtz/CO_TDDFT.fchk
 TransitionsFile=tests/transitionsFiles/transitions_CO.txt
 Positions=2.0,2.0,2.0
 Size=Custom
