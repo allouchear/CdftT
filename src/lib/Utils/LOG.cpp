@@ -93,6 +93,12 @@ void LOG::read_atoms_data(std::ifstream& f)
 
     pos=LocaliseDataLogBefore(f, "NAtoms=");
 
+    if (pos < 0)
+    {
+        print_error("Error: could not find NAtoms in LOG file.");
+        std::exit(1);
+    }
+
     f.seekg(pos);
     getline(f,p);
     std::stringstream sp(p);

@@ -700,6 +700,16 @@ template<typename T, typename U> U Job::computeOrbitalsOrBecke(const std::string
     Binomial bino(100, fact);
 
     std::ifstream analyticFile(analyticFileName);
+    if (!analyticFile.is_open())
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: could not open file \"" << analyticFileName << "\"." << std::endl;
+        errorMessage << "Please check if the file exists and if the path is correct in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
     T analyticFileParser(analyticFile);
     analyticFile.close();
     
