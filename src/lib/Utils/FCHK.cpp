@@ -390,43 +390,41 @@ bool FCHK::readGroundStateEnergy(const std::string& fchkFileName, double& ground
     bool found = false;
 
     std::ifstream logFile(fchkFileName);
-    if (logFile)
+    if (!logFile)
     {
-        std::string line;
-        while (!logFile.eof() && !found)
-        {
-            std::getline(logFile, line);
-            line = trim_whitespaces(line, true, true);
-
-            if (line.empty())
-            {
-                continue;
-            }
-            else
-            {
-                std::regex energyRegex("SCF Energy\\s+R\\s+(-?\\d+(?:\\.\\d+)?(?:E(?:\\+|-)\\d+)?)");
-                std::smatch energyRegexMatch;
-                if (std::regex_search(line, energyRegexMatch, energyRegex))
-                {
-                    groundStateEnergy = std::stod(energyRegexMatch[1]);
-                    found = true;
-                }
-            }
-        }
-
-        if (!found)
-        {
-            print_error("Error: could not read energy from FCHK file.");
-            std::exit(1);
-        }
-
-        logFile.close();
-    }
-    else
-    {
-        print_error("Error: could not read file " + fchkFileName + ".");
+        print_error("Error in FCHK::readGroundStateEnergy(): could not read file " + fchkFileName + ".");
         std::exit(1);
     }
 
+    std::string line;
+    while (!logFile.eof() && !found)
+    {
+        std::getline(logFile, line);
+        line = trim_whitespaces(line, true, true);
+
+        if (line.empty())
+        {
+            continue;
+        }
+        else
+        {
+            std::regex energyRegex("SCF Energy\\s+R\\s+(-?\\d+(?:\\.\\d+)?(?:E(?:\\+|-)\\d+)?)");
+            std::smatch energyRegexMatch;
+            if (std::regex_search(line, energyRegexMatch, energyRegex))
+            {
+                groundStateEnergy = std::stod(energyRegexMatch[1]);
+                found = true;
+            }
+        }
+    }
+
+    logFile.close();
+
+    if (!found)
+    {
+        print_error("Error in FCHK::readGroundStateEnergy(): could not read energy from FCHK file.");
+        std::exit(1);
+    }
+    
     return (ok && found);
 }

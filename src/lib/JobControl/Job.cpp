@@ -615,59 +615,98 @@ Job::~Job()
     _inputFile.close();
 }
 /******************************************************************************************/
-void Job::buildBasins(GridCP &gcp, const std::string &GridFileName, PartitionMethod partitionMethod)
+
+void Job::buildBasins(GridCP& gridCP, const std::string& gridFileName, PartitionMethod partitionMethod)
 {
-    std::ifstream gridf(GridFileName);
-    Grid g(gridf, _table);    
-    gcp.buildBasins(g, partitionMethod);
+    std::ifstream gridFile(gridFileName);
+    if (!gridFile)
+    {
+        print_error("Error: could not read file " + gridFileName + ".");
+        std::exit(1);
+    }
+
+    Grid g(gridFile, _table);
+    gridFile.close();
+
+    gridCP.buildBasins(g, partitionMethod);
 }
-void Job::buildBasinsBySign(GridCP& gcp, const std::string& GridFileName,  double cutoff, bool two) 
+
+void Job::buildBasinsBySign(GridCP& gridCP, const std::string& gridFileName,  double cutoff, bool two) 
 {
-    std::ifstream gridf(GridFileName);
-    Grid g(gridf, _table);
-    gridf.close();
+    std::ifstream gridFile(gridFileName);
+    if (!gridFile)
+    {
+        print_error("Error in Job::buildBasinsBySign(): could not read file " + gridFileName + ".");
+        std::exit(1);
+    }
+
+    Grid g(gridFile, _table);
+    gridFile.close();
+
     if (two)
     {
-            gcp.build2BasinSign(g);
+            gridCP.build2BasinSign(g);
     }    
     else
     {
-            gcp.buildBasinsBySign(g, cutoff);
+            gridCP.buildBasinsBySign(g, cutoff);
     }    
 }
-void Job::computeLocalIntegrals(GridCP& gcp, const std::vector<std::string>& GridFileNames)
+
+void Job::computeLocalIntegrals(GridCP& gridCP, const std::vector<std::string>& gridFileNames)
 {
-    for(size_t i=0;i<GridFileNames.size();i++)
+    for(size_t i = 0; i < gridFileNames.size(); ++i)
     {
-        std::ifstream f(GridFileNames[i]);
-        Grid g(f,_table);
-        f.close();
-        gcp.computeIntegrals(g);
-        gcp.printCriticalPoints();
+        std::ifstream gridFile(gridFileNames[i]);
+        if (!gridFile)
+        {
+            print_error("Error in Job::computeLocalIntegrals(): could not read file " + gridFileNames[i] + ".");
+            std::exit(1);
+        }
+
+        Grid g(gridFile,_table);
+        gridFile.close();
+
+        gridCP.computeIntegrals(g);
+        gridCP.printCriticalPoints();
     }
 }
 
-void Job::computeGridDifference(const std::string& minuendGridFilename, const std::string& subtrahendGridFilename, const std::string& outputGridFilename)
+void Job::computeGridDifference(const std::string& minuendGridFileName, const std::string& subtrahendGridFileName, const std::string& outputGridFileName)
 {
-    std::ifstream minuendFile(minuendGridFilename);
-    Grid minuendGrid(minuendFile, _table);
+    std::ifstream minuendFile(minuendGridFileName);
+    if (!minuendFile)
+    {
+        print_error("Error in Job::computeGridDifference(): could not read file " + minuendGridFileName + ".");
+        std::exit(1);
+    }
 
-    std::ifstream subtrahendFile(subtrahendGridFilename);
+    Grid minuendGrid(minuendFile, _table);
+    minuendFile.close();
+
+    std::ifstream subtrahendFile(subtrahendGridFileName);
+    if (!subtrahendFile)
+    {
+        print_error("Error in Job::computeGridDifference(): could not read file " + subtrahendGridFileName + ".");
+        std::exit(1);
+    }
+
     Grid subtrahendGrid(subtrahendFile, _table);
+    subtrahendFile.close();
 
     Grid diff = minuendGrid - subtrahendGrid;
 
-    minuendFile.close();
-    subtrahendFile.close();
-
-    std::ofstream out(outputGridFilename, std::ios::out);
-    if (out.fail())
+    std::ofstream outputGridFile(outputGridFileName, std::ios::out);
+    if (!outputGridFile)
     {
-        std::cout << "Failed to write to file " << outputGridFilename << "..." << std::endl;
+        print_error("Error in Job::computeGridDifference(): failed to write to file " + outputGridFileName + ".");
+        std::exit(1);
     }
 
-    diff.save(out);
-    std::cout << "Grid has been saved to : " << outputGridFilename << std::endl;
+    diff.save(outputGridFile);
+    outputGridFile.close();
+
+    std::cout << "Grid has been saved to : " << outputGridFileName << std::endl;
 }
 
 void Job::printCriticalPoints()
@@ -675,12 +714,19 @@ void Job::printCriticalPoints()
     std::cerr << "Function Job::printCriticalPoints() not implemented yet." << std::endl;
 }
 
-std::vector<double> Job::computePartialCharges(const std::string& gridFilename, PartitionMethod partitionMethod)
+std::vector<double> Job::computePartialCharges(const std::string& gridFileName, PartitionMethod partitionMethod)
 {
     std::vector<double> charges;
 
-    std::ifstream gridFile(gridFilename);
+    std::ifstream gridFile(gridFileName);
+    if (!gridFile)
+    {
+        print_error("Error in Job::computeLocalIntegrals(): could not read file " + gridFileName + ".");
+        std::exit(1);
+    }
+
     Grid grid(gridFile, _table);
+    gridFile.close();
 
     if (partitionMethod == PartitionMethod::BECKE)
     {
@@ -702,11 +748,14 @@ std::vector<double> Job::computePartialCharges(const std::string& gridFilename, 
 
     return charges;
 }
+
 std::vector<double> Job::computePartialChargesAndEnergy(std::vector<double>& energies, const std::string& analyticFileName)
 {
     Becke B;
     computeOrbitalsOrBecke<Becke>(B, analyticFileName);
+
     energies.push_back(B.PartialChargesAndEnergy()[0][0]);
+
     return B.PartialChargesAndEnergy()[1];
 }
 
@@ -714,25 +763,72 @@ Structure Job::returnStruct(const std::string& analyticFileName)
 {
     Becke B;
     computeOrbitalsOrBecke<Becke>(B, analyticFileName);
+
     return B.get_struct();
 }
 
 Descriptors Job::computeDescriptors(const std::string& gridFileName1, const std::string& gridFileName2, const std::string& gridFileName3, double ionizationEnergy, double electronAffinity, PartitionMethod partitionMethod)
 {
-    std::ifstream grid1(gridFileName1);
-    std::ifstream grid2(gridFileName2);
-    std::ifstream grid3(gridFileName3);
-    Descriptors D(grid1, grid2, grid3, ionizationEnergy, electronAffinity, partitionMethod);
+    std::ifstream gridFile1(gridFileName1);
+    if (!gridFile1)
+    {
+        print_error("Error in Job::computeDescriptors(): could not read file " + gridFileName1 + ".");
+        std::exit(1);
+    }
+
+    std::ifstream gridFile2(gridFileName2);
+    if (!gridFile2)
+    {
+        print_error("Error in Job::computeDescriptors(): could not read file " + gridFileName2 + ".");
+        std::exit(1);
+    }
+
+    std::ifstream gridFile3(gridFileName3);
+    if (!gridFile3)
+    {
+        print_error("Error in Job::computeDescriptors(): could not read file " + gridFileName3 + ".");
+        std::exit(1);
+    }
+
+    Descriptors D(gridFile1, gridFile2, gridFile3, ionizationEnergy, electronAffinity, partitionMethod);
+    gridFile1.close();
+    gridFile2.close();
+    gridFile3.close();
+
     return D;
 }
+
 Descriptors Job::computeDescriptors(const std::string& gridFileName1, const std::string& gridFileName2, const std::string& gridFileName3, const std::vector<double>& energies, PartitionMethod partitionMethod)
 {
-    std::ifstream grid1(gridFileName1);
-    std::ifstream grid2(gridFileName2);
-    std::ifstream grid3(gridFileName3);
-    Descriptors D(grid1, grid2, grid3, energies, partitionMethod);
+    std::ifstream gridFile1(gridFileName1);
+    if (!gridFile1)
+    {
+        print_error("Error in Job::computeDescriptors(): could not read file " + gridFileName1 + ".");
+        std::exit(1);
+    }
+
+    std::ifstream gridFile2(gridFileName2);
+    if (!gridFile2)
+    {
+        print_error("Error in Job::computeDescriptors(): could not read file " + gridFileName2 + ".");
+        std::exit(1);
+    }
+
+    std::ifstream gridFile3(gridFileName3);
+    if (!gridFile3)
+    {
+        print_error("Error in Job::computeDescriptors(): could not read file " + gridFileName3 + ".");
+        std::exit(1);
+    }
+
+    Descriptors D(gridFile1, gridFile2, gridFile3, energies, partitionMethod);
+    gridFile1.close();
+    gridFile2.close();
+    gridFile3.close();
+
     return D;
 }
+
 void Job::computeDescriptorsFD(const std::string& ANAFileName1, const std::string& ANAFileName2, const std::string& ANAFileName3)
 {
     std::vector<double> E(0);
@@ -877,7 +973,7 @@ template<typename T, typename U> U Job::computeOrbitalsOrBecke(const std::string
     std::ifstream analyticFile(analyticFileName);
     if (!analyticFile)
     {
-        print_error("Error: could not read file " + analyticFileName + ".");
+        print_error("Error in Job::computeOrbitalsOrBecke(): could not read file " + analyticFileName + ".");
         std::exit(1);
     }
 
@@ -1566,18 +1662,6 @@ void Job::computeResultsEnergyWithPointCharges(const std::vector<ExcitedState>& 
             log(logStream, logFile);
         }
     }
-
-    
-    logStream << "Test ExcitedStates::buildPerturbedStates():" << std::endl;
-    log(logStream, logFile);
-    std::vector<ExcitedState> perturbedStates = ExcitedState::buildPerturbedStates(states, eigenvalues, eigenvectors);
-    for (size_t i = 0; i < perturbedStates.size(); ++i)
-    {
-        logStream << perturbedStates[i] << std::endl;
-        log(logStream, logFile);
-    }
-    logStream << std::endl;
-    log(logStream, logFile);
 
 
 
@@ -2430,7 +2514,7 @@ void Job::run_computeEnergyWithPointCharges()
     }
 
 
-    
+    /*
     ////////////////////////////////////
     // Debug - V_nuclear calculations //
     ////////////////////////////////////
@@ -2537,7 +2621,7 @@ void Job::run_computeEnergyWithPointCharges()
     }
     log(logStream, logFile);
 
-
+    
     // COMPARAISON AVEC CALCUL SUR GRILLE
     logStream << std::endl << std::endl << "====================== REGULAR GRID COMPUTATION ======================" << std::endl << std::endl;
     log(logStream, logFile);
@@ -2705,100 +2789,9 @@ void Job::run_computeEnergyWithPointCharges()
     }
     logStream << "Total sum of MO matrix elements for Alpha and Beta spins (Becke): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl << std::endl;
     log(logStream, logFile);
-
-
-    /* OLD
-    logStream << "Ionic potential matrix in MO basis for Alpha spin:" << std::endl;
-    log(logStream, logFile);
-
-    int nbStepsTotal = orbitals.get_numberOfMo() * (orbitals.get_numberOfMo() + 1) / 2;
-    int currentStep = 0;
-    int lastProgress = -1;
-    if (showProgress)
-    {
-        print_progressBar(0, nbStepsTotal, lastProgress);
-    }
-
-    std::cout << std::scientific;
-    std::cout << std::setprecision(10);
-    logStream << std::scientific;
-    logStream << std::setprecision(10);
-    for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
-    {
-        for (int j = 0; j <= i; ++j)
-        {
-            V_ij = 0.0;
-            for (const Atom& atom : orbitals.get_struct().get_atoms())
-            {
-                V_ij += becke.ionic_potential(i, j, SpinType::ALPHA, atom.get_coordinates(), atom.get_atomicNumber(), beckeParams[0], beckeParams[1], beckeParams[2]);
-            }
-
-            sum_phi_i_Vnuclear_phi_j_alpha += (i == j ? V_ij : 2.0 * V_ij);
-            logStream << std::right << std::setw(17) << V_ij << '\t';
-
-            currentStep++;
-        }
-        logStream << std::endl;
-
-        if (showProgress)
-        {
-            print_progressBar(currentStep, nbStepsTotal, lastProgress);
-        }
-    }
-    if (showProgress)
-    {
-        std::cout << std::endl;
-    }
-    logStream << std::defaultfloat << "Total sum of MO matrix elements for Alpha spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_alpha << std::endl;
-    log(logStream, logFile);
-
-    logStream << "Ionic potential matrix in MO basis for Beta spin:" << std::endl;
-    log(logStream, logFile);
-
-    currentStep = 0;
-    lastProgress = -1;
-    if (showProgress)
-    {
-        print_progressBar(0, nbStepsTotal, lastProgress);
-    }
-
-    std::cout << std::scientific;
-    std::cout << std::setprecision(10);
-    logStream << std::scientific;
-    logStream << std::setprecision(10);
-    for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
-    {
-        for (int j = 0; j <= i; ++j)
-        {
-            V_ij = 0.0;
-            for (const Atom& atom : orbitals.get_struct().get_atoms())
-            {
-                V_ij += becke.ionic_potential(i, j, SpinType::BETA, atom.get_coordinates(), atom.get_atomicNumber(), beckeParams[0], beckeParams[1], beckeParams[2]);
-            }
-
-            sum_phi_i_Vnuclear_phi_j_beta += (i == j ? V_ij : 2.0 * V_ij);
-            logStream << std::right << std::setw(17) << V_ij << '\t';
-            
-            currentStep++;
-        }
-        logStream << std::endl;
-
-        if (showProgress)
-        {
-            print_progressBar(currentStep, nbStepsTotal, lastProgress);
-        }
-    }
-    if (showProgress)
-    {
-        std::cout << std::endl;
-    }
-    logStream << std::defaultfloat << "Total sum of MO matrix elements for Beta spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_beta << std::endl;
-    log(logStream, logFile);
-    
-    sum_phi_i_Vnuclear_phi_j = sum_phi_i_Vnuclear_phi_j_alpha + sum_phi_i_Vnuclear_phi_j_beta;
-    logStream << "Total sum of MO matrix elements for Alpha and Beta spins (Becke Grid): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl;
-    log(logStream, logFile);
     */
+
+    logFile.close();
 }
 
 void Job::run_computeGridDifference()

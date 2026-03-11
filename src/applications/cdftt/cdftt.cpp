@@ -24,9 +24,12 @@ int main(int argc, char* argv[])
 
         print_error(errorMessage.str());
 
-        std::ofstream f(fname);
-        f << "RunType=HELP" << std::endl;
-        f.close();
+        std::ofstream exampleFile(fname);
+        if (exampleFile)
+        {
+            exampleFile << "RunType=HELP" << std::endl;
+            exampleFile.close();
+        }
     }
     else
     {

@@ -272,21 +272,21 @@ class Job
         /**
          * @brief Builds basins from a grid using `partitionMethod`.
          *
-         * @param[out] gcp GridCP reference that will be populated with the constructed basins.
-         * @param[in] GridFileName Path to the input grid (.cube file) used to build basins.
+         * @param[out] gridCP GridCP reference that will be populated with the constructed basins.
+         * @param[in] gridFileName Path to the input grid (.cube file) used to build basins.
          * @param[in] partitionMethod Selected partition method.
          */
-        void buildBasins(GridCP& gcp, const std::string& GridFileName, PartitionMethod partitionMethod);
+        void buildBasins(GridCP& gridCP, const std::string& gridFileName, PartitionMethod partitionMethod);
 
         /**
          * @brief Builds basins by sign of grid values (BBS/B2S partition methods).
          *
-         * @param[out] gcp GridCP reference that will be populated with sign-based basins.
-         * @param[in] GridFileName Path to the grid file used as input.
+         * @param[out] gridCP GridCP reference that will be populated with sign-based basins.
+         * @param[in] gridFileName Path to the grid file used as input.
          * @param[in] cutoff Numerical cutoff below which values are considered zero.
          * @param[in] two If true, builds exactly two basins.
          */
-        void buildBasinsBySign(GridCP& gcp, const std::string& GridFileName, double cutoff, bool two);
+        void buildBasinsBySign(GridCP& gridCP, const std::string& gridFileName, double cutoff, bool two);
 
         /**
          * @brief Builds a `Domain` suitable for cube creation from `orb` and sizing options.
@@ -336,11 +336,11 @@ class Job
         /**
          * @brief Computes the difference between two grids and saves the result to an output file.
          *
-         * @param[in] minuendGridFilename Left (minuend) input grid filename.
-         * @param[in] subtrahendGridFilename Right (subtrahend) input grid filename.
-         * @param[in] outputGridFilename Output filename for the difference grid.
+         * @param[in] minuendGridFileName Left (minuend) input grid filename.
+         * @param[in] subtrahendGridFileName Right (subtrahend) input grid filename.
+         * @param[in] outputGridFileName Output filename for the difference grid.
          */
-        void computeGridDifference(const std::string& minuendGridFilename, const std::string& subtrahendGridFilename, const std::string& outputGridFilename);
+        void computeGridDifference(const std::string& minuendGridFileName, const std::string& subtrahendGridFileName, const std::string& outputGridFileName);
 
         /**
          * @brief Computes < psi_i | H | psi_j > and < psi_i | H-H0 | psi_j > for a set of excited states and one or many point charge(s).
@@ -365,11 +365,11 @@ class Job
         /**
          * @brief Computes partial atomic charges from a grid using the specified method.
          *
-         * @param[in] gridFilename Input grid filename used for partitioning and integration.
+         * @param[in] gridFileName Input grid filename used for partitioning and integration.
          * @param[in] partitionMethod Partition method to use (AIM, VDD, Becke, ...).
          * @return Vector of computed partial charges.
          */
-        std::vector<double> computePartialCharges(const std::string& gridFilename, PartitionMethod partitionMethod);
+        std::vector<double> computePartialCharges(const std::string& gridFileName, PartitionMethod partitionMethod);
 
         /**
          * @brief Computes partial charges and energy values from an analytic file.

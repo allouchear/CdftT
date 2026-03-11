@@ -46,7 +46,7 @@ class Domain
         /** @brief Infinitesimal distance increment along the third (z) axis. */
         double _dz;
 
-        /** @brief Infinitesimal volume increment (equals to _dx * _dy * _dz). */
+        /** @brief Infinitesimal volume increment (equal to _dx * _dy * _dz). */
         double _dv;
 
         //----------------------------------------------------------------------------------------------------//

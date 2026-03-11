@@ -95,7 +95,7 @@ std::vector<double> Descriptors::compute_Charges_From_Becke(const Grid& grid)
     return B.get_Partial_Charge();
 }
 
-std::vector<double> Descriptors::compute_Charges_From_Grid(const Grid &AIM, PartitionMethod partitionMethod)
+std::vector<double> Descriptors::compute_Charges_From_Grid(const Grid& AIM, PartitionMethod partitionMethod)
 {
     GridCP gridcp;
     gridcp.buildBasins(AIM, partitionMethod);
@@ -103,7 +103,7 @@ std::vector<double> Descriptors::compute_Charges_From_Grid(const Grid &AIM, Part
     return Q;
 }
 
-std::vector<double> Descriptors::compute_Charges_From_File(std::ifstream &file, PartitionMethod partitionMethod)
+std::vector<double> Descriptors::compute_Charges_From_File(std::ifstream& file, PartitionMethod partitionMethod)
 {
     PeriodicTable Table;
     Grid AIM(file, Table);
