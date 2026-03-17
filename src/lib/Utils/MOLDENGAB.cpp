@@ -95,18 +95,9 @@ MOLDENGAB::MOLDENGAB(std::ifstream& moldenGabFile) :
         {
             _cart_sphe = "sphe";
         }
-        else if(p.find("Cart") != std::string::npos)
-        {
-            _cart_sphe = "cart";
-        }
         else
         {
-            std::stringstream errorMessage;
-            errorMessage << "Error in MOLDENGAB::MOLDENGAB(): can't recognize data format (sphe/cart)." << std::endl;
-            errorMessage << "Please check your file.";
-            print_error(errorMessage.str());
-
-            std::exit(1);
+            _cart_sphe = "cart"; // if not found, we assume cartesian (gabedit default format)
         }
     }
     else

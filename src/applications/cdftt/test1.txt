@@ -1,7 +1,7 @@
-Charges=-0.1
+Charges=-0.0
 Positions=-2.0,-0.5,-0.5
 RunType=ComputeEnergyWithPointCharges
-AnalyticFiles=tests/Guegan2020/acrolein_200States.fchk
+AnalyticFiles=tests/Guegan2020/acrolein_200States.log
 TransitionsFile=tests/Guegan2020/acrolein_200States.log
-OutputPrefix=acrolein_comparison_GaussianWithCharge
+OutputPrefix=testLog
 #Verbose=3
