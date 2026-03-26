@@ -70,6 +70,7 @@ namespace EnumConversionMaps
         { RunType::CONVERT_ORBITALS, "ConvertOrbitals" },
         { RunType::HELP, "Help" },
         { RunType::LAMBDA_DIAGNOSTIC, "LambdaDiagnostic" },
+        { RunType::LINEAR_RESPONSE, "LinearResponse" },
         { RunType::MAKE_DENSITY_CUBE, "MakeDensityCube" },
         { RunType::MAKE_ORBITALS_CUBE, "MakeOrbitalsCube" },
         { RunType::MAKE_ELF_CUBE, "MakeELFCube" },

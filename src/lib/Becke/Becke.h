@@ -57,20 +57,9 @@ class Becke
 
 
     public:
-        /** 
-         * @brief Returns the total energy.
-         */
-        double get_Energy();
-
-        /**
-         * @brief Returns the partial charges (per atom).
-         */
-        std::vector<double> get_Partial_Charge();
-
-        /**
-         * @brief Prints partial charges to standard output.
-         */
-        void printCharges();
+        //----------------------------------------------------------------------------------------------------//
+        // CONSTRUCTORS
+        //----------------------------------------------------------------------------------------------------//
 
         /**
          * @brief Default constructor.
@@ -137,19 +126,37 @@ class Becke
          */
         Becke(LOG& log, Binomial& bin, const PeriodicTable& table);
 
-        /**
-         * @brief Default destructor.
-         *
-         * Not used explicitly.
+        //----------------------------------------------------------------------------------------------------//
+        // GETTERS
+        //----------------------------------------------------------------------------------------------------//
+
+        /** 
+         * @brief Returns the total energy.
          */
-        ~Becke() {}
+        double get_energy() const;
 
         /**
-         * @brief Returns the Structure (molecule or system).
-         *
-         * @return Structure The molecule or system.
+         * @brief Returns the molecule (system).
          */
-        Structure get_struct() {return _molecule;}
+        const Structure& get_molecule() const;
+
+        /**
+         * @brief Returns the orbitals.
+         */
+        const Orbitals& get_orbitals() const;
+
+        /**
+         * @brief Returns the partial charges (per atom).
+         */
+        const std::vector<double>& get_partial_charge() const;
+
+
+
+
+        /**
+         * @brief Prints partial charges to standard output.
+         */
+        void printCharges();
 
         /**
          * @brief Returns the number of radial points for a given atomic number.
@@ -289,13 +296,39 @@ class Becke
          */
         void partial_charge(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
-
-        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, bool debug = false, bool printAOMatrix = false, bool printMOMatrix = false);
-        
         /**
-         * @brief Calculates and returns the ionic potential energy.
+         * @brief Calculates and returns the ionic potential matrix < phi_i | V_ion | phi_j > for a given ion position and charge.
+          *
+          * @param chargePosition The position of the ion.
+          * @param charge The charge of the ion.
+          * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+          * @param lebedev_order Lebedev order for angular quadrature (default 41).
+          * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+          * @param debug If true, prints the AO and/or MO matrices and their sums to standard output for debugging purposes (default false).
+          * @param printAOMatrix If true, prints the AO matrix to standard output for debugging purposes (default false).
+          * @param printMOMatrix If true, prints the MO matrix to standard output for debugging purposes (default false).
+        */
+        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, bool debug = false, bool printAOMatrix = false, bool printMOMatrix = false);
+
+        std::vector<std::vector<std::vector<std::vector<double>>>> getTripleOrbitalIntegralMatrix(int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Calculates and returns the ionic potential energy (matrix element < phi_i | V_ion | phi_j >).
+         * 
+         * @param[in] i Index of the first orbital.
+         * @param[in] j Index of the second orbital.
+         * @param[in] spinType Spin type for the integral (default ALPHA).
+         * @param[in] chargePosition The position of the ion.
+         * @param[in] charge The charge of the ion.
+         * @param[in] kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param[in] lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param[in] radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @return Ionic potential energy < phi_i | V_ion | phi_j >.
          */
         double ionic_potential(int i, int j, SpinType spinType, const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        
+        void chiAtomic(std::vector<std::vector<std::vector<double>>>& chiAtomic, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
          * @brief Electronic density value at point (x,y,z).

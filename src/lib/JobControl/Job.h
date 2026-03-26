@@ -204,9 +204,9 @@ class Job
         //----------------------------------------------------------------------------------------------------//
 
         /**
-         * @brief Sets the list of available jobs and their descriptions.
+         * @brief Prints the list of available jobs ("runType" parameter value) and their descriptions.
          */
-        void setJobList();
+        void printListOfRunTypes();
 
         /**
          * @brief Runs the job associated with the "Help" runtype.
@@ -245,6 +245,11 @@ class Job
         void run_lambdaDiagnostic();
 
         /**
+         * @brief Runs the job associated with the "LinearResponse" runtype.
+         */
+        void run_linearResponse();
+
+        /**
          * @brief Runs the job associated with the "MakeDensityCube" runtype.
          */
         void run_makeDensityCube();
@@ -263,6 +268,11 @@ class Job
          * @brief Runs the job associated with the "ConvertOrbitals" runtype.
          */
         void run_convertOrbitals();
+
+        /**
+         * @brief Sets the list of available jobs and their descriptions.
+         */
+        void setJobList();
 
 
         //----------------------------------------------------------------------------------------------------//
@@ -354,6 +364,8 @@ class Job
          */
         void computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedState>& excitedStates, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_psi_j, std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, std::ofstream& logFile, int verbose = 0);
 
+        void computeLinearResponseFunctionMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<std::vector<double>>>>& tripleOrbitalIntegralMatrix, std::vector<std::vector<std::vector<double>>>& lrfMatrix);
+
         /**
          * @brief Integrates the provided grids over the domain of a Critical Points grid (GridCP).
          *
@@ -388,7 +400,8 @@ class Job
          * @param[in] analyticFileName Name of the analytic file.
          * @return Constructed instance of type U, initialised with analytic data.
          */
-        template<typename T, typename U> U computeOrbitalsOrBecke(const std::string& analyticFileName);
+        template<typename T, typename U>
+        U computeOrbitalsOrBecke(const std::string& analyticFileName);
 
         /**
          * @brief Detects the analytic file format and initialises an instance of the chosen class.
@@ -425,11 +438,6 @@ class Job
         void openInputFile();
 
         /**
-         * @brief Prints the list of available run types and their descriptions.
-         */
-        void printListOfRunTypes();
-
-        /**
          * @brief Prints critical points information from a Critical Points grid (GridCP). (Not implemented yet.)
          */
         void printCriticalPoints();
@@ -443,6 +451,37 @@ class Job
         Structure returnStruct(const std::string& analyticFileName);
 
         /**
+         * @brief Selects all molecular orbitals for the requested spin configuration.
+         *
+         * @param[out] orbnums Output vector of orbital indices.
+         * @param[out] orbspin Output vector of spin types corresponding to `orbnums`.
+         * @param[in] o Orbitals instance for occupation info.
+         * @param[in] spinType Requested spin selection.
+         * @param[in] numberOfOrbitals Number of MOs available.
+         */
+        void setAllOrbitals(std::vector<int> &orbnums, std::vector<SpinType> &orbspin, Orbitals &o, SpinType spinType, int numberOfOrbitals);
+
+        /**
+         * @brief Applies a custom orbital index list and corresponding spin list.
+         *
+         * @param[in,out] orbnums Input orbital indices (1-based expected; converted internally).
+         * @param[out] orbspin Output vector filled with parsed spin types.
+         * @param[in] spinList Input vector of SpinType values corresponding to custom orbitals.
+         */
+        void setCustomOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, const std::vector<SpinType>& spinList);
+
+        /**
+         * @brief Selects occupied molecular orbitals according to occupations and spin selection.
+         *
+         * @param[out] orbnums Output vector of occupied orbital indices.
+         * @param[out] orbspin Output vector of spin types for each selected orbital.
+         * @param[in] o Orbitals instance containing occupation numbers.
+         * @param[in] spinType Requested spin selection.
+         * @param[in] N Number of MOs available.
+         */
+        void setOccupiedOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, int N);
+
+        /**
          * @brief Configures `orbitalsNumbers` and `orbitalsSpins` based on selection.
          *
          * @param[in] o Orbitals instance to query occupation/spin information.
@@ -454,49 +493,6 @@ class Job
          * @param[in] spinList Optional custom spin list for custom orbital selections.
          */
         void setOrbitals(Orbitals& o, const int numberOfOrbitals, std::vector<int>& orbitalsNumbers, std::vector<SpinType>& orbitalsSpins, const OrbitalType orbitalType, SpinType spinType, const std::vector<SpinType>& spinList = {});
-
-        /**
-         * @brief Selects all molecular orbitals for the requested spin configuration.
-         *
-         * @param[out] orbnums Output vector of orbital indices.
-         * @param[out] orbspin Output vector of spin types corresponding to `orbnums`.
-         * @param[in] o Orbitals instance for occupation info.
-         * @param[in] spinType Requested spin selection.
-         * @param[in] numberOfOrbitals Number of MOs available.
-         */
-        void setAllOrb(std::vector<int> &orbnums, std::vector<SpinType> &orbspin, Orbitals &o, SpinType spinType, const int& numberOfOrbitals);
-
-        /**
-         * @brief Selects occupied molecular orbitals according to occupations and spin selection.
-         *
-         * @param[out] orbnums Output vector of occupied orbital indices.
-         * @param[out] orbspin Output vector of spin types for each selected orbital.
-         * @param[in] o Orbitals instance containing occupation numbers.
-         * @param[in] spinType Requested spin selection.
-         * @param[in] N Number of MOs available.
-         */
-        void setOccOrb(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, const int& N);
-        
-        /**
-         * @brief Selects virtual (unoccupied) molecular orbitals according to spin selection.
-         *
-         * @param[out] orbnums Output vector of virtual orbital indices.
-         * @param[out] orbspin Output vector of spin types for each selected orbital.
-         * @param[in] o Orbitals instance containing occupation numbers.
-         * @param[in] spinType Requested spin selection.
-         * @param[in] N Number of MOs available.
-         */
-        void setVirtOrb(std::vector<int> &orbnums, std::vector<SpinType> &orbspin, Orbitals &o, SpinType spinType, const int &N);
-
-        /**
-         * @brief Selects LUMO orbital(s) according to spin selection.
-         *
-         * @param[out] orbnums Output vector set to LUMO index(es).
-         * @param[out] orbspin Output vector set to corresponding spin(s).
-         * @param[in] o Orbitals instance used to query occupations.
-         * @param[in] spinType Requested spin selection.
-         */
-        void setLumo(std::vector<int> &orbnums, std::vector<SpinType> &orbspin, Orbitals &o, SpinType spinType);
 
         /**
          * @brief Selects HOMO orbital(s) according to spin selection.
@@ -516,19 +512,35 @@ class Job
          * @param[in] o Orbitals instance for occupation info.
          * @param[in] spinType Requested spin selection.
          */
-        void setHomoLumo(std::vector<int> &orbnums, std::vector<SpinType> &orbspin, Orbitals &o, SpinType spinType);
+        void setHomoLumo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType);
 
         /**
-         * @brief Applies a custom orbital index list and corresponding spin list.
+         * @brief Selects LUMO orbital(s) according to spin selection.
          *
-         * @param[in,out] orbnums Input orbital indices (1-based expected; converted internally).
-         * @param[out] orbspin Output vector filled with parsed spin types.
-         * @param[in] spinList Input vector of SpinType values corresponding to custom orbitals.
+         * @param[out] orbnums Output vector set to LUMO index(es).
+         * @param[out] orbspin Output vector set to corresponding spin(s).
+         * @param[in] o Orbitals instance used to query occupations.
+         * @param[in] spinType Requested spin selection.
          */
-        void setCustom(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, const std::vector<SpinType>& spinList);
+        void setLumo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType);
+
+        /**
+         * @brief Selects virtual (unoccupied) molecular orbitals according to spin selection.
+         *
+         * @param[out] orbnums Output vector of virtual orbital indices.
+         * @param[out] orbspin Output vector of spin types for each selected orbital.
+         * @param[in] o Orbitals instance containing occupation numbers.
+         * @param[in] spinType Requested spin selection.
+         * @param[in] N Number of MOs available.
+         */
+        void setVirtualOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, int N);
 
 
     public:
+        //----------------------------------------------------------------------------------------------------//
+        // CONSTRUCTORS AND DESTRUCTOR
+        //----------------------------------------------------------------------------------------------------//
+
         /**
          * @brief Default constructor.
          *
@@ -544,12 +556,18 @@ class Job
         Job(std::string inputFileName);
 
         /**
-         * @brief Destructor closes the input file stream.
+         * @brief Destructor. Closes the input file stream.
          */
         ~Job();
 
+        //----------------------------------------------------------------------------------------------------//
+        // OTHER PUBLIC METHODS
+        //----------------------------------------------------------------------------------------------------//
+
         /**
-         * @brief Parse input and run the selected job.
+         * @brief Looks for the "runType" parameter in the input file and runs either the according job.
+         * 
+         * If the "runType" parameter is not found or if its value does not correspond to a valid job, this method will run the "Help" job.
          */
         void run();
 };

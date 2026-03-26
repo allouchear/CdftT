@@ -1123,7 +1123,7 @@ void Grid::save(std::ofstream& nameFile)
         nameFile<<"Orbitals"<<std::endl;
     }
     nameFile<<std::scientific;
-    nameFile<<_structure.number_of_atoms()<<" ";
+    nameFile<<_structure.getNumberOfAtoms()<<" ";
     for(int i=0;i<3;i++)
     {
         nameFile<<_domain.get_origin()[i]<<" ";
@@ -1167,7 +1167,7 @@ void Grid::save(std::ofstream& nameFile)
         }
     }
     nameFile<<std::endl;
-    for(int i=0;i<_structure.number_of_atoms();i++)
+    for(int i=0;i<_structure.getNumberOfAtoms();i++)
     {
         nameFile<<_structure.atom(i).get_atomicNumber()<<" ";
         if(_structure.atom(i).get_charge()<1)
@@ -1279,14 +1279,14 @@ void Grid::next(int i, int j, int k, double& current, std::vector<std::vector<in
 
 std::vector<double> Grid::atom_attract_diff(const std::vector<std::vector<int>>& attract)
 {
-    std::vector<double> v(_structure.number_of_atoms());
+    std::vector<double> v(_structure.getNumberOfAtoms());
     double distance=0;
     double d1=100;
     std::vector<double> ds(3);
     ds[0]=_domain.get_dx();
     ds[1]=_domain.get_dy();
     ds[2]=_domain.get_dz();
-    for(int j=0; j<_structure.number_of_atoms();j++)
+    for(int j=0; j<_structure.getNumberOfAtoms();j++)
     {
         for(int n=0;n<int(attract.size()); n++)
         {
@@ -1579,7 +1579,7 @@ Grid Grid::aim_On_Grid(int nBound)
                     std::cout << (attractors[m][a] * ds[a] + _domain.get_origin()[a]) * Constants::BOHR_RADIUS_TO_ANGSTROM << std::endl;
                 }
             }
-            for(int m=0; m<_structure.number_of_atoms();m++)
+            for(int m=0; m<_structure.getNumberOfAtoms();m++)
             {
                 std::cout<<atom_attract_diff(attractors)[m]<<std::endl;
                 std::cout<<atom_attract_diff(attractors).size()<<std::endl;
@@ -1857,7 +1857,7 @@ Grid Grid::aim_On_Grid_Density()
                     std::cout<<attractors[m][a]<<std::endl;
                 }
             }
-            for(int m=0; m<_structure.number_of_atoms();m++)
+            for(int m=0; m<_structure.getNumberOfAtoms();m++)
             {
                 std::cout<<atom_attract_diff(attractors)[m]<<std::endl;
                 std::cout<<atom_attract_diff(attractors).size()<<std::endl;

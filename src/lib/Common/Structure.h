@@ -66,10 +66,7 @@ class Structure
 
             //! A normal member taking no arguments and returning an integer value.
             /*! \return The number of atoms in our structure. */
-        int number_of_atoms() const
-        {
-            return _atoms.size();
-        }
+        int getNumberOfAtoms() const;
 
             //! A normal member taking one arguments and returning an atom value.
             /*! \return The atom i of our structure. */

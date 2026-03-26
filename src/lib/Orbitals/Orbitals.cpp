@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstdlib>
@@ -1012,6 +1013,63 @@ void Orbitals::set_energy(double energy)
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
+std::vector<std::vector<int>> Orbitals::getOccupiedOrbitalNumbers() const
+{
+    std::vector<std::vector<int>> occupiedOrbitalNumbers(2);
+
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for (size_t i = 0; i < _occupationNumber[spin].size(); ++i)
+        {
+            if (_occupationNumber[spin][i] != 0.0)
+            {
+                occupiedOrbitalNumbers[spin].push_back(i + 1); // +1 because orbital numbers are 1-based indexing
+            }
+        }
+    }
+
+    return occupiedOrbitalNumbers;
+}
+
+std::vector<std::vector<int>> Orbitals::getVirtualOrbitalNumbers() const
+{
+    std::vector<std::vector<int>> virtualOrbitalNumbers(2);
+
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for (size_t i = 0; i < _occupationNumber[spin].size(); ++i)
+        {
+            if (_occupationNumber[spin][i] == 0.0)
+            {
+                virtualOrbitalNumbers[spin].push_back(i + 1); // +1 because orbital numbers are 1-based indexing
+            }
+        }
+    }
+    
+    return virtualOrbitalNumbers;
+}
+
+void Orbitals::getOccupiedAndVirtualOrbitalNumbers(std::vector<std::vector<int>>& occupiedOrbitalNumbers, std::vector<std::vector<int>>& virtualOrbitalNumbers) const
+{
+    occupiedOrbitalNumbers.resize(2);
+    virtualOrbitalNumbers.resize(2);
+    
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for (size_t i = 0; i < _occupationNumber[spin].size(); ++i)
+        {
+            if (_occupationNumber[spin][i] == 0.0)
+            {
+                virtualOrbitalNumbers[spin].push_back(i + 1); // +1 because orbital numbers are 1-based indexing
+            }
+            else
+            {
+                occupiedOrbitalNumbers[spin].push_back(i + 1); // +1 because orbital numbers are 1-based indexing
+            }
+        }
+    }
+}
+
 int Orbitals::getPrimitiveCenter(int i) const
 {
     return _primitiveCenters[i];
@@ -1227,6 +1285,104 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
     }
 
     return ionicMatrixMO;
+}
+
+std::vector<std::vector<std::vector<std::vector<double>>>> Orbitals::getTripleOrbitalIntegralMatrix()
+{
+    // Build LRF matrix in AO basis
+    std::vector<std::vector<std::vector<double>>> lrfMatrixAO = std::vector<std::vector<std::vector<double>>>(_numberOfAo, std::vector<std::vector<double>>());
+    for (int i = 0; i < _numberOfAo; ++i)
+    {
+        lrfMatrixAO[i] = std::vector<std::vector<double>>(i + 1, std::vector<double>());
+
+        for (int j = 0; j <= i; ++j)
+        {
+            lrfMatrixAO[i][j] = std::vector<double>(j + 1, 0.0);
+        }
+    }
+
+    // Compute LRF matrix elements in AO basis
+    for (int i = 0; i < _numberOfAo; ++i)
+    {
+        for (int j = 0; j <= i; ++j)
+        {
+            for (int k = 0; k <= j; ++k)
+            {
+                lrfMatrixAO[i][j][k] = _vcgtf[i].overlap3CGTF(_vcgtf[j], _vcgtf[k]);
+            }
+        }
+    }
+
+    // debut
+    std::cout << std::setprecision(10);
+    for (int ii = 0; ii < _numberOfAo; ++ii)
+    {
+        std::cout << "ii = " << ii << std::endl;
+
+        for (int jj = 0; jj <= ii; ++jj)
+        {
+            for (int kk = 0; kk <= jj; ++kk)
+            {
+                std::cout << std::right << std::setw(16) << lrfMatrixAO[ii][jj][kk] << ' ';
+            }
+
+            std::cout << std::endl;
+        }
+    }
+
+    // Build LRF matrix in MO basis
+    std::vector<std::vector<std::vector<std::vector<double>>>> lrfMatrixMO = std::vector<std::vector<std::vector<std::vector<double>>>>(2, std::vector<std::vector<std::vector<double>>>(_numberOfMo, std::vector<std::vector<double>>()));
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for (int i = 0; i < _numberOfMo; ++i)
+        {
+            lrfMatrixMO[spin][i].resize(i + 1);
+
+            for (int j = 0; j <= i; ++j)
+            {
+                lrfMatrixMO[spin][i][j].resize(j + 1);
+            }
+        }
+    }
+
+    // Compute LRF matrix elements in MO basis
+    int spin, i, j, k;
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for private(spin, i, j, k)
+    #endif
+    for (spin = 0; spin < 2; ++spin)
+    {
+        for (i = 0; i < _numberOfMo; ++i)
+        {
+            for (j = 0; j <= i; ++j)
+            {
+                for (k = 0; k <= j; ++k)
+                {
+                    double sum = 0.0;
+
+                    for (size_t p = 0; p < _coefficients[spin][i].size(); ++p)
+                    {
+                        for (size_t q = 0; q < _coefficients[spin][j].size(); ++q)
+                        {
+                            for (size_t r = 0; r < _coefficients[spin][k].size(); ++r)
+                            {
+                                // Get the correct AO matrix element (considering symmetry)
+                                std::array <size_t, 3> indices = { p, q, r };
+                                std::sort(indices.begin(), indices.end(), std::greater<size_t>());
+                                double lrfAOElement = lrfMatrixAO[indices[0]][indices[1]][indices[2]];
+
+                                sum += _coefficients[spin][i][p] * _coefficients[spin][j][q] * _coefficients[spin][k][r] * lrfAOElement;
+                            }
+                        }
+                    }
+
+                    lrfMatrixMO[spin][i][j][k] = sum;
+                }
+            }
+        }
+    }
+
+    return lrfMatrixMO;
 }
 
 double Orbitals::OrbstarOrb()

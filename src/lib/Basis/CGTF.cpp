@@ -81,17 +81,17 @@ void CGTF::denormaliseCGTF()
         _gtf[n].denormaliseRadialGTF();
 }
 
-double CGTF::overlapCGTF(CGTF &right)
+double CGTF::overlapCGTF(CGTF& right)
 {
     double sum = 0.0;
 
     //std::cout<<"Number of Function GTF in CGTF = "<<_numberOfFunctions<<std::endl;
 
-    for(int n = 0; n < _numberOfFunctions; ++n)
+    for(int i = 0; i < _numberOfFunctions; ++i)
     {
-        for(int np = 0; np < right._numberOfFunctions; ++np)
+        for(int j = 0; j < right._numberOfFunctions; ++j)
         {
-            sum += _coefficients[n] * right._coefficients[np] * _gtf[n].overlapGTF(right._gtf[np]);
+            sum += _coefficients[i] * right._coefficients[j] * _gtf[i].overlapGTF(right._gtf[j]);
         }
     }
 
@@ -100,34 +100,41 @@ double CGTF::overlapCGTF(CGTF &right)
     return sum;
 }
 
-double CGTF::overlap3CGTF(CGTF &midle, CGTF &right)
+double CGTF::overlap3CGTF(CGTF& midle, CGTF& right)
 {
-    double sum=0.0;
-    int n;
-    int np;
-    int ns;
+    double sum = 0.0;
 
-    for(n=0;n<_numberOfFunctions;n++)
-        for(np=0;np<midle.numberOfFunctions();np++)
-            for(ns=0;ns<right.numberOfFunctions();ns++)
-                sum += _gtf[n].overlap3GTF(midle.gtf()[np],right.gtf()[ns]);
+    for(int i = 0; i < _numberOfFunctions ; ++i)
+    {
+        for(int j = 0; j < midle._numberOfFunctions ; ++j)
+        {
+            for(int k = 0; k < right._numberOfFunctions ; ++k)
+            {
+                sum += _coefficients[i] * midle._coefficients[j] * right._coefficients[k] * _gtf[i].overlap3GTF(midle.gtf()[j], right.gtf()[k]);
+            }
+        }
+    }
 
     return sum;
 }
 
 double CGTF::overlap4CGTF(CGTF &middleLeft, CGTF &middleRight, CGTF &right)
 {
-    double sum=0.0;
-    int np;
-    int nq;
-    int nr;
-    int ns;
+    double sum = 0.0;
 
-    for (np = 0; np < _numberOfFunctions; np++)
-        for (nq = 0; nq < middleLeft.numberOfFunctions(); nq++)
-            for (nr = 0; nr < middleRight.numberOfFunctions(); nr++)
-                for (ns = 0; ns < right.numberOfFunctions(); ns++)
-                    sum += _gtf[np].overlap4GTF(middleLeft.gtf()[nq], middleRight.gtf()[nr], right.gtf()[ns]);
+    for (int i = 0; i < _numberOfFunctions; ++i)
+    {
+        for (int j = 0; j < middleLeft._numberOfFunctions; ++j)
+        {
+            for (int k = 0; k < middleRight._numberOfFunctions; ++k)
+            {
+                for (int l = 0; l < right._numberOfFunctions; ++l)
+                {
+                    sum += _coefficients[i] * middleLeft._coefficients[j] * middleRight._coefficients[k] * right._coefficients[l] * _gtf[i].overlap4GTF(middleLeft.gtf()[j], middleRight.gtf()[k], right.gtf()[l]);
+                }
+            }
+        }
+    }
 
     return sum;
 }

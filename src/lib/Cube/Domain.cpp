@@ -386,9 +386,9 @@ double Domain::sizeUpMol(const Structure& S, double scale)
     double dmax = 0;
 
     std::vector<Atom> atoms = S.get_atoms();
-    for (int i = 0; i < S.number_of_atoms(); i++)
+    for (int i = 0; i < S.getNumberOfAtoms(); i++)
     {
-        for (int j = 0; j < S.number_of_atoms(); j++)
+        for (int j = 0; j < S.getNumberOfAtoms(); j++)
         {
             if (i == j)
             {

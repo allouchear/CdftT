@@ -33,6 +33,15 @@ const std::vector<Atom>& Structure::get_atoms() const
 }
 
 
+//----------------------------------------------------------------------------------------------------//
+// OTHER PUBLIC METHODS
+//----------------------------------------------------------------------------------------------------//
+
+int Structure::getNumberOfAtoms() const
+{
+    return static_cast<int>(_atoms.size());
+}
+
 void Structure::read_From_Cube(ifstream& nameFile, int Natoms,const PeriodicTable& Table )
 {
     double input;
@@ -73,10 +82,10 @@ Structure Structure::add(const Structure& S)
 {
     try
     {
-        for(int j=0; j<S.number_of_atoms(); j++)
+        for(int j=0; j<S.getNumberOfAtoms(); j++)
         {    
             bool b=true;
-            for(int k=0; k<number_of_atoms(); k++)
+            for(int k=0; k<getNumberOfAtoms(); k++)
             {
                 if( _atoms[k].computeDistance(S._atoms[j])==0 )
                 {

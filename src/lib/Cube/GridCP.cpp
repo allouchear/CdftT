@@ -416,7 +416,7 @@ void GridCP::computeNumCenters()
         _criticalPoints[ip].numCenter=0;
         for(int c=0; c<3;c++)
             r[c] = _domain.get_origin()[ c ] + i*_domain.get_T()[c][0] + j*_domain.get_T()[c][1] +  k*_domain.get_T()[c][2]; 
-        for(int ia=0;ia<_str.number_of_atoms();ia++)
+        for(int ia=0;ia<_str.getNumberOfAtoms();ia++)
         {
             for(int c=0; c<3;c++)
                 dr[c] = r[c]-_str.atom(ia).get_coordinates()[c];
@@ -478,7 +478,7 @@ void GridCP::removeBasins0()
 /**************************************************************************/
 void GridCP::removeNonSignificantBasins()
 {
-    int nAtoms=_str.number_of_atoms();
+    int nAtoms=_str.getNumberOfAtoms();
     int nCP=_criticalPoints.size();
 
     if (nCP==nAtoms) return;
@@ -842,7 +842,7 @@ void GridCP::buildVDD()
     if (_criticalPoints.size()>0)
         _criticalPoints.clear();
 
-    int nAtoms=_str.number_of_atoms();
+    int nAtoms=_str.getNumberOfAtoms();
     //std::cout<<"nAtoms="<<nAtoms<<std::endl;
     for(int ia=0;ia<nAtoms;ia++)
     {

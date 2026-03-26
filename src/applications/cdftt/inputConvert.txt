@@ -1,2 +1,0 @@
-RunType=ConvertOrbitals
-AnalyticFiles=tests/Guegan2020/acrolein_200States.gab, tests/Guegan2020/tmp.molden

@@ -10,7 +10,7 @@
 
 void Descriptors::reset()
 {
-    if (_str.number_of_atoms()<1 )
+    if (_str.getNumberOfAtoms()<1 )
     {
         _Q0 = std::vector<double>();
         _Qm = std::vector<double>();
@@ -30,21 +30,21 @@ void Descriptors::reset()
     }
     else 
     {
-        _Q0 = std::vector<double>(_str.number_of_atoms());
-        _Qm = std::vector<double>(_str.number_of_atoms());
-        _Qp = std::vector<double>(_str.number_of_atoms());
-        _fk0 = std::vector<double>(_str.number_of_atoms());
-        _fkm = std::vector<double>(_str.number_of_atoms());
-        _fkp = std::vector<double>(_str.number_of_atoms());
-        _Deltafk = std::vector<double>(_str.number_of_atoms());
-        _wkm = std::vector<double>(_str.number_of_atoms());
-        _wkp = std::vector<double>(_str.number_of_atoms());
-        _Skm = std::vector<double>(_str.number_of_atoms());
-        _Skp = std::vector<double>(_str.number_of_atoms());
-        _Skfrac = std::vector<double>(_str.number_of_atoms());
-        _hardnessk = std::vector<double>(_str.number_of_atoms());
-        _hardnesskm = std::vector<double>(_str.number_of_atoms());
-        _hardnesskp = std::vector<double>(_str.number_of_atoms());
+        _Q0 = std::vector<double>(_str.getNumberOfAtoms());
+        _Qm = std::vector<double>(_str.getNumberOfAtoms());
+        _Qp = std::vector<double>(_str.getNumberOfAtoms());
+        _fk0 = std::vector<double>(_str.getNumberOfAtoms());
+        _fkm = std::vector<double>(_str.getNumberOfAtoms());
+        _fkp = std::vector<double>(_str.getNumberOfAtoms());
+        _Deltafk = std::vector<double>(_str.getNumberOfAtoms());
+        _wkm = std::vector<double>(_str.getNumberOfAtoms());
+        _wkp = std::vector<double>(_str.getNumberOfAtoms());
+        _Skm = std::vector<double>(_str.getNumberOfAtoms());
+        _Skp = std::vector<double>(_str.getNumberOfAtoms());
+        _Skfrac = std::vector<double>(_str.getNumberOfAtoms());
+        _hardnessk = std::vector<double>(_str.getNumberOfAtoms());
+        _hardnesskm = std::vector<double>(_str.getNumberOfAtoms());
+        _hardnesskp = std::vector<double>(_str.getNumberOfAtoms());
     }
 }
 
@@ -91,8 +91,8 @@ std::vector<double> Descriptors::compute_Charges_From_Becke(const Grid& grid)
     Binomial bino (100, fact);
     Becke B(grid);
     B.partial_charge(grid);
-    std::vector<double> Bint=B.get_Partial_Charge();
-    return B.get_Partial_Charge();
+    std::vector<double> Bint=B.get_partial_charge();
+    return B.get_partial_charge();
 }
 
 std::vector<double> Descriptors::compute_Charges_From_Grid(const Grid& AIM, PartitionMethod partitionMethod)
@@ -181,7 +181,7 @@ void Descriptors::compute_all()
     _Qmax = -_mu/_hardness;
     _DEmin = -0.5*(_mu*_mu)/_hardness;
 
-    for(int i=0;i<_str.number_of_atoms();i++)
+    for(int i=0;i<_str.getNumberOfAtoms();i++)
     {
         _Deltafk[i] = _fkp[i]-_fkm[i];
         _fk0[i]=0.5*(_fkm[i]+_fkp[i]);
@@ -198,7 +198,7 @@ void Descriptors::compute_all()
 
 void Descriptors::compute_fk_From_Charge()
 {    
-    if(int(_Qm.size())!=_str.number_of_atoms() or int(_Qp.size())!=_str.number_of_atoms() or int(_Q0.size())!=_str.number_of_atoms())
+    if(int(_Qm.size())!=_str.getNumberOfAtoms() or int(_Qp.size())!=_str.getNumberOfAtoms() or int(_Q0.size())!=_str.getNumberOfAtoms())
     {
         print_error("Error in Descriptors::compute_fk_From_Charge(): the number of atoms in _str is inconsistent with std::vector sizes... Please check the vectors.");
         
@@ -206,7 +206,7 @@ void Descriptors::compute_fk_From_Charge()
     }
     else
     {
-        for(int i=0; i<_str.number_of_atoms();i++)
+        for(int i=0; i<_str.getNumberOfAtoms();i++)
         {
             _fkp[i] = _Q0[i]-_Qm[i];
             _fkm[i] = _Qp[i]-_Q0[i];
@@ -216,10 +216,10 @@ void Descriptors::compute_fk_From_Charge()
 
 void Descriptors::compute_fk()
 {
-    _fk0.resize(_str.number_of_atoms());
-    _fkp.resize(_str.number_of_atoms());
-    _fkm.resize(_str.number_of_atoms());
-    for(int i=0; i<_str.number_of_atoms();i++)
+    _fk0.resize(_str.getNumberOfAtoms());
+    _fkp.resize(_str.getNumberOfAtoms());
+    _fkm.resize(_str.getNumberOfAtoms());
+    for(int i=0; i<_str.getNumberOfAtoms();i++)
     {
         _fk0[i] = 0.5*(_Qm[i]-_Qp[i]);
         _fkp[i] = _Qm[i]-_Q0[i];
@@ -238,15 +238,15 @@ void Descriptors::set_mu_fk_data(std::vector<std::vector<double>> f, double eH, 
 
 void Descriptors::set_mu_fk_data(std::vector<std::vector<double>> data)
 {
-    _fk0.resize(_str.number_of_atoms());
-    _fkp.resize(_str.number_of_atoms());
-    _fkm.resize(_str.number_of_atoms());
+    _fk0.resize(_str.getNumberOfAtoms());
+    _fkp.resize(_str.getNumberOfAtoms());
+    _fkm.resize(_str.getNumberOfAtoms());
 
     _mum= -(data[2][0]-data[0][0]);
     _mup= -(data[0][0]-data[1][0]);
     _mu = 0.5*(_mup+_mum);
 
-    for(int i=0; i<_str.number_of_atoms(); i++)
+    for(int i=0; i<_str.getNumberOfAtoms(); i++)
     {
         _fkm[i]=data[0][i+1]-data[1][i+1];
         _fkp[i]=data[2][i+1]-data[0][i+1];
@@ -269,18 +269,18 @@ std::ostream& operator<<(std::ostream& flux, const Descriptors& desc)
         
         flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
         flux<<std::left<<std::setw(7)<<"Symbol"<<std::setw(4)<<"k"<<std::setw(15)<<std::right<<"Qk-"<<std::setw(15)<<std::right<<"Qk+"<<std::setw(15)<<std::right<<"Qk0"<<std::endl;
-        for(int i=0; i<desc._str.number_of_atoms(); i++)
+        for(int i=0; i<desc._str.getNumberOfAtoms(); i++)
             flux<<std::left<<std::setw(7)<<desc._str.atom(i).get_symbol()<<std::setw(4)<<i+1<<std::setw(15)<<std::right<<desc._Qm[i]<<std::setw(15)<<std::right<<desc._Qp[i]<<std::setw(15)<<std::right<<desc._Q0[i]<<std::endl;
         flux<<std::endl;
     }
     flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
     flux<<std::left<<std::setw(7)<<"Symbol"<<std::setw(4)<<"k"<<std::setw(15)<<std::right<<"f-"<<std::setw(15)<< std::right<< "f+"<<std::setw(15)<<std::right<<"f0"<<std::setw(15)<<std::right<<"Delta f"<<std::endl;
-    for(int i=0; i<desc._str.number_of_atoms(); i++)
+    for(int i=0; i<desc._str.getNumberOfAtoms(); i++)
         flux<<std::left<<std::setw(7)<<desc._str.atom(i).get_symbol()<<std::setw(4)<<i+1<<std::setw(15)<<std::right<<desc._fkm[i]<<std::setw(15)<<std::right<<desc._fkp[i]<<std::setw(15)<<std::right<<desc._fk0[i]<<std::setw(15)<<std::right<<desc._Deltafk[i]<<std::endl;
     flux<<std::endl;    
     flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
     flux<<std::left<<std::setw(15)<<std::right<<"w-"<<std::setw(15)<<std::right<<"w+"<<std::setw(15)<<std::right<<"s-"<<std::setw(15)<<std::right<<"s+"<<std::setw(15)<<std::right<<"s-/s+"<<std::setw(15)<<std::right<<"hardness-"<<std::setw(15)<<std::right<<"hardness+"<<std::setw(15)<<std::right<<"hardness"<<std::endl;
-    for(int i=0; i<desc._str.number_of_atoms(); i++)
+    for(int i=0; i<desc._str.getNumberOfAtoms(); i++)
         flux<<std::setw(15)<<std::right<<desc._wkm[i]*HeV<<std::setw(15)<<std::right<<desc._wkp[i]*HeV<<std::setw(15)<<std::right<<desc._Skm[i]/HeV<<std::setw(15)<<std::right<<desc._Skp[i]/HeV<<std::setw(15)<<std::right<<desc._Skfrac[i]<<std::setw(15)<<std::right<<desc._hardnesskm[i]*HeV<<std::setw(15)<<std::right<<desc._hardnesskp[i]*HeV<<std::setw(15)<<std::right<<desc._hardnessk[i]*HeV<<std::endl;
     flux<<std::endl;
     
@@ -362,68 +362,68 @@ Descriptors::Descriptors(WFX& wfx, const PeriodicTable& Table)
 {
     _okCharge=false;
     _str=Structure(wfx, Table);
-    _Deltafk.resize(_str.number_of_atoms());
-    _wkm.resize(_str.number_of_atoms());
-    _wkp.resize(_str.number_of_atoms());
-    _Skm.resize(_str.number_of_atoms());
-    _Skp.resize(_str.number_of_atoms());
-    _Skfrac.resize(_str.number_of_atoms());
-    _hardnessk.resize(_str.number_of_atoms());
-    _hardnesskm.resize(_str.number_of_atoms());
-    _hardnesskp.resize(_str.number_of_atoms());
+    _Deltafk.resize(_str.getNumberOfAtoms());
+    _wkm.resize(_str.getNumberOfAtoms());
+    _wkp.resize(_str.getNumberOfAtoms());
+    _Skm.resize(_str.getNumberOfAtoms());
+    _Skp.resize(_str.getNumberOfAtoms());
+    _Skfrac.resize(_str.getNumberOfAtoms());
+    _hardnessk.resize(_str.getNumberOfAtoms());
+    _hardnesskm.resize(_str.getNumberOfAtoms());
+    _hardnesskp.resize(_str.getNumberOfAtoms());
 
-    _fk0.resize(_str.number_of_atoms());
+    _fk0.resize(_str.getNumberOfAtoms());
 }
 
 Descriptors::Descriptors(FCHK& fchk, const PeriodicTable& Table)
 {
     _okCharge=false;
     _str=Structure(fchk, Table);
-    _Deltafk.resize(_str.number_of_atoms());
-    _wkm.resize(_str.number_of_atoms());
-    _wkp.resize(_str.number_of_atoms());
-    _Skm.resize(_str.number_of_atoms());
-    _Skp.resize(_str.number_of_atoms());
-    _Skfrac.resize(_str.number_of_atoms());
-    _hardnessk.resize(_str.number_of_atoms());
-    _hardnesskm.resize(_str.number_of_atoms());
-    _hardnesskp.resize(_str.number_of_atoms());
+    _Deltafk.resize(_str.getNumberOfAtoms());
+    _wkm.resize(_str.getNumberOfAtoms());
+    _wkp.resize(_str.getNumberOfAtoms());
+    _Skm.resize(_str.getNumberOfAtoms());
+    _Skp.resize(_str.getNumberOfAtoms());
+    _Skfrac.resize(_str.getNumberOfAtoms());
+    _hardnessk.resize(_str.getNumberOfAtoms());
+    _hardnesskm.resize(_str.getNumberOfAtoms());
+    _hardnesskp.resize(_str.getNumberOfAtoms());
 
-    _fk0.resize(_str.number_of_atoms());
+    _fk0.resize(_str.getNumberOfAtoms());
 }
 
 Descriptors::Descriptors(MOLDENGAB& moldengab, const PeriodicTable& Table)
 {
     _okCharge=false;
     _str=Structure(moldengab, Table);
-    _Deltafk.resize(_str.number_of_atoms());
-    _wkm.resize(_str.number_of_atoms());
-    _wkp.resize(_str.number_of_atoms());
-    _Skm.resize(_str.number_of_atoms());
-    _Skp.resize(_str.number_of_atoms());
-    _Skfrac.resize(_str.number_of_atoms());
-    _hardnessk.resize(_str.number_of_atoms());
-    _hardnesskm.resize(_str.number_of_atoms());
-    _hardnesskp.resize(_str.number_of_atoms());
+    _Deltafk.resize(_str.getNumberOfAtoms());
+    _wkm.resize(_str.getNumberOfAtoms());
+    _wkp.resize(_str.getNumberOfAtoms());
+    _Skm.resize(_str.getNumberOfAtoms());
+    _Skp.resize(_str.getNumberOfAtoms());
+    _Skfrac.resize(_str.getNumberOfAtoms());
+    _hardnessk.resize(_str.getNumberOfAtoms());
+    _hardnesskm.resize(_str.getNumberOfAtoms());
+    _hardnesskp.resize(_str.getNumberOfAtoms());
 
-    _fk0.resize(_str.number_of_atoms());
+    _fk0.resize(_str.getNumberOfAtoms());
 }
 
 Descriptors::Descriptors(LOG& log, const PeriodicTable& Table)
 {
     _okCharge=false;
     _str=Structure(log, Table);
-    _Deltafk.resize(_str.number_of_atoms());
-    _wkm.resize(_str.number_of_atoms());
-    _wkp.resize(_str.number_of_atoms());
-    _Skm.resize(_str.number_of_atoms());
-    _Skp.resize(_str.number_of_atoms());
-    _Skfrac.resize(_str.number_of_atoms());
-    _hardnessk.resize(_str.number_of_atoms());
-    _hardnesskm.resize(_str.number_of_atoms());
-    _hardnesskp.resize(_str.number_of_atoms());
+    _Deltafk.resize(_str.getNumberOfAtoms());
+    _wkm.resize(_str.getNumberOfAtoms());
+    _wkp.resize(_str.getNumberOfAtoms());
+    _Skm.resize(_str.getNumberOfAtoms());
+    _Skp.resize(_str.getNumberOfAtoms());
+    _Skfrac.resize(_str.getNumberOfAtoms());
+    _hardnessk.resize(_str.getNumberOfAtoms());
+    _hardnesskm.resize(_str.getNumberOfAtoms());
+    _hardnesskp.resize(_str.getNumberOfAtoms());
 
-    _fk0.resize(_str.number_of_atoms());
+    _fk0.resize(_str.getNumberOfAtoms());
 }
 void Descriptors::compute_All_From_Cube(std::ifstream &file1, std::ifstream &file2, std::ifstream &file3, std::vector<double> E, PartitionMethod partitionMethod)
 {

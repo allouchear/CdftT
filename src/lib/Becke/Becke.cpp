@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <functional>
@@ -9,6 +10,9 @@
 #include <Becke/Becke.h>
 
 
+//----------------------------------------------------------------------------------------------------//
+// CONSTRUCTORS
+//----------------------------------------------------------------------------------------------------//
 
 Becke::Becke()
 {
@@ -94,6 +98,34 @@ Becke::Becke(LOG& log, Binomial& bin, const PeriodicTable& table)
     _multigrid = false;
     _energy = log.Energy();
 }
+
+
+//----------------------------------------------------------------------------------------------------//
+// GETTERS
+//----------------------------------------------------------------------------------------------------//
+
+double Becke::get_energy() const
+{
+	return _energy;
+}
+
+const Structure& Becke::get_molecule() const
+{
+    return _molecule;
+}
+
+const Orbitals& Becke::get_orbitals() const
+{
+    return _orbitals;
+}
+
+const std::vector<double>& Becke::get_partial_charge() const
+{
+    return _partial_charge;
+}
+
+
+
 
 int Becke::number_of_radial_points(int Z)
 {
@@ -212,7 +244,7 @@ void Becke::multicenter_grids(int kmax, int lebedev_order, int radial_grid_facto
     }
 
     // declaration of all variables
-    int Nat = _molecule.number_of_atoms();
+    int Nat = _molecule.getNumberOfAtoms();
     double chi, uij, rm, mu, nu;
     std::vector<double> wr(Nat, 0.0);
     std::vector<std::vector<double>> R (Nat,std::vector<double> (Nat,0));     // distances between atoms i and j
@@ -423,7 +455,7 @@ double Becke::multicenter_integration(std::function<double(const std::vector<GTF
         _multigrid=true;
     }
 
-    int Nat = _molecule.number_of_atoms();
+    int Nat = _molecule.getNumberOfAtoms();
 
     double integral = 0.0;
 
@@ -475,7 +507,7 @@ double Becke::multicenter_integration(std::function<double(Orbitals&, int i, int
         _multigrid=true;
     }
 
-    int Nat = _molecule.number_of_atoms();
+    int Nat = _molecule.getNumberOfAtoms();
 
     double integral = 0.0;
 
@@ -528,7 +560,7 @@ double Becke::multicenter_integration(std::function<double(Orbitals& Orb, int i,
         _multigrid=true;
     }
 
-    int Nat = _molecule.number_of_atoms();
+    int Nat = _molecule.getNumberOfAtoms();
 
     double integral = 0.0;
 
@@ -555,7 +587,7 @@ double Becke::multicenter_integration(std::function<double(Orbitals&, int, int, 
         _multigrid = true;
     }
 
-    int Nat = _molecule.number_of_atoms();
+    int Nat = _molecule.getNumberOfAtoms();
 
     double integral = 0.0;
 
@@ -613,7 +645,7 @@ std::vector<double> Becke::multicenter_sub_integration(std::function<double(Orbi
         _multigrid=true;
     }
 
-    int Nat = _molecule.number_of_atoms();
+    int Nat = _molecule.getNumberOfAtoms();
 
     std::vector<double> sub_integral (Nat, 0.0);
 
@@ -727,7 +759,7 @@ double Becke::overlap(int i, int j, int kmax, int lebedev_order, int radial_grid
 
 void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
 {
-    int Nat=_molecule.number_of_atoms();
+    int Nat=_molecule.getNumberOfAtoms();
     std::vector<double> qn (Nat);
     std::vector<double> In = multicenter_sub_integration(&density, kmax, lebedev_order, radial_grid_factor);
 
@@ -739,7 +771,7 @@ void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
 
 void Becke::partial_charge(const Grid &g, int kmax, int lebedev_order, int radial_grid_factor)
 {
-    int Nat = _molecule.number_of_atoms();
+    int Nat = _molecule.getNumberOfAtoms();
     std::vector<double> qn(Nat);
     std::vector<double> In = multicenter_sub_integration(g);
     for (int i = 0; i < Nat; i++)
@@ -783,7 +815,7 @@ std::vector<std::vector<std::vector<double>>> Becke::getIonicPotentialMatrix(con
     {
         for (int j = 0; j <= i; ++j)
         {
-            for (int I = 0; I < _molecule.number_of_atoms(); ++I)
+            for (int I = 0; I < _molecule.getNumberOfAtoms(); ++I)
             {
                 for (size_t J = 0; J < _grid_weights[I].size(); J++)
                 {
@@ -902,6 +934,154 @@ std::vector<std::vector<std::vector<double>>> Becke::getIonicPotentialMatrix(con
     return ionicMatrixMO;
 }
 
+std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbitalIntegralMatrix(int kmax, int lebedev_order, int radial_grid_factor)
+{
+    if (_multigrid == false)
+    {
+        multicenter_grids(kmax, lebedev_order, radial_grid_factor);
+        _multigrid = true;
+    }
+
+    int numberOfAo = _orbitals.get_numberOfAo();
+    int numberOfMo = _orbitals.get_numberOfMo();
+    std::vector<CGTF> vcgtf = _orbitals.get_vcgtf();
+    const std::vector<std::vector<std::vector<double>>>& coefficients = _orbitals.get_coefficients();
+
+    // Build triple-orbital-integral matrix in AO basis
+    std::vector<std::vector<std::vector<double>>> toiMatrixAO = std::vector<std::vector<std::vector<double>>>(numberOfAo, std::vector<std::vector<double>>());
+    for (int i = 0; i < numberOfAo; ++i)
+    {
+        toiMatrixAO[i] = std::vector<std::vector<double>>(i + 1, std::vector<double>());
+
+        for (int j = 0; j <= i; ++j)
+        {
+            toiMatrixAO[i][j] = std::vector<double>(j + 1, 0.0);
+        }
+    }
+
+    // Compute TOI matrix elements in AO basis
+    for (int i = 0; i < numberOfAo; ++i)
+    {
+        for (int j = 0; j <= i; ++j)
+        {
+            for (int k = 0; k <= j; ++k)
+            {
+                for (int I = 0; I < _molecule.getNumberOfAtoms(); ++I)
+                {
+                    for (size_t J = 0; J < _grid_weights[I].size(); J++)
+                    {
+                        double x = _grid_points[I][J][0];
+                        double y = _grid_points[I][J][1];
+                        double z = _grid_points[I][J][2];
+                        
+                        toiMatrixAO[i][j][k] += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func(x, y, z) * vcgtf[j].func(x, y, z) * vcgtf[k].func(x, y, z);
+                    }
+                }
+            }
+        }
+    }
+
+    std::cout << std::setprecision(10);
+    for (int ii = 0; ii < numberOfAo; ++ii)
+    {
+        std::cout << "ii = " << ii << std::endl;
+
+        for (int jj = 0; jj <= ii; ++jj)
+        {
+            for (int kk = 0; kk <= jj; ++kk)
+            {
+                std::cout << std::right << std::setw(17) << toiMatrixAO[ii][jj][kk] << ' ';
+            }
+
+            std::cout << std::endl;
+        }
+    }
+
+    
+    // Build TOI matrix in MO basis
+    std::vector<std::vector<std::vector<std::vector<double>>>> toiMatrixMO = std::vector<std::vector<std::vector<std::vector<double>>>>(2, std::vector<std::vector<std::vector<double>>>(numberOfMo, std::vector<std::vector<double>>()));
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for (int i = 0; i < numberOfMo; ++i)
+        {
+            toiMatrixMO[spin][i].resize(i + 1);
+
+            for (int j = 0; j <= i; ++j)
+            {
+                toiMatrixMO[spin][i][j].resize(j + 1);
+            }
+        }
+    }
+
+    // Compute TOI matrix elements in MO basis
+    int spin, i, j, k;
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for private(spin, i, j, k)
+    #endif
+    for (spin = 0; spin < 2; ++spin)
+    {
+        for (i = 0; i < numberOfMo; ++i)
+        {
+            for (j = 0; j <= i; ++j)
+            {
+                for (k = 0; k <= j; ++k)
+                {
+                    double sum = 0.0;
+
+                    for (size_t p = 0; p < coefficients[spin][i].size(); ++p)
+                    {
+                        for (size_t q = 0; q < coefficients[spin][j].size(); ++q)
+                        {
+                            for (size_t r = 0; r < coefficients[spin][k].size(); ++r)
+                            {
+                                // Get the correct AO matrix element (considering symmetry)
+                                std::array<size_t, 3> indices = {p, q, r};
+                                std::sort(indices.begin(), indices.end(), std::greater<size_t>());
+                                double toiAOElement = toiMatrixAO[indices[0]][indices[1]][indices[2]];
+
+                                sum += coefficients[spin][i][p] * coefficients[spin][j][q] * coefficients[spin][k][r] * toiAOElement;
+                            }
+                        }
+                    }
+
+                    toiMatrixMO[spin][i][j][k] = sum;
+                }
+            }
+        }
+    }
+
+    // debug
+    // if (debug)
+    // {
+    //     for (spin = 0; spin < 2; ++spin)
+    //     {
+    //         std::cout << std::scientific;
+    //         std::cout << std::setprecision(10);
+
+    //         if (printMOMatrix)
+    //             std::cout << "Ionic potential matrix in MO basis for " << to_string(static_cast<SpinType>(spin)) << " spin:" << std::endl;
+    //         for (int ii = 0; ii < numberOfMo; ++ii)
+    //         {
+    //             for (int jj = 0; jj <= ii; ++jj)
+    //             {
+    //                 __debug_MOMatrix[spin][ii][jj] += ionicMatrixMO[spin][ii][jj];
+    //                 __debug_totalSumMO[spin] += (ii == jj ? ionicMatrixMO[spin][ii][jj] : 2.0 * ionicMatrixMO[spin][ii][jj]);
+
+    //                 if (printMOMatrix)
+    //                     std::cout << std::right << std::setw(17) << __debug_MOMatrix[spin][ii][jj] << '\t';
+    //             }
+    //             if (printMOMatrix)
+    //                 std::cout << std::endl;
+    //         }
+
+    //         if (printMOMatrix)
+    //             std::cout << std::defaultfloat << "Total sum of MO matrix elements for " << to_string(static_cast<SpinType>(spin)) << " spin: " << std::setprecision(10) << __debug_totalSumMO[spin] << std::endl;
+    //     }
+    // }
+
+    return toiMatrixMO;
+}
+
 double Becke::ionic_potential(int i, int j, SpinType spinType, const std::array<double, 3>& chargePosition, double charge, int kmax, int lebedev_order, int radial_grid_factor)
 {
     double sum = 0.0;
@@ -921,6 +1101,121 @@ double Becke::ionic_potential(int i, int j, SpinType spinType, const std::array<
     }
 
     return sum;
+}
+
+void Becke::chiAtomic(std::vector<std::vector<std::vector<double>>>& chiAtomic, int kmax, int lebedev_order, int radial_grid_factor)
+{
+    // Build Becke grid if not already done
+    if(_multigrid==false)
+    {
+        multicenter_grids(kmax, lebedev_order, radial_grid_factor);
+        _multigrid=true;
+    }
+
+
+    // Get necessary data from molecule and orbitals
+    int nbAtoms = _molecule.getNumberOfAtoms();
+
+    int numberOfAo = _orbitals.get_numberOfAo();
+
+    std::vector<CGTF> vcgtf = _orbitals.get_vcgtf();
+    const std::vector<std::vector<std::vector<double>>>& coefficients = _orbitals.get_coefficients();
+
+    const std::vector<std::vector<double>>& orbitalEnergies = _orbitals.get_orbitalEnergy();
+
+    std::vector<std::vector<int>> occupiedOrbitalNumbers;
+    std::vector<std::vector<int>> virtualOrbitalNumbers;
+    _orbitals.getOccupiedAndVirtualOrbitalNumbers(occupiedOrbitalNumbers, virtualOrbitalNumbers);
+
+
+    // Build sub-integral vector of overlaps for each atom
+    std::vector<std::vector<double>> integralPerAtom(2, std::vector<double>(nbAtoms, 0.0)); // First index: spin, second index: atom
+
+    for(int I = 0; I < nbAtoms; ++I)
+    {
+        // Build overlap matrix on atomic basis for this atom
+        std::vector<std::vector<double>> overlapMatrixAO = std::vector<std::vector<double>>(_orbitals.get_numberOfAo());
+        
+        for (int i = 0; i < numberOfAo; ++i)
+        {
+            overlapMatrixAO[i].resize(i + 1, 0.0);
+
+            for (int j = 0; j <= i; ++j)
+            {
+                double sum = 0.0;
+
+                #ifdef ENABLE_OMP
+                #pragma omp parallel for reduction(+: sum)
+                #endif
+                for(size_t J = 0; J < _grid_weights[I].size(); ++J)
+                {
+                    double x = _grid_points[I][J][0];
+                    double y = _grid_points[I][J][1];
+                    double z = _grid_points[I][J][2];
+
+                    sum += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func(x, y, z) * vcgtf[j].func(x, y, z);
+                }
+
+                overlapMatrixAO[i][j] = sum;
+            }
+        }
+
+        int spin;
+        size_t i, j;
+        #ifdef ENABLE_OMP
+        #pragma omp parallel for private(spin, i, j)
+        #endif
+        for (spin = 0; spin < 2; ++spin)
+        {
+            size_t nbOccupiedOrbitals = occupiedOrbitalNumbers[spin].size();
+            size_t nbVirtualOrbitals = virtualOrbitalNumbers[spin].size();
+
+            for (i = 0; i < nbOccupiedOrbitals; ++i)
+            {
+                int occupiedOrbitalIndex = occupiedOrbitalNumbers[spin][i] - 1; // Convert to 0-based index
+
+                for (j = 0; j < nbVirtualOrbitals; ++j)
+                {
+                    int virtualOrbitalIndex = virtualOrbitalNumbers[spin][j] - 1; // Convert to 0-based index
+
+                    double sum = 0.0;
+
+                    for (size_t m = 0; m < coefficients[spin][occupiedOrbitalIndex].size(); ++m)
+                    {
+                        for (size_t n = 0; n < coefficients[spin][virtualOrbitalIndex].size(); ++n)
+                        {
+                            sum += coefficients[spin][occupiedOrbitalIndex][m]
+                                   * coefficients[spin][virtualOrbitalIndex][n]
+                                   * (n <= m ? overlapMatrixAO[m][n] : overlapMatrixAO[n][m])
+                                   / (orbitalEnergies[spin][virtualOrbitalIndex] - orbitalEnergies[spin][occupiedOrbitalIndex]);
+                        }
+                    }
+
+                    integralPerAtom[spin][I] += sum;
+                }
+            }
+        }
+    }
+
+
+    // Build chiAtomic triangular matrixes for each spin
+    chiAtomic.resize(2, std::vector<std::vector<double>>(nbAtoms));
+    for (int i = 0; i < nbAtoms; ++i)
+    {
+        chiAtomic[0][i].resize(i + 1, 0.0);
+        chiAtomic[1][i].resize(i + 1, 0.0);
+    }
+
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for (int I = 0; I < nbAtoms; ++I)
+        {
+            for (int J = 0; J < I; ++J)
+            {
+                chiAtomic[spin][I][J] = - 2.0 * integralPerAtom[spin][I] * integralPerAtom[spin][J];
+            }
+        }
+    }
 }
 
 double Becke::density(Orbitals& Orb, double x, double y, double z)
@@ -1019,7 +1314,7 @@ double Becke::multicenter_integration(const Grid& g, int kmax, int lebedev_order
         	_multigrid=true;
 	}
 
-	int Nat = _molecule.number_of_atoms();
+	int Nat = _molecule.getNumberOfAtoms();
 
 	double integral = 0.0;
 
@@ -1045,7 +1340,7 @@ std::vector<double> Becke::multicenter_sub_integration(const Grid& g,int kmax , 
 		multicenter_grids(kmax, lebedev_order, radial_grid_factor);
 		_multigrid=true;
 	}
-	int Nat = _molecule.number_of_atoms();
+	int Nat = _molecule.getNumberOfAtoms();
 	std::vector<double> sub_integral(Nat,0.0) ;
 	for(int I=0; I<Nat; I++)
 	{
@@ -1078,18 +1373,13 @@ std::vector<std::vector<double>> Becke::PartialChargesAndEnergy(int kmax, int le
     
     return c;
 }
-std::vector<double> Becke::get_Partial_Charge()
-{
-	return _partial_charge;
-}
-double Becke::get_Energy()
-{
-	return _energy;
-}
+
+
+
 void Becke::printCharges()
 {
-    std::cout << "Number of atoms = " << _molecule.number_of_atoms() << std::endl;
-    for(int i = 0; i < _molecule.number_of_atoms(); i++)
+    std::cout << "Number of atoms = " << _molecule.getNumberOfAtoms() << std::endl;
+    for(int i = 0; i < _molecule.getNumberOfAtoms(); i++)
     {
         std::cout << " Atom = " << std::left << std::setw(10) << _molecule.atom(i).get_symbol() << ", " << std::setw(10) << " value = " << std::setw(15) << _partial_charge[i] << std::endl;
     }

@@ -164,6 +164,30 @@ class Orbitals
         //----------------------------------------------------------------------------------------------------//
 
         /**
+         * @brief Returns the numbers of the occupied orbitals for alpha and beta spins.
+         * 
+         * @return A 2D vector of integers corresponding to the number of the occupied orbitals. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
+         */
+        std::vector<std::vector<int>> getOccupiedOrbitalNumbers() const;
+
+        /**
+         * @brief Returns the numbers of the virtual orbitals for alpha and beta spins.
+         * 
+         * @return A 2D vector of integers corresponding to the number of the virtual orbitals. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
+         */
+        std::vector<std::vector<int>> getVirtualOrbitalNumbers() const;
+
+        /**
+         * @brief Returns the numbers of the occupied and virtual orbitals for alpha and beta spins.
+         * 
+         * This method is slightly more efficient than calling getOccupiedOrbitalNumbers() and getVirtualOrbitalNumbers() separately, as it only loops once over the occupation numbers.
+         * 
+         * @param[out] occupiedOrbitalNumbers The 2D vector of integers where the number of the occupied orbitals are stored. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
+         * @param[out] virtualOrbitalNumbers The 2D vector of integers where the number of the virtual orbitals are stored. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
+         */
+        void getOccupiedAndVirtualOrbitalNumbers(std::vector<std::vector<int>>& occupiedOrbitalNumbers, std::vector<std::vector<int>>& virtualOrbitalNumbers) const;
+
+        /**
          * @brief Returns the i-th primitive center.
          */
         int getPrimitiveCenter(int i) const;
@@ -198,13 +222,18 @@ class Orbitals
         double kinetic();
 
         /**
-         * @brief Calculates the ion-electron integral for a given ion : < phi_i | V_ion | phi_j >
+         * @brief Calculates the ion-electron integral for a given ion: < phi_i | V_ion | phi_j >.
          *
          * @param[in] chargePosition The position of the ion.
          * @param[in] charge The charge of the ion.
-         * @return The matrix < phi_i | V_ion | phi_j > (the first index corresponds to alpha spin, the second to beta spin).
+         * @return The lower triangular matrix < phi_i | V_ion | phi_j > (i >= j). The first index of this 3D vector gives the alpha spin matrix, the second gives the beta spin one.
          */
         std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, bool debug = false, bool printAOMatrix = false, bool printMOMatrix = false);
+
+        /**
+         * @brief Calculates the 3D matrix of triple orbital integrals. The first index corresponds to alpha spin orbitals and the second index corresponds to beta spin orbitals.
+         */
+        std::vector<std::vector<std::vector<std::vector<double>>>> getTripleOrbitalIntegralMatrix();
 
         //! A normal member taking no arguments and returning a double value.
         /*! \return The value of the integral of Orbitals * Orbitals. */
