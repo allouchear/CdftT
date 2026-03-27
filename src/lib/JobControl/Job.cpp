@@ -1598,7 +1598,7 @@ void Job::run_linearResponse()
     computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
     std::cout << std::endl;
 
-
+    /*
     // Get triple-orbital-integral matrix
     std::vector<std::vector<std::vector<std::vector<double>>>> tripleOrbitalIntegralMatrix = orbitals.getTripleOrbitalIntegralMatrix();
 
@@ -1752,8 +1752,70 @@ void Job::run_linearResponse()
     outputFile.close();
 
 
+    // Expand LRF eigenvector in AO basis (eigenvectors are in vertical format, i.e. columns are eigenvectors)
+    std::vector<std::vector<std::vector<double>>> lrfEigenvectorsInAoBasis(2); // First index for alpha spin, second index for beta spin
+    const std::vector<std::vector<std::vector<double>>>& coefficients = orbitals.get_coefficients();
+
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        lrfEigenvectorsInAoBasis[spin] = std::vector<std::vector<double>>(orbitals.get_numberOfAo(), std::vector<double>(orbitals.get_numberOfMo(), 0.0));
+
+        for (size_t i = 0; i < eigenvectors[spin].size(); ++i) // sigma
+        {
+            for (size_t j = 0; j < eigenvectors[spin][i].size(); ++j) // phi
+            {
+                for (size_t k = 0; k < coefficients[spin].size(); ++k) // xi
+                {
+                    lrfEigenvectorsInAoBasis[spin][k][i] += eigenvectors[spin][j][i] * coefficients[spin][k][j];
+                }
+            }
+        }
+    }
 
 
+    // Copy orbitals to pseudoOrbitals to keep the same structure and only change energies and coefficients
+    Orbitals pseudoOrbitals(orbitals);
+
+    // Replace MO energies by LRF eigenvalues
+    pseudoOrbitals.set_orbitalEnergy(eigenvalues);
+
+    // Replace coefficients by LRF eigenvectors in AO basis
+    // First we need to transpose the eigenvectors matrix to have eigenvectors in rows and not in columns
+    std::vector<std::vector<std::vector<double>>> pseudoOrbitalsCoefficents(2); // First index for alpha spin, second index for beta spin
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        pseudoOrbitalsCoefficents[spin] = std::vector<std::vector<double>>(orbitals.get_numberOfMo(), std::vector<double>(orbitals.get_numberOfAo(), 0.0));
+
+        for (size_t i = 0; i < lrfEigenvectorsInAoBasis[spin].size(); ++i) // xi
+        {
+            for (size_t j = 0; j < lrfEigenvectorsInAoBasis[spin][i].size(); ++j) // sigma
+            {
+                pseudoOrbitalsCoefficents[spin][j][i] = lrfEigenvectorsInAoBasis[spin][i][j];
+            }
+        }
+    }
+    pseudoOrbitals.set_coefficients(pseudoOrbitalsCoefficents);
+
+    // Read cube grid parameters and build domain
+    GridSize gridSize;
+    CustomSizeData customSizeData;
+    readSize(gridSize, customSizeData);
+    Domain domain = buildDomainForCube(pseudoOrbitals, gridSize, customSizeData, pseudoOrbitals.get_numberOfMo());
+
+    std::vector<int> pseudoOrbitalsIndexes;
+    std::vector<SpinType> pseudoOrbitalsSpinTypes_alpha;
+    std::vector<SpinType> pseudoOrbitalsSpinTypes_beta;
+    for (int i = 0; i < pseudoOrbitals.get_numberOfMo(); ++i)
+    {
+        pseudoOrbitalsIndexes.push_back(i);
+        pseudoOrbitalsSpinTypes_alpha.push_back(SpinType::ALPHA);
+        pseudoOrbitalsSpinTypes_beta.push_back(SpinType::BETA);
+    }
+
+    //createCube(pseudoOrbitals, domain, outputFilePrefix + "_lrf_eigenvectors_alpha.cube", 1, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_alpha);
+    //createCube(pseudoOrbitals, domain, outputFilePrefix + "_lrf_eigenvectors_beta.cube", 1, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_beta);
+
+    */
     /**************/
     /* BECKE GRID */
     /**************/
@@ -1775,7 +1837,7 @@ void Job::run_linearResponse()
     Becke becke;
     computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
 
-
+    /*
     // Get triple-orbital-integral matrix for Becke grid
     std::vector<std::vector<std::vector<std::vector<double>>>> tripleOrbitalIntegralMatrix_becke = becke.getTripleOrbitalIntegralMatrix();
     
@@ -1910,118 +1972,95 @@ void Job::run_linearResponse()
     logStream << std::defaultfloat << std::endl;
     log(logStream, logFile);
     outputFile.close();
-
+    */
 
     /***********************/
     /* BECKE GRID - Chi_AB */
     /***********************/
 
-    logStream << std::endl << std::endl << "====================== BECKE GRID COMPUTATION - Chi_{AB} ======================" << std::endl << std::endl;
+    logStream << std::endl << std::endl << "====================== BECKE GRID COMPUTATION - Xi_{AB} ======================" << std::endl << std::endl;
     log(logStream, logFile);
 
-    std::vector<std::vector<std::vector<double>>> lrfMatrix_becke_atomic;
-    becke.chiAtomic(lrfMatrix_becke_atomic);
+    std::vector<std::vector<double>> lrfMatrix_becke_atomic;
+    becke.chiAtomic(lrfMatrix_becke_atomic, beckeParams[0], beckeParams[1], beckeParams[2]);
 
-
-    // Diagonalize LRF atomic Matrix
-    std::vector<std::vector<double>> eigenvalues_becke_atomic(2); // First index for alpha spin, second index for beta spin
-    std::vector<std::vector<std::vector<double>>> eigenvectors_becke_atomic(2); // Same
-
-    // Compute results for alpha spin
-    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix_becke_atomic[0], eigenvalues_becke_atomic[0], eigenvectors_becke_atomic[0]);
-
-    outputFile.open(outputFilePrefix + "_energies_becke_chiAB_alpha.cdftt");
-    if (!outputFile)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "_energies_becke_chiAB_alpha.cdftt for writing." << std::endl;
-        
-        print_error(errorMessage.str());
-        
-        std::exit(1);
-    }
-
-    logStream << "Sorted Eigenvalues (alpha spin):" << std::endl;
+    // Print LRF atomic matrix
+    logStream << "LRF atomic matrix (Becke grid):" << std::endl;
     log(logStream, logFile);
     logStream << std::scientific;
     logStream << std::setprecision(10);
-    outputFile << std::scientific;
-    outputFile << std::setprecision(10);
-    for (size_t k = 0; k < eigenvalues_becke_atomic[0].size(); ++k)
+    for (size_t i = 0; i < lrfMatrix_becke_atomic.size(); ++i)
     {
-        logStream << eigenvalues_becke_atomic[0][k] << ' ';
-        outputFile << eigenvalues_becke_atomic[0][k] << std::endl;
-    }
-    logStream << std::endl << std::endl;
-    log(logStream, logFile);
-    outputFile.close();
-
-    outputFile.open(outputFilePrefix + "_eigenvectors_becke_chiAB_alpha.cdftt");
-    if (!outputFile)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "_eigenvectors_becke_chiAB_alpha.cdftt for writing." << std::endl;
-        
-        print_error(errorMessage.str());
-        
-        std::exit(1);
-    }
-
-    logStream << "Sorted Eigenvectors (columns): " << std::endl;
-    log(logStream, logFile);
-    logStream << std::scientific;
-    logStream << std::setprecision(10);
-    outputFile << std::scientific;
-    outputFile << std::setprecision(10);
-    for (size_t i = 0; i < eigenvectors_becke_atomic[0].size(); ++i)
-    {
-        for (size_t j = 0; j < eigenvectors_becke_atomic[0][i].size(); ++j)
+        for (size_t j = 0; j < lrfMatrix_becke_atomic[i].size(); ++j)
         {
-            logStream << std::right << std::setw(17) << eigenvectors_becke_atomic[0][i][j] << '\t';
-            outputFile << std::right << std::setw(17) << eigenvectors_becke_atomic[0][i][j] << ' ';
+            logStream << std::right << std::setw(17) << lrfMatrix_becke_atomic[i][j] << ' ';
         }
-
         logStream << std::endl;
-        outputFile << std::endl;
     }
     logStream << std::defaultfloat << std::endl;
     log(logStream, logFile);
-    outputFile.close();
 
-    // Compute and save results for beta spin
-    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix_becke_atomic[1], eigenvalues_becke_atomic[1], eigenvectors_becke_atomic[1]);
+    // Print Xi_{AA} + \sum Xi_{AB} for each atom
+    std::vector<Atom> atoms = becke.get_orbitals().get_struct().get_atoms();
+    logStream << "Xi_{AA} + sum(Xi_{AB}) for each atom (should be around 0):" << std::endl;
+    log(logStream, logFile);
+    for (size_t i = 0; i < lrfMatrix_becke_atomic.size(); ++i)
+    {
+        double sumXi_AB = 0.0;
 
-    outputFile.open(outputFilePrefix + "_energies_becke_chiAB_beta.cdftt");
+        for (size_t j = 0; j < lrfMatrix_becke_atomic.size(); ++j)
+        {
+            if (i != j)
+            {
+                sumXi_AB += (j <= i  ? lrfMatrix_becke_atomic[i][j] : lrfMatrix_becke_atomic[j][i]);
+            }
+        }
+
+        logStream << "Atom " << i << " (" << atoms[i].get_symbol() << "): " << std::scientific << std::setprecision(10) << lrfMatrix_becke_atomic[i][i] + sumXi_AB << std::endl;
+    }
+    logStream << std::defaultfloat << std::endl;
+    log(logStream, logFile);
+
+
+    // Diagonalize LRF atomic Matrix
+    std::vector<double> eigenvalues_becke_atomic;
+    std::vector<std::vector<double>> eigenvectors_becke_atomic;
+
+    // Compute results
+    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix_becke_atomic, eigenvalues_becke_atomic, eigenvectors_becke_atomic);
+    sortEigenValuesAndEigenVectors(eigenvalues_becke_atomic, eigenvectors_becke_atomic);
+
+    std::ofstream outputFile(outputFilePrefix + "_energies_becke_chiAB.cdftt");
     if (!outputFile)
     {
         std::stringstream errorMessage;
-        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "_energies_becke_chiAB_beta.cdftt for writing." << std::endl;
+        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "_energies_becke_chiAB.cdftt for writing." << std::endl;
         
         print_error(errorMessage.str());
         
         std::exit(1);
     }
 
-    logStream << "Sorted Eigenvalues (beta spin):" << std::endl;
+    logStream << "Sorted Eigenvalues:" << std::endl;
     log(logStream, logFile);
     logStream << std::scientific;
     logStream << std::setprecision(10);
     outputFile << std::scientific;
     outputFile << std::setprecision(10);
-    for (size_t k = 0; k < eigenvalues_becke_atomic[1].size(); ++k)
+    for (size_t k = 0; k < eigenvalues_becke_atomic.size(); ++k)
     {
-        logStream << eigenvalues_becke_atomic[1][k] << ' ';
-        outputFile << eigenvalues_becke_atomic[1][k] << std::endl;
+        logStream << eigenvalues_becke_atomic[k] << ' ';
+        outputFile << eigenvalues_becke_atomic[k] << std::endl;
     }
     logStream << std::endl << std::endl;
     log(logStream, logFile);
     outputFile.close();
 
-    outputFile.open(outputFilePrefix + "_eigenvectors_becke_chiAB_beta.cdftt");
+    outputFile.open(outputFilePrefix + "_eigenvectors_becke_chiAB.cdftt");
     if (!outputFile)
     {
         std::stringstream errorMessage;
-        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "_eigenvectors_becke_chiAB_beta.cdftt for writing." << std::endl;
+        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "_eigenvectors_becke_chiAB.cdftt for writing." << std::endl;
         
         print_error(errorMessage.str());
         
@@ -2034,12 +2073,12 @@ void Job::run_linearResponse()
     logStream << std::setprecision(10);
     outputFile << std::scientific;
     outputFile << std::setprecision(10);
-    for (size_t i = 0; i < eigenvectors_becke_atomic[1].size(); ++i)
+    for (size_t i = 0; i < eigenvectors_becke_atomic.size(); ++i)
     {
-        for (size_t j = 0; j < eigenvectors_becke_atomic[1][i].size(); ++j)
+        for (size_t j = 0; j < eigenvectors_becke_atomic[i].size(); ++j)
         {
-            logStream << std::right << std::setw(17) << eigenvectors_becke_atomic[1][i][j] << '\t';
-            outputFile << std::right << std::setw(17) << eigenvectors_becke_atomic[1][i][j] << ' ';
+            logStream << std::right << std::setw(17) << eigenvectors_becke_atomic[i][j] << '\t';
+            outputFile << std::right << std::setw(17) << eigenvectors_becke_atomic[i][j] << ' ';
         }
 
         logStream << std::endl;
@@ -3340,16 +3379,16 @@ void Job::computeResultsEnergyWithPointCharges(const std::vector<ExcitedState>& 
 void Job::createCube(Orbitals& orbitals, const Domain& domain, const std::string& cubeFileName, int TypeFlag, const ELFMethod elfMethod, std::vector<int> nums, std::vector<SpinType> typesSpin)
 {
     Grid g;
-    if (TypeFlag == 0)
+    if (TypeFlag == 0) // Electronic density
     {
         g=orbitals.makeGrid(domain);
 
     }
-    else if (TypeFlag == 1)
+    else if (TypeFlag == 1) // Orbitals
     {
         g = orbitals.makeOrbGrid(domain, nums, typesSpin);
     }
-    else
+    else // ELF
     {
         if (elfMethod == ELFMethod::BECKE)
         {

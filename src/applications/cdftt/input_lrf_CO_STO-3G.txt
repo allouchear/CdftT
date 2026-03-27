@@ -1,3 +1,0 @@
-RunType=LinearResponse
-AnalyticFiles=tests/STO-3G/CO_TDDFT_STO-3G.fchk
-OutputPrefix=LRF_CO_STO-3G

@@ -981,6 +981,7 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbit
         }
     }
 
+    /*
     std::cout << std::setprecision(10);
     for (int ii = 0; ii < numberOfAo; ++ii)
     {
@@ -996,7 +997,7 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbit
             std::cout << std::endl;
         }
     }
-
+    */
     
     // Build TOI matrix in MO basis
     std::vector<std::vector<std::vector<std::vector<double>>>> toiMatrixMO = std::vector<std::vector<std::vector<std::vector<double>>>>(2, std::vector<std::vector<std::vector<double>>>(numberOfMo, std::vector<std::vector<double>>()));
@@ -1103,7 +1104,7 @@ double Becke::ionic_potential(int i, int j, SpinType spinType, const std::array<
     return sum;
 }
 
-void Becke::chiAtomic(std::vector<std::vector<std::vector<double>>>& chiAtomic, int kmax, int lebedev_order, int radial_grid_factor)
+void Becke::chiAtomic(std::vector<std::vector<double>>& chiAtomic, int kmax, int lebedev_order, int radial_grid_factor)
 {
     // Build Becke grid if not already done
     if(_multigrid==false)
@@ -1114,7 +1115,7 @@ void Becke::chiAtomic(std::vector<std::vector<std::vector<double>>>& chiAtomic, 
 
 
     // Get necessary data from molecule and orbitals
-    int nbAtoms = _molecule.getNumberOfAtoms();
+    int numberOfAtoms = _molecule.getNumberOfAtoms();
 
     int numberOfAo = _orbitals.get_numberOfAo();
 
@@ -1128,17 +1129,14 @@ void Becke::chiAtomic(std::vector<std::vector<std::vector<double>>>& chiAtomic, 
     _orbitals.getOccupiedAndVirtualOrbitalNumbers(occupiedOrbitalNumbers, virtualOrbitalNumbers);
 
 
-    // Build sub-integral vector of overlaps for each atom
-    std::vector<std::vector<double>> integralPerAtom(2, std::vector<double>(nbAtoms, 0.0)); // First index: spin, second index: atom
+    // Compute the overlap matrix in AO basis (integrated on each atom)
+    std::vector<std::vector<std::vector<double>>> overlapMatrixesAO(numberOfAtoms, std::vector<std::vector<double>>(numberOfAo));
 
-    for(int I = 0; I < nbAtoms; ++I)
+    for(int I = 0; I < numberOfAtoms; ++I)
     {
-        // Build overlap matrix on atomic basis for this atom
-        std::vector<std::vector<double>> overlapMatrixAO = std::vector<std::vector<double>>(_orbitals.get_numberOfAo());
-        
         for (int i = 0; i < numberOfAo; ++i)
         {
-            overlapMatrixAO[i].resize(i + 1, 0.0);
+            overlapMatrixesAO[I][i].resize(i + 1, 0.0);
 
             for (int j = 0; j <= i; ++j)
             {
@@ -1156,64 +1154,60 @@ void Becke::chiAtomic(std::vector<std::vector<std::vector<double>>>& chiAtomic, 
                     sum += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func(x, y, z) * vcgtf[j].func(x, y, z);
                 }
 
-                overlapMatrixAO[i][j] = sum;
+                overlapMatrixesAO[I][i][j] = sum;
             }
         }
+    }
 
-        int spin;
-        size_t i, j;
-        #ifdef ENABLE_OMP
-        #pragma omp parallel for private(spin, i, j)
-        #endif
-        for (spin = 0; spin < 2; ++spin)
+    // Build chiAtomic triangular matrix
+    chiAtomic.resize(numberOfAtoms, std::vector<double>());
+    for (int i = 0; i < numberOfAtoms; ++i)
+    {
+        chiAtomic[i].resize(i + 1, 0.0);
+    }
+
+
+    int I, J;
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for private(I, J)
+    #endif
+    for (I = 0; I < numberOfAtoms; ++I)
+    {
+        for (J = 0; J <= I; ++J)
         {
-            size_t nbOccupiedOrbitals = occupiedOrbitalNumbers[spin].size();
-            size_t nbVirtualOrbitals = virtualOrbitalNumbers[spin].size();
-
-            for (i = 0; i < nbOccupiedOrbitals; ++i)
+            for (int spin = 0; spin < 2; ++spin)
             {
-                int occupiedOrbitalIndex = occupiedOrbitalNumbers[spin][i] - 1; // Convert to 0-based index
+                size_t nbOccupiedOrbitals = occupiedOrbitalNumbers[spin].size();
+                size_t nbVirtualOrbitals = virtualOrbitalNumbers[spin].size();
 
-                for (j = 0; j < nbVirtualOrbitals; ++j)
+                for (size_t i = 0; i < nbOccupiedOrbitals; ++i)
                 {
-                    int virtualOrbitalIndex = virtualOrbitalNumbers[spin][j] - 1; // Convert to 0-based index
+                    int occupiedOrbitalIndex = occupiedOrbitalNumbers[spin][i] - 1; // Convert to 0-based index
 
-                    double sum = 0.0;
-
-                    for (size_t m = 0; m < coefficients[spin][occupiedOrbitalIndex].size(); ++m)
+                    for (size_t j = 0; j < nbVirtualOrbitals; ++j)
                     {
-                        for (size_t n = 0; n < coefficients[spin][virtualOrbitalIndex].size(); ++n)
-                        {
-                            sum += coefficients[spin][occupiedOrbitalIndex][m]
-                                   * coefficients[spin][virtualOrbitalIndex][n]
-                                   * (n <= m ? overlapMatrixAO[m][n] : overlapMatrixAO[n][m])
-                                   / (orbitalEnergies[spin][virtualOrbitalIndex] - orbitalEnergies[spin][occupiedOrbitalIndex]);
-                        }
-                    }
+                        int virtualOrbitalIndex = virtualOrbitalNumbers[spin][j] - 1; // Convert to 0-based index
 
-                    integralPerAtom[spin][I] += sum;
+                        double sum_I = 0.0;
+                        double sum_J = 0.0;
+
+                        for (size_t m = 0; m < coefficients[spin][occupiedOrbitalIndex].size(); ++m)
+                        {
+                            for (size_t n = 0; n < coefficients[spin][virtualOrbitalIndex].size(); ++n)
+                            {
+                                double coeffProduct = coefficients[spin][occupiedOrbitalIndex][m] * coefficients[spin][virtualOrbitalIndex][n];
+
+                                sum_I += coeffProduct * (n <= m ? overlapMatrixesAO[I][m][n] : overlapMatrixesAO[I][n][m]);
+                                sum_J += coeffProduct * (n <= m ? overlapMatrixesAO[J][m][n] : overlapMatrixesAO[J][n][m]);
+                            }
+                        }
+
+                        chiAtomic[I][J] += sum_I * sum_J / (orbitalEnergies[spin][virtualOrbitalIndex] - orbitalEnergies[spin][occupiedOrbitalIndex]);
+                    }
                 }
             }
-        }
-    }
 
-
-    // Build chiAtomic triangular matrixes for each spin
-    chiAtomic.resize(2, std::vector<std::vector<double>>(nbAtoms));
-    for (int i = 0; i < nbAtoms; ++i)
-    {
-        chiAtomic[0][i].resize(i + 1, 0.0);
-        chiAtomic[1][i].resize(i + 1, 0.0);
-    }
-
-    for (int spin = 0; spin < 2; ++spin)
-    {
-        for (int I = 0; I < nbAtoms; ++I)
-        {
-            for (int J = 0; J < I; ++J)
-            {
-                chiAtomic[spin][I][J] = - 2.0 * integralPerAtom[spin][I] * integralPerAtom[spin][J];
-            }
+            chiAtomic[I][J] *= (-2.0);
         }
     }
 }

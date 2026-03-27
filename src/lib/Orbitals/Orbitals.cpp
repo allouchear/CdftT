@@ -1008,6 +1008,16 @@ void Orbitals::set_energy(double energy)
     _energy = energy;
 }
 
+void Orbitals::set_orbitalEnergy(const std::vector<std::vector<double>>& orbitalEnergy)
+{
+    _orbitalEnergy = orbitalEnergy;
+}
+
+void Orbitals::set_coefficients(const std::vector<std::vector<std::vector<double>>>& coefficients)
+{
+    _coefficients = coefficients;
+}
+
 
 //----------------------------------------------------------------------------------------------------//
 // OTHER PUBLIC METHODS
@@ -1313,7 +1323,8 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Orbitals::getTripleOr
         }
     }
 
-    // debut
+    // debug
+    /*
     std::cout << std::setprecision(10);
     for (int ii = 0; ii < _numberOfAo; ++ii)
     {
@@ -1329,6 +1340,7 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Orbitals::getTripleOr
             std::cout << std::endl;
         }
     }
+    */
 
     // Build LRF matrix in MO basis
     std::vector<std::vector<std::vector<std::vector<double>>>> lrfMatrixMO = std::vector<std::vector<std::vector<std::vector<double>>>>(2, std::vector<std::vector<std::vector<double>>>(_numberOfMo, std::vector<std::vector<double>>()));
@@ -1734,7 +1746,7 @@ Grid Orbitals::makeOrbGrid(const Domain& domain, const std::vector<int>& orbital
 
                     for(int l = 0; l < domain.get_Nval(); ++l)
                     {
-                        g.set_Vijkl(phy[l],i,j,k,l);
+                        g.set_Vijkl(phy[l], i, j, k, l);
                     }
                 }
                 

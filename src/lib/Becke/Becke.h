@@ -328,7 +328,7 @@ class Becke
         double ionic_potential(int i, int j, SpinType spinType, const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         
-        void chiAtomic(std::vector<std::vector<std::vector<double>>>& chiAtomic, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+        void chiAtomic(std::vector<std::vector<double>>& chiAtomic, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
          * @brief Electronic density value at point (x,y,z).

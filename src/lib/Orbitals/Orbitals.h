@@ -158,6 +158,19 @@ class Orbitals
          */
         void set_energy(double energy);
 
+        /**
+         * @brief Sets the orbital energies.
+         * 
+         * @param[in] orbitalEnergy The 2D vector of doubles where the energy values are stored. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals. The second dimension gives the energy of the i-th orbital.
+         */
+        void set_orbitalEnergy(const std::vector<std::vector<double>>& orbitalEnergy);
+
+        /**
+         * @brief Sets the coefficients for all orbitals.
+         * 
+         * @param[in] coefficients The 3D vector of doubles where the coefficient values are stored. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
+         */
+        void set_coefficients(const std::vector<std::vector<std::vector<double>>>& coefficients);
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
@@ -165,7 +178,7 @@ class Orbitals
 
         /**
          * @brief Returns the numbers of the occupied orbitals for alpha and beta spins.
-         * 
+         *
          * @return A 2D vector of integers corresponding to the number of the occupied orbitals. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
          */
         std::vector<std::vector<int>> getOccupiedOrbitalNumbers() const;
