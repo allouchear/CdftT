@@ -203,6 +203,7 @@ class Atom
          *
          * @param a2 Second atom.
          * @param a3 Third atom.
+         * 
          * @return double Angle in degrees.
          */
         double computeAngle(const Atom& a2, const Atom& a3) const;
@@ -211,6 +212,7 @@ class Atom
          * @brief Computes the distance between this atom and another atom.
          *
          * @param a2 Other atom.
+         * 
          * @return double Distance (in coordinates units).
          */
         double computeDistance(const Atom& a2) const;
@@ -219,6 +221,7 @@ class Atom
          * @brief Computes the distance between this atom and a given coordinate.
          *
          * @param distantCoordinate Coordinate to compute the distance to.
+         * 
          * @return double Distance (in coordinates units).
          */
         double computeDistance(const std::array<double, 3>& distantCoordinate) const;
@@ -229,6 +232,7 @@ class Atom
          * @param a2 Second atom.
          * @param a3 Third atom.
          * @param a4 Fourth atom.
+         * 
          * @return double Torsion angle in degrees.
          */
         double computeTorsion(const Atom& a2, const Atom& a3, const Atom& a4) const;

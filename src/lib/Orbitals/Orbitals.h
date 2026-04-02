@@ -21,24 +21,61 @@
 class Orbitals
 {
     private:
+        /** @brief Vector of CGTFs that compose the basis set. */
         std::vector<CGTF> _vcgtf;
+
+        /** @brief Coefficients for the molecular orbitals. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals. The second dimension gives the coefficient of the i-th orbital. */
         std::vector<std::vector<std::vector<double>>> _coefficients;
+
+        /** @brief Number of atomic orbitals. */
         int _numberOfAo;
+
+        /** @brief Number of molecular orbitals. */
         int _numberOfMo;
+
+        /** @brief Number of alpha electrons. */
         int _numberOfAlphaElectrons;
+
+        /** @brief Number of beta electrons. */
         int _numberOfBetaElectrons;
+
+        /** @brief Number of atoms. */
         int _numberOfAtoms;
+
+        /** @brief Table of primitive centers (atom indices) for each CGTF. */
         std::vector<int> _primitiveCenters;
+
+        /** @brief Structure associated with the orbitals. */
         Structure _struct;
+
+        /** @brief Table of atomic numbers for each atom. */
         std::vector<int> _atomicNumbers;
+
+        /** @brief Table of atomic symbols for each atom. */
         std::vector<std::string> _symbol;
+
+        /** @brief Table of molecular orbital energies. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals. The second dimension gives the energy of the i-th orbital. */
         std::vector<std::vector<double>> _orbitalEnergy;
+
+        /** @brief Table of all fukui function values. The first index is for f-, the second for f+. The second dimension gives the fukui function value for the i-th atom. */
         std::vector<std::vector<double>> _all_f;
-        std::vector<int> _numOrb;
+
+        /** @brief Orbital numbers (1-based) of the HOMO (index 0) and LUMO (index 1). */
+        std::array<int, 2> _HomoLumoNumbers;
+        
+        /** @brief Table of occupation numbers for each orbital. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals. The second dimension gives the occupation number of the i-th orbital. */
         std::vector<std::vector<double>> _occupationNumber;
+
+        /** @brief Flag indicating whether alpha and beta spins are present. */
         bool _alphaAndBeta;
+
+        /** @brief Helper class to compute binomial coefficients. */
         Binomial _bino;
+
+        /** @brief Descriptors for the orbitals. See @ref Descriptors for more information about the descriptors. */
         Descriptors _descriptors;
+
+
         std::vector<CGTF> _vcgtfNonNormalise;
         int _numberOfGtf;
         double _energy;
@@ -52,7 +89,32 @@ class Orbitals
         std::vector<double> __debug_totalSumMO = std::vector<double>(2, 0.0);
 
 
-    public:
+        //----------------------------------------------------------------------------------------------------//
+        // PRIVATE METHODS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Computes the electronic density for a given spin-orbital with CGTFs already evaluated at a given point.
+         *
+         * @param[in] orbitalNumber The number of the orbital (1-based) for which to compute the electronic density.
+         * @param[in] spinType The spin type of the orbital for which to compute the density.
+         * @param[in] evaluatedCgtfs The evaluated CGTFs at the given point.
+         *
+         * @return double Electronic density for the specified spin-orbital at the given point.
+         */
+        double density(int orbitalNumber, SpinType spinType, const std::vector<double>& evaluatedCgtfs) const;
+
+        /**
+         * @brief Evaluates the CGTFs at the given point (x, y, z) and stores the results in the provided vector.
+         * 
+         * @param[in, out] evaluatedCgtfs A vector to store the evaluated CGTF values at the given point.
+         * @param[in] x Coordinate along the first (x) axis.
+         * @param[in] y Coordinate along the second (y) axis.
+         * @param[in] z Coordinate along the third (z) axis.
+         */
+        void evaluateCgtfsAtPoint(std::vector<double>& evaluatedCgtfs, double x, double y, double z) const;
+
+      public:
         //----------------------------------------------------------------------------------------------------//
         // CONSTRUCTORS
         //----------------------------------------------------------------------------------------------------//
@@ -80,6 +142,11 @@ class Orbitals
         //----------------------------------------------------------------------------------------------------//
         // GETTERS
         //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Returns the table of all f values.
+         */
+        const std::vector<std::vector<double>>& get_all_f() const;
 
         /**
          * @brief Returns the table of CGTF which compose the Orbitals.
@@ -175,6 +242,16 @@ class Orbitals
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
         //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Returns the HOMO's energy.
+         */
+        double getHOMOEnergy(int alpha = 0) const;
+
+        /**
+         * @brief Returns the LUMO's energy.
+         */
+        double getLUMOEnergy(int alpha = 0) const;
 
         /**
          * @brief Returns the numbers of the occupied orbitals for alpha and beta spins.
@@ -273,14 +350,6 @@ class Orbitals
             /*! \return The LUMO Molecular Orbital number. */
         void LUMO();
 
-            //! A normal member taking no arguments and returning a double value.
-            /*! \return The HOMO's energy. */
-        double eHOMO(int alpha=0) const {return _orbitalEnergy[alpha][_numOrb[0]];}
-
-            //! A normal member taking no arguments and returning a double value.
-            /*! \return The LUMO's energy. */
-        double eLUMO(int alpha=0) const {return _orbitalEnergy[alpha][_numOrb[1]];}
-
             //! A normal member taking no arguments and returning a std::vector<std::vector<double>> value.
             /*! \return The matrix of overlaps. */
         std::vector<std::vector<double>> get_S();
@@ -311,15 +380,34 @@ class Orbitals
         void PrintDescriptors(int i, int j);
 
 
-        
             //! Make a grid of electronic density
             /*! creates a grid of electronic density. Values are calculated with Orbitals::density(x, y, z)*/
         Grid makeGrid(const Domain& d);
 
-            //! Electronic density
-            /*! Calculates and returns the electronic density from molecular orbitals */
-        double density(double x, double y, double z);
-            
+        /**
+         * @brief Computes the total electronic density for all orbitals at a given point.
+         *
+         * @param[in] x Coordinate along the first (x) axis.
+         * @param[in] y Coordinate along the second (y) axis.
+         * @param[in] z Coordinate along the third (z) axis.
+         *
+         * @return double Total electronic density at the given point.
+         */
+        double density(double x, double y, double z) const;
+
+        /**
+         * @brief Computes the total electronic density for given orbitals at a given point.
+         *
+         * @param[in] orbitalNumbers Vector of orbital numbers (1-based) for which to compute the density.
+         * @param[in] orbitalSpins Vector of @ref SpinType for each orbital (must have the same length as orbitalNumbers).
+         * @param[in] x Coordinate along the first (x) axis.
+         * @param[in] y Coordinate along the second (y) axis.
+         * @param[in] z Coordinate along the third (z) axis.
+         *
+         * @return double Total electronic density for the given spin-orbitals at the given point.
+         */
+        double density(const std::vector<int>& orbitalNumbers, const std::vector<SpinType>& orbitalSpins, double x, double y, double z) const;
+
         /**
          * @brief Builds the Grid associated with the orbitals object.
          * 
@@ -336,7 +424,7 @@ class Orbitals
             
             //! Electron localisation function
             /*! Calculates and returns the ELF*/
-        double ELF(const double& x, const double& y, const double& z, double epsilon=2.87e-5);
+        double ELF(double x, double y, double z, double epsilon=2.87e-5);
 
             //! Make ELF grid
             /*! Make an ELF grid using Orbitals::ELF()*/

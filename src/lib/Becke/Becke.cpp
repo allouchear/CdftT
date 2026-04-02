@@ -125,7 +125,21 @@ const std::vector<double>& Becke::get_partial_charge() const
 }
 
 
+//----------------------------------------------------------------------------------------------------//
+// OTHER PUBLIC METHODS
+//----------------------------------------------------------------------------------------------------//
 
+double Becke::getHOMOEnergy()
+{
+    _orbitals.HOMO();
+    return _orbitals.getHOMOEnergy();
+}
+
+double Becke::getLUMOEnergy()
+{
+    _orbitals.LUMO();
+    return _orbitals.getLUMOEnergy();
+}
 
 int Becke::number_of_radial_points(int Z)
 {
@@ -473,7 +487,7 @@ double Becke::multicenter_integration(std::function<double(const std::vector<GTF
     return integral;
 }
 
-double Becke::multicenter_integration(std::function<double(Orbitals&, int i, int j, double x, double y, double z)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::multicenter_integration(std::function<double(const Orbitals&, int i, int j, double x, double y, double z)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor)
 {    /*
     compute the integral
 
@@ -525,7 +539,7 @@ double Becke::multicenter_integration(std::function<double(Orbitals&, int i, int
     return integral;
 }
 
-double Becke::multicenter_integration(std::function<double(Orbitals& Orb, int i, int j, double x, double y, double z, SpinType spinType)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor, SpinType spinType)
+double Becke::multicenter_integration(std::function<double(const Orbitals&, int, int, double, double, double, SpinType)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor, SpinType spinType)
 {    /*
     compute the integral
 
@@ -609,7 +623,7 @@ double Becke::multicenter_integration(std::function<double(Orbitals&, int, int, 
     return integral;
 }
 
-std::vector<double> Becke::multicenter_sub_integration(std::function<double(Orbitals& Orb, double x, double y, double z)> f, int kmax, int lebedev_order, int radial_grid_factor)
+std::vector<double> Becke::multicenter_sub_integration(std::function<double(const Orbitals&, double, double, double)> f, int kmax, int lebedev_order, int radial_grid_factor)
 {   
     /*
     compute the integral
@@ -761,7 +775,7 @@ void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
 {
     int Nat=_molecule.getNumberOfAtoms();
     std::vector<double> qn (Nat);
-    std::vector<double> In = multicenter_sub_integration(&density, kmax, lebedev_order, radial_grid_factor);
+    std::vector<double> In = multicenter_sub_integration(static_cast<double(*)(const Orbitals&, double, double, double)>(density), kmax, lebedev_order, radial_grid_factor); // must use the cast because density is an overloaded function
 
     for(int i=0; i<Nat ;i++)
         qn[i]=_molecule.atom(i).get_atomicNumber() - In[i];
@@ -1212,9 +1226,20 @@ void Becke::chiAtomic(std::vector<std::vector<double>>& chiAtomic, int kmax, int
     }
 }
 
-double Becke::density(Orbitals& Orb, double x, double y, double z)
+double Becke::density(const Orbitals& orbitals, double x, double y, double z)
 {
-	return Orb.density(x,y,z);
+	return orbitals.density(x, y, z);
+}
+
+double Becke::density(const Orbitals& orbitals, const std::vector<int>& orbitalNumbers, const std::vector<SpinType>& orbitalSpins, double x, double y, double z)
+{
+    if (orbitalNumbers.size() != orbitalSpins.size())
+    {
+        print_error("Error in Becke::density(): orbitalNumbers and orbitalSpins vectors must have the same size.");
+        std::exit(1);
+    }
+
+    return orbitals.density(orbitalNumbers, orbitalSpins, x, y, z);
 }
 
 double Becke::prodGTF(const std::vector<GTF>& p, double x, double y, double z)
@@ -1226,23 +1251,26 @@ double Becke::prodGTF(const std::vector<GTF>& p, double x, double y, double z)
     return p*c;
 }
 
-double Becke::CGTFstarCGTF(Orbitals& Orb, int i, int j, double x, double y ,double z)
+double Becke::CGTFstarCGTF(const Orbitals& orbitals, int i, int j, double x, double y ,double z)
 {
-    double c=0.0;
+    double c = 0.0;
 
-    if(i==j)
+    const std::vector<CGTF>& vcgtf = orbitals.get_vcgtf();
+
+    if(i == j)
     {
-        c=Orb.get_vcgtf()[i].func(x,y,z);
-        return c*c;
+        c = vcgtf[i].func(x, y, z);
+        c *= c;
     }
-
     else
-        c=Orb.get_vcgtf()[i].func(x,y,z)*Orb.get_vcgtf()[j].func(x,y,z);
+    {
+        c = vcgtf[i].func(x, y, z) * vcgtf[j].func(x, y, z);
+    }
 
     return c;
 }
 
-double Becke::phi(Orbitals& orbitals, int i, double x, double y, double z, SpinType spinType)
+double Becke::phi(const Orbitals& orbitals, int i, double x, double y, double z, SpinType spinType)
 {
     double phi = 0.0;
     
@@ -1254,7 +1282,7 @@ double Becke::phi(Orbitals& orbitals, int i, double x, double y, double z, SpinT
     return phi;
 }
 
-double Becke::phiStarPhi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType)
+double Becke::phiStarPhi(const Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType)
 {
     double phi_star_phi = 0.0;
     int spin = static_cast<int>(spinType);

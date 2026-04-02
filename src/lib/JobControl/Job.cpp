@@ -1587,6 +1587,9 @@ void Job::run_linearResponse()
 
     std::stringstream logStream;
 
+    // Flush std::cout so that logStream and std::cout are synchronized in the output.
+    std::cout << std::flush;
+
     
     //Read analytic file name
     std::vector<std::string> analyticFilesNames;
@@ -1594,9 +1597,18 @@ void Job::run_linearResponse()
 
 
     // Loading orbitals
+    std::cout << "Building Orbitals object... ";
     Orbitals orbitals;
     computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
     std::cout << std::endl;
+
+
+    /************/
+    /* ANALYTIC */
+    /************/
+
+    logStream << std::endl << std::endl << "====================== ANALYTIC COMPUTATION ======================" << std::endl << std::endl;
+    log(logStream, logFile);
 
     /*
     // Get triple-orbital-integral matrix
@@ -1621,13 +1633,14 @@ void Job::run_linearResponse()
 
 
     // Compute LRF Matrix
-    std::vector<std::vector<std::vector<double>>> lrfMatrix;
+    std::vector<std::vector<std::vector<double>>> lrfMatrix(2);
     computeLinearResponseFunctionMatrix(orbitals, tripleOrbitalIntegralMatrix, lrfMatrix);
 
 
     // Diagonalize LRF Matrix
-    std::vector<std::vector<double>> eigenvalues(2); // First index for alpha spin, second index for beta spin
-    std::vector<std::vector<std::vector<double>>> eigenvectors(2); // Same
+    std::vector<std::vector<double>> eigenvalues(2);
+    std::vector<std::vector<std::vector<double>>> eigenvectors(2);
+
 
     // Compute and save results for alpha spin
     findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix[0], eigenvalues[0], eigenvectors[0]);
@@ -1669,7 +1682,7 @@ void Job::run_linearResponse()
         std::exit(1);
     }
 
-    logStream << "Sorted Eigenvectors (columns): " << std::endl;
+    logStream << "Sorted Eigenvectors (columns, alpha spin): " << std::endl;
     log(logStream, logFile);
     logStream << std::scientific;
     logStream << std::setprecision(10);
@@ -1689,6 +1702,7 @@ void Job::run_linearResponse()
     logStream << std::defaultfloat << std::endl;
     log(logStream, logFile);
     outputFile.close();
+
 
     // Compute and save results for beta spin
     findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix[1], eigenvalues[1], eigenvectors[1]);
@@ -1730,7 +1744,7 @@ void Job::run_linearResponse()
         std::exit(1);
     }
 
-    logStream << "Sorted Eigenvectors (columns): " << std::endl;
+    logStream << "Sorted Eigenvectors (columns, beta spin): " << std::endl;
     log(logStream, logFile);
     logStream << std::scientific;
     logStream << std::setprecision(10);
@@ -1814,8 +1828,8 @@ void Job::run_linearResponse()
 
     //createCube(pseudoOrbitals, domain, outputFilePrefix + "_lrf_eigenvectors_alpha.cube", 1, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_alpha);
     //createCube(pseudoOrbitals, domain, outputFilePrefix + "_lrf_eigenvectors_beta.cube", 1, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_beta);
-
     */
+    
     /**************/
     /* BECKE GRID */
     /**************/
@@ -1834,6 +1848,7 @@ void Job::run_linearResponse()
 
 
     // Build Becke grid
+    std::cout << "Building Becke object... ";
     Becke becke;
     computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
 
@@ -2030,6 +2045,7 @@ void Job::run_linearResponse()
     findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix_becke_atomic, eigenvalues_becke_atomic, eigenvectors_becke_atomic);
     sortEigenValuesAndEigenVectors(eigenvalues_becke_atomic, eigenvectors_becke_atomic);
 
+    //outputFile.open(outputFilePrefix + "_energies_becke_chiAB.cdftt");
     std::ofstream outputFile(outputFilePrefix + "_energies_becke_chiAB.cdftt");
     if (!outputFile)
     {
@@ -2087,6 +2103,87 @@ void Job::run_linearResponse()
     logStream << std::defaultfloat << std::endl;
     log(logStream, logFile);
     outputFile.close();
+
+
+    // Lowest electron distorsion mode
+    logStream << "Lowest electron density distorsion mode condensed on the carbon: " << std::abs(eigenvalues_becke_atomic[0] * eigenvectors_becke_atomic[0][0] * eigenvectors_becke_atomic[0][0]) << std::endl;
+    logStream << "Lowest electron density distorsion mode condensed on the halogen: " << std::abs(eigenvalues_becke_atomic[0] * eigenvectors_becke_atomic[1][0] * eigenvectors_becke_atomic[1][0]) << std::endl;
+    log(logStream, logFile);
+
+
+    /***********************/
+    /* ENERGY - FMO method */
+    /***********************/
+
+    logStream << std::endl << std::endl << "====================== ENERGY - FMO method ======================" << std::endl << std::endl;
+    log(logStream, logFile);
+
+    orbitals.HOMO_LUMO();
+    orbitals.get_f();
+    Descriptors descriptors(orbitals.get_descriptors());
+    descriptors.set_mu_fk_data(orbitals.get_all_f(), orbitals.getHOMOEnergy(), orbitals.getLUMOEnergy());
+    descriptors.compute_all();
+
+    // Print deltafk
+    const std::vector<double>& deltafk = descriptors.get_deltafk();
+
+    logStream << "Δf (column)" << std::endl;
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    for (size_t i = 0; i < deltafk.size(); ++i)
+    {
+        logStream << std::right << std::setw(17) << deltafk[i] << std::endl;
+    }
+    logStream << std::endl;
+    log(logStream, logFile);
+    
+
+    // Get dk coefficient
+    std::vector<double> dk_coeffs(deltafk.size(), 0.0);
+    for (size_t i = 0; i < deltafk.size(); ++i)
+    {
+        for (size_t j = 0; j < deltafk.size(); ++j)
+        {
+            dk_coeffs[i] += deltafk[j] * eigenvectors_becke_atomic[j][i];
+        }
+    }
+
+    logStream << "Δf = ";
+    for (size_t i = 0; i < deltafk.size(); ++i)
+    {
+        logStream << (dk_coeffs[i] >= 0 ? "+ " : "- ") << std::abs(dk_coeffs[i]) << " χ_" << i + 1 << ' ';
+    }
+    logStream << std::endl;
+    log(logStream, logFile);
+
+    double energy = 0.0;
+    for (size_t i = 0; i < dk_coeffs.size(); ++i)
+    {
+        energy += dk_coeffs[i] * dk_coeffs[i] / std::abs(eigenvalues_becke_atomic[i]);
+    }
+    energy *= (- 0.5);
+
+    logStream << "Energy = " << std::scientific << std::setprecision(10) << energy << " H" << std::endl;
+    log(logStream, logFile);
+
+
+    /***********************************************/
+    /* ENERGY - FD method with Q0, Q+ and Q- files */
+    /***********************************************/
+
+    logStream << std::endl << std::endl << "====================== ENERGY - FD method with Q0, Q+ and Q- files ======================" << std::endl << std::endl;
+    log(logStream, logFile);
+
+
+    /****************************************/
+    /* ENERGY - FD method with Q0 file only */
+    /****************************************/
+
+    logStream << std::endl << std::endl << "====================== ENERGY - FD method with Q0 file only ======================" << std::endl << std::endl;
+    log(logStream, logFile);
+
+    // Here we assume that Δf = ρ_LUMO - ρ_HOMO
+    
 }
 
 void Job::run_makeDensityCube()
@@ -2713,6 +2810,9 @@ void Job::computeLinearResponseFunctionMatrix(const Orbitals& orbitals, const st
     std::vector<std::vector<int>> virtualOrbitalsNumbers;
     orbitals.getOccupiedAndVirtualOrbitalNumbers(occupiedOrbitalsNumbers, virtualOrbitalsNumbers);
 
+    // Get orbital energies
+    std::vector<std::vector<double>> orbitalEnergies = orbitals.get_orbitalEnergy();
+
 
     // Build and initialise the lower triangular LRF matrix for each spin
     lrfMatrix.resize(2, std::vector<std::vector<double>>(numberOfMO, std::vector<double>()));
@@ -2734,17 +2834,13 @@ void Job::computeLinearResponseFunctionMatrix(const Orbitals& orbitals, const st
         {
             for (int j = 0; j <= i; ++j)
             {
-                double sum = 0.0;
-
                 for (int occupiedOrbital : occupiedOrbitalsNumbers[spin])
                 {
-                    int occupiedOrbitalIndex = occupiedOrbital - 1; // -1 because occupiedOrbitalsNumbers are 1-based
-                    double occupiedOrbitalEnergy = orbitals.get_orbitalEnergy()[spin][occupiedOrbitalIndex];
+                    int occupiedOrbitalIndex = occupiedOrbital - 1; // because occupiedOrbitalsNumbers are 1-based
 
                     for (int virtualOrbital : virtualOrbitalsNumbers[spin])
                     {
-                        int virtualOrbitalIndex = virtualOrbital - 1; // -1 because virtualOrbitalsNumbers are 1-based
-                        double virtualOrbitalEnergy = orbitals.get_orbitalEnergy()[spin][virtualOrbitalIndex];
+                        int virtualOrbitalIndex = virtualOrbital - 1; // because virtualOrbitalsNumbers are 1-based
 
                         std::array<int, 3> indices_i = {i, occupiedOrbitalIndex, virtualOrbitalIndex};
                         std::array<int, 3> indices_j = {j, occupiedOrbitalIndex, virtualOrbitalIndex};
@@ -2752,12 +2848,14 @@ void Job::computeLinearResponseFunctionMatrix(const Orbitals& orbitals, const st
                         std::sort(indices_i.begin(), indices_i.end(), std::greater<size_t>());
                         std::sort(indices_j.begin(), indices_j.end(), std::greater<size_t>());
 
-                        sum += 2 * tripleOrbitalIntegralMatrix[spin][indices_i[0]][indices_i[1]][indices_i[2]] * tripleOrbitalIntegralMatrix[spin][indices_j[0]][indices_j[1]][indices_j[2]] / (occupiedOrbitalEnergy - virtualOrbitalEnergy);
+                        lrfMatrix[spin][i][j] += tripleOrbitalIntegralMatrix[spin][indices_i[0]][indices_i[1]][indices_i[2]]
+                                                  * tripleOrbitalIntegralMatrix[spin][indices_j[0]][indices_j[1]][indices_j[2]]
+                                                  / (orbitalEnergies[spin][occupiedOrbitalIndex] - orbitalEnergies[spin][virtualOrbitalIndex]);
                     }
                 }
 
-                lrfMatrix[spin][i][j] = sum;
-                std::cout << "< phi_" << i << " | Xi | phi_" << j << " > = " << sum << std::endl;
+                lrfMatrix[spin][i][j] *= 2.0;
+                std::cout << "< phi_" << i << " | Xi | phi_" << j << " > = " << lrfMatrix[spin][i][j] << std::endl;
             }
 
             std::cout << std::endl;
