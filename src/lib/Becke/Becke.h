@@ -153,6 +153,35 @@ class Becke
 
 
         //----------------------------------------------------------------------------------------------------//
+        // ATOMIC AND MOLECULAR BASIS INTEGRATING METHODS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Calculates and returns the ionic potential matrix < phi_i | V_ion | phi_j > for a given ion position and charge.
+          *
+          * @param chargePosition The position of the ion.
+          * @param charge The charge of the ion.
+          * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+          * @param lebedev_order Lebedev order for angular quadrature (default 41).
+          * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+          * @param debug If true, prints the AO and/or MO matrices and their sums to standard output for debugging purposes (default false).
+          * @param printAOMatrix If true, prints the AO matrix to standard output for debugging purposes (default false).
+          * @param printMOMatrix If true, prints the MO matrix to standard output for debugging purposes (default false).
+        */
+        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, bool debug = false, bool printAOMatrix = false, bool printMOMatrix = false);
+
+        /**
+         * @brief TODO
+         */
+        std::vector<std::vector<std::vector<std::vector<double>>>> getPhiStarPhiMatrix_perAtom(int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief TODO
+         */
+        std::vector<std::vector<std::vector<std::vector<double>>>> getTripleOrbitalIntegralMatrix(int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+
+        //----------------------------------------------------------------------------------------------------//
         // INTEGRATION METHODS
         //----------------------------------------------------------------------------------------------------//
 
@@ -181,7 +210,7 @@ class Becke
          *
          * @return double Value of the integral.
          */
-        double multicenter_integration(std::function<double(const Orbitals&, int, int, double, double, double)>, int, int, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+        double multicenter_integration(std::function<double(const Orbitals&, int, int, double, double, double)> f, int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
          * @brief Multicenter integration for functions of signature: double(Orbitals&, int, int, double, double, double, SpinType).
@@ -220,28 +249,57 @@ class Becke
         double multicenter_integration(std::function<double(Orbitals&, int, int, double, double, double, SpinType, const std::array<double, 3>&, double)> f, int i, int j, SpinType spinType, const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
-         * @brief Returns the table of integral values for a function of signature double(Orbitals&, double, double, double), evaluated on each grid (so on each atom).
+         * @brief Returns the table of density integral values per atom.
          *
-         * @param f Function to evaluate.
-         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
-         * @param lebedev_order Lebedev order for angular quadrature (default 41).
-         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @param[in] g Density grid to use.
+         * @param[in] kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param[in] lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param[in] radial_grid_factor Radial grid multiplicative factor (default 5).
+         *
+         * @return Table of integral values per atom.
+         */
+        std::vector<double> multicenter_sub_integration(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Returns the table of integral values per atom for a function of signature double(Orbitals&, double, double, double), evaluated on each grid (so on each atom).
+         *
+         * @param[in] f Function to evaluate.
+         * @param[in] orbitals Orbitals to use for the evaluation.
+         * @param[in] kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param[in] lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param[in] radial_grid_factor Radial grid multiplicative factor (default 5).
+         *
+         * @return Table of integral values per atom.
+         */
+        std::vector<double> multicenter_sub_integration(std::function<double(const Orbitals&, double, double, double)> f, const Orbitals& orbitals, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Returns the table of integral values per atom for a function of signature double(Orbitals&, double, double, double), evaluated on each grid (so on each atom).
+         *
+         * @param[in] f Function to evaluate.
+         * @param[in] kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param[in] lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param[in] radial_grid_factor Radial grid multiplicative factor (default 5).
          *
          * @return Table of integral values per atom.
          */
         std::vector<double> multicenter_sub_integration(std::function<double(const Orbitals&, double, double, double)> f, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
-         * @brief ?
+         * @brief Returns the table of integral values per atom for a function of signature double(Orbitals&, int, int, double, double, double, SpinType), evaluated on each grid (so on each atom).
          *
-         * @param g Density grid to use.
-         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
-         * @param lebedev_order Lebedev order for angular quadrature (default 41).
-         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * @param[in] f Function to evaluate.
+         * @param[in] i Index of the first orbital to use for the evaluation of f.
+         * @param[in] j Index of the second orbital to use for the evaluation of f.
+         * @param[in] spinType Spin type of the orbital to use for the evaluation of f.
+         * @param[in] kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param[in] lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param[in] radial_grid_factor Radial grid multiplicative factor (default 5).
          *
          * @return Table of integral values per atom.
          */
-        std::vector<double> multicenter_sub_integration(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+        std::vector<double> multicenter_sub_integration(std::function<double(const Orbitals&, int, int, double, double, double, SpinType)> f, int i, int j, SpinType spinType = SpinType::ALPHA, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
@@ -250,12 +308,25 @@ class Becke
         /**
          * @brief Returns the HOMO energy.
          */
-        double getHOMOEnergy();
+        std::vector<double> getHomoEnergy();
 
         /**
          * @brief Returns the LUMO energy.
          */
-        double getLUMOEnergy();
+        std::vector<double> getLumoEnergy();
+
+        /**
+         * @brief Returns the difference between LUMO and HOMO density per atom.
+         *
+         * @param[in] spinType Spin type of the orbitals to use for the evaluation.
+         * @param[in] kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param[in] lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param[in] radial_grid_factor Radial grid multiplicative factor (default 5).
+         *
+         * @return Table of integral values per atom.
+
+         */
+        std::vector<double> getRhoLumoMinusRhoHomo(int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
          * @brief Prints partial charges to standard output.
@@ -302,8 +373,6 @@ class Becke
             /*! \return The value of cutoff profiles. */
         double s(double mu, int k = 3); // ?
 
-        
-
         /**
          * @brief Calculates and updates the partial charge.
          *
@@ -324,25 +393,6 @@ class Becke
         void partial_charge(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
-         * @brief Calculates and returns the ionic potential matrix < phi_i | V_ion | phi_j > for a given ion position and charge.
-          *
-          * @param chargePosition The position of the ion.
-          * @param charge The charge of the ion.
-          * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
-          * @param lebedev_order Lebedev order for angular quadrature (default 41).
-          * @param radial_grid_factor Radial grid multiplicative factor (default 5).
-          * @param debug If true, prints the AO and/or MO matrices and their sums to standard output for debugging purposes (default false).
-          * @param printAOMatrix If true, prints the AO matrix to standard output for debugging purposes (default false).
-          * @param printMOMatrix If true, prints the MO matrix to standard output for debugging purposes (default false).
-        */
-        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, bool debug = false, bool printAOMatrix = false, bool printMOMatrix = false);
-
-        /**
-         * @brief TODO
-         */
-        std::vector<std::vector<std::vector<std::vector<double>>>> getTripleOrbitalIntegralMatrix(int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
-
-        /**
          * @brief Calculates and returns the ionic potential energy (matrix element < phi_i | V_ion | phi_j >).
          * 
          * @param[in] i Index of the first orbital.
@@ -357,34 +407,10 @@ class Becke
          */
         double ionic_potential(int i, int j, SpinType spinType, const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
-        
+        /**
+         * @ brief TODO
+         */
         void chiAtomic(std::vector<std::vector<double>>& chiAtomic, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
-
-        /**
-         * @brief Electronic density value at point (x,y,z).
-         *
-         * @param orbitals Orbitals object used to evaluate the density.
-         * @param x X coordinate.
-         * @param y Y coordinate.
-         * @param z Z coordinate.
-         * 
-         * @return double Electronic density at the given point.
-         */
-        static double density(const Orbitals& orbitals, double x, double y, double z);
-
-        /**
-         * @brief Electronic density value of the given orbitals at point (x,y,z).
-         *
-         * @param orbitals Orbitals object used to evaluate the density.
-         * @param orbitalNumbers Vector of orbital numbers (1-based).
-         * @param orbitalSpins Vector of @ref SpinType for each orbital (must have the same length as orbitalNumbers).
-         * @param x Coordinate on the first axis (x direction).
-         * @param y Coordinate on the second axis (y direction).
-         * @param z Coordinate on the third axis (z direction).
-         * 
-         * @return double Electronic density at the given point.
-         */
-        static double density(const Orbitals& orbitals, const std::vector<int>& orbitalNumbers, const std::vector<SpinType>& orbitalSpins, double x, double y, double z);
 
         /**
          * @brief Returns the overlap integral between two Gaussian-Type Functions (GTFs).
@@ -425,20 +451,6 @@ class Becke
         double OverlapCGTF(int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
-         * @brief Returns the product of two Contracted Gaussian-Type Functions (CGTFs) evaluated at a point (x,y,z).
-         *
-         * @param Orb Orbitals reference containing the CGTFs.
-         * @param i Index of first CGTF.
-         * @param j Index of second CGTF.
-         * @param x X coordinate.
-         * @param y Y coordinate.
-         * @param z Z coordinate.
-         * 
-         * @return double Product value of the two CGTFs at (x,y,z).
-         */
-        static double CGTFstarCGTF(const Orbitals& orbitals, int i, int j, double x, double y, double z);
-
-        /**
          * @brief Returns the overlap integral between two orbitals of indexes i and j.
          *
          * @param i Index of the first orbital.
@@ -453,6 +465,89 @@ class Becke
         double overlap(int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, SpinType spinType = SpinType::ALPHA);
 
         /**
+         * @brief Returns partial charges and energy from a Grid.
+         *
+         * @param g Grid reference.
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * 
+         * @return Total energy (index 0) and partial charges (starting from index 1).
+         */
+        std::vector<double> PartialChargeAndEnergy(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * @brief Returns partial charges and energy from a Grid.
+         *
+         * @param g Grid reference.
+         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
+         * 
+         * @return Total energy (first column) and partial charges (second column).
+         */
+        std::vector<std::vector<double>> PartialChargesAndEnergy(int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+
+        //----------------------------------------------------------------------------------------------------//
+        // STATIC METHODS CALLED BY THE INTEGRATION METHODS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Returns the product of two Contracted Gaussian-Type Functions (CGTFs) evaluated at a point (x,y,z).
+         *
+         * @param Orb Orbitals reference containing the CGTFs.
+         * @param i Index of first CGTF.
+         * @param j Index of second CGTF.
+         * @param x X coordinate.
+         * @param y Y coordinate.
+         * @param z Z coordinate.
+         *
+         * @return double Product value of the two CGTFs at (x,y,z).
+         */
+        static double CGTFstarCGTF(const Orbitals& orbitals, int i, int j, double x, double y, double z);
+
+        /**
+         * @brief Electronic density value at point (x,y,z).
+         *
+         * @param orbitals Orbitals object used to evaluate the density.
+         * @param x X coordinate.
+         * @param y Y coordinate.
+         * @param z Z coordinate.
+         *
+         * @return double Electronic density at the given point.
+         */
+        static double density(const Orbitals& orbitals, double x, double y, double z);
+
+        /**
+         * @brief Electronic density value of the given spin-orbital at point (x,y,z).
+         *
+         * @param orbitals Orbitals object used to evaluate the density.
+         * @param orbitalIndex Index of the orbital.
+         * @param orbitalSpin @ref SpinType of the orbital.
+         * @param x Coordinate on the first axis (x direction).
+         * @param y Coordinate on the second axis (y direction).
+         * @param z Coordinate on the third axis (z direction).
+         *
+         * @return double Electronic density at the given point.
+         */
+        static double density(const Orbitals& orbitals, int orbitalIndex, SpinType orbitalSpin, double x, double y, double z);
+
+        /**
+         * @brief Electronic density value of the given spin-orbitals at point (x,y,z).
+         *
+         * @param orbitals Orbitals object used to evaluate the density.
+         * @param orbitalIndexes Vector of orbital indexes.
+         * @param orbitalSpins Vector of @ref SpinType for each orbital (must have the same length as orbitalIndexes).
+         * @param x Coordinate on the first axis (x direction).
+         * @param y Coordinate on the second axis (y direction).
+         * @param z Coordinate on the third axis (z direction).
+         *
+         * @return double Electronic density at the given point.
+         */
+        static double density(const Orbitals& orbitals, const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins, double x, double y, double z);
+
+        /**
          * @brief Returns the value of the i-th orbital at point (x,y,z).
          *
          * @param orbitals Orbitals reference.
@@ -461,7 +556,7 @@ class Becke
          * @param y Y coordinate.
          * @param z Z coordinate.
          * @param spinType SpinType to consider (default ALPHA).
-         * 
+         *
          * @return double Value of the chosen orbital at the point (x,y,z).
          */
         static double phi(const Orbitals& orbitals, int i, double x, double y, double z, SpinType spinType = SpinType::ALPHA);
@@ -476,7 +571,7 @@ class Becke
          * @param y Y coordinate.
          * @param z Z coordinate.
          * @param spinType SpinType to consider (default ALPHA).
-         * 
+         *
          * @return double Product value of the two orbitals at (x,y,z).
          */
         static double phiStarPhi(const Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType = SpinType::ALPHA);
@@ -493,35 +588,10 @@ class Becke
          * @param[in] spinType Spin type (ALPHA, BETA, ALPHA_BETA).
          * @param[in] position Position of the charge.
          * @param[in] charge Value of the charge.
-         * 
+         *
          * @return Product value of the two orbitals at (x,y,z) multiplied by the electrostatic potential V_ionic.
          */
         static double phiStarVionicStarPhi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType, const std::array<double, 3>& chargePosition, double charge);
-
-        /**
-         * @brief Returns partial charges and energy from a Grid.
-         *
-         * @param g Grid reference.
-         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
-         * @param lebedev_order Lebedev order for angular quadrature (default 41).
-         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
-         * 
-         * @return Total energy (index 0) and partial charges (starting from index 1).
-         */
-        std::vector<double> PartialChargeAndEnergy(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
-
-
-        /**
-         * @brief Returns partial charges and energy from a Grid.
-         *
-         * @param g Grid reference.
-         * @param kmax Fuzzyness of the Voronoi polyhedrons (default 3).
-         * @param lebedev_order Lebedev order for angular quadrature (default 41).
-         * @param radial_grid_factor Radial grid multiplicative factor (default 5).
-         * 
-         * @return Total energy (first column) and partial charges (second column).
-         */
-        std::vector<std::vector<double>> PartialChargesAndEnergy(int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 };
 
 #endif

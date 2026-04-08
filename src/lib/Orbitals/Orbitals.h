@@ -24,11 +24,17 @@ class Orbitals
         /** @brief Vector of CGTFs that compose the basis set. */
         std::vector<CGTF> _vcgtf;
 
-        /** @brief Coefficients for the molecular orbitals. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals. The second dimension gives the coefficient of the i-th orbital. */
+        /** @brief Vector of CGTFs that compose the basis set without normalization. */
+        std::vector<CGTF> _vcgtfUnnormalized;
+
+        /** @brief Coefficients of the CGTF for the molecular orbitals. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals. The second dimension gives the coefficient of the i-th orbital. */
         std::vector<std::vector<std::vector<double>>> _coefficients;
 
         /** @brief Number of atomic orbitals. */
         int _numberOfAo;
+
+        /** @brief Number of primitive functions. */
+        int _numberOfGtf;
 
         /** @brief Number of molecular orbitals. */
         int _numberOfMo;
@@ -60,8 +66,8 @@ class Orbitals
         /** @brief Table of all fukui function values. The first index is for f-, the second for f+. The second dimension gives the fukui function value for the i-th atom. */
         std::vector<std::vector<double>> _all_f;
 
-        /** @brief Orbital numbers (1-based) of the HOMO (index 0) and LUMO (index 1). */
-        std::array<int, 2> _HomoLumoNumbers;
+        /** @brief Orbital indexes (0-based) of the HOMO (index 0) and LUMO (index 1). */
+        std::array<int, 2> _homoLumoIndexes;
         
         /** @brief Table of occupation numbers for each orbital. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals. The second dimension gives the occupation number of the i-th orbital. */
         std::vector<std::vector<double>> _occupationNumber;
@@ -75,9 +81,6 @@ class Orbitals
         /** @brief Descriptors for the orbitals. See @ref Descriptors for more information about the descriptors. */
         Descriptors _descriptors;
 
-
-        std::vector<CGTF> _vcgtfNonNormalise;
-        int _numberOfGtf;
         double _energy;
         std::vector<double> _coordinates;
         bool _mixte;
@@ -96,13 +99,13 @@ class Orbitals
         /**
          * @brief Computes the electronic density for a given spin-orbital with CGTFs already evaluated at a given point.
          *
-         * @param[in] orbitalNumber The number of the orbital (1-based) for which to compute the electronic density.
+         * @param[in] orbitalIndex The index of the orbital (0-based) for which to compute the electronic density.
          * @param[in] spinType The spin type of the orbital for which to compute the density.
          * @param[in] evaluatedCgtfs The evaluated CGTFs at the given point.
          *
          * @return double Electronic density for the specified spin-orbital at the given point.
          */
-        double density(int orbitalNumber, SpinType spinType, const std::vector<double>& evaluatedCgtfs) const;
+        double density(int orbitalIndex, SpinType spinType, const std::vector<double>& evaluatedCgtfs) const;
 
         /**
          * @brief Evaluates the CGTFs at the given point (x, y, z) and stores the results in the provided vector.
@@ -114,17 +117,20 @@ class Orbitals
          */
         void evaluateCgtfsAtPoint(std::vector<double>& evaluatedCgtfs, double x, double y, double z) const;
 
-      public:
+        double phiSquared(int orbitalIndex, SpinType spinType, const std::vector<double>& evaluatedCgtfs) const;
+
+
+    public :
         //----------------------------------------------------------------------------------------------------//
         // CONSTRUCTORS
         //----------------------------------------------------------------------------------------------------//
 
-            //! A default constructor.
-            /*! This constructor is used to set all of the parameters for Orbitals on 0 or "None" value. */
+        //! A default constructor.
+        /*! This constructor is used to set all of the parameters for Orbitals on 0 or "None" value. */
         Orbitals();
 
-            //! A real constructor.
-            /*! This constructor is used to add all of the parameters for Orbitals with the data in .wfx file. */
+        //! A real constructor.
+        /*! This constructor is used to add all of the parameters for Orbitals with the data in .wfx file. */
         Orbitals(WFX& wfxParser, Binomial& bino, const PeriodicTable& periodicTable);
 
             //! A real constructor.
@@ -219,11 +225,54 @@ class Orbitals
         //----------------------------------------------------------------------------------------------------//
 
         /**
+         * @brief Sets the coefficients for all orbitals.
+         * 
+         * @param[in] coefficients The 3D vector of doubles where the coefficient values are stored. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
+         */
+        void set_coefficients(const std::vector<std::vector<std::vector<double>>>& coefficients);
+
+        /**
          * @brief Sets the total energy associated with the Orbitals (ground state energy).
          * 
          * @param[in] energy The energy value to set, in Hartree.
          */
         void set_energy(double energy);
+
+        /**
+         * @brief Sets the orbital indexes (0-based) of the HOMO and LUMO.
+         * 
+         * @param[in] homoIndex The index of the HOMO.
+         * @param[in] lumoIndex The index of the LUMO.
+         */
+        void set_homoLumoIndexes(int homoIndex, int lumoIndex);
+
+        /**
+         * @brief Sets the number of alpha electrons.
+         *
+         * @param[in] numberOfAlphaElectrons The number of alpha electrons.
+         */
+        void set_numberOfAlphaElectrons(int numberOfAlphaElectrons);
+
+        /**
+         * @brief Sets the number of beta electrons.
+         *
+         * @param[in] numberOfBetaElectrons The number of beta electrons.
+         */
+        void set_numberOfBetaElectrons(int numberOfBetaElectrons);
+
+        /**
+         * @brief Sets the number of molecular orbitals.
+         * 
+         * @param[in] numberOfMo The number of molecular orbitals.
+         */
+        void set_numberOfMo(int numberOfMo);
+
+        /**
+         * @brief Sets the occupation numbers.
+         * 
+         * @param[in] occupationNumber The 2D vector of doubles where the occupation numbers are stored. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
+         */
+        void set_occupationNumber(const std::vector<std::vector<double>>& occupationNumber);
 
         /**
          * @brief Sets the orbital energies.
@@ -232,26 +281,39 @@ class Orbitals
          */
         void set_orbitalEnergy(const std::vector<std::vector<double>>& orbitalEnergy);
 
-        /**
-         * @brief Sets the coefficients for all orbitals.
-         * 
-         * @param[in] coefficients The 3D vector of doubles where the coefficient values are stored. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
-         */
-        void set_coefficients(const std::vector<std::vector<std::vector<double>>>& coefficients);
-
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
         //----------------------------------------------------------------------------------------------------//
 
         /**
+         * @brief Returns the coefficients of the HOMO. The first dimension is for the spin and the second dimension is for the orbital (so it has a length of 1) to stay consistent with the _coefficients field.
+         */
+        std::vector<std::vector<std::vector<double>>> getHomoCoefficients();
+
+        /**
          * @brief Returns the HOMO's energy.
          */
-        double getHOMOEnergy(int alpha = 0) const;
+        std::vector<double> getHomoEnergy();
+
+        /**
+         * @brief Returns the index (0-based) of the HOMO.
+         */
+        int getHomoIndex();
+
+        /**
+         * @brief Returns the coefficients of the LUMO. The first dimension is for the spin and the second dimension is for the orbital (so it has a length of 1) to stay consistent with the _coefficients field.
+         */
+        std::vector<std::vector<std::vector<double>>> getLumoCoefficients();
 
         /**
          * @brief Returns the LUMO's energy.
          */
-        double getLUMOEnergy(int alpha = 0) const;
+        std::vector<double> getLumoEnergy();
+
+        /**
+         * @brief Returns the index (0-based) of the LUMO.
+         */
+        int getLumoIndex();
 
         /**
          * @brief Returns the numbers of the occupied orbitals for alpha and beta spins.
@@ -364,20 +426,16 @@ class Orbitals
 
             //! A normal member taking no arguments and returning a void value.
             /*! Actualise _all_f for HOMO and LUMO Orbitals. */
-        void HOMO_LUMO();
-
-            //! A normal member taking two arguments and returning a void value.
-            /*! Actualise _all_f for i and j Orbitals. */
-        void HOMO_LUMO(int i, int j);
+        void init_homoLumoIndexes();
 
             //! A normal member taking no arguments and returning a void value.
             /*! Print all the descriptors with the FMO method. */
-        void PrintDescriptors();
+        void printDescriptors();
 
             //! A normal member taking no arguments and returning a void value.
             /*! Change the HOMO on the orbital i and the LUMO on the orbitals j.
              *  Print all the descriptors with the FMO method. */
-        void PrintDescriptors(int i, int j);
+        void printDescriptors(int homoIndex, int lumoIndex);
 
 
             //! Make a grid of electronic density
@@ -396,17 +454,30 @@ class Orbitals
         double density(double x, double y, double z) const;
 
         /**
+         * @brief Computes the electronic density for a given spin-orbital at a given point.
+         *
+         * @param[in] orbitalIndex The index of the orbital (0-based) for which to compute the electronic density.
+         * @param[in] spinType The spin type of the orbital for which to compute the density.
+         * @param[in] x Coordinate along the first (x) axis.
+         * @param[in] y Coordinate along the second (y) axis.
+         * @param[in] z Coordinate along the third (z) axis.
+         *
+         * @return double Electronic density for the specified spin-orbital at the given point.
+         */
+        double density(int orbitalIndex, SpinType spinType, double x, double y, double z) const;
+
+        /**
          * @brief Computes the total electronic density for given orbitals at a given point.
          *
-         * @param[in] orbitalNumbers Vector of orbital numbers (1-based) for which to compute the density.
-         * @param[in] orbitalSpins Vector of @ref SpinType for each orbital (must have the same length as orbitalNumbers).
+         * @param[in] orbitalIndexes Vector of orbital indexes (0-based) for which to compute the density.
+         * @param[in] orbitalSpins Vector of @ref SpinType for each orbital (must have the same length as orbitalIndexes).
          * @param[in] x Coordinate along the first (x) axis.
          * @param[in] y Coordinate along the second (y) axis.
          * @param[in] z Coordinate along the third (z) axis.
          *
          * @return double Total electronic density for the given spin-orbitals at the given point.
          */
-        double density(const std::vector<int>& orbitalNumbers, const std::vector<SpinType>& orbitalSpins, double x, double y, double z) const;
+        double density(const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins, double x, double y, double z) const;
 
         /**
          * @brief Builds the Grid associated with the orbitals object.
@@ -471,7 +542,7 @@ class Orbitals
          * @param orbitals Orbitals to print.
          * @return Reference to the output stream.
          */
-        friend std::ostream& operator<<(std::ostream& stream, Orbitals& orbitals);
+        friend std::ostream& operator<<(std::ostream& stream, const Orbitals& orbitals);
 };
 
     //! An operator member taking two arguments and returning a double value.

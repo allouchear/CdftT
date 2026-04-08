@@ -340,8 +340,10 @@ class Job
          * @param[in] ANAFileName1 First analytic input file.
          * @param[in] ANAFileName2 Second analytic input file.
          * @param[in] ANAFileName3 Third analytic input file.
+         * 
+         * @return Descriptors object containing computed descriptors.
          */
-        void computeDescriptorsFD(const std::string& ANAFileName1, const std::string& ANAFileName2, const std::string& ANAFileName3);
+        Descriptors computeDescriptorsFD(const std::string& ANAFileName1, const std::string& ANAFileName2, const std::string& ANAFileName3, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
          * @brief Computes the difference between two grids and saves the result to an output file.
@@ -390,7 +392,7 @@ class Job
          * @param[in] analyticFileName Analytic file path.
          * @return Vector of computed partial charges.
          */
-        std::vector<double> computePartialChargesAndEnergy(std::vector<double>& energies, const std::string& analyticFileName);
+        std::vector<double> computePartialChargesAndEnergy(std::vector<double>& energies, const std::string& analyticFileName, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
          * @brief Builds an Orbitals or Becke helper object from an analytic file.

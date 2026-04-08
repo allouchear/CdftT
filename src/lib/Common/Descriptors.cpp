@@ -170,7 +170,7 @@ std::vector<double> Descriptors::compute_Charges_From_Grid(const Grid& AIM, Part
 {
     GridCP gridcp;
     gridcp.buildBasins(AIM, partitionMethod);
-    
+
     return gridcp.computeAIMCharges(AIM);
 }
 
@@ -486,23 +486,36 @@ void Descriptors::compute_All_From_Cube(std::ifstream &file1, std::ifstream &fil
     sortCharges(Q1, Q2, Q3, E, I, A);
     compute_All_From_Charge(I,A);
 }
+
 void Descriptors::sortCharges(std::vector<double> Q1, std::vector<double> Q2, std::vector<double> Q3, std::vector<double> E, double& I, double& A)
 {
     std::vector<std::vector<double>> Q(3);
-    Q[0]=Q1;
-    Q[1]=Q2;
-    Q[2]=Q3;
-    std::vector<double> S(3,0);
-    for(size_t i=0; i<Q1.size();i++)
-        for(size_t c=0; c<3;c++)
-            S[c]+=Q[c][i];
+    Q[0] = Q1;
+    Q[1] = Q2;
+    Q[2] = Q3;
 
-    for(int i=0;i<3;i++)
+    std::vector<double> S(3, 0.0);
+    for (size_t i = 0; i < Q1.size(); ++i)
     {
-        int k=i;
-        for(int j=i+1;j<3;j++)
-            if(S[j]<S[k]) k=j;
-        if(k!=i)
+        for(size_t c = 0; c < 3; ++c)
+        {
+            S[c] += Q[c][i];
+        }
+    }
+
+    for (int i = 0; i < 3; ++i)
+    {
+        int k = i;
+        
+        for (int j = i + 1; j < 3; ++j)
+        {
+            if(S[j] < S[k])
+            {
+                k=j;
+            }
+        }
+
+        if (k != i)
         {
             double s=S[k];
             S[k] = S[i];

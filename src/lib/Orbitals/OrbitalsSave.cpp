@@ -101,7 +101,7 @@ void Orbitals::Save_wfx(std::string& tag)
 
     s<<"<Primitive Centers>"<<std::endl;
 
-    if(int(_vcgtfNonNormalise.size())==_numberOfGtf)
+    if(int(_vcgtfUnnormalized.size())==_numberOfGtf)
         for(int i=0; i<_numberOfGtf; i++)
         {
             s<<"\t"<<_primitiveCenters[i];
@@ -221,7 +221,7 @@ void Orbitals::Save_wfx(std::string& tag)
                                                             // Moldengab faire attention au format sphe/cart !!!!
 void Orbitals::Save_molden(std::string& tag)    
 {
-    if(int(_vcgtfNonNormalise.size())==_numberOfGtf)
+    if(int(_vcgtfUnnormalized.size())==_numberOfGtf)
     {
         std::cout<<"This option is nnot implemente."<<std::endl;
         return;
@@ -245,21 +245,21 @@ void Orbitals::Save_molden(std::string& tag)
     
     bool d=false, f=false, g=false;
 
-    for(size_t i=0; i<_vcgtfNonNormalise.size(); i++)
+    for(size_t i=0; i<_vcgtfUnnormalized.size(); i++)
     {
-        if(_vcgtfNonNormalise[i].Lformat()=="Sphe")
+        if(_vcgtfUnnormalized[i].Lformat()=="Sphe")
         {
-            if((_vcgtfNonNormalise[i].Ltype()=="D" || _vcgtfNonNormalise[i].Ltype()=="d") && !d)
+            if((_vcgtfUnnormalized[i].Ltype()=="D" || _vcgtfUnnormalized[i].Ltype()=="d") && !d)
             {
                 s<<"[5D] ";
                 d=true;
             }
-            else if((_vcgtfNonNormalise[i].Ltype()=="F" || _vcgtfNonNormalise[i].Ltype()=="f") &&!f)
+            else if((_vcgtfUnnormalized[i].Ltype()=="F" || _vcgtfUnnormalized[i].Ltype()=="f") &&!f)
             {
                 s<<"[7F] ";
                 f=true;
             }
-            else if((_vcgtfNonNormalise[i].Ltype()=="G" || _vcgtfNonNormalise[i].Ltype()=="d") && !g)
+            else if((_vcgtfUnnormalized[i].Ltype()=="G" || _vcgtfUnnormalized[i].Ltype()=="d") && !g)
             {
                 s<<"[9G] ";
                 g=true;
@@ -274,59 +274,59 @@ void Orbitals::Save_molden(std::string& tag)
 
     for(int i=0; i<_numberOfAtoms; i++)
     {
-        s<<"\t"<<_vcgtfNonNormalise[k].NumCenter()<<" "<<0<<std::endl;
+        s<<"\t"<<_vcgtfUnnormalized[k].NumCenter()<<" "<<0<<std::endl;
 
         do{
             if(k==0)    //First shell
             {
-                s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
-                s<<std::fixed<<std::setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<std::endl;
+                s<<" "<<_vcgtfUnnormalized[k].Ltype()<<"\t"<<_vcgtfUnnormalized[k].numberOfFunctions()<<"  ";
+                s<<std::fixed<<std::setprecision(1)<<_vcgtfUnnormalized[k].FactorCoef()<<std::endl;
 
-                for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
-                    s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfNonNormalise[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<std::endl;
+                for(int j=0; j<_vcgtfUnnormalized[k].numberOfFunctions(); j++)
+                    s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfUnnormalized[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfUnnormalized[k].coefficients()[j]<<std::endl;
 
                 k++;
             }
 
-            else if(k+1<int(_vcgtfNonNormalise.size()))    //Other shell
+            else if(k+1<int(_vcgtfUnnormalized.size()))    //Other shell
             {
-                if(_vcgtfNonNormalise[k].Ltype()==_vcgtfNonNormalise[k+1].Ltype() && _vcgtfNonNormalise[k].gtf()[0].get_exponent()==_vcgtfNonNormalise[k+1].gtf()[0].get_exponent())    //Other format
+                if(_vcgtfUnnormalized[k].Ltype()==_vcgtfUnnormalized[k+1].Ltype() && _vcgtfUnnormalized[k].gtf()[0].get_exponent()==_vcgtfUnnormalized[k+1].gtf()[0].get_exponent())    //Other format
                 {
-                    lt=_vcgtfNonNormalise[k].gtf()[0].get_l()[0]+_vcgtfNonNormalise[k].gtf()[0].get_l()[1]+_vcgtfNonNormalise[k].gtf()[0].get_l()[2];
+                    lt=_vcgtfUnnormalized[k].gtf()[0].get_l()[0]+_vcgtfUnnormalized[k].gtf()[0].get_l()[1]+_vcgtfUnnormalized[k].gtf()[0].get_l()[2];
 
-                    if(_vcgtfNonNormalise[k].Lformat()=="Cart")
+                    if(_vcgtfUnnormalized[k].Lformat()=="Cart")
                         m=(lt+1)*(lt+2)/2;
                     else
                         m=2*lt+1;
 
-                    s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
-                    s<<std::fixed<<std::setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<std::endl;
+                    s<<" "<<_vcgtfUnnormalized[k].Ltype()<<"\t"<<_vcgtfUnnormalized[k].numberOfFunctions()<<"  ";
+                    s<<std::fixed<<std::setprecision(1)<<_vcgtfUnnormalized[k].FactorCoef()<<std::endl;
 
-                    for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
-                        s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfNonNormalise[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<std::endl;
+                    for(int j=0; j<_vcgtfUnnormalized[k].numberOfFunctions(); j++)
+                        s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfUnnormalized[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfUnnormalized[k].coefficients()[j]<<std::endl;
 
                     k+=m;
                 }
 
-                else if(_vcgtfNonNormalise[k].Ltype()==_vcgtfNonNormalise[k+1].Ltype())           //WFX
+                else if(_vcgtfUnnormalized[k].Ltype()==_vcgtfUnnormalized[k+1].Ltype())           //WFX
                 {
-                    lt=_vcgtfNonNormalise[k].gtf()[0].get_l()[0]+_vcgtfNonNormalise[k].gtf()[0].get_l()[1]+_vcgtfNonNormalise[k].gtf()[0].get_l()[2];
+                    lt=_vcgtfUnnormalized[k].gtf()[0].get_l()[0]+_vcgtfUnnormalized[k].gtf()[0].get_l()[1]+_vcgtfUnnormalized[k].gtf()[0].get_l()[2];
 
                     if(lt!=0)
                     {
                         m=(lt+1)*(lt+2)/2;
                         q=k;
-                        save_alpha=_vcgtfNonNormalise[k].gtf()[0].get_exponent();
+                        save_alpha=_vcgtfUnnormalized[k].gtf()[0].get_exponent();
 
                         do{
-                            s<<" "<<_vcgtfNonNormalise[q].Ltype()<<"\t"<<_vcgtfNonNormalise[q].numberOfFunctions()<<"  ";
-                            s<<std::fixed<<std::setprecision(1)<<_vcgtfNonNormalise[q].FactorCoef()<<std::endl;
+                            s<<" "<<_vcgtfUnnormalized[q].Ltype()<<"\t"<<_vcgtfUnnormalized[q].numberOfFunctions()<<"  ";
+                            s<<std::fixed<<std::setprecision(1)<<_vcgtfUnnormalized[q].FactorCoef()<<std::endl;
 
-                            for(int j=0; j<_vcgtfNonNormalise[q].numberOfFunctions(); j++)
-                                s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfNonNormalise[q].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfNonNormalise[q].coefficients()[j]<<std::endl;
+                            for(int j=0; j<_vcgtfUnnormalized[q].numberOfFunctions(); j++)
+                                s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfUnnormalized[q].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfUnnormalized[q].coefficients()[j]<<std::endl;
 
                             q++;
-                        }while(q+1<int(_vcgtfNonNormalise.size()) && _vcgtfNonNormalise[q].gtf()[0].get_exponent()!=save_alpha);
+                        }while(q+1<int(_vcgtfUnnormalized.size()) && _vcgtfUnnormalized[q].gtf()[0].get_exponent()!=save_alpha);
                         //q=q-k+1;        don't work for h2otest.wfx
                         q=q-k;
                         //k+=q*(m-1)+1;      don't work for h2otest.wfx
@@ -335,11 +335,11 @@ void Orbitals::Save_molden(std::string& tag)
 
                     else
                     {
-                        s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
-                        s<<std::fixed<<std::setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<std::endl;
+                        s<<" "<<_vcgtfUnnormalized[k].Ltype()<<"\t"<<_vcgtfUnnormalized[k].numberOfFunctions()<<"  ";
+                        s<<std::fixed<<std::setprecision(1)<<_vcgtfUnnormalized[k].FactorCoef()<<std::endl;
 
-                        for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
-                            s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfNonNormalise[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<std::endl;
+                        for(int j=0; j<_vcgtfUnnormalized[k].numberOfFunctions(); j++)
+                            s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfUnnormalized[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfUnnormalized[k].coefficients()[j]<<std::endl;
 
                         k++;
                     }
@@ -347,26 +347,26 @@ void Orbitals::Save_molden(std::string& tag)
 
                 else               //Other case
                 {
-                    s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
-                    s<<std::fixed<<std::setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<std::endl;
+                    s<<" "<<_vcgtfUnnormalized[k].Ltype()<<"\t"<<_vcgtfUnnormalized[k].numberOfFunctions()<<"  ";
+                    s<<std::fixed<<std::setprecision(1)<<_vcgtfUnnormalized[k].FactorCoef()<<std::endl;
 
-                    for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
-                        s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfNonNormalise[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<std::endl;
+                    for(int j=0; j<_vcgtfUnnormalized[k].numberOfFunctions(); j++)
+                        s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfUnnormalized[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfUnnormalized[k].coefficients()[j]<<std::endl;
 
                     k++;
                 }
             }
             else               //Last shell
             {
-                s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
-                s<<std::fixed<<std::setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<std::endl;
+                s<<" "<<_vcgtfUnnormalized[k].Ltype()<<"\t"<<_vcgtfUnnormalized[k].numberOfFunctions()<<"  ";
+                s<<std::fixed<<std::setprecision(1)<<_vcgtfUnnormalized[k].FactorCoef()<<std::endl;
 
-                for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
-                    s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfNonNormalise[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<std::endl;
+                for(int j=0; j<_vcgtfUnnormalized[k].numberOfFunctions(); j++)
+                    s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfUnnormalized[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfUnnormalized[k].coefficients()[j]<<std::endl;
 
                 k++;
             }
-        }while(k<int(_vcgtfNonNormalise.size()) && i+1==_vcgtfNonNormalise[k].NumCenter());
+        }while(k<int(_vcgtfUnnormalized.size()) && i+1==_vcgtfUnnormalized[k].NumCenter());
         s<<std::endl;
     }
 
@@ -413,7 +413,7 @@ void Orbitals::Save_gab(std::string& tag)
         return;
     }
 
-    if(int(_vcgtfNonNormalise.size())==_numberOfGtf)
+    if(int(_vcgtfUnnormalized.size())==_numberOfGtf)
     {
         std::cout<<"This option is nnot implemente."<<std::endl;
         return;
@@ -440,59 +440,59 @@ void Orbitals::Save_gab(std::string& tag)
 
     for(int i=0; i<_numberOfAtoms; i++)
     {
-        s<<"\t"<<_vcgtfNonNormalise[k].NumCenter()<<" "<<0<<std::endl;
+        s<<"\t"<<_vcgtfUnnormalized[k].NumCenter()<<" "<<0<<std::endl;
 
         do{
             if(k==0)    //First shell
             {
-                s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
-                s<<std::fixed<<std::setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<std::endl;
+                s<<" "<<_vcgtfUnnormalized[k].Ltype()<<"\t"<<_vcgtfUnnormalized[k].numberOfFunctions()<<"  ";
+                s<<std::fixed<<std::setprecision(1)<<_vcgtfUnnormalized[k].FactorCoef()<<std::endl;
 
-                for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
-                    s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfNonNormalise[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<std::endl;
+                for(int j=0; j<_vcgtfUnnormalized[k].numberOfFunctions(); j++)
+                    s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfUnnormalized[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfUnnormalized[k].coefficients()[j]<<std::endl;
 
                 k++;
             }
 
-            else if(k+1<int(_vcgtfNonNormalise.size()))    //Other shell
+            else if(k+1<int(_vcgtfUnnormalized.size()))    //Other shell
             {
-                if(_vcgtfNonNormalise[k].Ltype()==_vcgtfNonNormalise[k+1].Ltype() && _vcgtfNonNormalise[k].gtf()[0].get_exponent()==_vcgtfNonNormalise[k+1].gtf()[0].get_exponent())    //Other format
+                if(_vcgtfUnnormalized[k].Ltype()==_vcgtfUnnormalized[k+1].Ltype() && _vcgtfUnnormalized[k].gtf()[0].get_exponent()==_vcgtfUnnormalized[k+1].gtf()[0].get_exponent())    //Other format
                 {
-                    lt=_vcgtfNonNormalise[k].gtf()[0].get_l()[0]+_vcgtfNonNormalise[k].gtf()[0].get_l()[1]+_vcgtfNonNormalise[k].gtf()[0].get_l()[2];
+                    lt=_vcgtfUnnormalized[k].gtf()[0].get_l()[0]+_vcgtfUnnormalized[k].gtf()[0].get_l()[1]+_vcgtfUnnormalized[k].gtf()[0].get_l()[2];
 
-                    if(_vcgtfNonNormalise[k].Lformat()=="Cart")
+                    if(_vcgtfUnnormalized[k].Lformat()=="Cart")
                         m=(lt+1)*(lt+2)/2;
                     else
                         m=2*lt+1;
 
-                    s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
-                    s<<std::fixed<<std::setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<std::endl;
+                    s<<" "<<_vcgtfUnnormalized[k].Ltype()<<"\t"<<_vcgtfUnnormalized[k].numberOfFunctions()<<"  ";
+                    s<<std::fixed<<std::setprecision(1)<<_vcgtfUnnormalized[k].FactorCoef()<<std::endl;
 
-                    for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
-                        s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfNonNormalise[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<std::endl;
+                    for(int j=0; j<_vcgtfUnnormalized[k].numberOfFunctions(); j++)
+                        s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfUnnormalized[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfUnnormalized[k].coefficients()[j]<<std::endl;
 
                     k+=m;
                 }
 
-                else if(_vcgtfNonNormalise[k].Ltype()==_vcgtfNonNormalise[k+1].Ltype())           //WFX
+                else if(_vcgtfUnnormalized[k].Ltype()==_vcgtfUnnormalized[k+1].Ltype())           //WFX
                 {
-                    lt=_vcgtfNonNormalise[k].gtf()[0].get_l()[0]+_vcgtfNonNormalise[k].gtf()[0].get_l()[1]+_vcgtfNonNormalise[k].gtf()[0].get_l()[2];
+                    lt=_vcgtfUnnormalized[k].gtf()[0].get_l()[0]+_vcgtfUnnormalized[k].gtf()[0].get_l()[1]+_vcgtfUnnormalized[k].gtf()[0].get_l()[2];
 
                     if(lt!=0)
                     {
                         m=(lt+1)*(lt+2)/2;
                         q=k;
-                        save_alpha=_vcgtfNonNormalise[k].gtf()[0].get_exponent();
+                        save_alpha=_vcgtfUnnormalized[k].gtf()[0].get_exponent();
 
                         do{
-                            s<<" "<<_vcgtfNonNormalise[q].Ltype()<<"\t"<<_vcgtfNonNormalise[q].numberOfFunctions()<<"  ";
-                            s<<std::fixed<<std::setprecision(1)<<_vcgtfNonNormalise[q].FactorCoef()<<std::endl;
+                            s<<" "<<_vcgtfUnnormalized[q].Ltype()<<"\t"<<_vcgtfUnnormalized[q].numberOfFunctions()<<"  ";
+                            s<<std::fixed<<std::setprecision(1)<<_vcgtfUnnormalized[q].FactorCoef()<<std::endl;
 
-                            for(int j=0; j<_vcgtfNonNormalise[q].numberOfFunctions(); j++)
-                                s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfNonNormalise[q].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfNonNormalise[q].coefficients()[j]<<std::endl;
+                            for(int j=0; j<_vcgtfUnnormalized[q].numberOfFunctions(); j++)
+                                s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfUnnormalized[q].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfUnnormalized[q].coefficients()[j]<<std::endl;
 
                             q++;
-                        }while(q+1<int(_vcgtfNonNormalise.size()) && _vcgtfNonNormalise[q].gtf()[0].get_exponent()!=save_alpha);
+                        }while(q+1<int(_vcgtfUnnormalized.size()) && _vcgtfUnnormalized[q].gtf()[0].get_exponent()!=save_alpha);
                         //q=q-k+1;        don't work for h2otest.wfx
                         q=q-k;
                         //k+=q*(m-1)+1;      don't work for h2otest.wfx
@@ -501,11 +501,11 @@ void Orbitals::Save_gab(std::string& tag)
 
                     else
                     {
-                        s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
-                        s<<std::fixed<<std::setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<std::endl;
+                        s<<" "<<_vcgtfUnnormalized[k].Ltype()<<"\t"<<_vcgtfUnnormalized[k].numberOfFunctions()<<"  ";
+                        s<<std::fixed<<std::setprecision(1)<<_vcgtfUnnormalized[k].FactorCoef()<<std::endl;
 
-                        for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
-                            s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfNonNormalise[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<std::endl;
+                        for(int j=0; j<_vcgtfUnnormalized[k].numberOfFunctions(); j++)
+                            s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfUnnormalized[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfUnnormalized[k].coefficients()[j]<<std::endl;
 
                         k++;
                     }
@@ -513,26 +513,26 @@ void Orbitals::Save_gab(std::string& tag)
 
                 else               //Other case
                 {
-                    s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
-                    s<<std::fixed<<std::setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<std::endl;
+                    s<<" "<<_vcgtfUnnormalized[k].Ltype()<<"\t"<<_vcgtfUnnormalized[k].numberOfFunctions()<<"  ";
+                    s<<std::fixed<<std::setprecision(1)<<_vcgtfUnnormalized[k].FactorCoef()<<std::endl;
 
-                    for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
-                        s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfNonNormalise[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<std::endl;
+                    for(int j=0; j<_vcgtfUnnormalized[k].numberOfFunctions(); j++)
+                        s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfUnnormalized[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfUnnormalized[k].coefficients()[j]<<std::endl;
 
                     k++;
                 }
             }
             else               //Last shell
             {
-                s<<" "<<_vcgtfNonNormalise[k].Ltype()<<"\t"<<_vcgtfNonNormalise[k].numberOfFunctions()<<"  ";
-                s<<std::fixed<<std::setprecision(1)<<_vcgtfNonNormalise[k].FactorCoef()<<std::endl;
+                s<<" "<<_vcgtfUnnormalized[k].Ltype()<<"\t"<<_vcgtfUnnormalized[k].numberOfFunctions()<<"  ";
+                s<<std::fixed<<std::setprecision(1)<<_vcgtfUnnormalized[k].FactorCoef()<<std::endl;
 
-                for(int j=0; j<_vcgtfNonNormalise[k].numberOfFunctions(); j++)
-                    s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfNonNormalise[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfNonNormalise[k].coefficients()[j]<<std::endl;
+                for(int j=0; j<_vcgtfUnnormalized[k].numberOfFunctions(); j++)
+                    s<<std::fixed<<std::setprecision(6)<<std::right<<std::setw(6)<<" "<<std::setw(15)<<_vcgtfUnnormalized[k].gtf()[j].get_exponent()<<"  "<<std::setw(15)<<_vcgtfUnnormalized[k].coefficients()[j]<<std::endl;
 
                 k++;
             }
-        }while(k<int(_vcgtfNonNormalise.size()) && i+1==_vcgtfNonNormalise[k].NumCenter());
+        }while(k<int(_vcgtfUnnormalized.size()) && i+1==_vcgtfUnnormalized[k].NumCenter());
         s<<std::endl;
     }
 

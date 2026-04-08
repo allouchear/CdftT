@@ -555,10 +555,12 @@ void LOG::read_MO_data(std::ifstream& f)
                 _beta_energy.push_back(d);
             }
 
-            for(int i=0; i<_number_of_MO; i++)
+            for (int i = 0; i < _number_of_basis_functions; i++)
             {
                 getline(f,p);
                 std::stringstream sss(p);
+
+                sss >> p2;
 
                 if(p.find("1S")!=std::string::npos || p.find("1s")!=std::string::npos)
                 {
@@ -567,8 +569,13 @@ void LOG::read_MO_data(std::ifstream& f)
                 }
 
                 sss>>p;
-                sss>>p;
-        
+
+                if (_d_cart_sphe == "sphe" and (p.find("d") != std::string::npos or p.find("D") != std::string::npos) and (p.size() == 2 or p.size() == 3))
+                    sss >> p;
+
+                if (_f_cart_sphe == "sphe" and (p.find("f") != std::string::npos or p.find("F") != std::string::npos) and (p.size() == 2 or p.size() == 3))
+                    sss >> p;
+
                 for(int j=0; j<m; j++)
                 {
                     sss>>d;

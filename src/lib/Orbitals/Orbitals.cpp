@@ -26,8 +26,10 @@
 
 Orbitals::Orbitals():
     _vcgtf(),
+    _vcgtfUnnormalized(),
     _coefficients(),
     _numberOfAo(0),
+    _numberOfGtf(0),
     _numberOfMo(0),
     _numberOfAlphaElectrons(0),
     _numberOfBetaElectrons(0),
@@ -38,13 +40,11 @@ Orbitals::Orbitals():
     _symbol(),
     _orbitalEnergy(),
     _all_f(),
-    _HomoLumoNumbers(),
+    _homoLumoIndexes({ -1, -1 }),
     _occupationNumber(),
     _alphaAndBeta(false),
     _bino(),
     _descriptors(),
-    _vcgtfNonNormalise(),
-    _numberOfGtf(0),
     _energy(0.0),
     _coordinates(),
     _mixte(false)
@@ -52,8 +52,10 @@ Orbitals::Orbitals():
 
 Orbitals::Orbitals(WFX& wfxParser, Binomial& bino, const PeriodicTable& periodicTable):
     _vcgtf(),
+    _vcgtfUnnormalized(),
     _coefficients(2),
     _numberOfAo(0),
+    _numberOfGtf(0),
     _numberOfMo(0),
     _numberOfAlphaElectrons(0),
     _numberOfBetaElectrons(0),
@@ -64,13 +66,11 @@ Orbitals::Orbitals(WFX& wfxParser, Binomial& bino, const PeriodicTable& periodic
     _symbol(),
     _orbitalEnergy(),
     _all_f(),
-    _HomoLumoNumbers({ 0, 0 }),
+    _homoLumoIndexes({ -1, -1 }),
     _occupationNumber(),
     _alphaAndBeta(false),
     _bino(bino),
     _descriptors(),
-    _vcgtfNonNormalise(),
-    _numberOfGtf(0),
     _energy(0.0),
     _coordinates(),
     _mixte(false)
@@ -139,13 +139,15 @@ Orbitals::Orbitals(WFX& wfxParser, Binomial& bino, const PeriodicTable& periodic
     _alphaAndBeta = wfxParser.AlphaAndBeta();
     _descriptors = Descriptors(wfxParser, periodicTable);
     _numberOfAo = _vcgtf.size();
-    _vcgtfNonNormalise = _vcgtf;
+    _vcgtfUnnormalized = _vcgtf;
 }
 
 Orbitals::Orbitals(FCHK& fchkParser, Binomial& bino, const PeriodicTable& periodicTable):
     _vcgtf(),
+    _vcgtfUnnormalized(),
     _coefficients(2),
     _numberOfAo(0),
+    _numberOfGtf(0),
     _numberOfMo(0),
     _numberOfAlphaElectrons(0),
     _numberOfBetaElectrons(0),
@@ -156,13 +158,11 @@ Orbitals::Orbitals(FCHK& fchkParser, Binomial& bino, const PeriodicTable& period
     _symbol(),
     _orbitalEnergy(),
     _all_f(),
-    _HomoLumoNumbers({ 0, 0 }),
+    _homoLumoIndexes({ -1, -1 }),
     _occupationNumber(),
     _alphaAndBeta(false),
     _bino(bino),
     _descriptors(),
-    _vcgtfNonNormalise(),
-    _numberOfGtf(0),
     _energy(0.0),
     _coordinates(),
     _mixte(false)
@@ -397,7 +397,7 @@ Orbitals::Orbitals(FCHK& fchkParser, Binomial& bino, const PeriodicTable& period
         _primitiveCenters.push_back(_vcgtf[i].NumCenter());
     }
 
-    _vcgtfNonNormalise = _vcgtf;
+    _vcgtfUnnormalized = _vcgtf;
     NormaliseAllBasis();
 
     for(size_t i = 0; i < _vcgtf.size(); i++)
@@ -408,8 +408,10 @@ Orbitals::Orbitals(FCHK& fchkParser, Binomial& bino, const PeriodicTable& period
 
 Orbitals::Orbitals(MOLDENGAB& moldengabParser, Binomial& bino, const PeriodicTable& periodicTable):
     _vcgtf(),
+    _vcgtfUnnormalized(),
     _coefficients(2),
     _numberOfAo(0),
+    _numberOfGtf(0),
     _numberOfMo(0),
     _numberOfAlphaElectrons(0),
     _numberOfBetaElectrons(0),
@@ -420,13 +422,11 @@ Orbitals::Orbitals(MOLDENGAB& moldengabParser, Binomial& bino, const PeriodicTab
     _symbol(),
     _orbitalEnergy(),
     _all_f(),
-    _HomoLumoNumbers({ 0, 0 }),
+    _homoLumoIndexes({ -1, -1 }),
     _occupationNumber(),
     _alphaAndBeta(false),
     _bino(bino),
     _descriptors(),
-    _vcgtfNonNormalise(),
-    _numberOfGtf(0),
     _energy(0.0),
     _coordinates(),
     _mixte(false)
@@ -657,7 +657,7 @@ Orbitals::Orbitals(MOLDENGAB& moldengabParser, Binomial& bino, const PeriodicTab
         std::exit(1);
     }
 
-    _vcgtfNonNormalise = _vcgtf;
+    _vcgtfUnnormalized = _vcgtf;
 
     for(size_t i = 0; i < _vcgtf.size(); ++i)
     {
@@ -678,8 +678,10 @@ Orbitals::Orbitals(MOLDENGAB& moldengabParser, Binomial& bino, const PeriodicTab
 
 Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodicTable):
     _vcgtf(),
+    _vcgtfUnnormalized(),
     _coefficients(2),
     _numberOfAo(0),
+    _numberOfGtf(0),
     _numberOfMo(0),
     _numberOfAlphaElectrons(0),
     _numberOfBetaElectrons(0),
@@ -690,19 +692,17 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
     _symbol(),
     _orbitalEnergy(),
     _all_f(),
-    _HomoLumoNumbers({ 0, 0 }),
+    _homoLumoIndexes({ -1, -1 }),
     _occupationNumber(),
     _alphaAndBeta(false),
     _bino(bino),
     _descriptors(),
-    _vcgtfNonNormalise(),
-    _numberOfGtf(0),
     _energy(0.0),
     _coordinates(),
     _mixte(false)
 {
     _struct = Structure(logParser, periodicTable);
-    _vcgtfNonNormalise = std::vector<CGTF> ();
+    _vcgtfUnnormalized = std::vector<CGTF> ();
     _numberOfGtf = 0;
     _coefficients = std::vector<std::vector<std::vector<double>>> (2);
     _coefficients[0] = logParser.AlphaMOcoefs();
@@ -906,7 +906,7 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
         }
     }
 
-    _vcgtfNonNormalise = _vcgtf;
+    _vcgtfUnnormalized = _vcgtf;
 
     for(size_t i = 0; i < _vcgtf.size(); ++i)
     {
@@ -928,7 +928,7 @@ Orbitals::Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodic
 // PRIVATE METHODS
 //----------------------------------------------------------------------------------------------------//
 
-double Orbitals::density(int orbitalNumber, SpinType spinType, const std::vector<double>& evaluatedCgtfs) const
+double Orbitals::density(int orbitalIndex, SpinType spinType, const std::vector<double>& evaluatedCgtfs) const
 {
     double rho = 0.0;
 
@@ -947,16 +947,16 @@ double Orbitals::density(int orbitalNumber, SpinType spinType, const std::vector
     {
         int spin = static_cast<int>(spinType);
 
-        if (_occupationNumber[spin][orbitalNumber - 1] > 1e-10) // orbitalNumber is 1-based
+        if (_occupationNumber[spin][orbitalIndex] > 1e-10)
         {
             double phi = 0;
 
             for (size_t k = 0; k < evaluatedCgtfs.size(); ++k)
             {
-                phi += _coefficients[spin][orbitalNumber - 1][k] * evaluatedCgtfs[k];
+                phi += _coefficients[spin][orbitalIndex][k] * evaluatedCgtfs[k];
             }
 
-            rho += _occupationNumber[spin][orbitalNumber - 1] * phi * phi;
+            rho += _occupationNumber[spin][orbitalIndex] * phi * phi;
         }
     }
 
@@ -976,6 +976,40 @@ void Orbitals::evaluateCgtfsAtPoint(std::vector<double>& evaluatedCgtfs, double 
     }
 }
 
+double Orbitals::phiSquared(int orbitalIndex, SpinType spinType, const std::vector<double>& evaluatedCgtfs) const
+{
+    double phiSquared = 0.0;
+
+    // Handle ALPHA_BETA case
+    std::vector<SpinType> spins;
+    if (spinType == SpinType::ALPHA || spinType == SpinType::ALPHA_BETA)
+    {
+        spins.push_back(SpinType::ALPHA);
+    }
+    if (spinType == SpinType::BETA || spinType == SpinType::ALPHA_BETA)
+    {
+        spins.push_back(SpinType::BETA);
+    }
+
+    for (SpinType spinType : spins)
+    {
+        int spin = static_cast<int>(spinType);
+
+        if (_occupationNumber[spin][orbitalIndex] > 1e-10)
+        {
+            double phi = 0;
+
+            for (size_t k = 0; k < evaluatedCgtfs.size(); ++k)
+            {
+                phi += _coefficients[spin][orbitalIndex][k] * evaluatedCgtfs[k];
+            }
+
+            phiSquared += phi * phi;
+        }
+    }
+
+    return phiSquared;
+}
 
 //----------------------------------------------------------------------------------------------------//
 // GETTERS
@@ -1056,9 +1090,40 @@ const double Orbitals::get_energy() const
 // SETTERS
 //----------------------------------------------------------------------------------------------------//
 
+void Orbitals::set_coefficients(const std::vector<std::vector<std::vector<double>>>& coefficients)
+{
+    _coefficients = coefficients;
+}
+
 void Orbitals::set_energy(double energy)
 {
     _energy = energy;
+}
+
+void Orbitals::set_homoLumoIndexes(int homoIndex, int lumoIndex)
+{
+    _homoLumoIndexes[0] = homoIndex;
+    _homoLumoIndexes[1] = lumoIndex;
+}
+
+void Orbitals::set_numberOfAlphaElectrons(int numberOfAlphaElectrons)
+{
+    _numberOfAlphaElectrons = numberOfAlphaElectrons;
+}
+
+void Orbitals::set_numberOfBetaElectrons(int numberOfBetaElectrons)
+{
+    _numberOfBetaElectrons = numberOfBetaElectrons;
+}
+
+void Orbitals::set_numberOfMo(int numberOfMo)
+{
+    _numberOfMo = numberOfMo;
+}
+
+void Orbitals::set_occupationNumber(const std::vector<std::vector<double>>& occupationNumber)
+{
+    _occupationNumber = occupationNumber;
 }
 
 void Orbitals::set_orbitalEnergy(const std::vector<std::vector<double>>& orbitalEnergy)
@@ -1066,24 +1131,91 @@ void Orbitals::set_orbitalEnergy(const std::vector<std::vector<double>>& orbital
     _orbitalEnergy = orbitalEnergy;
 }
 
-void Orbitals::set_coefficients(const std::vector<std::vector<std::vector<double>>>& coefficients)
-{
-    _coefficients = coefficients;
-}
-
 
 //----------------------------------------------------------------------------------------------------//
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-double Orbitals::getHOMOEnergy(int alpha) const
+std::vector<std::vector<std::vector<double>>> Orbitals::getHomoCoefficients()
 {
-    return _orbitalEnergy[alpha][_HomoLumoNumbers[0]];
+    std::vector<std::vector<std::vector<double>>> homoCoefficients(2, std::vector<std::vector<double>>(1));
+
+    if (_homoLumoIndexes[0] == -1)
+    {
+        HOMO();
+    }
+
+    const int ALPHA = static_cast<int>(SpinType::ALPHA);
+    const int BETA = static_cast<int>(SpinType::BETA);
+
+    homoCoefficients[ALPHA][0] = _coefficients[ALPHA][_homoLumoIndexes[0]];
+    homoCoefficients[BETA][0] = _coefficients[BETA][_homoLumoIndexes[0]];
+    
+    return homoCoefficients;
 }
 
-double Orbitals::getLUMOEnergy(int alpha) const
+std::vector<double> Orbitals::getHomoEnergy()
 {
-    return _orbitalEnergy[alpha][_HomoLumoNumbers[1]];
+    int ALPHA = static_cast<int>(SpinType::ALPHA);
+    int BETA = static_cast<int>(SpinType::BETA);
+
+    if (_homoLumoIndexes[0] == -1)
+    {
+        HOMO();
+    }
+
+    return std::vector<double>({ _orbitalEnergy[ALPHA][_homoLumoIndexes[0]], _orbitalEnergy[BETA][_homoLumoIndexes[0]] });
+}
+
+int Orbitals::getHomoIndex()
+{
+    if (_homoLumoIndexes[0] == -1)
+    {
+        HOMO();
+    }
+
+    return _homoLumoIndexes[0];
+}
+
+std::vector<std::vector<std::vector<double>>> Orbitals::getLumoCoefficients()
+{
+    std::vector<std::vector<std::vector<double>>> lumoCoefficients(2, std::vector<std::vector<double>>(1));
+
+    if (_homoLumoIndexes[1] == -1)
+    {
+        LUMO();
+    }
+
+    const int ALPHA = static_cast<int>(SpinType::ALPHA);
+    const int BETA = static_cast<int>(SpinType::BETA);
+
+    lumoCoefficients[ALPHA][0] = _coefficients[ALPHA][_homoLumoIndexes[1]];
+    lumoCoefficients[BETA][0] = _coefficients[BETA][_homoLumoIndexes[1]];
+
+    return lumoCoefficients;
+}
+
+std::vector<double> Orbitals::getLumoEnergy()
+{
+    int ALPHA = static_cast<int>(SpinType::ALPHA);
+    int BETA = static_cast<int>(SpinType::BETA);
+
+    if (_homoLumoIndexes[1] == -1)
+    {
+        LUMO();
+    }
+
+    return std::vector<double>({ _orbitalEnergy[ALPHA][_homoLumoIndexes[1]], _orbitalEnergy[BETA][_homoLumoIndexes[1]] });
+}
+
+int Orbitals::getLumoIndex()
+{
+    if (_homoLumoIndexes[1] == -1)
+    {
+        LUMO();
+    }
+
+    return _homoLumoIndexes[1];
 }
 
 std::vector<std::vector<int>> Orbitals::getOccupiedOrbitalNumbers() const
@@ -1552,18 +1684,28 @@ double Orbitals::func(double x, double y, double z) const
 
 void Orbitals::HOMO()
 {
-    if(_numberOfAlphaElectrons>=_numberOfBetaElectrons)
-        _HomoLumoNumbers[0] = _numberOfAlphaElectrons-1;
+    if(_numberOfAlphaElectrons >= _numberOfBetaElectrons)
+    {
+        _homoLumoIndexes[0] = _numberOfAlphaElectrons - 1; // 0-based index
+    }
     else
-        _HomoLumoNumbers[0] = _numberOfBetaElectrons-1;
+    {
+        _homoLumoIndexes[0] = _numberOfBetaElectrons - 1; // 0-based index
+    }
 }
 
 void Orbitals::LUMO()
 {
-    _HomoLumoNumbers[1] = _HomoLumoNumbers[0]+1;
-    if(_HomoLumoNumbers[1] +1 >_numberOfMo)
+    if (_homoLumoIndexes[0] == -1)
     {
-        print_error("Lumo is not available in your file orbitals file");
+        HOMO();
+    }
+
+    _homoLumoIndexes[1] = _homoLumoIndexes[0] + 1;
+
+    if(_homoLumoIndexes[1] >= _numberOfMo)
+    {
+        print_error("Error in Orbitals::LUMO(): LUMO is not available because its orbital index is out of bounds.");
 
         std::exit(1);
     }
@@ -1595,9 +1737,9 @@ std::vector<double> Orbitals::get_f(int orb, int alpha)
     size_t nu,xi;
     std::vector<double> f(_numberOfAtoms,0.0);
 
-#ifdef ENABLE_OMP
-#pragma omp parallel for private(i,nu,xi)
-#endif
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for private(i,nu,xi)
+    #endif
     for(i=0; i<_numberOfAtoms; i++)
         for(nu=0; nu<_coefficients[alpha][orb].size(); nu++)
         {
@@ -1614,57 +1756,66 @@ std::vector<double> Orbitals::get_f(int orb, int alpha)
 
 void Orbitals::get_f(int alpha)
 {
-    std::vector<std::vector<double>> S=get_S();
-    int i;
-    size_t j,nu,xi;
-    std::vector<double> V(_numberOfAtoms,0.0);
-    std::vector<std::vector<double>> f(_HomoLumoNumbers.size(), V);
+    if (_homoLumoIndexes[0] == -1)
+    {
+        HOMO();
+    }
 
-    for(i=0; i<_numberOfAtoms; i++)
-        for(j=0; j<_HomoLumoNumbers.size(); j++)
-            for(nu=0; nu<_coefficients[alpha][_HomoLumoNumbers[j]].size(); nu++)
+    if (_homoLumoIndexes[1] == -1)
+    {
+        LUMO();
+    }
+
+    std::vector<std::vector<double>> S = get_S();
+    std::vector<std::vector<double>> f(2, std::vector<double>(_numberOfAtoms, 0.0));
+
+    for(int i = 0; i < _numberOfAtoms; ++i)
+    {
+        for(size_t j = 0; j < 2; ++j)
+        {
+            for(size_t nu = 0; nu < _coefficients[alpha][_homoLumoIndexes[j]].size(); ++nu)
             {
-                if(i+1 == _primitiveCenters[nu])
+                if(i + 1 == _primitiveCenters[nu])
                 {
-                    f[j][i]+=_coefficients[alpha][_HomoLumoNumbers[j]][nu]*_coefficients[alpha][_HomoLumoNumbers[j]][nu];
+                    f[j][i] += _coefficients[alpha][_homoLumoIndexes[j]][nu] * _coefficients[alpha][_homoLumoIndexes[j]][nu];
                 }
 
-                for(xi=0; xi<_coefficients[alpha][_HomoLumoNumbers[j]].size(); xi++)
-                    if(xi!=nu && i+1 == _primitiveCenters[nu])
-                        f[j][i]+=_coefficients[alpha][_HomoLumoNumbers[j]][xi]*_coefficients[alpha][_HomoLumoNumbers[j]][nu]*S[xi][nu];
+                for(size_t xi = 0; xi < _coefficients[alpha][_homoLumoIndexes[j]].size(); ++xi)
+                {
+                    if(xi != nu && i + 1 == _primitiveCenters[nu])
+                    {
+                        f[j][i] += _coefficients[alpha][_homoLumoIndexes[j]][xi] * _coefficients[alpha][_homoLumoIndexes[j]][nu] * S[xi][nu];
+                    }
+                }
             }
+        }
+    }
 
     _all_f = f;
 }
 
-void Orbitals::HOMO_LUMO()
+void Orbitals::init_homoLumoIndexes()
 {
     HOMO();
     LUMO();
 }
 
-void Orbitals::HOMO_LUMO(int i, int j)
+void Orbitals::printDescriptors()
 {
-    _HomoLumoNumbers[0]=i;
-    _HomoLumoNumbers[1]=j;
-}
-
-void Orbitals::PrintDescriptors()
-{
-    HOMO_LUMO();
+    init_homoLumoIndexes();
     std::cout<<"end HOMOLUMO"<<std::endl;
     get_f();
     std::cout<<"end get_f"<<std::endl;
-    _descriptors.set_mu_fk_data(_all_f, getHOMOEnergy(), getLUMOEnergy());
+    _descriptors.set_mu_fk_data(_all_f, getHomoEnergy()[static_cast<int>(SpinType::ALPHA)], getLumoEnergy()[static_cast<int>(SpinType::ALPHA)]);
     _descriptors.compute_all();
     std::cout<<_descriptors<<std::endl;
 }
 
-void Orbitals::PrintDescriptors(int i, int j)
+void Orbitals::printDescriptors(int homoIndex, int lumoIndex)
 {
-    HOMO_LUMO(i,j);
+    set_homoLumoIndexes(homoIndex, lumoIndex);
     get_f();
-    _descriptors.set_mu_fk_data(_all_f, getHOMOEnergy(), getLUMOEnergy());
+    _descriptors.set_mu_fk_data(_all_f, getHomoEnergy()[static_cast<int>(SpinType::ALPHA)], getLumoEnergy()[static_cast<int>(SpinType::ALPHA)]);
     _descriptors.compute_all();
     std::cout<<_descriptors<<std::endl;
 }
@@ -1678,7 +1829,7 @@ double operator*(const Orbitals& a, const std::vector<double>& coord)
     return r;
 }
 
-std::ostream& operator<<(std::ostream& stream, Orbitals& orbitals)
+std::ostream& operator<<(std::ostream& stream, const Orbitals& orbitals)
 {
     stream << std::scientific;
     stream << std::setprecision(10);
@@ -1761,19 +1912,28 @@ double Orbitals::density(double x, double y, double z) const
     std::vector<double> evaluatedCgtfs(_vcgtf.size());
     evaluateCgtfsAtPoint(evaluatedCgtfs, x, y, z);
 
-    for(int orbitalNumber = 1; orbitalNumber <= get_numberOfMo(); ++orbitalNumber)
+    for(int orbitalIndex = 0; orbitalIndex < get_numberOfMo(); ++orbitalIndex)
     {
-        rho += density(orbitalNumber, spinType, evaluatedCgtfs);
+        rho += density(orbitalIndex, spinType, evaluatedCgtfs);
     }
 
     return rho;
 }
 
-double Orbitals::density(const std::vector<int>& orbitalNumbers, const std::vector<SpinType>& orbitalSpins, double x, double y, double z) const
+double Orbitals::density(int orbitalIndex, SpinType spinType, double x, double y, double z) const
 {
-    if (orbitalNumbers.size() != orbitalSpins.size())
+    // Evaluate all CGTFs at the given point (x, y, z) once and reuse the values for each orbital
+    std::vector<double> evaluatedCgtfs(_vcgtf.size());
+    evaluateCgtfsAtPoint(evaluatedCgtfs, x, y, z);
+
+    return density(orbitalIndex, spinType, evaluatedCgtfs);
+}
+
+double Orbitals::density(const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins, double x, double y, double z) const
+{
+    if (orbitalIndexes.size() != orbitalSpins.size())
     {
-        print_error("Error in Orbitals::density(): orbitalNumbers and orbitalSpins vectors must have the same size.");
+        print_error("Error in Orbitals::density(): orbitalIndexes and orbitalSpins vectors must have the same size.");
         std::exit(1);
     }
 
@@ -1783,9 +1943,9 @@ double Orbitals::density(const std::vector<int>& orbitalNumbers, const std::vect
     std::vector<double> evaluatedCgtfs(_vcgtf.size());
     evaluateCgtfsAtPoint(evaluatedCgtfs, x, y, z);
 
-    for (size_t i = 0; i < orbitalNumbers.size(); ++i)
+    for (size_t i = 0; i < orbitalIndexes.size(); ++i)
     {
-        rho += density(orbitalNumbers[i], orbitalSpins[i], evaluatedCgtfs);
+        rho += density(orbitalIndexes[i], orbitalSpins[i], evaluatedCgtfs);
     }
 
     return rho;

@@ -620,7 +620,8 @@ void Job::run_computeDescriptors()
             }
             
             // Compute descriptors
-            computeDescriptorsFD(analyticFilesNames[0], analyticFilesNames[1], analyticFilesNames[2]);
+            Descriptors descriptors = computeDescriptorsFD(analyticFilesNames[0], analyticFilesNames[1], analyticFilesNames[2]);
+            std::cout << descriptors << std::endl;
         }
         else
         {
@@ -640,7 +641,7 @@ void Job::run_computeDescriptors()
             // Compute descriptors
             Orbitals o;
             computeOrbitalsOrBecke<Orbitals>(o, analyticFilesNames[0]);
-            o.PrintDescriptors();
+            o.printDescriptors();
         }
     }
     else
@@ -2118,52 +2119,55 @@ void Job::run_linearResponse()
     logStream << std::endl << std::endl << "====================== ENERGY - FMO method ======================" << std::endl << std::endl;
     log(logStream, logFile);
 
-    orbitals.HOMO_LUMO();
+    orbitals.init_homoLumoIndexes();
     orbitals.get_f();
-    Descriptors descriptors(orbitals.get_descriptors());
-    descriptors.set_mu_fk_data(orbitals.get_all_f(), orbitals.getHOMOEnergy(), orbitals.getLUMOEnergy());
-    descriptors.compute_all();
+    Descriptors descriptors_FMO(orbitals.get_descriptors());
+    descriptors_FMO.set_mu_fk_data(orbitals.get_all_f(), orbitals.getHomoEnergy()[static_cast<int>(SpinType::ALPHA)], orbitals.getLumoEnergy()[static_cast<int>(SpinType::ALPHA)]);
+    descriptors_FMO.compute_all();
 
     // Print deltafk
-    const std::vector<double>& deltafk = descriptors.get_deltafk();
+    const std::vector<double>& deltafk_FMO = descriptors_FMO.get_deltafk();
 
     logStream << "Δf (column)" << std::endl;
     logStream << std::scientific;
     logStream << std::setprecision(10);
-    for (size_t i = 0; i < deltafk.size(); ++i)
+    for (size_t i = 0; i < deltafk_FMO.size(); ++i)
     {
-        logStream << std::right << std::setw(17) << deltafk[i] << std::endl;
+        logStream << std::right << std::setw(17) << deltafk_FMO[i] << std::endl;
     }
     logStream << std::endl;
     log(logStream, logFile);
     
 
     // Get dk coefficient
-    std::vector<double> dk_coeffs(deltafk.size(), 0.0);
-    for (size_t i = 0; i < deltafk.size(); ++i)
+    std::vector<double> dk_coeffs(deltafk_FMO.size(), 0.0);
+    for (size_t i = 0; i < deltafk_FMO.size(); ++i)
     {
-        for (size_t j = 0; j < deltafk.size(); ++j)
+        for (size_t j = 0; j < deltafk_FMO.size(); ++j)
         {
-            dk_coeffs[i] += deltafk[j] * eigenvectors_becke_atomic[j][i];
+            dk_coeffs[i] += deltafk_FMO[j] * eigenvectors_becke_atomic[j][i];
         }
     }
 
     logStream << "Δf = ";
-    for (size_t i = 0; i < deltafk.size(); ++i)
+    for (size_t i = 0; i < deltafk_FMO.size(); ++i)
     {
         logStream << (dk_coeffs[i] >= 0 ? "+ " : "- ") << std::abs(dk_coeffs[i]) << " χ_" << i + 1 << ' ';
     }
     logStream << std::endl;
     log(logStream, logFile);
 
-    double energy = 0.0;
+    double energy_FMO = 0.0;
     for (size_t i = 0; i < dk_coeffs.size(); ++i)
     {
-        energy += dk_coeffs[i] * dk_coeffs[i] / std::abs(eigenvalues_becke_atomic[i]);
+        if (std::abs(eigenvalues_becke_atomic[i]) > 1e-5)
+        {
+            energy_FMO += dk_coeffs[i] * dk_coeffs[i] / std::abs(eigenvalues_becke_atomic[i]);
+        }
     }
-    energy *= (- 0.5);
+    energy_FMO *= (-0.5);
 
-    logStream << "Energy = " << std::scientific << std::setprecision(10) << energy << " H" << std::endl;
+    logStream << "Energy = " << std::scientific << std::setprecision(10) << energy_FMO << " H" << std::endl;
     log(logStream, logFile);
 
 
@@ -2171,9 +2175,56 @@ void Job::run_linearResponse()
     /* ENERGY - FD method with Q0, Q+ and Q- files */
     /***********************************************/
 
-    logStream << std::endl << std::endl << "====================== ENERGY - FD method with Q0, Q+ and Q- files ======================" << std::endl << std::endl;
+    logStream << std::endl << std::endl << "====================== ENERGY - FD method with Q0, Q- and Q+ files ======================" << std::endl << std::endl;
     log(logStream, logFile);
 
+    Descriptors descriptors_FD = computeDescriptorsFD(analyticFilesNames[1], analyticFilesNames[2], analyticFilesNames[3], beckeParams[0], beckeParams[1], beckeParams[2]);
+
+    std::cout << descriptors_FD << std::endl;
+
+    // Print deltafk
+    const std::vector<double>& deltafk_FD_threeFiles = descriptors_FD.get_deltafk();
+
+    logStream << "Δf (column)" << std::endl;
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    for (size_t i = 0; i < deltafk_FD_threeFiles.size(); ++i)
+    {
+        logStream << std::right << std::setw(17) << deltafk_FD_threeFiles[i] << std::endl;
+    }
+    logStream << std::endl;
+    log(logStream, logFile);
+
+    // Get dk coefficient
+    std::vector<double> dk_coeffs_FD_threeFiles(deltafk_FD_threeFiles.size(), 0.0);
+    for (size_t i = 0; i < deltafk_FD_threeFiles.size(); ++i)
+    {
+        for (size_t j = 0; j < deltafk_FD_threeFiles.size(); ++j)
+        {
+            dk_coeffs_FD_threeFiles[i] += deltafk_FD_threeFiles[j] * eigenvectors_becke_atomic[j][i];
+        }
+    }
+
+    logStream << "Δf = ";
+    for (size_t i = 0; i < deltafk_FD_threeFiles.size(); ++i)
+    {
+        logStream << (dk_coeffs_FD_threeFiles[i] >= 0 ? "+ " : "- ") << std::abs(dk_coeffs_FD_threeFiles[i]) << " χ_" << i + 1 << ' ';
+    }
+    logStream << std::endl;
+    log(logStream, logFile);
+
+    double energy_FD_threeFiles = 0.0;
+    for (size_t i = 0; i < dk_coeffs_FD_threeFiles.size(); ++i)
+    {
+        if (std::abs(eigenvalues_becke_atomic[i]) > 1e-5)
+        {
+            energy_FD_threeFiles += dk_coeffs_FD_threeFiles[i] * dk_coeffs_FD_threeFiles[i] / std::abs(eigenvalues_becke_atomic[i]);
+        }
+    }
+    energy_FD_threeFiles *= (-0.5);
+
+    logStream << "Energy = " << std::scientific << std::setprecision(10) << energy_FD_threeFiles << " H" << std::endl;
+    log(logStream, logFile);
 
     /****************************************/
     /* ENERGY - FD method with Q0 file only */
@@ -2183,7 +2234,48 @@ void Job::run_linearResponse()
     log(logStream, logFile);
 
     // Here we assume that Δf = ρ_LUMO - ρ_HOMO
-    
+    std::vector<double> deltafk_FD_oneFile = becke.getRhoLumoMinusRhoHomo(beckeParams[0], beckeParams[1], beckeParams[2]);
+
+    logStream << "Δf (column)" << std::endl;
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    for (size_t i = 0; i < deltafk_FD_oneFile.size(); ++i)
+    {
+        logStream << std::right << std::setw(17) << deltafk_FD_oneFile[i] << std::endl;
+    }
+    logStream << std::endl;
+    log(logStream, logFile);
+
+    // Get dk coefficient
+    std::vector<double> dk_coeffs_FD_oneFile(deltafk_FD_oneFile.size(), 0.0);
+    for (size_t i = 0; i < deltafk_FD_oneFile.size(); ++i)
+    {
+        for (size_t j = 0; j < deltafk_FD_oneFile.size(); ++j)
+        {
+            dk_coeffs_FD_oneFile[i] += deltafk_FD_oneFile[j] * eigenvectors_becke_atomic[j][i];
+        }
+    }
+
+    logStream << "Δf = ";
+    for (size_t i = 0; i < deltafk_FD_oneFile.size(); ++i)
+    {
+        logStream << (dk_coeffs_FD_oneFile[i] >= 0 ? "+ " : "- ") << std::abs(dk_coeffs_FD_oneFile[i]) << " χ_" << i + 1 << ' ';
+    }
+    logStream << std::endl;
+    log(logStream, logFile);
+
+    double energy_FD_oneFile = 0.0;
+    for (size_t i = 0; i < dk_coeffs_FD_oneFile.size(); ++i)
+    {
+        if (std::abs(eigenvalues_becke_atomic[i]) > 1e-5)
+        {
+            energy_FD_oneFile += dk_coeffs_FD_oneFile[i] * dk_coeffs_FD_oneFile[i] / std::abs(eigenvalues_becke_atomic[i]);
+        }
+    }
+    energy_FD_oneFile *= (-0.5);
+
+    logStream << "Energy = " << std::scientific << std::setprecision(10) << energy_FD_oneFile << " H" << std::endl;
+    log(logStream, logFile);
 }
 
 void Job::run_makeDensityCube()
@@ -2604,17 +2696,19 @@ Descriptors Job::computeDescriptors(const std::string& gridFileName1, const std:
     return D;
 }
 
-void Job::computeDescriptorsFD(const std::string& ANAFileName1, const std::string& ANAFileName2, const std::string& ANAFileName3)
+Descriptors Job::computeDescriptorsFD(const std::string& ANAFileName1, const std::string& ANAFileName2, const std::string& ANAFileName3, int kmax, int lebedev_order, int radial_grid_factor)
 {
-    std::vector<double> E(0);
-    std::vector<double> Q1 = computePartialChargesAndEnergy(E, ANAFileName1);
-    std::vector<double> Q2 = computePartialChargesAndEnergy(E, ANAFileName2);
-    std::vector<double> Q3 = computePartialChargesAndEnergy(E, ANAFileName3);
-
+    std::cout << "Building Structure object... ";
     Structure s = returnStruct(ANAFileName1);
+    std::cout << std::endl;
 
-    Descriptors D(s, Q1, Q2, Q3, E);
-    std::cout << D;
+    std::vector<double> E(0);
+
+    std::vector<double> Q0 = computePartialChargesAndEnergy(E, ANAFileName1, kmax, lebedev_order, radial_grid_factor);
+    std::vector<double> Qm = computePartialChargesAndEnergy(E, ANAFileName2, kmax, lebedev_order, radial_grid_factor);
+    std::vector<double> Qp = computePartialChargesAndEnergy(E, ANAFileName3, kmax, lebedev_order, radial_grid_factor);
+
+    return Descriptors(s, Q0, Qm, Qp, E);
 }
 
 void Job::computeGridDifference(const std::string& minuendGridFileName, const std::string& subtrahendGridFileName, const std::string& outputGridFileName)
@@ -2900,14 +2994,17 @@ std::vector<double> Job::computePartialCharges(const std::string& gridFileName, 
     return charges;
 }
 
-std::vector<double> Job::computePartialChargesAndEnergy(std::vector<double>& energies, const std::string& analyticFileName)
+std::vector<double> Job::computePartialChargesAndEnergy(std::vector<double>& energies, const std::string& analyticFileName, int kmax, int lebedev_order, int radial_grid_factor)
 {
+    std::cout << "Building Becke object... ";
     Becke B;
     computeOrbitalsOrBecke<Becke>(B, analyticFileName);
 
-    energies.push_back(B.PartialChargesAndEnergy()[0][0]);
+    std::vector<std::vector<double>> partialChargesAndEnergy = B.PartialChargesAndEnergy(kmax, lebedev_order, radial_grid_factor);
 
-    return B.PartialChargesAndEnergy()[1];
+    energies.push_back(partialChargesAndEnergy[0][0]);
+
+    return partialChargesAndEnergy[1];
 }
 
 template<typename T, typename U>
