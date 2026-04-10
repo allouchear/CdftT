@@ -384,8 +384,10 @@ class Orbitals
 
         /**
          * @brief Calculates the 3D matrix of triple orbital integrals. The first index corresponds to alpha spin orbitals and the second index corresponds to beta spin orbitals.
+         * 
+         * @param[in] showProgress If true, shows progress of the calculation.
          */
-        std::vector<std::vector<std::vector<std::vector<double>>>> getTripleOrbitalIntegralMatrix();
+        std::vector<std::vector<std::vector<std::vector<double>>>> getTripleOrbitalIntegralMatrix(bool showProgress = false);
 
         //! A normal member taking no arguments and returning a double value.
         /*! \return The value of the integral of Orbitals * Orbitals. */

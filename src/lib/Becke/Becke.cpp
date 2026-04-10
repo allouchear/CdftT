@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstdlib>
 #include <functional>
@@ -370,7 +371,7 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getPhiStarPhiM
     return phiStarPhiMatrixMO;
 }
 
-std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbitalIntegralMatrix(int kmax, int lebedev_order, int radial_grid_factor)
+std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbitalIntegralMatrix(int kmax, int lebedev_order, int radial_grid_factor, bool showProgress)
 {
     if (_multigrid == false)
     {
@@ -384,23 +385,30 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbit
     const std::vector<std::vector<std::vector<double>>>& coefficients = _orbitals.get_coefficients();
 
     // Build triple-orbital-integral matrix in AO basis
-    std::vector<std::vector<std::vector<double>>> toiMatrixAO = std::vector<std::vector<std::vector<double>>>(numberOfAo, std::vector<std::vector<double>>());
-    for (int i = 0; i < numberOfAo; ++i)
-    {
-        toiMatrixAO[i] = std::vector<std::vector<double>>(i + 1, std::vector<double>());
+    // To avoid index reorder when computing the TOI matrix in MO basis, we will store the TOI matrix in AO basis as a full 3D matrix (instead of a lower triangular one) and fill it considering the symmetry of the indices (i, j, k).
+    std::vector<std::vector<std::vector<double>>> toiMatrixAO = std::vector<std::vector<std::vector<double>>>(numberOfAo, std::vector<std::vector<double>>(numberOfAo, std::vector<double>(numberOfAo, 0.0)));
 
-        for (int j = 0; j <= i; ++j)
-        {
-            toiMatrixAO[i][j] = std::vector<double>(j + 1, 0.0);
-        }
+    const int nbStepsTotalAo = (numberOfAo * (numberOfAo + 1) * (numberOfAo + 2)) / 6;
+    std::atomic<int> progress(0);
+    int lastProgress = -1;
+
+    // Show progress bar at 0% at the beginning
+    if (showProgress)
+    {
+        std::cout << "Computing triple orbital integral matrix on atomic basis..." << std::endl;
+        print_progressBar(0, nbStepsTotalAo, lastProgress);
     }
 
     // Compute TOI matrix elements in AO basis
-    for (int i = 0; i < numberOfAo; ++i)
+    int i, j, k;
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for private(i, j, k)
+    #endif
+    for (i = 0; i < numberOfAo; ++i)
     {
-        for (int j = 0; j <= i; ++j)
+        for (j = 0; j <= i; ++j)
         {
-            for (int k = 0; k <= j; ++k)
+            for (k = 0; k <= j; ++k)
             {
                 for (int I = 0; I < _molecule.getNumberOfAtoms(); ++I)
                 {
@@ -413,8 +421,28 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbit
                         toiMatrixAO[i][j][k] += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func(x, y, z) * vcgtf[j].func(x, y, z) * vcgtf[k].func(x, y, z);
                     }
                 }
+
+                // Fill the other elements of the full 3D matrix considering the symmetry of the indices (i, j, k)
+                toiMatrixAO[i][k][j] = toiMatrixAO[j][i][k] = toiMatrixAO[j][k][i] = toiMatrixAO[k][i][j] = toiMatrixAO[k][j][i] = toiMatrixAO[i][j][k];
+            }
+
+            if (showProgress)
+            {
+                // Update at each j iteration for a smoother display
+                int currentStep = progress.fetch_add(j + 1) + (j + 1);
+
+                #ifdef ENABLE_OMP
+                #pragma omp critical
+                #endif
+                {
+                    print_progressBar(currentStep, nbStepsTotalAo, lastProgress);
+                }
             }
         }
+    }
+    if (showProgress)
+    {
+        std::cout << std::endl;
     }
 
     /*
@@ -450,8 +478,19 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbit
         }
     }
 
+    const int nbStepsTotalMo = 2 * (numberOfMo * (numberOfMo + 1) * (numberOfMo + 2)) / 6;
+    progress = 0;
+    lastProgress = -1;
+
+    // Show progress bar at 0% at the beginning
+    if (showProgress)
+    {
+        std::cout << "Computing triple orbital integral matrix on molecular basis..." << std::endl;
+        print_progressBar(0, nbStepsTotalMo, lastProgress);
+    }
+
     // Compute TOI matrix elements in MO basis
-    int spin, i, j, k;
+    int spin;
     #ifdef ENABLE_OMP
     #pragma omp parallel for private(spin, i, j, k)
     #endif
@@ -471,20 +510,32 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbit
                         {
                             for (size_t r = 0; r < coefficients[spin][k].size(); ++r)
                             {
-                                // Get the correct AO matrix element (considering symmetry)
-                                std::array<size_t, 3> indices = {p, q, r};
-                                std::sort(indices.begin(), indices.end(), std::greater<size_t>());
-                                double toiAOElement = toiMatrixAO[indices[0]][indices[1]][indices[2]];
-
-                                sum += coefficients[spin][i][p] * coefficients[spin][j][q] * coefficients[spin][k][r] * toiAOElement;
+                                sum += coefficients[spin][i][p] * coefficients[spin][j][q] * coefficients[spin][k][r] * toiMatrixAO[p][q][r];
                             }
                         }
                     }
 
                     toiMatrixMO[spin][i][j][k] = sum;
                 }
+
+                if (showProgress)
+                {
+                    // Update at each j iteration for a smoother display
+                    int currentStep = progress.fetch_add(j + 1) + (j + 1);
+
+                    #ifdef ENABLE_OMP
+                    #pragma omp critical
+                    #endif
+                    {
+                        print_progressBar(currentStep, nbStepsTotalMo, lastProgress);
+                    }
+                }
             }
         }
+    }
+    if (showProgress)
+    {
+        std::cout << std::endl << std::endl;
     }
 
     // debug

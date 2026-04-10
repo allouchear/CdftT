@@ -1492,30 +1492,55 @@ std::vector<std::vector<std::vector<double>>> Orbitals::getIonicPotentialMatrix(
     return ionicMatrixMO;
 }
 
-std::vector<std::vector<std::vector<std::vector<double>>>> Orbitals::getTripleOrbitalIntegralMatrix()
+std::vector<std::vector<std::vector<std::vector<double>>>> Orbitals::getTripleOrbitalIntegralMatrix(bool showProgress)
 {
-    // Build LRF matrix in AO basis
-    std::vector<std::vector<std::vector<double>>> lrfMatrixAO = std::vector<std::vector<std::vector<double>>>(_numberOfAo, std::vector<std::vector<double>>());
-    for (int i = 0; i < _numberOfAo; ++i)
-    {
-        lrfMatrixAO[i] = std::vector<std::vector<double>>(i + 1, std::vector<double>());
+    // Build triple-orbital-integral matrix in AO basis
+    // To avoid index reorder when computing the TOI matrix in MO basis, we will store the TOI matrix in AO basis as a full 3D matrix (instead of a lower triangular one) and fill it considering the symmetry of the indices (i, j, k).
+    std::vector<std::vector<std::vector<double>>> toiMatrixAO = std::vector<std::vector<std::vector<double>>>(_numberOfAo, std::vector<std::vector<double>>(_numberOfAo, std::vector<double>(_numberOfAo, 0.0)));
 
-        for (int j = 0; j <= i; ++j)
-        {
-            lrfMatrixAO[i][j] = std::vector<double>(j + 1, 0.0);
-        }
+    const int nbStepsTotalAo = (_numberOfAo * (_numberOfAo + 1) * (_numberOfAo + 2)) / 6;
+    std::atomic<int> progress(0);
+    int lastProgress = -1;
+
+    // Show progress bar at 0% at the beginning
+    if (showProgress)
+    {
+        std::cout << "Computing triple orbital integral matrix on atomic basis..." << std::endl;
+        print_progressBar(0, nbStepsTotalAo, lastProgress);
     }
 
     // Compute LRF matrix elements in AO basis
-    for (int i = 0; i < _numberOfAo; ++i)
+    int i, j, k;
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for private(i, j, k)
+    #endif
+    for (i = 0; i < _numberOfAo; ++i)
     {
-        for (int j = 0; j <= i; ++j)
+        for (j = 0; j <= i; ++j)
         {
-            for (int k = 0; k <= j; ++k)
+            for (k = 0; k <= j; ++k)
             {
-                lrfMatrixAO[i][j][k] = _vcgtf[i].overlap3CGTF(_vcgtf[j], _vcgtf[k]);
+                // Store the value for all permutations of (i, j, k) considering symmetry
+                toiMatrixAO[i][j][k] = toiMatrixAO[i][k][j] = toiMatrixAO[j][i][k] = toiMatrixAO[j][k][i] = toiMatrixAO[k][i][j] = toiMatrixAO[k][j][i] = _vcgtf[i].overlap3CGTF(_vcgtf[j], _vcgtf[k]);
+            }
+
+            if (showProgress)
+            {
+                // Update at each j iteration for a smoother display
+                int currentStep = progress.fetch_add(j + 1) + (j + 1);
+
+                #ifdef ENABLE_OMP
+                #pragma omp critical
+                #endif
+                {
+                    print_progressBar(currentStep, nbStepsTotalAo, lastProgress);
+                }
             }
         }
+    }
+    if (showProgress)
+    {
+        std::cout << std::endl;
     }
 
     // debug
@@ -1529,7 +1554,7 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Orbitals::getTripleOr
         {
             for (int kk = 0; kk <= jj; ++kk)
             {
-                std::cout << std::right << std::setw(16) << lrfMatrixAO[ii][jj][kk] << ' ';
+                std::cout << std::right << std::setw(16) << toiMatrixAO[ii][jj][kk] << ' ';
             }
 
             std::cout << std::endl;
@@ -1537,23 +1562,34 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Orbitals::getTripleOr
     }
     */
 
-    // Build LRF matrix in MO basis
-    std::vector<std::vector<std::vector<std::vector<double>>>> lrfMatrixMO = std::vector<std::vector<std::vector<std::vector<double>>>>(2, std::vector<std::vector<std::vector<double>>>(_numberOfMo, std::vector<std::vector<double>>()));
+    // Build TOI matrix in MO basis
+    std::vector<std::vector<std::vector<std::vector<double>>>> toiMatrixMO = std::vector<std::vector<std::vector<std::vector<double>>>>(2, std::vector<std::vector<std::vector<double>>>(_numberOfMo, std::vector<std::vector<double>>()));
     for (int spin = 0; spin < 2; ++spin)
     {
         for (int i = 0; i < _numberOfMo; ++i)
         {
-            lrfMatrixMO[spin][i].resize(i + 1);
+            toiMatrixMO[spin][i].resize(i + 1);
 
             for (int j = 0; j <= i; ++j)
             {
-                lrfMatrixMO[spin][i][j].resize(j + 1);
+                toiMatrixMO[spin][i][j].resize(j + 1);
             }
         }
     }
 
+    const int nbStepsTotalMo = 2 * (_numberOfMo * (_numberOfMo + 1) * (_numberOfMo + 2)) / 6;
+    progress = 0;
+    lastProgress = -1;
+
+    // Show progress bar at 0% at the beginning
+    if (showProgress)
+    {
+        std::cout << "Computing triple orbital integral matrix on molecular basis..." << std::endl;
+        print_progressBar(0, nbStepsTotalMo, lastProgress);
+    }
+
     // Compute LRF matrix elements in MO basis
-    int spin, i, j, k;
+    int spin;
     #ifdef ENABLE_OMP
     #pragma omp parallel for private(spin, i, j, k)
     #endif
@@ -1573,23 +1609,35 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Orbitals::getTripleOr
                         {
                             for (size_t r = 0; r < _coefficients[spin][k].size(); ++r)
                             {
-                                // Get the correct AO matrix element (considering symmetry)
-                                std::array <size_t, 3> indices = { p, q, r };
-                                std::sort(indices.begin(), indices.end(), std::greater<size_t>());
-                                double lrfAOElement = lrfMatrixAO[indices[0]][indices[1]][indices[2]];
-
-                                sum += _coefficients[spin][i][p] * _coefficients[spin][j][q] * _coefficients[spin][k][r] * lrfAOElement;
+                                sum += _coefficients[spin][i][p] * _coefficients[spin][j][q] * _coefficients[spin][k][r] * toiMatrixAO[p][q][r];
                             }
                         }
                     }
 
-                    lrfMatrixMO[spin][i][j][k] = sum;
+                    toiMatrixMO[spin][i][j][k] = sum;
+                }
+
+                if (showProgress)
+                {
+                    // Update at each j iteration for a smoother display
+                    int currentStep = progress.fetch_add(j + 1) + (j + 1);
+
+                    #ifdef ENABLE_OMP
+                    #pragma omp critical
+                    #endif
+                    {
+                        print_progressBar(currentStep, nbStepsTotalMo, lastProgress);
+                    }
                 }
             }
         }
     }
+    if (showProgress)
+    {
+        std::cout << std::endl << std::endl;
+    }
 
-    return lrfMatrixMO;
+    return toiMatrixMO;
 }
 
 double Orbitals::OrbstarOrb()
@@ -1737,9 +1785,9 @@ std::vector<double> Orbitals::get_f(int orb, int alpha)
     size_t nu,xi;
     std::vector<double> f(_numberOfAtoms,0.0);
 
-    #ifdef ENABLE_OMP
-    #pragma omp parallel for private(i,nu,xi)
-    #endif
+#ifdef ENABLE_OMP
+#pragma omp parallel for private(i,nu,xi)
+#endif
     for(i=0; i<_numberOfAtoms; i++)
         for(nu=0; nu<_coefficients[alpha][orb].size(); nu++)
         {
@@ -1966,7 +2014,7 @@ Grid Orbitals::makeOrbGrid(const Domain& domain, const std::vector<int>& orbital
     std::atomic<int> progress(0);
     int lastProgress = -1;
 
-    // Afficher la barre de progression à 0% dès le début
+    // Show progress bar at 0% at the beginning
     if(showProgress)
     {
         print_progressBar(0, nbStepsTotal, lastProgress);
@@ -1995,7 +2043,7 @@ Grid Orbitals::makeOrbGrid(const Domain& domain, const std::vector<int>& orbital
                 
                 if(showProgress)
                 {
-                    // Mise à jour à chaque itération de N2 pour un affichage plus fluide
+                    // Update at each N2 iteration for a smoother display
                     int currentStep = progress.fetch_add(N3) + N3;
                     
                     #ifdef ENABLE_OMP

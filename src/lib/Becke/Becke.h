@@ -178,7 +178,7 @@ class Becke
         /**
          * @brief TODO
          */
-        std::vector<std::vector<std::vector<std::vector<double>>>> getTripleOrbitalIntegralMatrix(int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+        std::vector<std::vector<std::vector<std::vector<double>>>> getTripleOrbitalIntegralMatrix(int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, bool showProgress = false);
 
 
         //----------------------------------------------------------------------------------------------------//

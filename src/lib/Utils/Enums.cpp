@@ -18,6 +18,14 @@ namespace EnumConversionMaps
         { ELFMethod::UNKNOWN, "UNKNOWN" }
     };
 
+    std::unordered_map<GridSaveType, std::string> gridSaveType_string =
+    {
+        { GridSaveType::DENSITY, "Density" },
+        { GridSaveType::GRADIENT, "Gradient" },
+        { GridSaveType::ORBITALS, "Orbitals" },
+        { GridSaveType::UNKNOWN, "UNKNOWN" }
+    };
+
     std::unordered_map<GridSize, std::string> gridSize_string =
     {
         { GridSize::COARSE, "Coarse" },
@@ -106,6 +114,17 @@ std::string to_string(ELFMethod method)
 ELFMethod elfMethod_from_string(const std::string& strMethod)
 {
     return enum_from_string(strMethod, EnumConversionMaps::elfMethod_string, ELFMethod::UNKNOWN);
+}
+
+
+std::string to_string(GridSaveType saveType)
+{
+    return enum_to_string(saveType, EnumConversionMaps::gridSaveType_string);
+}
+
+GridSaveType gridSaveType_from_string(const std::string& strSaveType)
+{
+    return enum_from_string(strSaveType, EnumConversionMaps::gridSaveType_string, GridSaveType::UNKNOWN);
 }
 
 

@@ -1611,10 +1611,11 @@ void Job::run_linearResponse()
     logStream << std::endl << std::endl << "====================== ANALYTIC COMPUTATION ======================" << std::endl << std::endl;
     log(logStream, logFile);
 
-    /*
+    
     // Get triple-orbital-integral matrix
-    std::vector<std::vector<std::vector<std::vector<double>>>> tripleOrbitalIntegralMatrix = orbitals.getTripleOrbitalIntegralMatrix();
+    std::vector<std::vector<std::vector<std::vector<double>>>> tripleOrbitalIntegralMatrix = orbitals.getTripleOrbitalIntegralMatrix(showProgress);
 
+    /*
     std::cout << std::endl << std::endl << std::setprecision(10);
     for (size_t i = 0; i < tripleOrbitalIntegralMatrix[0].size(); ++i)
     {
@@ -1631,10 +1632,10 @@ void Job::run_linearResponse()
         }
     }
     std::cout << std::endl;
-
+    */
 
     // Compute LRF Matrix
-    std::vector<std::vector<std::vector<double>>> lrfMatrix(2);
+    std::vector<std::vector<std::vector<double>>> lrfMatrix;
     computeLinearResponseFunctionMatrix(orbitals, tripleOrbitalIntegralMatrix, lrfMatrix);
 
 
@@ -1827,9 +1828,9 @@ void Job::run_linearResponse()
         pseudoOrbitalsSpinTypes_beta.push_back(SpinType::BETA);
     }
 
-    //createCube(pseudoOrbitals, domain, outputFilePrefix + "_lrf_eigenvectors_alpha.cube", 1, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_alpha);
-    //createCube(pseudoOrbitals, domain, outputFilePrefix + "_lrf_eigenvectors_beta.cube", 1, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_beta);
-    */
+    createCube(pseudoOrbitals, domain, outputFilePrefix + "_lrf_eigenvectors_alpha.cube", 1, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_alpha);
+    createCube(pseudoOrbitals, domain, outputFilePrefix + "_lrf_eigenvectors_beta.cube", 1, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_beta);
+    
     
     /**************/
     /* BECKE GRID */
@@ -1853,9 +1854,9 @@ void Job::run_linearResponse()
     Becke becke;
     computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
 
-    /*
+    
     // Get triple-orbital-integral matrix for Becke grid
-    std::vector<std::vector<std::vector<std::vector<double>>>> tripleOrbitalIntegralMatrix_becke = becke.getTripleOrbitalIntegralMatrix();
+    std::vector<std::vector<std::vector<std::vector<double>>>> tripleOrbitalIntegralMatrix_becke = becke.getTripleOrbitalIntegralMatrix(beckeParams[0], beckeParams[1], beckeParams[2], showProgress);
     
     
     // Compute LRF Matrix for Becke grid
@@ -1988,7 +1989,7 @@ void Job::run_linearResponse()
     logStream << std::defaultfloat << std::endl;
     log(logStream, logFile);
     outputFile.close();
-    */
+    
 
     /***********************/
     /* BECKE GRID - Chi_AB */
@@ -2047,7 +2048,7 @@ void Job::run_linearResponse()
     sortEigenValuesAndEigenVectors(eigenvalues_becke_atomic, eigenvectors_becke_atomic);
 
     //outputFile.open(outputFilePrefix + "_energies_becke_chiAB.cdftt");
-    std::ofstream outputFile(outputFilePrefix + "_energies_becke_chiAB.cdftt");
+    outputFile.open(outputFilePrefix + "_energies_becke_chiAB.cdftt");
     if (!outputFile)
     {
         std::stringstream errorMessage;
@@ -2896,8 +2897,7 @@ void Job::computeLocalIntegrals(GridCP& gridCP, const std::vector<std::string>& 
 void Job::computeLinearResponseFunctionMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<std::vector<double>>>>& tripleOrbitalIntegralMatrix, std::vector<std::vector<std::vector<double>>>& lrfMatrix)
 {
     // Get number of MOs
-    int numberOfMO = orbitals.get_numberOfMo();
-
+    int numberOfMo = orbitals.get_numberOfMo();
 
     // Get occupied and virtual orbitals numbers
     std::vector<std::vector<int>> occupiedOrbitalsNumbers;
@@ -2905,14 +2905,14 @@ void Job::computeLinearResponseFunctionMatrix(const Orbitals& orbitals, const st
     orbitals.getOccupiedAndVirtualOrbitalNumbers(occupiedOrbitalsNumbers, virtualOrbitalsNumbers);
 
     // Get orbital energies
-    std::vector<std::vector<double>> orbitalEnergies = orbitals.get_orbitalEnergy();
+    const std::vector<std::vector<double>>& orbitalEnergies = orbitals.get_orbitalEnergy();
 
 
     // Build and initialise the lower triangular LRF matrix for each spin
-    lrfMatrix.resize(2, std::vector<std::vector<double>>(numberOfMO, std::vector<double>()));
+    lrfMatrix.resize(2, std::vector<std::vector<double>>(numberOfMo, std::vector<double>()));
     for (int spin = 0; spin < 2; ++spin)
     {
-        for (int i = 0; i < numberOfMO; ++i)
+        for (int i = 0; i < numberOfMo; ++i)
         {
             lrfMatrix[spin][i].resize(i + 1, 0.0);
         }
@@ -2924,7 +2924,7 @@ void Job::computeLinearResponseFunctionMatrix(const Orbitals& orbitals, const st
     {
         std::cout << "Computing LRF matrix for " << (spin == static_cast<int>(SpinType::ALPHA) ? "Alpha" : "Beta") << " spin (analytical):" << std::endl;
 
-        for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
+        for (int i = 0; i < numberOfMo; ++i)
         {
             for (int j = 0; j <= i; ++j)
             {

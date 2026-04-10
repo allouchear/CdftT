@@ -1,6 +1,7 @@
 RunType=LinearResponse
-AnalyticFiles=iodomethane.fchk
+AnalyticFiles=iodomethane_0.fchk,iodomethane_0.fchk,iodomethane_m.fchk,iodomethane_p.fchk
 OutputPrefix=LRF_iodomethane
+ShowProgress=True
 Size=Custom
 CustomSizeData=128,128,128,5,5,5,7.87401574803148e-02,0,0,0,7.87401574803148e-02,0,0,0,7.87401574803148e-02
 Becke=5,41,9

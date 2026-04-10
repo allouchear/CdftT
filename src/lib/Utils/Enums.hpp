@@ -16,6 +16,14 @@ enum class ELFMethod
     UNKNOWN
 };
 
+enum class GridSaveType
+{
+    DENSITY,
+    GRADIENT,
+    ORBITALS,
+    UNKNOWN
+};
+
 enum class GridSize
 {
     COARSE,
@@ -90,6 +98,7 @@ enum class SpinType
 namespace EnumConversionMaps
 {
     extern std::unordered_map<ELFMethod, std::string> elfMethod_string;
+    extern std::unordered_map<GridSaveType, std::string> gridSaveType_string;
     extern std::unordered_map<GridSize, std::string> gridSize_string;
     extern std::unordered_map<HFType, std::string> hfType_string;
     extern std::unordered_map<OrbitalType, std::string> orbitalType_string;
@@ -114,6 +123,8 @@ template<typename T> T enum_from_string(const std::string& strValue, const std::
 
 std::string to_string(ELFMethod method);
 ELFMethod elfMethod_from_string(const std::string& strMethod);
+std::string to_string(GridSaveType saveType);
+GridSaveType gridSaveType_from_string(const std::string& strSaveType);
 std::string to_string(GridSize size);
 GridSize gridSize_from_string(const std::string& strSize);
 std::string to_string(HFType hfType);
