@@ -1,0 +1,7 @@
+Charges=-0.1
+Positions=-2.0,-0.5,-0.5
+RunType=linearResponse
+AnalyticFiles=tests/Guegan2020/acrolein_200States.fchk
+OutputPrefix=LRF_acrolein
+ShowProgress=True
+Becke=5,41,9

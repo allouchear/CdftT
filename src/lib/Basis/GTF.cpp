@@ -58,9 +58,24 @@ Binomial& GTF::get_bino()
 }
 
 
+//----------------------------------------------------------------------------------------------------//
+// SETTERS
+//----------------------------------------------------------------------------------------------------//
+
+void GTF::set_coefficient(const double coefficient)
+{
+    _coefficient = coefficient;
+}
+
+void GTF::set_exponent(const double exponent)
+{
+    _exponent = exponent;
+}
 
 
-
+//----------------------------------------------------------------------------------------------------//
+// OTHER PUBLIC METHODS
+//----------------------------------------------------------------------------------------------------//
 
 double GTF::GTFstarGTF (GTF& right)
 {
@@ -581,7 +596,7 @@ void GTF::operator*=(double c)
     _coefficient *= c;
 }
 
-void GTF::push_back(const double& a, const double& c, const std::array<double, 3>& coord, const std::vector<int>& l, Binomial& B)
+void GTF::push_back(const double& a, const double& c, const std::array<double, 3>& coord, const std::vector<int>& l, const Binomial& B)
 {
     _exponent=a;
     _coefficient=c;

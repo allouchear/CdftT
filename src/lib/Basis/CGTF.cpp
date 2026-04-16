@@ -17,12 +17,16 @@ CGTF::CGTF()
     _bino = Binomial();
 }
 
-CGTF::CGTF(std::vector<GTF> gtfs) : _gtf(gtfs)
-{
-    _numberOfFunctions=_gtf.size();
-    _coefficients=std::vector<double> (_numberOfFunctions, 1);
-    _bino = gtfs[0].get_bino();
-}
+CGTF::CGTF(std::vector<GTF> gtfs) :
+    _num_center(0),
+    _numberOfFunctions(gtfs.size()),
+    _l_type(""),
+    _l_format(""),
+    _factor_coef(1.0),
+    _gtf(gtfs),
+    _coefficients(gtfs.size(), 1.0),
+    _bino(gtfs[0].get_bino())
+{ }
 
 void CGTF::setCoef(double c)
 {
@@ -294,8 +298,12 @@ bool operator==(const CGTF& left, const CGTF& right)
 
 std::ostream& operator<<(std::ostream &stream, const CGTF &cgtf)
 {
-    for (int i = 0; i < cgtf.numberOfFunctions(); i++)
-        stream << std::setw(20) << cgtf.coefficients()[i] << cgtf.gtf()[i] << std::endl;
+    stream << std::scientific;
+
+    for (int i = 0; i < cgtf.numberOfFunctions(); ++i)
+    {
+        stream << std::left << std::setw(20) << cgtf.coefficients()[i] << cgtf.gtf()[i] << std::endl;
+    }
 
     return stream;
 }

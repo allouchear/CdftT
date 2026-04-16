@@ -117,6 +117,15 @@ class Orbitals
          */
         void evaluateCgtfsAtPoint(std::vector<double>& evaluatedCgtfs, double x, double y, double z) const;
 
+        /**
+         * @brief Computes the square of the molecular orbital value (phi^2) for a given spin-orbital with CGTFs already evaluated at a given point.
+         * 
+         * @param[in] orbitalIndex The index of the orbital (0-based) for which to compute phi^2.
+         * @param[in] spinType The spin type of the orbital for which to compute phi^2.
+         * @param[in] evaluatedCgtfs The evaluated CGTFs at a given point.
+         * 
+         * @return double The value of phi^2 for the specified spin-orbital at a given point.
+         */
         double phiSquared(int orbitalIndex, SpinType spinType, const std::vector<double>& evaluatedCgtfs) const;
 
 
@@ -131,18 +140,18 @@ class Orbitals
 
         //! A real constructor.
         /*! This constructor is used to add all of the parameters for Orbitals with the data in .wfx file. */
-        Orbitals(WFX& wfxParser, Binomial& bino, const PeriodicTable& periodicTable);
+        Orbitals(WFX& wfxParser, const Binomial& bino, const PeriodicTable& periodicTable);
 
             //! A real constructor.
             /*! This constructor is used to add all of the parameters for Orbitals with the data in .fchk file. */
-        Orbitals(FCHK& fchkParser, Binomial& bino, const PeriodicTable& periodicTable);
+        Orbitals(FCHK& fchkParser, const Binomial& bino, const PeriodicTable& periodicTable);
 
             //! A real constructor.
             /*! This constructor is used to add all of the parameters for Orbitals with the data in .molden or .gab file. */
-        Orbitals(MOLDENGAB& moldengabParser, Binomial& bino, const PeriodicTable& periodicTable);
+        Orbitals(MOLDENGAB& moldengabParser, const Binomial& bino, const PeriodicTable& periodicTable);
             //! A real constructor.
             /*! This constructor is used to add all of the parameters for Orbitals with the data in .log file. */
-        Orbitals(LOG& logParser, Binomial& bino, const PeriodicTable& periodicTable);
+        Orbitals(LOG& logParser, const Binomial& bino, const PeriodicTable& periodicTable);
 
 
         //----------------------------------------------------------------------------------------------------//
@@ -261,6 +270,13 @@ class Orbitals
         void set_numberOfBetaElectrons(int numberOfBetaElectrons);
 
         /**
+         * @brief Sets the number of atomic orbitals.
+         *
+         * @param[in] numberOfAo The number of atomic orbitals.
+         */
+        void set_numberOfAo(int numberOfAo);
+
+        /**
          * @brief Sets the number of molecular orbitals.
          * 
          * @param[in] numberOfMo The number of molecular orbitals.
@@ -280,6 +296,13 @@ class Orbitals
          * @param[in] orbitalEnergy The 2D vector of doubles where the energy values are stored. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals. The second dimension gives the energy of the i-th orbital.
          */
         void set_orbitalEnergy(const std::vector<std::vector<double>>& orbitalEnergy);
+
+        /**
+         * @brief Sets the table of CGTF which compose the Orbitals.
+         * 
+         * @param[in] vcgtf The vector of CGTF to set for the Orbitals.
+         */
+        void set_vcgtf(const std::vector<CGTF>& vcgtf);
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
@@ -381,6 +404,15 @@ class Orbitals
          * @return The lower triangular matrix < phi_i | V_ion | phi_j > (i >= j). The first index of this 3D vector gives the alpha spin matrix, the second gives the beta spin one.
          */
         std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, bool debug = false, bool printAOMatrix = false, bool printMOMatrix = false);
+
+        /**
+         * @brief Calculates the ion-electron integral for a given ion using a pseudo CGTF built from a constant unit GTF (exponant = 0, coefficient = 1).
+         * 
+         * @param[in] chargePosition The position of the ion.
+         * @param[in] charge The charge of the ion.
+         * @return The vector of < phi_i | V_ion | pseudoPhi >. The first index of this 2D vector gives the alpha spin values, the second gives the beta spin ones.
+         */
+        std::vector<std::vector<double>> getIonicPotentialVector_unitPseudoCgtf(const std::array<double, 3>& chargePosition, double charge, bool debug = false, bool printAOVector = false, bool printMOVector = false);
 
         /**
          * @brief Calculates the 3D matrix of triple orbital integrals. The first index corresponds to alpha spin orbitals and the second index corresponds to beta spin orbitals.

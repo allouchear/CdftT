@@ -92,7 +92,7 @@ class Becke
          * @param bin Binomial handler class reference.
          * @param table Periodic table reference.
          */
-        Becke(WFX& wfx, Binomial& Bin, const PeriodicTable& Table);
+        Becke(WFX& wfx, const Binomial& Bin, const PeriodicTable& Table);
 
         /**
          * @brief Constructor from a .fchk input.
@@ -103,7 +103,7 @@ class Becke
          * @param bin Binomial handler class reference.
          * @param table Periodic table reference.
          */
-        Becke(FCHK& fchk, Binomial& bin, const PeriodicTable& table);
+        Becke(FCHK& fchk, const Binomial& bin, const PeriodicTable& table);
 
         /**
          * @brief Constructor from a .molden or .gab input.
@@ -114,7 +114,7 @@ class Becke
          * @param bin Binomial handler class reference.
          * @param table Periodic table reference.
          */
-        Becke(MOLDENGAB& moldengab, Binomial& bin, const PeriodicTable& table);
+        Becke(MOLDENGAB& moldengab, const Binomial& bin, const PeriodicTable& table);
 
         /**
          * @brief Constructor from a .log input.
@@ -125,7 +125,7 @@ class Becke
          * @param bin Binomial handler class reference.
          * @param table Periodic table reference.
          */
-        Becke(LOG& log, Binomial& bin, const PeriodicTable& table);
+        Becke(LOG& log, const Binomial& bin, const PeriodicTable& table);
 
         //----------------------------------------------------------------------------------------------------//
         // GETTERS
@@ -157,7 +157,7 @@ class Becke
         //----------------------------------------------------------------------------------------------------//
 
         /**
-         * @brief Calculates and returns the ionic potential matrix < phi_i | V_ion | phi_j > for a given ion position and charge.
+         * @brief Calculates and returns the ionic potential matrix of < phi_i | V_ion | phi_j > elements for a given ion position and charge.
           *
           * @param chargePosition The position of the ion.
           * @param charge The charge of the ion.
@@ -169,6 +169,11 @@ class Becke
           * @param printMOMatrix If true, prints the MO matrix to standard output for debugging purposes (default false).
         */
         std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, bool debug = false, bool printAOMatrix = false, bool printMOMatrix = false);
+
+        /**
+         * @brief Calculates and returns the ionic potential vector of < 1 | V_ion | phi_i > elements for a given ion position and charge.
+         */
+        std::vector<std::vector<double>> getIonicPotentialVector(const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, bool debug = false, bool printAOVector = false, bool printMOVector = false);
 
         /**
          * @brief TODO

@@ -158,8 +158,6 @@ void Descriptors::compute_All_From_Charge(double I, double A )
 
 std::vector<double> Descriptors::compute_Charges_From_Becke(const Grid& grid)
 {
-    Factorial fact(100);
-    Binomial bino (100, fact);
     Becke B(grid);
     B.partial_charge(grid);
     std::vector<double> Bint=B.get_partial_charge();

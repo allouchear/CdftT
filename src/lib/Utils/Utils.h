@@ -199,21 +199,22 @@ class Factorial
 class Binomial
 {
     private:
-        std::vector<std::vector<double>> _tab;
         Factorial _fact;
+        std::vector<std::vector<double>> _tab;
+
+        void init();
+        
 
     public:
-        //! A real constructor.
-        /*! This constructor is used to create a table from 0 to n binomial. */
-        Binomial(int, Factorial &);
-
         //! A default constructor.
         /*! This constructor create a table without a size (0). */
         Binomial();
 
-        //! A default desctructor.
-        /*! We don't use it. */
-        ~Binomial() {}
+        Binomial(int n);
+
+        //! A real constructor.
+        /*! This constructor is used to create a table from 0 to n binomial. */
+        Binomial(int i, const Factorial& factorial);
 
         //! A normal member taking two arguments and returning a double value.
         /*! \return The i,j binomial value. */

@@ -663,20 +663,32 @@ double Factorial::double_factorial(int n)
     return _tab[n];
 }
 
-Binomial::Binomial()
+Binomial::Binomial():
+    _fact(),
+    _tab()
+{ }
+
+Binomial::Binomial(int n):
+    _fact(n),
+    _tab(n, std::vector<double>(0))
 {
-    _fact = Factorial();
-    _tab = std::vector<std::vector<double>>();
+    init();
 }
 
-Binomial::Binomial(int i, Factorial& F) : _fact(F)
+Binomial::Binomial(int i, const Factorial& factorial):
+    _fact(factorial),
+    _tab(i, std::vector<double>(0))
 {
-    std::vector<double> V(0);
-    _tab = std::vector<std::vector<double>>(i, V);
-    for (size_t k = 0; k < _tab.size(); k++)
+    init();
+}
+
+void Binomial::init()
+{
+    for (size_t k = 0; k < _tab.size(); ++k)
     {
-        _tab[k].resize(k+1);
-        for (size_t l = 0; l <= k; l++)
+        _tab[k].resize(k + 1);
+
+        for (size_t l = 0; l <= k; ++l)
         {
             _tab[k][l] = _fact.factorial(k) / _fact.factorial(l) / _fact.factorial(k - l);
         }

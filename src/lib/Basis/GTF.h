@@ -65,6 +65,23 @@ class GTF
 
 
         //----------------------------------------------------------------------------------------------------//
+        // SETTERS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Sets the coefficient value.
+         * @param[in] coefficient The new coefficient value.
+         */
+        void set_coefficient(const double coefficient);
+
+        /**
+         * @brief Sets the exponent value.
+         * @param[in] exponent The new exponent value.
+         */
+        void set_exponent(const double exponent);
+
+
+        //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
         //----------------------------------------------------------------------------------------------------//
 
@@ -164,7 +181,7 @@ class GTF
 
             //! A normal membre taking five arguments and returning a void value.
             /*! Insert all the data in the GTF. */
-        void push_back(const double&, const double&, const std::array<double, 3>&, const std::vector<int>&, Binomial&);
+        void push_back(const double&, const double&, const std::array<double, 3>&, const std::vector<int>&, const Binomial&);
         
             //! Gradient of GTF
             /*! Get the ith component of the gradient of a GTF*/

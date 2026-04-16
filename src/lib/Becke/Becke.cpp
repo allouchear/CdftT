@@ -52,7 +52,7 @@ Becke::Becke(const Grid& g)
 	_energy = 0.0;
 }
 
-Becke::Becke(WFX& wfx, Binomial& bin, const PeriodicTable& table)
+Becke::Becke(WFX& wfx, const Binomial& bin, const PeriodicTable& table)
 {
 	_molecule = Structure(wfx, table);
 	_grid = GridPoints();
@@ -64,7 +64,7 @@ Becke::Becke(WFX& wfx, Binomial& bin, const PeriodicTable& table)
     _energy = wfx.Energy();
 }
 
-Becke::Becke(FCHK& fchk, Binomial& bin, const PeriodicTable& table)
+Becke::Becke(FCHK& fchk, const Binomial& bin, const PeriodicTable& table)
 {
     _molecule = Structure(fchk, table);
     _grid = GridPoints();
@@ -76,7 +76,7 @@ Becke::Becke(FCHK& fchk, Binomial& bin, const PeriodicTable& table)
     _energy = fchk.ScfEnergy();
 }
 
-Becke::Becke(MOLDENGAB& moldengab, Binomial& bin, const PeriodicTable& table)
+Becke::Becke(MOLDENGAB& moldengab, const Binomial& bin, const PeriodicTable& table)
 {
     _molecule = Structure(moldengab, table);
     _grid = GridPoints();
@@ -88,7 +88,7 @@ Becke::Becke(MOLDENGAB& moldengab, Binomial& bin, const PeriodicTable& table)
     _energy = 0;
 }
 
-Becke::Becke(LOG& log, Binomial& bin, const PeriodicTable& table)
+Becke::Becke(LOG& log, const Binomial& bin, const PeriodicTable& table)
 {
     _molecule = Structure(log, table);
     _grid = GridPoints();
@@ -281,6 +281,142 @@ std::vector<std::vector<std::vector<double>>> Becke::getIonicPotentialMatrix(con
     }
 
     return ionicMatrixMO;
+}
+
+std::vector<std::vector<double>> Becke::getIonicPotentialVector(const std::array<double, 3>& chargePosition, double charge, int kmax, int lebedev_order, int radial_grid_factor, bool debug, bool printAOVector, bool printMOVector)
+{
+    if (_multigrid == false)
+    {
+        multicenter_grids(kmax, lebedev_order, radial_grid_factor);
+        _multigrid = true;
+    }
+
+    int numberOfAo = _orbitals.get_numberOfAo();
+    int numberOfMo = _orbitals.get_numberOfMo();
+    std::vector<CGTF> vcgtf = _orbitals.get_vcgtf();
+    const std::vector<std::vector<std::vector<double>>>& coefficients = _orbitals.get_coefficients();
+
+    // debug
+    if (__debug_AOMatrix.size() == 0)
+    {
+        __debug_AOMatrix = std::vector<std::vector<double>>(1, std::vector<double>(numberOfAo, 0.0));
+    }
+
+    // Build a unit pseudo CGTF  from one GTF having coefficient 1 and exponent 0 (i.e. a constant function equal to 1 everywhere)
+    // GTF unitPseudoGtf(0.0, 1.0, std::array<double, 3>({ 0.0, 0.0, 0.0 }), std::vector<int>({0, 0, 0}), Binomial(100));
+    // GTF unitPseudoGtf(0.1, 1.0, std::array<double, 3>({-3.3109928500e+00, 2.6937129300e-01, 2.0037396000e-04}), std::vector<int>({0, 0, 0}), Binomial(100));
+    // CGTF unitPseudoCgtf(std::vector<GTF>({unitPseudoGtf}));
+    // unitPseudoCgtf.normaliseCGTF();
+
+    // Build ionic potential vector in AO basis
+    std::vector<double> ionicVectorAO = std::vector<double>(numberOfAo, 0.0);
+
+    // Compute ionic potential matrix elements in AO basis
+    for (int i = 0; i < numberOfAo; ++i)
+    {
+        for (int I = 0; I < _molecule.getNumberOfAtoms(); ++I)
+        {
+            for (size_t J = 0; J < _grid_weights[I].size(); J++)
+            {
+                double x = _grid_points[I][J][0];
+                double y = _grid_points[I][J][1];
+                double z = _grid_points[I][J][2];
+
+                double distance = std::sqrt((chargePosition[0] - x) * (chargePosition[0] - x)
+                                            + (chargePosition[1] - y) * (chargePosition[1] - y)
+                                            + (chargePosition[2] - z) * (chargePosition[2] - z));
+                
+                if (distance > 1e-10)
+                {
+                    ionicVectorAO[i] += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func(x, y, z) /* * unitPseudoCgtf.func(x, y, z)*/ / distance;
+                }
+            }
+        }
+
+        ionicVectorAO[i] *= (- charge);
+    }
+
+    // debug
+    if (debug)
+    {
+        std::cout << std::scientific;
+        std::cout << std::setprecision(10);
+        if (printAOVector)
+        {
+            std::cout << "Ionic potential vector in AO basis:" << std::endl;
+        }
+        for (int i = 0; i < numberOfAo; ++i)
+        {
+            __debug_AOMatrix[0][i] = ionicVectorAO[i];
+            __debug_totalSumAO += ionicVectorAO[i];
+
+            if (printAOVector)
+            {
+                std::cout << std::right << std::setw(17) << __debug_AOMatrix[0][i] << '\t';
+            }
+        }
+        if (printAOVector)
+        {
+            std::cout << std::defaultfloat << std::endl << "Total sum of AO vector elements: " << std::setprecision(10) << __debug_totalSumAO << std::endl << std::endl;
+        }
+    }
+
+    // debug
+    if (__debug_MOMatrix.size() == 0)
+    {
+        __debug_MOMatrix = std::vector<std::vector<std::vector<double>>>(2, std::vector<std::vector<double>>(1, std::vector<double>(numberOfMo, 0.0)));
+    }
+
+    // Build ionic potential matrix in MO basis
+    std::vector<std::vector<double>> ionicVectorMO = std::vector<std::vector<double>>(2, std::vector<double>(numberOfMo, 0.0));
+
+    // Compute ionic potential matrix elements in MO basis
+    int spin, i;
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for private(spin, i)
+    #endif
+    for (spin = 0; spin < 2; ++spin)
+    {
+        for (i = 0; i < numberOfMo; ++i)
+        {
+            for (size_t m = 0; m < coefficients[spin][i].size(); ++m)
+            {
+                ionicVectorMO[spin][i] += coefficients[spin][i][m] * ionicVectorAO[m];
+            }
+        }
+    }
+
+    // debug
+    if (debug)
+    {
+        for (spin = 0; spin < 2; ++spin)
+        {
+            std::cout << std::scientific;
+            std::cout << std::setprecision(10);
+
+            if (printMOVector)
+            {
+                std::cout << "Ionic potential vector in MO basis for " << to_string(static_cast<SpinType>(spin)) << " spin:" << std::endl;
+            }
+            for (int i = 0; i < numberOfMo; ++i)
+            {
+                __debug_MOMatrix[spin][0][i] += ionicVectorMO[spin][i];
+                __debug_totalSumMO[spin] += ionicVectorMO[spin][i];
+
+                if (printMOVector)
+                {
+                    std::cout << std::right << std::setw(17) << __debug_MOMatrix[spin][0][i] << '\t';
+                }
+            }
+
+            if (printMOVector)
+            {
+                std::cout << std::defaultfloat << std::endl << "Total sum of MO vector elements for " << to_string(static_cast<SpinType>(spin)) << " spin: " << std::setprecision(10) << __debug_totalSumMO[spin] << std::endl;
+            }
+        }
+    }
+
+    return ionicVectorMO;
 }
 
 std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getPhiStarPhiMatrix_perAtom(int kmax, int lebedev_order, int radial_grid_factor)
