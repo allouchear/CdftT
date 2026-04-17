@@ -303,9 +303,9 @@ std::vector<std::vector<double>> Becke::getIonicPotentialVector(const std::array
     }
 
     // Build a unit pseudo CGTF  from one GTF having coefficient 1 and exponent 0 (i.e. a constant function equal to 1 everywhere)
-    // GTF unitPseudoGtf(0.0, 1.0, std::array<double, 3>({ 0.0, 0.0, 0.0 }), std::vector<int>({0, 0, 0}), Binomial(100));
-    // GTF unitPseudoGtf(0.1, 1.0, std::array<double, 3>({-3.3109928500e+00, 2.6937129300e-01, 2.0037396000e-04}), std::vector<int>({0, 0, 0}), Binomial(100));
-    // CGTF unitPseudoCgtf(std::vector<GTF>({unitPseudoGtf}));
+    // GTF unitPseudoGtf(0.0, 1.0, std::array<double, 3>({ 0.0, 0.0, 0.0 }), std::vector<int>({ 0, 0, 0 }), Binomial(100));
+    // GTF unitPseudoGtf(0.1, 1.0, std::array<double, 3>({ -3.3109928500e+00, 2.6937129300e-01, 2.0037396000e-04 }), std::vector<int>({ 0, 0, 0 }), Binomial(100));
+    // CGTF unitPseudoCgtf(std::vector<GTF>({ unitPseudoGtf }));
     // unitPseudoCgtf.normaliseCGTF();
 
     // Build ionic potential vector in AO basis

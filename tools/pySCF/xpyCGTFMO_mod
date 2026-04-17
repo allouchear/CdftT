@@ -1,0 +1,3 @@
+#!/bin/bash
+source ~allouche/shell/pySCFEnv
+python pyCGTFMO_mod.py

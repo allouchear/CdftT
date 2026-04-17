@@ -1,0 +1,1 @@
+srun -p f24 --nodes=1 -n 20 --time=10000:0:0 --pty bash
