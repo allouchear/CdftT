@@ -1378,7 +1378,7 @@ void Job::run_computeEnergyWithPointCharges()
         logStream << orbitals << std::endl;
         log(logStream, outputStream);
     }
-
+    
 
     // Get Ground Slater Determinant
     SlaterDeterminant groundStateSlaterDeterminant(orbitals);
@@ -1388,7 +1388,7 @@ void Job::run_computeEnergyWithPointCharges()
     // Building states vector
     std::vector<ExcitedState> states;
     states.push_back(groundState);
-
+    
 
     // Reading transitions file
     if (!transitionsFileName.empty())
@@ -1423,12 +1423,12 @@ void Job::run_computeEnergyWithPointCharges()
     // Compute ions-nuclei interactions only once
     std::vector<std::vector<double>> chargeNucleiContributions;
     computeChargeNucleiContributions(atoms, chargeNucleiContributions, charges, chargesPositions, loopOnAtoms, nuclearCutoff);
-
+    
 
     /************/
     /* ANALYTIC */
     /************/
-
+    
     logStream << std::endl << std::endl
               << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
               << "|||||||||||||||||||||||||||||||||||||||||||||||                          |||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
@@ -1450,12 +1450,12 @@ void Job::run_computeEnergyWithPointCharges()
 
     // Print results
     printResultsEnergyWithPointCharges(states, ionicMatrixes, chargeNucleiContributions, charges, chargesPositions, loopOnAtoms, atoms, outputPrefix, outputStream, verbose);
-
+    
 
     /****************/
     /* REGULAR GRID */
     /****************/
-
+    /*
     // Read grid size
     GridSize gridSize;
     CustomSizeData customSizeData;
@@ -1491,12 +1491,12 @@ void Job::run_computeEnergyWithPointCharges()
         // Print results
         printResultsEnergyWithPointCharges(states, ionicMatrixes_regularGrid, chargeNucleiContributions, charges, chargesPositions, loopOnAtoms, atoms, outputPrefix + "_regularGrid", outputStream, verbose);
     }
-
+    */
 
     /****************/
     /* BECKE GRID */
     /****************/
-
+    
     // Read Becke grid parameters
     std::vector<int> beckeParams;
     if (readBecke(beckeParams))
@@ -1537,7 +1537,7 @@ void Job::run_computeEnergyWithPointCharges()
     logStream << "==============================================================================================" << std::endl;
     logStream << "====================== DEBUG - Computation of < ϕ_0 | V_nuclear | ϕ_0 > ======================" << std::endl;
     logStream << "==============================================================================================" << std::endl << std::endl;
-
+    
     logStream << "====================== ANALYTIC COMPUTATION ======================" << std::endl << std::endl;
     log(logStream, outputStream);
 
@@ -1575,10 +1575,10 @@ void Job::run_computeEnergyWithPointCharges()
     }
     logStream << "Total sum of MO matrix elements for Alpha and Beta spins (analytic): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl << std::endl;
     log(logStream, outputStream);
-
+    
     double sum_psi_i_Vnuclear_psi_j = 0.0;
     double V_ij = 0.0;
-
+    
     // Print Slater determinant matrix elements
     logStream << "-------------------------------------------------------------------------------------------" << std::endl << std::endl;
     logStream << "States basis:" << std::endl;
@@ -1635,109 +1635,125 @@ void Job::run_computeEnergyWithPointCharges()
         }
     }
     log(logStream, outputStream);
-
+    
 
     // COMPARAISON AVEC CALCUL SUR GRILLE
-    logStream << std::endl << std::endl << "====================== REGULAR GRID COMPUTATION ======================" << std::endl << std::endl;
-    log(logStream, outputStream);
-
-    double sum_phi_i_Vnuclear_phi_j_alpha = 0.0;
-    double sum_phi_i_Vnuclear_phi_j_beta = 0.0;
-    V_ij = 0.0;
-
-    logStream << "Computing ionic potential matrix in MO basis for Alpha spin..." << std::endl;
-    log(logStream, outputStream);
-
-    int nbStepsTotal = orbitals.get_numberOfMo() * (orbitals.get_numberOfMo() + 1) / 2;
-    int currentStep = 0;
-    int lastProgress = -1;
-    if (showProgress)
+    GridSize gridSize;
+    CustomSizeData customSizeData;
+    if (readSize(gridSize, customSizeData))
     {
-        print_progressBar(0, nbStepsTotal, lastProgress);
-    }
+        logStream << std::endl << std::endl << "====================== REGULAR GRID COMPUTATION ======================" << std::endl << std::endl;
+        log(logStream, outputStream);
 
-    std::cout << std::scientific;
-    std::cout << std::setprecision(10);
-    logStream << std::scientific;
-    logStream << std::setprecision(10);
-    for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
-    {
-        for (int j = 0; j <= i; ++j)
-        {
-            V_ij = 0.0;
-            for (const Atom& atom : orbitals.get_struct().get_atoms())
-            {
-                V_ij += orbitalsGrid.phiStarVionicStarPhi(i, j, SpinType::ALPHA, atom.get_coordinates(), atom.get_atomicNumber());
-            }
+        // Setting orbitals
+        std::vector<SpinType> orbitalsSpins;
+        std::vector<int> orbitalsNumbers;
+        setOrbitals(orbitals, orbitals.get_numberOfMo(), orbitalsNumbers, orbitalsSpins, OrbitalType::ALL, SpinType::ALPHA_BETA);
 
-            sum_phi_i_Vnuclear_phi_j_alpha += (i == j ? V_ij : 2.0 * V_ij);
-            logStream << std::right << std::setw(17) << V_ij << '\t';
+        // Building domain and grid
+        std::cout << "Building domain and grid, please wait..." << std::endl;
+        Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, orbitalsNumbers.size());
+        Grid orbitalsGrid = orbitals.makeOrbGrid(domain, orbitalsNumbers, orbitalsSpins, showProgress);
+        std::cout << std::endl;
 
-            currentStep++;
-        }
-        logStream << std::endl;
+        double sum_phi_i_Vnuclear_phi_j_alpha = 0.0;
+        double sum_phi_i_Vnuclear_phi_j_beta = 0.0;
+        double V_ij = 0.0;
 
+        logStream << "Computing ionic potential matrix in MO basis for Alpha spin..." << std::endl;
+        log(logStream, outputStream);
+
+        int nbStepsTotal = orbitals.get_numberOfMo() * (orbitals.get_numberOfMo() + 1) / 2;
+        int currentStep = 0;
+        int lastProgress = -1;
         if (showProgress)
         {
-            print_progressBar(currentStep, nbStepsTotal, lastProgress);
+            print_progressBar(0, nbStepsTotal, lastProgress);
         }
-    }
-    if (showProgress)
-    {
-        std::cout << std::endl;
-    }
-    logStream << std::defaultfloat << "Total sum of MO matrix elements for Alpha spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_alpha << std::endl;
-    log(logStream, outputStream);
 
-    logStream << "Ionic potential matrix in MO basis for Beta spin:" << std::endl;
-    log(logStream, outputStream);
-
-    currentStep = 0;
-    lastProgress = -1;
-    if (showProgress)
-    {
-        print_progressBar(0, nbStepsTotal, lastProgress);
-    }
-
-    std::cout << std::scientific;
-    std::cout << std::setprecision(10);
-    logStream << std::scientific;
-    logStream << std::setprecision(10);
-
-    for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
-    {
-        for (int j = 0; j <= i; ++j)
+        std::cout << std::scientific;
+        std::cout << std::setprecision(10);
+        logStream << std::scientific;
+        logStream << std::setprecision(10);
+        for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
         {
-            V_ij = 0.0;
-            for (const Atom& atom : orbitals.get_struct().get_atoms())
+            for (int j = 0; j <= i; ++j)
             {
-                V_ij += orbitalsGrid.phiStarVionicStarPhi(i, j, SpinType::BETA, atom.get_coordinates(), atom.get_atomicNumber());
+                V_ij = 0.0;
+                for (const Atom& atom : orbitals.get_struct().get_atoms())
+                {
+                    V_ij += orbitalsGrid.phiStarVionicStarPhi(i, j, SpinType::ALPHA, atom.get_coordinates(), atom.get_atomicNumber());
+                }
+
+                sum_phi_i_Vnuclear_phi_j_alpha += (i == j ? V_ij : 2.0 * V_ij);
+                logStream << std::right << std::setw(17) << V_ij << '\t';
+
+                currentStep++;
             }
+            logStream << std::endl;
 
-            sum_phi_i_Vnuclear_phi_j_beta += (i == j ? V_ij : 2.0 * V_ij);
-            logStream << std::right << std::setw(17) << V_ij << '\t';
-
-            currentStep++;
+            if (showProgress)
+            {
+                print_progressBar(currentStep, nbStepsTotal, lastProgress);
+            }
         }
-        logStream << std::endl;
-
         if (showProgress)
         {
-            print_progressBar(currentStep, nbStepsTotal, lastProgress);
+            std::cout << std::endl;
         }
+        logStream << std::defaultfloat << "Total sum of MO matrix elements for Alpha spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_alpha << std::endl;
+        log(logStream, outputStream);
+
+        logStream << "Ionic potential matrix in MO basis for Beta spin:" << std::endl;
+        log(logStream, outputStream);
+
+        currentStep = 0;
+        lastProgress = -1;
+        if (showProgress)
+        {
+            print_progressBar(0, nbStepsTotal, lastProgress);
+        }
+
+        std::cout << std::scientific;
+        std::cout << std::setprecision(10);
+        logStream << std::scientific;
+        logStream << std::setprecision(10);
+
+        for (int i = 0; i < orbitals.get_numberOfMo(); ++i)
+        {
+            for (int j = 0; j <= i; ++j)
+            {
+                V_ij = 0.0;
+                for (const Atom& atom : orbitals.get_struct().get_atoms())
+                {
+                    V_ij += orbitalsGrid.phiStarVionicStarPhi(i, j, SpinType::BETA, atom.get_coordinates(), atom.get_atomicNumber());
+                }
+
+                sum_phi_i_Vnuclear_phi_j_beta += (i == j ? V_ij : 2.0 * V_ij);
+                logStream << std::right << std::setw(17) << V_ij << '\t';
+
+                currentStep++;
+            }
+            logStream << std::endl;
+
+            if (showProgress)
+            {
+                print_progressBar(currentStep, nbStepsTotal, lastProgress);
+            }
+        }
+        if (showProgress)
+        {
+            std::cout << std::endl;
+        }
+        logStream << std::defaultfloat << "Total sum of MO matrix elements for Beta spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_beta << std::endl << std::endl;
+        log(logStream, outputStream);
+
+        double sum_phi_i_Vnuclear_phi_j = sum_phi_i_Vnuclear_phi_j_alpha + sum_phi_i_Vnuclear_phi_j_beta;
+        logStream << "Total sum of MO matrix elements for Alpha and Beta spins (regular Grid): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl;
+        log(logStream, outputStream);
     }
-    if (showProgress)
-    {
-        std::cout << std::endl;
-    }
-    logStream << std::defaultfloat << "Total sum of MO matrix elements for Beta spin: " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j_beta << std::endl << std::endl;
-    log(logStream, outputStream);
 
-    sum_phi_i_Vnuclear_phi_j = sum_phi_i_Vnuclear_phi_j_alpha + sum_phi_i_Vnuclear_phi_j_beta;
-    logStream << "Total sum of MO matrix elements for Alpha and Beta spins (regular Grid): " << std::setprecision(10) << sum_phi_i_Vnuclear_phi_j << std::endl;
-    log(logStream, outputStream);
-
-
+    
     // COMPARAISON AVEC BECKE
     logStream << std::endl << std::endl << "====================== BECKE GRID COMPUTATION ======================" << std::endl << std::endl;
     log(logStream, outputStream);

@@ -1,4 +1,4 @@
-OBJECTS = Job.o
+OBJECTS = Job.o JobManager.o
 
 
 include $(LIBCDFTTDIR)/CONFIG

@@ -1,14 +1,9 @@
-#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <sys/time.h>
 
-#include "Timer.h"
-
-#include <JobControl/Job.h>
-#include <Utils/Utils.h>
+#include <JobControl/JobManager.hpp>
 
 
 int main(int argc, char* argv[])
@@ -36,11 +31,8 @@ int main(int argc, char* argv[])
         fname = argv[1];
     }
 
-    Timer timer;
-    Job job(fname);
-    job.run();
-
-    std::cout << "Time in ms " << timer.get() << std::endl;
+    JobManager jobManager(fname);
+    jobManager.runJobs();
 
     return 0;
 }
