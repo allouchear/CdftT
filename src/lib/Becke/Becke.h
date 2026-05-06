@@ -6,7 +6,6 @@
 #include <vector>
 
 #include <Becke/GridPoints.h>
-#include <Common/Descriptors.h>
 #include <Common/Structure.h>
 #include <Orbitals/Orbitals.h>
 #include <Utils/FCHK.h>

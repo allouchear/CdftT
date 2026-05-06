@@ -935,7 +935,7 @@ bool LOG::readGroundStateEnergy(const std::string& logFileName, double& groundSt
     return (ok && found);
 }
 
-bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy)
+bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, int maxNumberOfExcitedStates)
 {
     bool ok = true;
 
@@ -953,8 +953,10 @@ bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedSta
         std::exit(1);
     }
 
+    int numberOfExcitedStatesRead = 0;
+
     std::string line;
-    while (!logFile.eof())
+    while (!logFile.eof() && (maxNumberOfExcitedStates == -1 || numberOfExcitedStatesRead < maxNumberOfExcitedStates))
     {
         // Read line
         std::getline(logFile, line);
@@ -1041,6 +1043,7 @@ bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedSta
                 {
                     // Add excited state to the list
                     excitedStates.push_back(excitedState);
+                    ++numberOfExcitedStatesRead;
                 }
                 else
                 {

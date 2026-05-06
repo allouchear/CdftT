@@ -9,6 +9,10 @@
 #include <Utils/Enums.hpp>
 
 
+// Forward declarations to avoid circular dependencies
+class Orbitals;
+
+
 /**
  * @brief Grid class.
  *
@@ -25,6 +29,12 @@ class Grid
 
         /** @brief Values for each grid point. The first three dimensions are spatial dimensions (x,y,z). The fourth dimensions stores the values (e.g. one value per orbital). */
         std::vector<std::vector<std::vector<std::vector<double>>>> _values;
+
+        // debug
+        std::vector<std::vector<double>> __debug_AOMatrix;
+        std::vector<std::vector<std::vector<double>>> __debug_MOMatrix;
+        double __debug_totalSumAO = 0.0;
+        std::vector<double> __debug_totalSumMO = std::vector<double>(2, 0.0);
 
         //----------------------------------------------------------------------------------------------------//
         // PRIVATE METHODS
@@ -132,6 +142,8 @@ class Grid
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
         //----------------------------------------------------------------------------------------------------//
+
+        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const Orbitals& orbitals, const std::array<double, 3>& chargePosition, double charge, bool debug = false, bool printMOMatrix = false);
 
         /**
          * @brief Resets all grid values to zero and resizes _values to match the domain size.
@@ -247,9 +259,10 @@ class Grid
         /**
          * @brief Saves the grid to a .cube file.
          * 
-         * @param name Output file stream opened on a .cube file.
+         * @param[in, out] name Output file stream opened on a .cube file.
+         * @param[in] showProgress If true, shows a progress bar during saving.
          */
-        void save(std::ofstream& name);
+        void save(std::ofstream& name, bool showProgress = false) const;
 
         /**
          * @brief Returns the value at grid indices (i,j,k,l).
@@ -343,7 +356,7 @@ class Grid
          * @param[in] charge Value of the charge.
          * @return Product value of the orbitals multiplied by the electrostatic potential V_ionic.
          */
-        double phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge);
+        double phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge) const;
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS

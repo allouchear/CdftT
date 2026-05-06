@@ -1,7 +1,0 @@
-Charges=-0
-Positions=0,0,0
-RunType=ComputeEnergyWithPointCharges
-AnalyticFiles=../tests/Guegan2020/acrolein.fchk
-TransitionsFile=../tests/transitionsFiles/transitions_acrolein_simplified.txt
-OutputPrefix=acrolein_simplified
-Verbose=3

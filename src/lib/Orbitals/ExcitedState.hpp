@@ -152,9 +152,11 @@ class ExcitedState
          * @param[in] fileName Name of the file to read.
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
          * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
+         * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
+         * 
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
+        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1);
 
         /**
          * @brief Reads a transitions file and populates a vector of ExcitedState objects.
@@ -162,19 +164,20 @@ class ExcitedState
          * @param[in] transitionsFileName Name of the transitions file to read.
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
          * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
+         * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
+        static bool readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1);
 
         /**
          * @brief Reads transitions from an Orca .out file and populates a vector of ExcitedState objects. *
          * @param[in] orcaOutFileName Name of the Orca output file to read.
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
          * @param[in] groundStateEnergy Energy of the ground state, in Hartree. 
-         * @param[in] alphaAndBeta Whether beta transitions are the same as alpha ones (true) or not. 
+         * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy);
+        static bool readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1);
 
         /////////////////////////
         // OTHER STATIC METHODS

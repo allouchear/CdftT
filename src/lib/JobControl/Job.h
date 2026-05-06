@@ -6,8 +6,10 @@
 #include <set>
 #include <vector>
 
+#include <Becke/Becke.h>
 #include <Common/Descriptors.h>
 #include <Common/PeriodicTable.h>
+#include <Cube/Grid.h>
 #include <Cube/GridCP.h>
 #include <Orbitals/ExcitedState.hpp>
 #include <Orbitals/Orbitals.h>
@@ -24,7 +26,7 @@ class Job
 {
     private:
         /** @brief Periodic table used for element lookups. */
-        PeriodicTable _table;
+        //PeriodicTable _table;
 
         /** @brief Name of the input file to parse. */
         std::string _inputFileName;
@@ -47,156 +49,217 @@ class Job
          * @brief Reads the name(s) of the analytic file(s) from the "AnalyticFiles" parameter in the input file.
          *
          * @param[out] analyticFilesNames Reference to a vector where the read filename(s) will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames);
+        bool readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames);
 
         /**
          * @brief Reads the Becke parameters from the "Becke" parameter in the input file.
          *
          * @param[out] beckeParameters Reference to a vector where the read Becke parameters will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readBecke(std::vector<int>& beckeParameters);
+        bool readBecke(std::vector<int>& beckeParameters);
 
         /** @brief Reads the charges of the point charges from the "Charges" parameter in the input file.
          * 
          * @param[out] charges Reference to a vector of doubles where the read charge values will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readCharges(std::vector<double>& charges);
+        bool readCharges(std::vector<double>& charges);
 
         /** @brief Reads the numeric cutoff used by some partitioning methods from the "Cutoff" parameter in the input file.
          * 
          * @param[out] cutoff Reference to a double where the read cutoff value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readCutoff(double& cutoff);
+        bool readCutoff(double& cutoff);
 
         /**
          * @brief Reads the method used to compute the Electron Localization Function (ELF) from the "ELFMethod" parameter in the input file.
          *
          * @param[out] elfMethod Reference to an ELFMethod variable where the parsed method will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readELFMethod(ELFMethod& elfMethod);
+        bool readELFMethod(ELFMethod& elfMethod);
 
         /**
          * @brief Reads the energies from the "Energies" parameter in the input file.
          *
          * @param[out] energies Reference to a vector where the energy values will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readEnergies(std::vector<double>& energies);
+        bool readEnergies(std::vector<double>& energies);
 
         /**
          * @brief Reads the name(s) of the grid file(s) (.cube files) from the "GridFiles" parameter in the input file.
          *
          * @param[out] gridFilesNames Reference to a vector where the read filename(s) will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readGridFilesNames(std::vector<std::string>& gridFilesNames);
+        bool readGridFilesNames(std::vector<std::string>& gridFilesNames);
 
         /**
          * @brief Reads the energy of the ground state from the "GroundStateEnergy" parameter in the input file.
          * 
          * @param[out] energy Reference to a double where the read energy value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
         bool readGroundStateEnergy(double& energy);
+
+        /**
+         * @brief Reads the maximum number of excited states to consider from the "MaxNumberOfExcitedStates" parameter in the input file.
+         *
+         * @param[out] maxNumberOfExcitedStates Reference to an integer where the read value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readMaxNumberOfExcitedStates(int& maxNumberOfExcitedStates);
 
         /**
          * @brief Reads the cutoff distance for nuclear contribution from the "NuclearCutoff" parameter in the input file.
          *
          * @param[out] nuclearCutoff Reference to a double where the read cutoff distance will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readNuclearCutoff(double& nuclearCutoff);
+        bool readNuclearCutoff(double& nuclearCutoff);
 
         /**
          * @brief Reads a list of orbital numbers from the "OrbitalsNumbers" parameter in the input file.
          *
          * @param[out] orbitalsNumbers Reference to a vector where the orbital numbers will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readOrbitalsNumbers(std::vector<int>& orbitalsNumbers);
+        bool readOrbitalsNumbers(std::vector<int>& orbitalsNumbers);
 
         /**
          * @brief Reads a list of orbitals spins from the "OrbitalsSpins" parameter in the input file.
          *
          * @param[out] orbitalsSpins Reference to a vector where the parsed spin types will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readOrbitalsSpins(std::vector<SpinType>& orbitalsSpins);
+        bool readOrbitalsSpins(std::vector<SpinType>& orbitalsSpins);
 
         /**
          * @brief Reads the selected orbital type from the "OrbitalType" parameter in the input file.
          *
          * @param[out] orbitalType Reference to an OrbitalType variable where the parsed selected orbital type will be stored.
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readOrbitalType(OrbitalType& orbitalType);
+        bool readOrbitalType(OrbitalType& orbitalType);
 
         /**
          * @brief Reads the output filename prefix from the "OutputPrefix" parameter in the input file.
          *
          * @param[out] outputPrefix Reference to a string where the read output prefix will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readOutputPrefix(std::string& outputPrefix);
+        bool readOutputPrefix(std::string& outputPrefix);
 
         /**
          * @brief Reads the partition method from the "PartitionMethod" parameter in the input file.
          *
          * @param[out] partitionMethod Reference to a PartitionMethod variable where the parsed method will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readPartitionMethod(PartitionMethod& partitionMethod);
+        bool readPartitionMethod(PartitionMethod& partitionMethod);
 
         /**
          * @brief Reads 3-coordinate positions from the "Positions" parameter in the input file.
          *
          * @param[out] positions Reference to a vector of arrays of three doubles where the read positions will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readPositions(std::vector<std::array<double, 3>>& positions);
+        bool readPositions(std::vector<std::array<double, 3>>& positions);
 
         /**
          * @brief Reads the requested run type (job) from the "RunType" parameter in the input file.
          *
          * @param[out] runType Reference to a RunType variable where the parsed run type will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readRunType(RunType& runType);
+        bool readRunType(RunType& runType);
+
+        /**
+         * @brief Reads the save pseudo-orbitals option from the "SavePseudoOrbitals" parameter in the input file.
+         * 
+         * @param[out] savePseudoOrbitals Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readSavePseudoOrbitals(bool& savePseudoOrbitals);
 
         /**
          * @brief Reads the show progress option from the "ShowProgress" parameter in the input file.
          * 
          * @param[out] showProgress Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readShowProgress(bool& showProgress);
+        bool readShowProgress(bool& showProgress);
 
         /**
-         * @brief Reads the selected grid size from the "GridSize" parameter in the input file.
+         * @brief Reads the selected grid size from the "Size" parameter in the input file.
          * 
          * If the selected grid size is "Custom", this function also reads the custom size parameters from the "CustomSizeData" parameter.
          *
          * @param[out] gridSize Reference to a GridSize variable where the parsed grid size will be stored.
          * @param[out] customSizeData Reference to a CustomSizeData variable where the custom size parameters will be stored (if applicable).
+         * 
+         * @return True if the "Size" parameter was successfully read, false otherwise.
          */
-        void readSize(GridSize& gridSize, CustomSizeData& customSizeData);
+        bool readSize(GridSize& gridSize, CustomSizeData& customSizeData);
 
         /**
-         * @brief Reads a list of spins (`SpinList`) from input.
+         * @brief Reads a list of spins from the "SpinList" parameter in the input file.
          *
          * @param[out] spinList Vector filled with parsed spin types.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readSpinList(std::vector<SpinType>& spinList);
+        bool readSpinList(std::vector<SpinType>& spinList);
 
         /**
          * @brief Reads the selected spin type from the "SpinType" parameter in the input file.
          *
          * @param[out] spinType Reference to a SpinType variable where the parsed spin type value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readSpinType(SpinType& spinType);
+        bool readSpinType(SpinType& spinType);
 
         /**
          * @brief Reads the name of the file that describes excited states transitions from the "TransitionsFile" parameter in the input file.
          *
          * @param[out] transitionsFileName Reference to a string where the read filename will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readTransitionsFileName(std::string& transitionsFileName);
+        bool readTransitionsFileName(std::string& transitionsFileName);
 
         /**
          * @brief Reads the verbosity level from the "Verbose" parameter in the input file.
          * 
          * @param[out] verbose Reference to an integer where the read verbosity level will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readVerbose(int& verbose);
+        bool readVerbose(int& verbose);
 
 
         //----------------------------------------------------------------------------------------------------//
@@ -209,9 +272,9 @@ class Job
         void printListOfRunTypes();
 
         /**
-         * @brief Runs the job associated with the "Help" runtype.
+         * @brief Runs the job associated with the "ComputeCondensedLinearResponse" runtype.
          */
-        void run_help();
+        void run_computeCondensedLinearResponse();
 
         /**
          * @brief Runs the job associated with the "ComputeDescriptors" runtype.
@@ -235,19 +298,24 @@ class Job
         void run_computeIntegrals();
 
         /**
+         * @brief Runs the job associated with the "ComputeLinearResponseWithPointCharges" runtype.
+         */
+        void run_computeLinearResponseWithPointCharges();
+
+        /**
          * @brief Runs the job associated with the "ComputePartialCharges" runtype.
          */
         void run_computePartialCharges();
 
         /**
+         * @brief Runs the job associated with the "Help" runtype.
+         */
+        void run_help();
+
+        /**
          * @brief Runs the job associated with the "LambdaDiagnostic" runtype.
          */
         void run_lambdaDiagnostic();
-
-        /**
-         * @brief Runs the job associated with the "LinearResponse" runtype.
-         */
-        void run_linearResponse();
 
         /**
          * @brief Runs the job associated with the "MakeDensityCube" runtype.
@@ -310,6 +378,11 @@ class Job
         Domain buildDomainForCube(Orbitals& orb, const GridSize gridSize, const CustomSizeData& customSizeData, const int& Nval);
 
         /**
+         * TODO
+         */
+        void computeChargeNucleiContributions(const std::vector<Atom>& atoms, std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, double nuclearCutoff);
+
+        /**
          * @brief Computes descriptors from three grid files using ionization energy and electron affinity.
          *
          * @param[in] gridFileName1 Name of the electrophilic grid file.
@@ -362,9 +435,35 @@ class Job
          * @param[in] ionicMatrixes Matrixes of the < phi_i | V_ion/electrons | phi_j > contributions for the point charges.
          * @param[out] psi_i_H_psi_j Output lower triangular matrix where the computed < psi_i | H | psi_j > values will be stored.
          * @param[out] psi_i_HminusH0_psi_j Output lower triangular matrix where the computed < psi_i | H - H0 | psi_j > values will be stored.
+         * @param[in,out] outputStream Stream where information will be logged during the computation.
          * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
          */
-        void computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedState>& excitedStates, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_psi_j, std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, std::ofstream& logFile, int verbose = 0);
+        void computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedState>& excitedStates, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_psi_j, std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, std::ostream& outputStream, int verbose = 0);
+
+        /**
+         * TODO
+         */
+        void computeIonicPotentialMatrixesFromBecke(Becke& becke, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * TODO
+         */
+        void computeIonicPotentialMatrixesFromGrid(const Orbitals& orbitals, Grid& grid, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms);
+
+        /**
+         * TODO
+         */
+        void computeIonicPotentialMatrixesFromOrbitals(Orbitals& orbitals, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms);
+
+        /**
+         * TODO
+         */
+        void computeIonicPotentialVectorsFromBecke(Becke& becke, std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+
+        /**
+         * TODO
+         */
+        void computeIonicPotentialVectorsFromOrbitals(Orbitals& orbitals, std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms);
 
         /**
          * TODO
@@ -378,6 +477,17 @@ class Job
          * @param[in] GridFileNames Filenames of grids to integrate.
          */
         void computeLocalIntegrals(GridCP& gcp, const std::vector<std::string>& GridFileNames);
+
+        /**
+         * @brief Builds an Orbitals or Becke helper object from an analytic file.
+         *
+         * @tparam T Analytic file parser type (WFX, MOLDENGAB, FCHK, LOG, ...).
+         * @tparam U Resulting class type (Orbitals or Becke).
+         * @param[in] analyticFileName Name of the analytic file.
+         * @return Constructed instance of type U, initialised with analytic data.
+         */
+        template<typename T, typename U>
+        U computeOrbitalsOrBecke(const std::string& analyticFileName);
 
         /**
          * @brief Computes partial atomic charges from a grid using the specified method.
@@ -398,17 +508,6 @@ class Job
         std::vector<double> computePartialChargesAndEnergy(std::vector<double>& energies, const std::string& analyticFileName, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
-         * @brief Builds an Orbitals or Becke helper object from an analytic file.
-         *
-         * @tparam T Analytic file parser type (WFX, MOLDENGAB, FCHK, LOG, ...).
-         * @tparam U Resulting class type (Orbitals or Becke).
-         * @param[in] analyticFileName Name of the analytic file.
-         * @return Constructed instance of type U, initialised with analytic data.
-         */
-        template<typename T, typename U>
-        U computeOrbitalsOrBecke(const std::string& analyticFileName);
-
-        /**
          * @brief Detects the analytic file format and initialises an instance of the chosen class.
          *
          * @tparam T Resulting class type (Orbitals or Becke).
@@ -419,10 +518,21 @@ class Job
         void computeOrbitalsOrBecke(T& analyticObject, const std::string& analyticFileName);
 
         /**
+         * TODO
+         */
+        Orbitals computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<double>>>& lrfMatrix, std::vector<std::vector<double>>& eigenvalues, std::vector<std::vector<std::vector<double>>>& eigenvectors, const std::string& outputPrefix, bool savePseudoOrbitals, std::ostream& outputStream, int verbose, bool showProgress = false);
+
+        /**
          * @brief Computes and prints the energy results from Hamiltonian matrix elements with point charges.
          * 
+         * TODO
          */
-        void computeResultsEnergyWithPointCharges(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, const std::string& outputFilePrefix, std::ofstream& lofFile, int verbose);
+        void computeResultsEnergyWithPointCharges(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose);
+
+        /**
+         * TODO
+         */
+        void computeResultsLinearResponseWithPointCharges(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, std::ostream& outputStream, int verbose);
 
         /**
          * @brief Creates and saves a grid file (.cube) from the passed Orbitals instance, over a defined domain.
@@ -435,7 +545,7 @@ class Job
          * @param[in] nums Orbital indices used for orbital grids.
          * @param[in] typesSpin Spin type for orbital grids.
          */
-        void createCube(Orbitals& orbitals, const Domain& domain, const std::string& cubeFileName, int TypeFlag, const ELFMethod elfMethod = ELFMethod::SAVIN, std::vector<int> nums = {0}, std::vector<SpinType> typesSpin = { SpinType::ALPHA });
+        void createCube(Orbitals& orbitals, const Domain& domain, const std::string& cubeFileName, int TypeFlag, bool showProgress = false, const ELFMethod elfMethod = ELFMethod::SAVIN, std::vector<int> nums = {0}, std::vector<SpinType> typesSpin = { SpinType::ALPHA });
 
         /**
          * @brief Opens the configured input file.
@@ -446,6 +556,35 @@ class Job
          * @brief Prints critical points information from a Critical Points grid (GridCP). (Not implemented yet.)
          */
         void printCriticalPoints();
+
+        /**
+         * @brief Prints the results for the job "ComputeEnergyWithPointCharges".
+         *
+         * @param[in] states Vector of excited states of the system.
+         * @param[in] ionicPotentialMatrixes Ionic potential matrixes (values of the < psi_i | V_ion/electrons | psi_i >).
+         * @param[in] chargeNucleiContributions Values of the < psi_i | V_ion/nuclei | psi_i > contributions.
+         * @param[in] charges Charges of the point charges.
+         * @param[in] chargesPositions Positions of the point charges.
+         * @param[in] loopOnAtoms Whether to loop on atoms (in that case, each charge uses every chargePosition).
+         * @param[in] atoms Vector of atoms in the system (used if `loopOnAtoms` is true).
+         * @param[in] outputPrefix Output filename prefix for saving results.
+         * @param[in,out] outputStream Output stream for printing results.
+         * @param[in] verbose Verbosity level.
+         */
+        void printResultsEnergyWithPointCharges(const std::vector<ExcitedState>& states, const std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, const std::vector<Atom>& atoms, const std::string& outputPrefix, std::ostream& outputStream, int verbose);
+
+        /**
+         * @brief Prints the results for the job "ComputeLinearResponseWithPointCharges".
+         *
+         * @param[in] eigenvalues Eigenvalues of the system.
+         * @param[in] ionicPotentialVectors Ionic potential vectors.
+         * @param[in] charges Charges of the point charges.
+         * @param[in] chargesPositions Positions of the point charges.
+         * @param[in] loopOnAtoms Whether to loop on atoms (in that case, each charge uses every chargePosition).
+         * @param[in,out] outputStream Output stream for printing results.
+         * @param[in] verbose Verbosity level.
+         */
+        void printResultsLinearResponseWithPointCharges(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, const std::vector<Atom>& atoms, std::ostream& outputStream, int verbose);
 
         /**
          * @brief Extracts the molecular structure from an analytic file.

@@ -7,6 +7,7 @@
 #include <Common/Constants.h>
 #include <Common/PeriodicTable.h>
 #include <Common/Structure.h>
+#include <Cube/Grid.h>
 #include <Cube/GridCP.h>
 #include <Utils/Enums.hpp>
 

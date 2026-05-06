@@ -7,9 +7,14 @@
 #include <iostream>
 #include <vector>
 
-#include <Cube/Grid.h>
 #include <Becke/Becke.h>
-
+#include <Becke/GridPoints.h>
+#include <Cube/Grid.h>
+#include <Orbitals/Orbitals.h>
+#include <Utils/FCHK.h>
+#include <Utils/LOG.h>
+#include <Utils/MOLDENGAB.h>
+#include <Utils/WFX.h>
 
 //----------------------------------------------------------------------------------------------------//
 // CONSTRUCTORS
@@ -160,11 +165,15 @@ std::vector<std::vector<std::vector<double>>> Becke::getIonicPotentialMatrix(con
     }
 
     // Compute ionic potential matrix elements in AO basis
-    for (int i = 0; i < numberOfAo; ++i)
+    int i, j, I;
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for private(i, j, I)
+    #endif
+    for (i = 0; i < numberOfAo; ++i)
     {
-        for (int j = 0; j <= i; ++j)
+        for (j = 0; j <= i; ++j)
         {
-            for (int I = 0; I < _molecule.getNumberOfAtoms(); ++I)
+            for (I = 0; I < _molecule.getNumberOfAtoms(); ++I)
             {
                 for (size_t J = 0; J < _grid_weights[I].size(); J++)
                 {
@@ -226,7 +235,7 @@ std::vector<std::vector<std::vector<double>>> Becke::getIonicPotentialMatrix(con
     }
 
     // Compute ionic potential matrix elements in MO basis
-    int spin, i, j;
+    int spin;
     #ifdef ENABLE_OMP
     #pragma omp parallel for private(spin, i, j)
     #endif
@@ -312,9 +321,13 @@ std::vector<std::vector<double>> Becke::getIonicPotentialVector(const std::array
     std::vector<double> ionicVectorAO = std::vector<double>(numberOfAo, 0.0);
 
     // Compute ionic potential matrix elements in AO basis
-    for (int i = 0; i < numberOfAo; ++i)
+    int i, I;
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for private(i, I)
+    #endif
+    for (i = 0; i < numberOfAo; ++i)
     {
-        for (int I = 0; I < _molecule.getNumberOfAtoms(); ++I)
+        for (I = 0; I < _molecule.getNumberOfAtoms(); ++I)
         {
             for (size_t J = 0; J < _grid_weights[I].size(); J++)
             {
@@ -371,7 +384,7 @@ std::vector<std::vector<double>> Becke::getIonicPotentialVector(const std::array
     std::vector<std::vector<double>> ionicVectorMO = std::vector<std::vector<double>>(2, std::vector<double>(numberOfMo, 0.0));
 
     // Compute ionic potential matrix elements in MO basis
-    int spin, i;
+    int spin;
     #ifdef ENABLE_OMP
     #pragma omp parallel for private(spin, i)
     #endif
@@ -379,10 +392,14 @@ std::vector<std::vector<double>> Becke::getIonicPotentialVector(const std::array
     {
         for (i = 0; i < numberOfMo; ++i)
         {
+            double sum = 0.0;
+
             for (size_t m = 0; m < coefficients[spin][i].size(); ++m)
             {
-                ionicVectorMO[spin][i] += coefficients[spin][i][m] * ionicVectorAO[m];
+                sum += coefficients[spin][i][m] * ionicVectorAO[m];
             }
+
+            ionicVectorMO[spin][i] = sum;
         }
     }
 
@@ -398,7 +415,8 @@ std::vector<std::vector<double>> Becke::getIonicPotentialVector(const std::array
             {
                 std::cout << "Ionic potential vector in MO basis for " << to_string(static_cast<SpinType>(spin)) << " spin:" << std::endl;
             }
-            for (int i = 0; i < numberOfMo; ++i)
+
+            for (i = 0; i < numberOfMo; ++i)
             {
                 __debug_MOMatrix[spin][0][i] += ionicVectorMO[spin][i];
                 __debug_totalSumMO[spin] += ionicVectorMO[spin][i];
@@ -529,16 +547,16 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbit
     int lastProgress = -1;
 
     // Show progress bar at 0% at the beginning
+    std::cout << "Computing triple orbital integral matrix on atomic basis..." << std::endl;
     if (showProgress)
     {
-        std::cout << "Computing triple orbital integral matrix on atomic basis..." << std::endl;
         print_progressBar(0, nbStepsTotalAo, lastProgress);
     }
 
     // Compute TOI matrix elements in AO basis
-    int i, j, k;
+    int i, j, k, I;
     #ifdef ENABLE_OMP
-    #pragma omp parallel for private(i, j, k)
+    #pragma omp parallel for private(i, j, k, I)
     #endif
     for (i = 0; i < numberOfAo; ++i)
     {
@@ -546,7 +564,7 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbit
         {
             for (k = 0; k <= j; ++k)
             {
-                for (int I = 0; I < _molecule.getNumberOfAtoms(); ++I)
+                for (I = 0; I < _molecule.getNumberOfAtoms(); ++I)
                 {
                     for (size_t J = 0; J < _grid_weights[I].size(); J++)
                     {
@@ -618,10 +636,11 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbit
     progress = 0;
     lastProgress = -1;
 
+    std::cout << "Computing triple orbital integral matrix on molecular basis..." << std::endl;
+
     // Show progress bar at 0% at the beginning
     if (showProgress)
     {
-        std::cout << "Computing triple orbital integral matrix on molecular basis..." << std::endl;
         print_progressBar(0, nbStepsTotalMo, lastProgress);
     }
 

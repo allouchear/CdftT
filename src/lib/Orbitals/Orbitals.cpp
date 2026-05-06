@@ -1660,10 +1660,11 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Orbitals::getTripleOr
     std::atomic<int> progress(0);
     int lastProgress = -1;
 
+    std::cout << "Computing triple orbital integral matrix on atomic basis..." << std::endl;
+
     // Show progress bar at 0% at the beginning
     if (showProgress)
     {
-        std::cout << "Computing triple orbital integral matrix on atomic basis..." << std::endl;
         print_progressBar(0, nbStepsTotalAo, lastProgress);
     }
 
@@ -1739,10 +1740,11 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Orbitals::getTripleOr
     progress = 0;
     lastProgress = -1;
 
+    std::cout << "Computing triple orbital integral matrix on molecular basis..." << std::endl;
+
     // Show progress bar at 0% at the beginning
     if (showProgress)
     {
-        std::cout << "Computing triple orbital integral matrix on molecular basis..." << std::endl;
         print_progressBar(0, nbStepsTotalMo, lastProgress);
     }
 
@@ -2173,7 +2175,7 @@ Grid Orbitals::makeOrbGrid(const Domain& domain, const std::vector<int>& orbital
     int lastProgress = -1;
 
     // Show progress bar at 0% at the beginning
-    if(showProgress)
+    if (showProgress)
     {
         print_progressBar(0, nbStepsTotal, lastProgress);
     }
@@ -2187,19 +2189,19 @@ Grid Orbitals::makeOrbGrid(const Domain& domain, const std::vector<int>& orbital
         #endif
         for (int i = 0; i < N1; ++i)
         {
-            for(int j = 0; j < N2; ++j)
+            for (int j = 0; j < N2; ++j)
             {
-                for(int k = 0; k < N3; ++k)
+                for (int k = 0; k < N3; ++k)
                 {
                     std::vector<double> phy = phis(domain.x(i, j, k), domain.y(i, j, k), domain.z(i, j, k), orbitalsNumbers, orbitalsSpins);
 
-                    for(int l = 0; l < domain.get_Nval(); ++l)
+                    for (int l = 0; l < domain.get_Nval(); ++l)
                     {
                         g.set_Vijkl(phy[l], i, j, k, l);
                     }
                 }
                 
-                if(showProgress)
+                if (showProgress)
                 {
                     // Update at each N2 iteration for a smoother display
                     int currentStep = progress.fetch_add(N3) + N3;
@@ -2215,7 +2217,7 @@ Grid Orbitals::makeOrbGrid(const Domain& domain, const std::vector<int>& orbital
         }
     }
     
-    if(showProgress)
+    if (showProgress)
     {
         std::cout << std::endl;
     }

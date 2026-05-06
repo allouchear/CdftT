@@ -4,5 +4,5 @@ RunType=ComputeEnergyWithPointCharges
 AnalyticFiles=tests/Guegan2020/acrolein.fchk
 TransitionsFile=tests/Guegan2020/acrolein.log
 OutputPrefix=acrolein_comparison
-ShowProgress=True
+ShowProgress=False
 #Verbose=1

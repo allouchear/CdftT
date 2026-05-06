@@ -11,8 +11,8 @@
 #endif
 
 #include <Cube/Grid.h>
-#include <Cube/GridCP.h>
 #include <Common/Constants.h>
+#include <Orbitals/Orbitals.h>
 #include <Utils/Enums.hpp>
 
 
@@ -305,6 +305,91 @@ void Grid::set_values(const std::vector<std::vector<std::vector<std::vector<doub
 //----------------------------------------------------------------------------------------------------//
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
+
+std::vector<std::vector<std::vector<double>>> Grid::getIonicPotentialMatrix(const Orbitals& orbitals, const std::array<double, 3>& chargePosition, double charge, bool debug, bool printMOMatrix)
+{
+    int numberOfMo = orbitals.get_numberOfMo();
+
+    // debug
+    if (__debug_MOMatrix.size() == 0)
+    {
+        __debug_MOMatrix = std::vector<std::vector<std::vector<double>>>(2, std::vector<std::vector<double>>(numberOfMo, std::vector<double>()));
+    }
+
+    // Build ionic potential matrix in MO basis
+    std::vector<std::vector<std::vector<double>>> ionicMatrixMO = std::vector<std::vector<std::vector<double>>>(2, std::vector<std::vector<double>>(numberOfMo, std::vector<double>()));
+
+    int spin, i;
+    for (spin = 0; spin < 2; ++spin)
+    {
+        for (i = 0; i < numberOfMo; ++i)
+        {
+            ionicMatrixMO[spin][i].resize(i + 1, 0.0);
+
+            // debug
+            __debug_MOMatrix[spin][i].resize(i + 1, 0.0);
+        }
+    }
+
+    // Compute ionic potential matrix elements in MO basis
+    int j;
+    // #ifdef ENABLE_OMP
+    // #pragma omp parallel for private(spin, i, j)
+    // #endif
+    for (spin = 0; spin < 2; ++spin)
+    {
+        SpinType s = static_cast<SpinType>(spin);
+        
+        for (i = 0; i < numberOfMo; ++i)
+        {
+            for (j = 0; j <= i; ++j)
+            {
+                ionicMatrixMO[spin][i][j] = phiStarVionicStarPhi(i, j, s, chargePosition, charge);
+            }
+        }
+    }
+
+    // debug
+    if (debug)
+    {
+        for (spin = 0; spin < 2; ++spin)
+        {
+            std::cout << std::scientific;
+            std::cout << std::setprecision(10);
+            
+            if (printMOMatrix)
+            {
+                std::cout << "Ionic potential matrix in MO basis for " << to_string(static_cast<SpinType>(spin)) << " spin:" << std::endl;
+            }
+
+            for (i = 0; i < numberOfMo; ++i)
+            {
+                for (j = 0; j <= i; ++j)
+                {
+                    __debug_MOMatrix[spin][i][j] += ionicMatrixMO[spin][i][j];
+                    __debug_totalSumMO[spin] += (i == j ? ionicMatrixMO[spin][i][j] : 2.0 * ionicMatrixMO[spin][i][j]);
+
+                    if (printMOMatrix)
+                    {
+                        std::cout << std::right << std::setw(17) << __debug_MOMatrix[spin][i][j] << '\t';
+                    }
+                }
+
+                if (printMOMatrix)
+                {
+                    std::cout << std::endl;
+                }
+            }
+            
+            if (printMOMatrix)
+            {
+                std::cout << std::defaultfloat << "Total sum of MO matrix elements for " << to_string(static_cast<SpinType>(spin)) << " spin: " << std::setprecision(10) << __debug_totalSumMO[spin] << std::endl;
+            }
+        }
+    }
+
+    return ionicMatrixMO;
+}
 
 void Grid::reset()
 {
@@ -1063,12 +1148,12 @@ Grid Grid::coarser_Grid()
     int iZBegin = 1;
     int iZEnd = g._domain.get_N3();
 
-#ifdef ENABLE_OMP
-#pragma omp parallel for
-#endif
-#ifdef ENABLE_ACC
-#pragma acc kernels loop
-#endif
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for
+    #endif
+    #ifdef ENABLE_ACC
+    #pragma acc kernels loop
+    #endif
     for(int i = iXBegin ; i <= iXEnd-1 ; i++)
     {
         int x0, xp, xm;
@@ -1105,7 +1190,7 @@ Grid Grid::coarser_Grid()
     return g;
 }
 
-void Grid::save(std::ofstream& fileName)
+void Grid::save(std::ofstream& fileName, bool showProgress) const
 {
     fileName << std::scientific;
     fileName << std::setprecision(14);
@@ -1115,6 +1200,16 @@ void Grid::save(std::ofstream& fileName)
     int N1 = _domain.get_N1();
     int N2 = _domain.get_N2();
     int N3 = _domain.get_N3();
+
+    const int nbStepsTotal = N1 * N2 * N3;
+    int progress = 0;
+    int lastProgress = -1;
+
+    // Show progress bar at 0% at the beginning
+    if (showProgress)
+    {
+        print_progressBar(0, nbStepsTotal, lastProgress);
+    }
 
     GridSaveType saveType = GridSaveType::UNKNOWN;
     if (numberOfValuesPerGridPoint == 1)
@@ -1251,7 +1346,19 @@ void Grid::save(std::ofstream& fileName)
             {
                 fileName << std::endl;
             }
+
+            if (showProgress)
+            {
+                // Update at each N2 iteration for a smoother display
+                int currentStep = (progress += N3);
+                
+                print_progressBar(currentStep, nbStepsTotal, lastProgress);
+            }
         }
+    }
+    if (showProgress)
+    {
+        std::cout << std::endl;
     }
 }
 
@@ -1923,7 +2030,7 @@ Grid Grid::aim_On_Grid_Density()
                     }
                 }
             }
-            std::cout<<"number of of idices "<<int(value)<<std::endl;
+            std::cout<<"number of of indices "<<int(value)<<std::endl;
             return g;
         
         
@@ -1975,7 +2082,7 @@ double Grid::value(double x, double y, double z) const
     return S;
 }
 
-double Grid::phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge)
+double Grid::phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge) const
 {
     double phiStarVionicStarPhi = 0.0;
 

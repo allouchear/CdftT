@@ -70,15 +70,16 @@ namespace EnumConversionMaps
 
     std::unordered_map<RunType, std::string> runType_string =
     {
+        { RunType::COMPUTE_CONDENSED_LINEAR_RESPONSE, "ComputeCondensedLinearResponse" },
         { RunType::COMPUTE_DESCRIPTORS, "ComputeDescriptors" },
         { RunType::COMPUTE_ENERGY_WITH_POINT_CHARGES, "ComputeEnergyWithPointCharges" },
         { RunType::COMPUTE_GRID_DIFFERENCE, "ComputeGridDifference" },
         { RunType::COMPUTE_INTEGRALS, "ComputeIntegrals" },
+        { RunType::COMPUTE_LINEAR_RESPONSE_WITH_POINT_CHARGES, "ComputeLinearResponseWithPointCharges" },
         { RunType::COMPUTE_PARTIAL_CHARGES, "ComputePartialCharges" },
         { RunType::CONVERT_ORBITALS, "ConvertOrbitals" },
         { RunType::HELP, "Help" },
         { RunType::LAMBDA_DIAGNOSTIC, "LambdaDiagnostic" },
-        { RunType::LINEAR_RESPONSE, "LinearResponse" },
         { RunType::MAKE_DENSITY_CUBE, "MakeDensityCube" },
         { RunType::MAKE_ORBITALS_CUBE, "MakeOrbitalsCube" },
         { RunType::MAKE_ELF_CUBE, "MakeELFCube" },

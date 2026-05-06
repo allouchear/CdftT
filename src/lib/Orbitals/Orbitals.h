@@ -9,6 +9,7 @@
 #include <Common/Descriptors.h>
 #include <Common/PeriodicTable.h>
 #include <Common/Structure.h>
+#include <Cube/Grid.h>
 #include <Utils/Enums.hpp>
 #include <Utils/FCHK.h>
 #include <Utils/MOLDENGAB.h>

@@ -5,12 +5,14 @@
 
 #include <Common/Structure.h>
 #include <Cube/Domain.h>
-#include <Cube/Grid.h>
 #include <Utils/Enums.hpp>
 
+// Forward declarations to avoid circular dependencies
+class Grid;
 
-    //! Critical point
-    /*! structure containing data on attractors in the AIM framework. */
+
+//! Critical point
+/*! structure containing data on attractors in the AIM framework. */
 struct CriticalPoint
 {
     int index[3];

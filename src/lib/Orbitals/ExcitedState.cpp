@@ -284,28 +284,28 @@ bool ExcitedState::readGroundStateEnergyFromTransitionsFile(const std::string& t
 /////////////////////////////////////
 // TRANSITIONS FILE READING METHODS
 
-bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy)
+bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates)
 {
     bool ok = true;
 
     if (to_lower(fileName.substr(fileName.length() - 4)) == ".log")
     {
-        ok = LOG::readTransitions(fileName, excitedStates, groundStateEnergy);
+        ok = LOG::readTransitions(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates);
     }
     else if (to_lower(fileName.substr(fileName.length() - 4)) == ".out")
     {
-        ok = readTransitionsFromOutFile(fileName, excitedStates, groundStateEnergy);
+        ok = readTransitionsFromOutFile(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates);
     }
     else
     {
         // Try to read as a transitions file
-        ok = readTransitionsFile(fileName, excitedStates, groundStateEnergy);
+        ok = readTransitionsFile(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates);
     }
 
     return ok;
 }
 
-bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy)
+bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates)
 {
     bool ok = true;
 
@@ -323,8 +323,10 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
         std::exit(1);
     }
 
+    int numberOfExcitedStatesRead = 0;
+
     std::string line;
-    while (!transitionsFile.eof())
+    while (!transitionsFile.eof() && (maxNumberOfExcitedStates == -1 || numberOfExcitedStatesRead < maxNumberOfExcitedStates))
     {
         // Read line
         std::getline(transitionsFile, line);
@@ -453,6 +455,7 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
                 {
                     // Add excited state to the list
                     excitedStates.push_back(excitedState);
+                    ++numberOfExcitedStatesRead;
                 }
                 else
                 {
@@ -487,7 +490,7 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
     return ok;
 }
 
-bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy)
+bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates)
 {
     bool ok = true;
     bool hfTypeFound = false;
@@ -507,8 +510,10 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
         std::exit(1);
     }
 
+    int numberOfExcitedStatesRead = 0;
+
     std::string line;
-    while (!orcaOutFile.eof())
+    while (!orcaOutFile.eof() && (maxNumberOfExcitedStates == -1 || numberOfExcitedStatesRead < maxNumberOfExcitedStates))
     {
         // Read line
         std::getline(orcaOutFile, line);
@@ -587,6 +592,7 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
                 {
                     // Add excited state to the list
                     excitedStates.push_back(excitedState);
+                    ++numberOfExcitedStatesRead;
                 }
                 else
                 {

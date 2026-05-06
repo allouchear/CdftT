@@ -123,7 +123,11 @@ void print_error(const std::string& errorMessage, std::ostream& outputStream)
 {
     std::vector<std::reference_wrapper<std::ostream>> outputStreams;
     
-    outputStreams.emplace_back(outputStream);
+    if (&outputStream != &std::cout)
+    {
+        outputStreams.emplace_back(outputStream);
+    }
+    
     if (&outputStream != &std::cerr)
     {
         outputStreams.emplace_back(std::cerr);
