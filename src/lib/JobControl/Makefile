@@ -1,4 +1,4 @@
-OBJECTS = Job.o JobManager.o
+OBJECTS = ComputeEnergyWithPointCharges.o Job.o JobManager.o 
 
 
 include $(LIBCDFTTDIR)/CONFIG

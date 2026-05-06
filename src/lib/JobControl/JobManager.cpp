@@ -1,7 +1,7 @@
-#include <Utils/Enums.hpp>
+#include <JobControl/ComputeEnergyWithPointCharges.hpp>
 #include <JobControl/Job.h>
 #include <JobControl/JobManager.hpp>
-
+#include <Utils/Enums.hpp>
 
 //----------------------------------------------------------------------------------------------------//
 // CONSTRUCTORS
@@ -43,7 +43,7 @@ void JobManager::createJob(const std::string& inputFileName, RunType runtype)
         }
         case RunType::COMPUTE_ENERGY_WITH_POINT_CHARGES:
         {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
+            _jobs.push_back(std::make_unique<ComputeEnergyWithPointCharges>(inputFileName));
             break;
         }
         case RunType::COMPUTE_GRID_DIFFERENCE:

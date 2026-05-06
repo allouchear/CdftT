@@ -24,7 +24,7 @@
  */
 class Job
 {
-    private:
+    protected:
         /** @brief Periodic table used for element lookups. */
         //PeriodicTable _table;
 
@@ -428,19 +428,6 @@ class Job
         void computeGridDifference(const std::string& minuendGridFileName, const std::string& subtrahendGridFileName, const std::string& outputGridFileName);
 
         /**
-         * @brief Computes < psi_i | H | psi_j > and < psi_i | H-H0 | psi_j > for a set of excited states and one or many point charge(s).
-         * 
-         * @param[in] states Vector of excited states for which the computations will be performed.
-         * @param[in] chargesNucleiContributions Values of the < psi_i | V_ion/nuclei | psi_i > contributions (in the order of the charges).
-         * @param[in] ionicMatrixes Matrixes of the < phi_i | V_ion/electrons | phi_j > contributions for the point charges.
-         * @param[out] psi_i_H_psi_j Output lower triangular matrix where the computed < psi_i | H | psi_j > values will be stored.
-         * @param[out] psi_i_HminusH0_psi_j Output lower triangular matrix where the computed < psi_i | H - H0 | psi_j > values will be stored.
-         * @param[in,out] outputStream Stream where information will be logged during the computation.
-         * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
-         */
-        void computeHamiltonianMatrixWithPointCharges(const std::vector<ExcitedState>& excitedStates, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_psi_j, std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, std::ostream& outputStream, int verbose = 0);
-
-        /**
          * TODO
          */
         void computeIonicPotentialMatrixesFromBecke(Becke& becke, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
@@ -523,13 +510,6 @@ class Job
         Orbitals computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<double>>>& lrfMatrix, std::vector<std::vector<double>>& eigenvalues, std::vector<std::vector<std::vector<double>>>& eigenvectors, const std::string& outputPrefix, bool savePseudoOrbitals, std::ostream& outputStream, int verbose, bool showProgress = false);
 
         /**
-         * @brief Computes and prints the energy results from Hamiltonian matrix elements with point charges.
-         * 
-         * TODO
-         */
-        void computeResultsEnergyWithPointCharges(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose);
-
-        /**
          * TODO
          */
         void computeResultsLinearResponseWithPointCharges(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, std::ostream& outputStream, int verbose);
@@ -556,22 +536,6 @@ class Job
          * @brief Prints critical points information from a Critical Points grid (GridCP). (Not implemented yet.)
          */
         void printCriticalPoints();
-
-        /**
-         * @brief Prints the results for the job "ComputeEnergyWithPointCharges".
-         *
-         * @param[in] states Vector of excited states of the system.
-         * @param[in] ionicPotentialMatrixes Ionic potential matrixes (values of the < psi_i | V_ion/electrons | psi_i >).
-         * @param[in] chargeNucleiContributions Values of the < psi_i | V_ion/nuclei | psi_i > contributions.
-         * @param[in] charges Charges of the point charges.
-         * @param[in] chargesPositions Positions of the point charges.
-         * @param[in] loopOnAtoms Whether to loop on atoms (in that case, each charge uses every chargePosition).
-         * @param[in] atoms Vector of atoms in the system (used if `loopOnAtoms` is true).
-         * @param[in] outputPrefix Output filename prefix for saving results.
-         * @param[in,out] outputStream Output stream for printing results.
-         * @param[in] verbose Verbosity level.
-         */
-        void printResultsEnergyWithPointCharges(const std::vector<ExcitedState>& states, const std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, const std::vector<Atom>& atoms, const std::string& outputPrefix, std::ostream& outputStream, int verbose);
 
         /**
          * @brief Prints the results for the job "ComputeLinearResponseWithPointCharges".
@@ -713,7 +677,7 @@ class Job
          * 
          * If the "runType" parameter is not found or if its value does not correspond to a valid job, this method will run the "Help" job.
          */
-        void run();
+        virtual void run(); // TODO (lgardre): change to pure virtual (= 0) when all jobs are implemented as derived classes;
 };
 
 #endif /* CDFTT_JOB_H_INCLUDED */
