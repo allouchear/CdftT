@@ -25,24 +25,15 @@
 class Job
 {
     protected:
-        /** @brief Periodic table used for element lookups. */
-        //PeriodicTable _table;
-
         /** @brief Name of the input file to parse. */
         std::string _inputFileName;
 
         /** @brief Input file stream opened on the input file. */
         std::ifstream _inputFile;
 
-        /** @brief List of available job names (displayed in help). */
-        std::vector<std::string> _jobsList;
-
-        /** @brief Descriptions of the available jobs. */
-        std::vector<std::string> _jobDescription;
-
 
         //----------------------------------------------------------------------------------------------------//
-        // SPECIFIC PARAMETERS READING FROM INPUT FILE
+        // READING PARAMETERS FROM INPUT FILE
         //----------------------------------------------------------------------------------------------------//
 
         /**
@@ -267,11 +258,6 @@ class Job
         //----------------------------------------------------------------------------------------------------//
 
         /**
-         * @brief Prints the list of available jobs ("runType" parameter value) and their descriptions.
-         */
-        void printListOfRunTypes();
-
-        /**
          * @brief Runs the job associated with the "ComputeCondensedLinearResponse" runtype.
          */
         void run_computeCondensedLinearResponse();
@@ -296,11 +282,6 @@ class Job
          * @brief Runs the job associated with the "ComputeIntegrals" runtype.
          */
         void run_computeIntegrals();
-
-        /**
-         * @brief Runs the job associated with the "ComputeLinearResponseWithPointCharges" runtype.
-         */
-        void run_computeLinearResponseWithPointCharges();
 
         /**
          * @brief Runs the job associated with the "ComputePartialCharges" runtype.
@@ -337,11 +318,6 @@ class Job
          */
         void run_convertOrbitals();
 
-        /**
-         * @brief Sets the list of available jobs and their descriptions.
-         */
-        void setJobList();
-
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PRIVATE METHODS
@@ -376,11 +352,6 @@ class Job
          * @return Configured `Domain` instance.
          */
         Domain buildDomainForCube(Orbitals& orb, const GridSize gridSize, const CustomSizeData& customSizeData, const int& Nval);
-
-        /**
-         * TODO
-         */
-        void computeChargeNucleiContributions(const std::vector<Atom>& atoms, std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, double nuclearCutoff);
 
         /**
          * @brief Computes descriptors from three grid files using ionization energy and electron affinity.
@@ -426,36 +397,6 @@ class Job
          * @param[in] outputGridFileName Output filename for the difference grid.
          */
         void computeGridDifference(const std::string& minuendGridFileName, const std::string& subtrahendGridFileName, const std::string& outputGridFileName);
-
-        /**
-         * TODO
-         */
-        void computeIonicPotentialMatrixesFromBecke(Becke& becke, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
-
-        /**
-         * TODO
-         */
-        void computeIonicPotentialMatrixesFromGrid(const Orbitals& orbitals, Grid& grid, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms);
-
-        /**
-         * TODO
-         */
-        void computeIonicPotentialMatrixesFromOrbitals(Orbitals& orbitals, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms);
-
-        /**
-         * TODO
-         */
-        void computeIonicPotentialVectorsFromBecke(Becke& becke, std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
-
-        /**
-         * TODO
-         */
-        void computeIonicPotentialVectorsFromOrbitals(Orbitals& orbitals, std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms);
-
-        /**
-         * TODO
-         */
-        void computeLinearResponseFunctionMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<std::vector<double>>>>& tripleOrbitalIntegralMatrix, std::vector<std::vector<std::vector<double>>>& lrfMatrix);
 
         /**
          * @brief Integrates the provided grids over the domain of a Critical Points grid (GridCP).
@@ -510,11 +451,6 @@ class Job
         Orbitals computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<double>>>& lrfMatrix, std::vector<std::vector<double>>& eigenvalues, std::vector<std::vector<std::vector<double>>>& eigenvectors, const std::string& outputPrefix, bool savePseudoOrbitals, std::ostream& outputStream, int verbose, bool showProgress = false);
 
         /**
-         * TODO
-         */
-        void computeResultsLinearResponseWithPointCharges(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, std::ostream& outputStream, int verbose);
-
-        /**
          * @brief Creates and saves a grid file (.cube) from the passed Orbitals instance, over a defined domain.
          *
          * @param[in] orbitals Orbitals instance providing densities/orbitals.
@@ -536,19 +472,6 @@ class Job
          * @brief Prints critical points information from a Critical Points grid (GridCP). (Not implemented yet.)
          */
         void printCriticalPoints();
-
-        /**
-         * @brief Prints the results for the job "ComputeLinearResponseWithPointCharges".
-         *
-         * @param[in] eigenvalues Eigenvalues of the system.
-         * @param[in] ionicPotentialVectors Ionic potential vectors.
-         * @param[in] charges Charges of the point charges.
-         * @param[in] chargesPositions Positions of the point charges.
-         * @param[in] loopOnAtoms Whether to loop on atoms (in that case, each charge uses every chargePosition).
-         * @param[in,out] outputStream Output stream for printing results.
-         * @param[in] verbose Verbosity level.
-         */
-        void printResultsLinearResponseWithPointCharges(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, const std::vector<Atom>& atoms, std::ostream& outputStream, int verbose);
 
         /**
          * @brief Extracts the molecular structure from an analytic file.

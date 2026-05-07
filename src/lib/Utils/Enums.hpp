@@ -16,6 +16,14 @@ enum class ELFMethod
     UNKNOWN
 };
 
+enum class EnergyPointChargeMethod
+{
+    PERTURBATIVE,
+    VARIATIONAL,
+    LINEAR_RESPONSE,
+    UNKNOWN
+};
+
 enum class GridSaveType
 {
     DENSITY,
@@ -79,8 +87,8 @@ enum class RunType
     HELP,
     LAMBDA_DIAGNOSTIC,
     MAKE_DENSITY_CUBE,
-    MAKE_ORBITALS_CUBE,
     MAKE_ELF_CUBE,
+    MAKE_ORBITALS_CUBE,
     UNKNOWN
 };
 
@@ -99,6 +107,7 @@ enum class SpinType
 namespace EnumConversionMaps
 {
     extern std::unordered_map<ELFMethod, std::string> elfMethod_string;
+    extern std::unordered_map<EnergyPointChargeMethod, std::string> energyPointChargeMethod_string;
     extern std::unordered_map<GridSaveType, std::string> gridSaveType_string;
     extern std::unordered_map<GridSize, std::string> gridSize_string;
     extern std::unordered_map<HFType, std::string> hfType_string;
@@ -124,6 +133,8 @@ template<typename T> T enum_from_string(const std::string& strValue, const std::
 
 std::string to_string(ELFMethod method);
 ELFMethod elfMethod_from_string(const std::string& strMethod);
+std::string to_string(EnergyPointChargeMethod method);
+EnergyPointChargeMethod energyPointChargeMethod_from_string(const std::string& strMethod);
 std::string to_string(GridSaveType saveType);
 GridSaveType gridSaveType_from_string(const std::string& strSaveType);
 std::string to_string(GridSize size);

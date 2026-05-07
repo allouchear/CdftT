@@ -644,6 +644,29 @@ void ComputeEnergyWithPointCharges::computeResults(const std::vector<ExcitedStat
     log(logStream, outputStream);
 }
 
+void ComputeEnergyWithPointCharges::computeResultsLinearResponse(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, std::ostream& outputStream, int verbose)
+{
+    std::stringstream logStream;
+
+    double energy_pseudoOrbitals = 0.0;
+    for (size_t i = 0; i < ionicPotentialVectors.size(); ++i)
+    {
+        for (int spin = 0; spin < 2; ++spin)
+        {
+            for (size_t j = 0; j < eigenvalues[spin].size(); ++j)
+            {
+                energy_pseudoOrbitals += eigenvalues[spin][j] * ionicPotentialVectors[i][spin][j] * ionicPotentialVectors[i][spin][j];
+            }
+        }
+    }
+    energy_pseudoOrbitals *= 0.5;
+
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    logStream << "|E_polarisation| = " << std::abs(energy_pseudoOrbitals) * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT << " J/mol." << std::endl;
+    log(logStream, outputStream);
+}
+
 void ComputeEnergyWithPointCharges::printResults(const std::vector<ExcitedState>& states, const std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, const std::vector<Atom>& atoms, const std::string& outputPrefix, std::ostream& outputStream, int verbose)
 {
     std::stringstream logStream;
@@ -708,6 +731,60 @@ void ComputeEnergyWithPointCharges::printResults(const std::vector<ExcitedState>
     }
 }
 
+void ComputeEnergyWithPointCharges::printResultsLinearResponse(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, const std::vector<Atom>& atoms, std::ostream& outputStream, int verbose)
+{
+    size_t nbCharges = charges.size();
+    size_t nbChargePositions = chargesPositions.size();
+
+    std::stringstream logStream;
+
+    // Compute polarization energy
+    if (loopOnAtoms)
+    {
+        const int maxRunNumber = nbCharges * nbChargePositions;
+
+        for (size_t chargeIndex = 0; chargeIndex < nbCharges; ++chargeIndex)
+        {
+            for (size_t atomIndex = 0; atomIndex < atoms.size(); ++atomIndex)
+            {
+                int runNumber = chargeIndex * nbChargePositions + atomIndex + 1;
+                std::string runNumberStr = int_to_string_withLeadingZeros(runNumber, maxRunNumber);
+
+                logStream << "====================== RUN #" << runNumberStr
+                          << ": charge of " << charges[chargeIndex]
+                          << " e on " << atoms[atomIndex].get_name()
+                          << " at position (" << std::setprecision(10) << chargesPositions[atomIndex][0] << ", " << chargesPositions[atomIndex][1] << ", " << chargesPositions[atomIndex][2]
+                          << ") ======================"
+                          << std::defaultfloat << std::endl
+                          << std::endl;
+                log(logStream, outputStream);
+
+                std::vector<std::vector<std::vector<double>>> currentIonicPotentialVectors(1, ionicPotentialVectors[chargeIndex][atomIndex]);
+
+                computeResultsLinearResponse(eigenvalues, currentIonicPotentialVectors, outputStream, verbose);
+
+                logStream << std::defaultfloat << std::endl;
+                log(logStream, outputStream);
+            }
+        }
+    }
+    else
+    {
+        std::vector<std::vector<std::vector<double>>> currentIonicPotentialVectors(nbCharges);
+
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            currentIonicPotentialVectors[i] = ionicPotentialVectors[i][0];
+        }
+        
+        computeResultsLinearResponse(eigenvalues, currentIonicPotentialVectors, outputStream, verbose);
+
+        logStream << std::defaultfloat << std::endl;
+        log(logStream, outputStream);
+    }
+}
+
+
 //----------------------------------------------------------------------------------------------------//
 // CONSTRUCTOR
 //----------------------------------------------------------------------------------------------------//
@@ -715,6 +792,289 @@ void ComputeEnergyWithPointCharges::printResults(const std::vector<ExcitedState>
 ComputeEnergyWithPointCharges::ComputeEnergyWithPointCharges(const std::string& inputFileName):
     Job(inputFileName)
 { }
+
+
+//----------------------------------------------------------------------------------------------------//
+// STATIC METHODS
+//----------------------------------------------------------------------------------------------------//
+
+void ComputeEnergyWithPointCharges::computeChargeNucleiContributions(const std::vector<Atom>& atoms, std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, double nuclearCutoff)
+{
+    size_t nbCharges = charges.size();
+    size_t nbChargePositions = chargesPositions.size();
+
+    chargeNucleiContributions.resize(nbCharges);
+
+    for (size_t i = 0; i < nbCharges; ++i)
+    {
+        if (loopOnAtoms)
+        {
+            chargeNucleiContributions[i].resize(nbChargePositions, 0.0);
+
+            for (size_t j = 0; j < nbChargePositions; ++j)
+            {
+                for (const Atom& atom : atoms)
+                {
+                    double distance = std::sqrt((atom.get_coordinates()[0] - chargesPositions[j][0]) * (atom.get_coordinates()[0] - chargesPositions[j][0])
+                                                + (atom.get_coordinates()[1] - chargesPositions[j][1]) * (atom.get_coordinates()[1] - chargesPositions[j][1])
+                                                + (atom.get_coordinates()[2] - chargesPositions[j][2]) * (atom.get_coordinates()[2] - chargesPositions[j][2]));
+
+                    if (distance > nuclearCutoff)
+                    {
+                        chargeNucleiContributions[i][j] += charges[i] * atom.get_atomicNumber() / distance;
+                    }
+                }
+            }
+        }
+        else
+        {
+            chargeNucleiContributions[i].resize(1, 0.0);
+
+            for (const Atom& atom : atoms)
+            {
+                double distance = std::sqrt((atom.get_coordinates()[0] - chargesPositions[i][0]) * (atom.get_coordinates()[0] - chargesPositions[i][0])
+                                            + (atom.get_coordinates()[1] - chargesPositions[i][1]) * (atom.get_coordinates()[1] - chargesPositions[i][1])
+                                            + (atom.get_coordinates()[2] - chargesPositions[i][2]) * (atom.get_coordinates()[2] - chargesPositions[i][2]));
+
+                if (distance > nuclearCutoff)
+                {
+                    chargeNucleiContributions[i][0] += charges[i] * atom.get_atomicNumber() / distance;
+                }
+            }
+        }
+    }
+}
+
+void ComputeEnergyWithPointCharges::computeIonicPotentialMatrixesFromBecke(Becke& becke, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, int kmax, int lebedev_order, int radial_grid_factor)
+{
+    size_t nbCharges = charges.size();
+    size_t nbChargePositions = chargesPositions.size();
+
+    ionicPotentialMatrixes.resize(charges.size());
+
+    if (loopOnAtoms)
+    {
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            // In the looping case, each charge has multiple positions (one for each atom).
+            // So we need to compute the ionic matrixes for each position of the charge.
+            ionicPotentialMatrixes[i].resize(nbChargePositions);
+
+            for (size_t j = 0; j < nbChargePositions; ++j)
+            {
+                ionicPotentialMatrixes[i][j] = becke.getIonicPotentialMatrix(chargesPositions[j], charges[i], kmax, lebedev_order, radial_grid_factor);
+            }
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            // In the non-looping case, each charge has only one position.
+            // So we compute the ionic matrixes only once for each charge and store it in the first position of the second dimension of the vector.
+            ionicPotentialMatrixes[i].resize(1);
+            ionicPotentialMatrixes[i][0] = becke.getIonicPotentialMatrix(chargesPositions[i], charges[i], kmax, lebedev_order, radial_grid_factor);
+        }
+    }
+}
+
+void ComputeEnergyWithPointCharges::computeIonicPotentialMatrixesFromGrid(const Orbitals& orbitals, Grid& grid, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms)
+{
+    size_t nbCharges = charges.size();
+    size_t nbChargePositions = chargesPositions.size();
+
+    ionicPotentialMatrixes.resize(charges.size());
+
+    if (loopOnAtoms)
+    {
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            // In the looping case, each charge has multiple positions (one for each atom).
+            // So we need to compute the ionic matrixes for each position of the charge.
+            ionicPotentialMatrixes[i].resize(nbChargePositions);
+
+            for (size_t j = 0; j < nbChargePositions; ++j)
+            {
+                ionicPotentialMatrixes[i][j] = grid.getIonicPotentialMatrix(orbitals, chargesPositions[j], charges[i]);
+            }
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            // In the non-looping case, each charge has only one position.
+            // So we compute the ionic matrixes only once for each charge and store it in the first position of the second dimension of the vector.
+            ionicPotentialMatrixes[i].resize(1);
+            ionicPotentialMatrixes[i][0] = grid.getIonicPotentialMatrix(orbitals, chargesPositions[i], charges[i]);
+        }
+    }
+}
+
+void ComputeEnergyWithPointCharges::computeIonicPotentialMatrixesFromOrbitals(Orbitals& orbitals, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms)
+{
+    size_t nbCharges = charges.size();
+    size_t nbChargePositions = chargesPositions.size();
+
+    ionicPotentialMatrixes.resize(charges.size());
+
+    if (loopOnAtoms)
+    {
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            // In the looping case, each charge has multiple positions (one for each atom).
+            // So we need to compute the ionic matrixes for each position of the charge.
+            ionicPotentialMatrixes[i].resize(nbChargePositions);
+
+            for (size_t j = 0; j < nbChargePositions; ++j)
+            {
+                ionicPotentialMatrixes[i][j] = orbitals.getIonicPotentialMatrix(chargesPositions[j], charges[i]);
+            }
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            // In the non-looping case, each charge has only one position.
+            // So we compute the ionic matrixes only once for each charge and store it in the first position of the second dimension of the vector.
+            ionicPotentialMatrixes[i].resize(1);
+            ionicPotentialMatrixes[i][0] = orbitals.getIonicPotentialMatrix(chargesPositions[i], charges[i]);
+        }
+    }
+}
+
+void ComputeEnergyWithPointCharges::computeIonicPotentialVectorsFromBecke(Becke& becke, std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, int kmax, int lebedev_order, int radial_grid_factor)
+{
+    size_t nbCharges = charges.size();
+    size_t nbChargePositions = chargesPositions.size();
+
+    ionicPotentialVectors.resize(charges.size());
+
+    if (loopOnAtoms)
+    {
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            // In the looping case, each charge has multiple positions (one for each atom).
+            // So we need to compute the ionic matrixes for each position of the charge.
+            ionicPotentialVectors[i].resize(nbChargePositions);
+
+            for (size_t j = 0; j < nbChargePositions; ++j)
+            {
+                ionicPotentialVectors[i][j] = becke.getIonicPotentialVector(chargesPositions[j], charges[i], kmax, lebedev_order, radial_grid_factor);
+            }
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            // In the non-looping case, each charge has only one position.
+            // So we compute the ionic matrixes only once for each charge and store it in the first position of the second dimension of the vector.
+            ionicPotentialVectors[i].resize(1);
+            ionicPotentialVectors[i][0] = becke.getIonicPotentialVector(chargesPositions[i], charges[i], kmax, lebedev_order, radial_grid_factor);
+        }
+    }
+}
+
+void ComputeEnergyWithPointCharges::computeIonicPotentialVectorsFromOrbitals(Orbitals& orbitals, std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms)
+{
+    size_t nbCharges = charges.size();
+    size_t nbChargePositions = chargesPositions.size();
+
+    ionicPotentialVectors.resize(charges.size());
+
+    if (loopOnAtoms)
+    {
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            // In the looping case, each charge has multiple positions (one for each atom).
+            // So we need to compute the ionic matrixes for each position of the charge.
+            ionicPotentialVectors[i].resize(nbChargePositions);
+
+            for (size_t j = 0; j < nbChargePositions; ++j)
+            {
+                ionicPotentialVectors[i][j] = orbitals.getIonicPotentialVector_unitPseudoCgtf(chargesPositions[j], charges[i]);
+            }
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            // In the non-looping case, each charge has only one position.
+            // So we compute the ionic matrixes only once for each charge and store it in the first position of the second dimension of the vector.
+            ionicPotentialVectors[i].resize(1);
+            ionicPotentialVectors[i][0] = orbitals.getIonicPotentialVector_unitPseudoCgtf(chargesPositions[i], charges[i]);
+        }
+    }
+}
+
+void ComputeEnergyWithPointCharges::computeLinearResponseFunctionMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<std::vector<double>>>>& tripleOrbitalIntegralMatrix, std::vector<std::vector<std::vector<double>>>& lrfMatrix)
+{
+    // Get number of MOs
+    int numberOfMo = orbitals.get_numberOfMo();
+
+    // Get occupied and virtual orbitals numbers
+    std::vector<std::vector<int>> occupiedOrbitalsNumbers;
+    std::vector<std::vector<int>> virtualOrbitalsNumbers;
+    orbitals.getOccupiedAndVirtualOrbitalNumbers(occupiedOrbitalsNumbers, virtualOrbitalsNumbers);
+
+    // Get orbital energies
+    const std::vector<std::vector<double>>& orbitalEnergies = orbitals.get_orbitalEnergy();
+
+
+    // Build and initialise the lower triangular LRF matrix for each spin
+    lrfMatrix.resize(2, std::vector<std::vector<double>>(numberOfMo, std::vector<double>()));
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for (int i = 0; i < numberOfMo; ++i)
+        {
+            lrfMatrix[spin][i].resize(i + 1, 0.0);
+        }
+    }
+
+    std::cout << std::scientific;
+    std::cout << std::setprecision(10);
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        std::cout << "Computing LRF matrix for " << (spin == static_cast<int>(SpinType::ALPHA) ? "Alpha" : "Beta") << " spin (analytical):" << std::endl;
+
+        for (int i = 0; i < numberOfMo; ++i)
+        {
+            for (int j = 0; j <= i; ++j)
+            {
+                for (int occupiedOrbital : occupiedOrbitalsNumbers[spin])
+                {
+                    int occupiedOrbitalIndex = occupiedOrbital - 1; // because occupiedOrbitalsNumbers are 1-based
+
+                    for (int virtualOrbital : virtualOrbitalsNumbers[spin])
+                    {
+                        int virtualOrbitalIndex = virtualOrbital - 1; // because virtualOrbitalsNumbers are 1-based
+
+                        std::array<int, 3> indices_i = {i, occupiedOrbitalIndex, virtualOrbitalIndex};
+                        std::array<int, 3> indices_j = {j, occupiedOrbitalIndex, virtualOrbitalIndex};
+
+                        std::sort(indices_i.begin(), indices_i.end(), std::greater<size_t>());
+                        std::sort(indices_j.begin(), indices_j.end(), std::greater<size_t>());
+
+                        lrfMatrix[spin][i][j] += tripleOrbitalIntegralMatrix[spin][indices_i[0]][indices_i[1]][indices_i[2]]
+                                                  * tripleOrbitalIntegralMatrix[spin][indices_j[0]][indices_j[1]][indices_j[2]]
+                                                  / (orbitalEnergies[spin][occupiedOrbitalIndex] - orbitalEnergies[spin][virtualOrbitalIndex]);
+                    }
+                }
+
+                lrfMatrix[spin][i][j] *= 2.0;
+                std::cout << "< phi_" << i + 1 << " | Xi | phi_" << j + 1<< " > = " << lrfMatrix[spin][i][j] << std::endl;
+            }
+
+            std::cout << std::endl;
+        }
+
+        std::cout << std::endl;
+    }
+}
+
 
 //----------------------------------------------------------------------------------------------------//
 // PUBLIC METHODS
@@ -1333,6 +1693,285 @@ void ComputeEnergyWithPointCharges::run()
     log(logStream, outputStream);
     */
 
+    if (verbose != 0 && logFile)
+    {
+        logFile.close();
+    }
+}
+
+
+void ComputeEnergyWithPointCharges::run_computeLinearResponseWithPointCharges()
+{
+    // Read output file prefix
+    std::string outputPrefix;
+    readOutputPrefix(outputPrefix);
+
+
+    // Read option to save pseudo orbitals in cube format
+    bool savePseudoOrbitals;
+    readSavePseudoOrbitals(savePseudoOrbitals);
+
+
+    // Read progress bar display option
+    bool showProgress;
+    readShowProgress(showProgress);
+
+
+    // Read verbose level and open log file if needed
+    int verbose;
+    readVerbose(verbose);
+
+    std::stringstream logStream;
+    
+    std::ofstream logFile;
+    if (verbose != 0)
+    {
+        logFile.open(outputPrefix + "_log.cdftt");
+        if (!logFile)
+        {
+            std::cout << "Warning: could not open log file " << outputPrefix << "_log.cdftt for writing." << std::endl;
+            std::cout << "The program will still display logging information on standard output." << std::endl << std::endl;
+        }
+    }
+    std::ostream& outputStream = ((verbose != 0 && logFile) ? logFile : std::cout);
+
+    
+    //Read analytic file name
+    std::vector<std::string> analyticFilesNames;
+    readAnalyticFilesNames(analyticFilesNames);
+
+
+    // TODO: check number of analytic files
+
+
+    // Loading orbitals
+    std::cout << "Building Orbitals object... ";
+    Orbitals orbitals;
+    computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
+    std::cout << std::endl;
+
+    // Keep a const reference on orbitals' atoms
+    const std::vector<Atom>& atoms = orbitals.get_struct().get_atoms();
+
+    
+    // Read point charges
+    std::vector<double> charges;
+    readCharges(charges);
+    size_t nbCharges = charges.size();
+
+
+    // Read point charges positions
+    bool loopOnAtoms = false;
+    std::vector<std::array<double, 3>> chargesPositions;
+    readPositions(chargesPositions);
+
+    if (chargesPositions.empty())
+    {
+        logStream << "Note: the \"Positions\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        logStream << "The program will place the point charge" << (nbCharges > 1 ? "s" : "") << " on each atom successively." << std::endl << std::endl;
+        log(logStream, outputStream);
+
+        loopOnAtoms = true;
+        for (const Atom& atom : atoms)
+        {
+            chargesPositions.push_back(atom.get_coordinates());
+        }
+    }
+    size_t nbChargePositions = chargesPositions.size();
+
+
+    // Check number of charges positions
+    if (!loopOnAtoms && nbChargePositions != nbCharges)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect number of point charges positions." << std::endl;
+        errorMessage << "Please check the documentation and the positions specified in the \"ChargesPositions\" parameter in " << _inputFileName << '.';
+
+        print_error(errorMessage.str(), outputStream);
+
+        std::exit(1);
+    }
+
+
+    // Print charges information
+    logStream << "Number of point charges: " << nbCharges << std::endl;
+    log(logStream, outputStream);
+    if (!loopOnAtoms)
+    {
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            logStream << "Point charge #" << i + 1 << ": " << charges[i] << " e at position (" << std::setprecision(10) << chargesPositions[i][0] << ", " << chargesPositions[i][1] << ", " << chargesPositions[i][2] << ")." << std::defaultfloat << std::endl;
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < nbCharges; ++i)
+        {
+            for (size_t j = 0; j < nbChargePositions; ++j)
+            {
+                logStream << "Run #" << i * nbChargePositions + j + 1 << ": point charge #" << i + 1 << " of " << charges[i] << " e, on " << atoms[j].get_name() << " at position (" << std::setprecision(10) << chargesPositions[j][0] << ", " << chargesPositions[j][1] << ", " << chargesPositions[j][2] << ")." << std::defaultfloat << std::endl;
+            }
+        }
+    }
+    logStream << std::endl;
+    log(logStream, outputStream);
+    
+
+    /************/
+    /* ANALYTIC */
+    /************/
+
+    logStream << std::endl << std::endl
+              << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
+              << "|||||||||||||||||||||||||||||||||||||||||||||||                          |||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
+              << "|||||||||||||||||||||||||||||||||||||||||||||||   ANALYTIC COMPUTATION   |||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
+              << "|||||||||||||||||||||||||||||||||||||||||||||||                          |||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
+              << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl << std::endl;
+    log(logStream, outputStream);
+
+    
+    // Compute triple-orbital-integral matrix only once.
+    // We build a 4D vector of dimensions [spin][MO_i][MO_j][MO_k] to store the triple-orbital-integral matrix.
+    // The first dimension corresponds to the spin (0 for alpha, 1 for beta).
+    // The second, third and fourth dimensions correspond to the indices of the matrix elements (i, j and k) with k <= j <= i (lower triangular matrixes).
+    std::vector<std::vector<std::vector<std::vector<double>>>> tripleOrbitalIntegralMatrix = orbitals.getTripleOrbitalIntegralMatrix(showProgress);
+
+
+    // Compute linear response function (LRF) matrix
+    std::vector<std::vector<std::vector<double>>> lrfMatrix;
+    computeLinearResponseFunctionMatrix(orbitals, tripleOrbitalIntegralMatrix, lrfMatrix);
+
+
+    // Diagonalize LRF matrix to get pseudo orbitals from eigenvectors
+    std::vector<std::vector<double>> eigenvalues;
+    std::vector<std::vector<std::vector<double>>> eigenvectors;
+    Orbitals pseudoOrbitals = computePseudoOrbitalsFromLrfMatrix(orbitals, lrfMatrix, eigenvalues, eigenvectors, outputPrefix, savePseudoOrbitals, outputStream, verbose, showProgress);
+
+
+    // Compute ionic vectors obtained with a pseudo CGTF made from a unit pseudo GTF (exponent = 0, coefficient = 1) only once.
+    // We build a 4D of dimensions [charge][position][spin][MO] to store the ionic potential vectors for each charge and position.
+    // The first dimension corresponds to the charge index.
+    // The second dimension corresponds to the charge position index (in case the program has to loop over atom positions).
+    // The third dimension corresponds to the spin (0 for alpha, 1 for beta).
+    // The fourth dimension corresponds to the MO index.
+    std::vector<std::vector<std::vector<std::vector<double>>>> ionicPotentialVectors;
+    computeIonicPotentialVectorsFromOrbitals(pseudoOrbitals, ionicPotentialVectors, charges, chargesPositions, loopOnAtoms);
+
+
+    // Print results
+    printResultsLinearResponse(eigenvalues, ionicPotentialVectors, charges, chargesPositions, loopOnAtoms, atoms, outputStream, verbose);
+    
+
+    /**************/
+    /* BECKE GRID */
+    /**************/
+
+    // Read Becke grid parameters
+    std::vector<int> beckeParams;
+    readBecke(beckeParams);
+
+    if (beckeParams.size() != 0)
+    {
+        logStream << std::endl << std::endl
+                  << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
+                  << "||||||||||||||||||||||||||||||||||||||||||||||                            ||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
+                  << "||||||||||||||||||||||||||||||||||||||||||||||   BECKE GRID COMPUTATION   ||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
+                  << "||||||||||||||||||||||||||||||||||||||||||||||                            ||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
+                  << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl << std::endl;
+        log(logStream, outputStream);
+
+
+        // Build Becke grid
+        std::cout << "Building Becke object... ";
+        Becke becke;
+        computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
+
+
+        // Get triple-orbital-integral matrix for Becke grid
+        std::vector<std::vector<std::vector<std::vector<double>>>> tripleOrbitalIntegralMatrix_becke = becke.getTripleOrbitalIntegralMatrix(beckeParams[0], beckeParams[1], beckeParams[2], showProgress);
+
+
+        // Compute LRF Matrix for Becke grid
+        std::vector<std::vector<std::vector<double>>> lrfMatrix_becke;
+        computeLinearResponseFunctionMatrix(becke.get_orbitals(), tripleOrbitalIntegralMatrix_becke, lrfMatrix_becke);
+
+
+        // Diagonalize LRF matrix to get pseudo orbitals from eigenvectors
+        std::vector<std::vector<double>> eigenvalues_becke(2);
+        std::vector<std::vector<std::vector<double>>> eigenvectors_becke(2);
+        Orbitals pseudoOrbitals_becke = computePseudoOrbitalsFromLrfMatrix(becke.get_orbitals(), lrfMatrix_becke, eigenvalues_becke, eigenvectors_becke, outputPrefix + "_becke", savePseudoOrbitals, outputStream, verbose, showProgress);
+        
+        
+        // Compute ionic vectors obtained with a pseudo CGTF made from a unit pseudo GTF (exponent = 0, coefficient = 1) only once.
+        std::vector<std::vector<std::vector<std::vector<double>>>> ionicPotentialVectors_becke;
+        computeIonicPotentialVectorsFromOrbitals(pseudoOrbitals_becke, ionicPotentialVectors_becke, charges, chargesPositions, loopOnAtoms);
+
+
+        // Print results
+        printResultsLinearResponse(eigenvalues_becke, ionicPotentialVectors_becke, charges, chargesPositions, loopOnAtoms, atoms, outputStream, verbose);
+
+
+
+        // DEBUG - Manually compute sigma vectors (i.e. obtaining the same values than the pseudo Orbitals coefficients.)
+        /*
+        // Compute ionic vectors obtained with a pseudo CGTF made from a unit pseudo GTF (exponent = 0, coefficient = 1) only once.
+        std::vector<std::vector<std::vector<std::vector<double>>>> ionicPotentialVectors_becke_debug;
+        computeIonicPotentialVectorsFromBecke(becke, ionicPotentialVectors_becke_debug, charges, chargesPositions, loopOnAtoms, beckeParams[0], beckeParams[1], beckeParams[2]);
+
+
+        // Multiply by eigenvectors values to get sigma vectors (i.e. the pseudo orbitals coefficients in the basis of the original orbitals).
+        std::vector<std::vector<std::vector<std::vector<double>>>> sigmaVectors_becke_debug(nbCharges);
+        if (loopOnAtoms)
+        {
+            for (size_t i = 0; i < nbCharges; ++i)
+            {
+                // In the looping case, each charge has multiple positions (one for each atom).
+                // So we need to compute the ionic matrixes for each position of the charge.
+                sigmaVectors_becke_debug[i].resize(nbChargePositions, std::vector<std::vector<double>>(2, std::vector<double>(eigenvalues_becke[0].size(), 0.0)));
+
+                for (size_t j = 0; j < nbChargePositions; ++j)
+                {
+                    for (int spin = 0; spin < 2; ++spin)
+                    {
+                        for (size_t k = 0; k < eigenvalues_becke[spin].size(); ++k)
+                        {
+                            for (size_t l = 0; l < eigenvectors_becke[spin].size(); ++l)
+                            {
+                                sigmaVectors_becke_debug[i][j][spin][k] += eigenvectors_becke[spin][l][k] * ionicPotentialVectors_becke_debug[i][j][spin][l];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (size_t i = 0; i < nbCharges; ++i)
+            {
+                // In the non-looping case, each charge has only one position.
+                // So we compute the ionic matrixes only once for each charge and store it in the first position of the second dimension of the vector.
+                sigmaVectors_becke_debug[i].resize(1, std::vector<std::vector<double>>(2, std::vector<double>(eigenvalues_becke[0].size(), 0.0)));
+
+                for (int spin = 0; spin < 2; ++spin)
+                {
+                    for (size_t k = 0; k < eigenvalues_becke[spin].size(); ++k)
+                    {
+                        for (size_t l = 0; l < eigenvectors_becke[spin].size(); ++l)
+                        {
+                            sigmaVectors_becke_debug[i][0][spin][k] += eigenvectors_becke[spin][l][k] * ionicPotentialVectors_becke_debug[i][0][spin][l];
+                        }
+                    }
+                }
+            }
+        }
+
+
+        // Print results
+        printResultsLinearResponseWithPointCharges(eigenvalues_becke, sigmaVectors_becke_debug, charges, chargesPositions, loopOnAtoms, atoms, outputStream, verbose);
+        */
+    }
+
+    
     if (verbose != 0 && logFile)
     {
         logFile.close();

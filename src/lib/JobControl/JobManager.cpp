@@ -1,6 +1,7 @@
 #include <JobControl/ComputeEnergyWithPointCharges.hpp>
 #include <JobControl/Job.h>
 #include <JobControl/JobManager.hpp>
+#include <JobControl/Help.hpp>
 #include <Utils/Enums.hpp>
 
 //----------------------------------------------------------------------------------------------------//
@@ -73,7 +74,7 @@ void JobManager::createJob(const std::string& inputFileName, RunType runtype)
         }
         case RunType::HELP:
         {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
+            _jobs.push_back(std::make_unique<Help>());
             break;
         }
         case RunType::LAMBDA_DIAGNOSTIC:

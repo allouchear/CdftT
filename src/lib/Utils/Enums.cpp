@@ -18,6 +18,14 @@ namespace EnumConversionMaps
         { ELFMethod::UNKNOWN, "UNKNOWN" }
     };
 
+    std::unordered_map<EnergyPointChargeMethod, std::string> energyPointChargeMethod_string =
+    {
+        { EnergyPointChargeMethod::PERTURBATIVE, "Perturbative" },
+        { EnergyPointChargeMethod::VARIATIONAL, "Variational" },
+        { EnergyPointChargeMethod::LINEAR_RESPONSE, "LinearResponse" },
+        { EnergyPointChargeMethod::UNKNOWN, "UNKNOWN" }
+    };
+
     std::unordered_map<GridSaveType, std::string> gridSaveType_string =
     {
         { GridSaveType::DENSITY, "Density" },
@@ -81,8 +89,8 @@ namespace EnumConversionMaps
         { RunType::HELP, "Help" },
         { RunType::LAMBDA_DIAGNOSTIC, "LambdaDiagnostic" },
         { RunType::MAKE_DENSITY_CUBE, "MakeDensityCube" },
-        { RunType::MAKE_ORBITALS_CUBE, "MakeOrbitalsCube" },
         { RunType::MAKE_ELF_CUBE, "MakeELFCube" },
+        { RunType::MAKE_ORBITALS_CUBE, "MakeOrbitalsCube" },
         { RunType::UNKNOWN, "UNKNOWN" }
     };
 
@@ -115,6 +123,17 @@ std::string to_string(ELFMethod method)
 ELFMethod elfMethod_from_string(const std::string& strMethod)
 {
     return enum_from_string(strMethod, EnumConversionMaps::elfMethod_string, ELFMethod::UNKNOWN);
+}
+
+
+std::string to_string(EnergyPointChargeMethod method)
+{
+    return enum_to_string(method, EnumConversionMaps::energyPointChargeMethod_string);
+}
+
+EnergyPointChargeMethod energyPointChargeMethod_from_string(const std::string& strMethod)
+{
+    return enum_from_string(strMethod, EnumConversionMaps::energyPointChargeMethod_string, EnergyPointChargeMethod::UNKNOWN);
 }
 
 
