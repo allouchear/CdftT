@@ -8,6 +8,7 @@ ORBITALS = Orbitals
 UTILS = Utils
 COMMON  = Common
 JOBCONTROL  = JobControl
+JOBS = JobControl/Jobs
 
 BASISOBJ  = $(BASIS)/*.o
 BECKEOBJ  = $(BECKE)/*.o
@@ -15,7 +16,7 @@ ORBITALSOBJ  = $(ORBITALS)/*.o
 UTILSOBJ  = $(UTILS)/*.o
 CUBEOBJ  = $(CUBE)/*.o
 COMMONOBJ  = $(COMMON)/*.o
-JOBCONTROLOBJ  = $(JOBCONTROL)/*.o
+JOBCONTROLOBJ  = $(JOBCONTROL)/*.o $(JOBS)/*.o
 
 SUBDIRS = \
 	$(COMMON) $(CUBE) $(BASIS) $(BECKE) $(ORBITALS) $(UTILS) $(JOBCONTROL)

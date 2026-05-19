@@ -7,7 +7,8 @@
 
 /** @brief Help job class.
  * 
- *  This job is run when the "runType" parameter in the input file is set to "HELP" or when the "runType" parameter is not found or does not correspond to a valid job. It prints the list of available jobs and their descriptions.
+ * This job is run when the "runType" parameter in the input file is set to "Help" or when the input file is not given.
+ * It prints the list of available jobs and their descriptions.
  */
 class Help : public Job
 {
@@ -29,6 +30,13 @@ class Help : public Job
          * @brief Constructor for the Help class.
          */
         Help();
+
+
+        //----------------------------------------------------------------------------------------------------//
+        // STATIC METHODS
+        //----------------------------------------------------------------------------------------------------//
+
+        static void printAvailableJobs();
         
 
         //----------------------------------------------------------------------------------------------------//

@@ -485,7 +485,7 @@ void Descriptors::compute_All_From_Cube(std::ifstream &file1, std::ifstream &fil
     compute_All_From_Charge(I,A);
 }
 
-void Descriptors::sortCharges(std::vector<double> Q1, std::vector<double> Q2, std::vector<double> Q3, std::vector<double> E, double& I, double& A)
+void Descriptors::sortCharges(const std::vector<double>& Q1, const std::vector<double>& Q2, const std::vector<double>& Q3, std::vector<double>& E, double I, double A)
 {
     std::vector<std::vector<double>> Q(3);
     Q[0] = Q1;

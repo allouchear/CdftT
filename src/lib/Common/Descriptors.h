@@ -119,7 +119,7 @@ class Descriptors
         // PRIVATE METHODS
         //----------------------------------------------------------------------------------------------------//
 
-        void sortCharges(std::vector<double> Q1, std::vector<double> Q2, std::vector<double> Q3, std::vector<double> E, double& I, double& A);
+        void sortCharges(const std::vector<double>& Q1, const std::vector<double>& Q2, const std::vector<double>& Q3, std::vector<double>& E, double I, double A);
 
 
     public:

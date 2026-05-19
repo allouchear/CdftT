@@ -2088,26 +2088,65 @@ std::ostream& operator<<(std::ostream& stream, const Orbitals& orbitals)
     return stream;
 }
 
-Grid Orbitals::makeGrid(const Domain& d)
+Grid Orbitals::makeGrid(const Domain& domain, bool showProgress)
 {
     Grid g;
     g.set_structure(_struct);
-    g.set_domain(d);
+    g.set_domain(domain);
     g.reset();
-#ifdef ENABLE_OMP
-#pragma omp parallel
-#endif
-    for(int i=0;i<d.get_N1();i++)
+
+    int N1 = domain.get_N1();
+    int N2 = domain.get_N2();
+    int N3 = domain.get_N3();
+
+    const int nbStepsTotal = N1 * N2 * N3;
+    std::atomic<int> progress(0);
+    int lastProgress = -1;
+
+    // Show progress bar at 0% at the beginning
+    if (showProgress)
     {
-        for(int j=0;j<d.get_N2();j++)
+        print_progressBar(0, nbStepsTotal, lastProgress);
+    }
+
+    #ifdef ENABLE_OMP
+    #pragma omp parallel
+    #endif
+    {
+        #ifdef ENABLE_OMP
+        #pragma omp for collapse(2)
+        #endif
+        for(int i = 0; i < N1; ++i)
         {
-            for(int k=0;k<d.get_N3();k++)
+            for(int j = 0; j < N2; ++j)
             {
-                double rho=density(d.x(i,j,k), d.y(i,j,k), d.z(i,j,k));
-                g.set_Vijkl(rho,i,j,k,0);
+                for(int k = 0; k < N3; ++k)
+                {
+                    double rho = density(domain.x(i, j, k), domain.y(i, j, k), domain.z(i, j, k));
+                    g.set_Vijkl(rho, i, j, k, 0);
+                }
+                    
+                if (showProgress)
+                {
+                    // Update at each N2 iteration for a smoother display
+                    int currentStep = progress.fetch_add(N3) + N3;
+                    
+                    #ifdef ENABLE_OMP
+                    #pragma omp critical
+                    #endif
+                    {
+                        print_progressBar(currentStep, nbStepsTotal, lastProgress);
+                    }
+                }
             }
         }
     }
+    
+    if (showProgress)
+    {
+        std::cout << std::endl;
+    }
+
     return g;
 }
 
@@ -2295,25 +2334,80 @@ double Orbitals::ELF(double x, double y, double z, double epsilon)
     return 1.0/(1.0+XS2);
 }
 
-Grid Orbitals::makeELFgrid(const Domain& d,const double& epsilon)
+Grid Orbitals::makeELFgrid(const Domain& domain, ELFMethod elfMethod, bool showProgress)
 {
     Grid g;
     g.set_structure(_struct);
-    g.set_domain(d);
+    g.set_domain(domain);
     g.reset();
-#ifdef ENABLE_OMP
-#pragma omp parallel
-#endif
-    for(int i=0;i<d.get_N1();i++)
+
+    double epsilon;
+    if (elfMethod == ELFMethod::BECKE)
     {
-        for(int j=0;j<d.get_N2();j++)
+        epsilon = 0.0;
+    }
+    else if (elfMethod == ELFMethod::SAVIN)
+    {
+        epsilon = 2.87e-5;
+    }
+    else
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Orbitals::makeELFgrid(): invalid ELF method." << std::endl;
+        errorMessage << "Please check the documentation and the \"ELFMethod\" parameter value in the provided input file.";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    int N1 = domain.get_N1();
+    int N2 = domain.get_N2();
+    int N3 = domain.get_N3();
+
+    const int nbStepsTotal = N1 * N2 * N3;
+    std::atomic<int> progress(0);
+    int lastProgress = -1;
+
+    // Show progress bar at 0% at the beginning
+    if (showProgress)
+    {
+        print_progressBar(0, nbStepsTotal, lastProgress);
+    }
+
+    #ifdef ENABLE_OMP
+    #pragma omp parallel
+    #endif
+    {
+        #ifdef ENABLE_OMP
+        #pragma omp for collapse(2)
+        #endif
+        for(int i = 0; i < N1; ++i)
         {
-            for(int k=0;k<d.get_N3();k++)
+            for(int j = 0; j < N2; ++j)
             {
-                double elf=ELF(d.x(i,j,k), d.y(i,j,k), d.z(i,j,k), epsilon);
-                g.set_Vijkl(elf,i,j,k,0);
+                for(int k = 0; k < N3; ++k)
+                {
+                    double elf = ELF(domain.x(i,j,k), domain.y(i,j,k), domain.z(i,j,k), epsilon);
+                    
+                    g.set_Vijkl(elf, i, j, k, 0);
+                }
+
+                if (showProgress)
+                {
+                    // Update at each N2 iteration for a smoother display
+                    int currentStep = progress.fetch_add(N3) + N3;
+                    
+                    #ifdef ENABLE_OMP
+                    #pragma omp critical
+                    #endif
+                    {
+                        print_progressBar(currentStep, nbStepsTotal, lastProgress);
+                    }
+                }
             }
         }
     }
+
     return g;
 }

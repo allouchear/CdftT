@@ -1,8 +1,21 @@
-#include <JobControl/ComputeEnergyWithPointCharges.hpp>
 #include <JobControl/Job.h>
 #include <JobControl/JobManager.hpp>
-#include <JobControl/Help.hpp>
+
+#include <JobControl/Jobs/ComputeCondensedLinearResponse.hpp>
+#include <JobControl/Jobs/ComputeDescriptors.hpp>
+#include <JobControl/Jobs/ComputeEnergyWithPointCharges.hpp>
+#include <JobControl/Jobs/ComputeGridDifference.hpp>
+#include <JobControl/Jobs/ComputeIntegrals.hpp>
+#include <JobControl/Jobs/ComputePartialCharges.hpp>
+#include <JobControl/Jobs/ConvertOrbitals.hpp>
+#include <JobControl/Jobs/Help.hpp>
+#include <JobControl/Jobs/LambdaDiagnostic.hpp>
+#include <JobControl/Jobs/MakeDensityCube.hpp>
+#include <JobControl/Jobs/MakeELFCube.hpp>
+#include <JobControl/Jobs/MakeOrbitalsCube.hpp>
+
 #include <Utils/Enums.hpp>
+
 
 //----------------------------------------------------------------------------------------------------//
 // CONSTRUCTORS
@@ -34,12 +47,12 @@ void JobManager::createJob(const std::string& inputFileName, RunType runtype)
     {
         case RunType::COMPUTE_CONDENSED_LINEAR_RESPONSE:
         {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
+            _jobs.push_back(std::make_unique<ComputeCondensedLinearResponse>(inputFileName));
             break;
         }
         case RunType::COMPUTE_DESCRIPTORS:
         {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
+            _jobs.push_back(std::make_unique<ComputeDescriptors>(inputFileName));
             break;
         }
         case RunType::COMPUTE_ENERGY_WITH_POINT_CHARGES:
@@ -49,52 +62,47 @@ void JobManager::createJob(const std::string& inputFileName, RunType runtype)
         }
         case RunType::COMPUTE_GRID_DIFFERENCE:
         {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
+            _jobs.push_back(std::make_unique<ComputeGridDifference>(inputFileName));
             break;
         }
         case RunType::COMPUTE_INTEGRALS:
         {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
-            break;
-        }
-        case RunType::COMPUTE_LINEAR_RESPONSE_WITH_POINT_CHARGES:
-        {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
+            _jobs.push_back(std::make_unique<ComputeIntegrals>(inputFileName));
             break;
         }
         case RunType::COMPUTE_PARTIAL_CHARGES:
         {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
+            _jobs.push_back(std::make_unique<ComputePartialCharges>(inputFileName));
             break;
         }
         case RunType::CONVERT_ORBITALS:
         {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
+            //_jobs.push_back(std::make_unique<ConvertOrbitals>(inputFileName));
             break;
         }
         case RunType::HELP:
         {
-            _jobs.push_back(std::make_unique<Help>());
+            //_jobs.push_back(std::make_unique<Help>());
             break;
         }
         case RunType::LAMBDA_DIAGNOSTIC:
         {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
+            //_jobs.push_back(std::make_unique<LambdaDiagnostic>(inputFileName));
             break;
         }
         case RunType::MAKE_DENSITY_CUBE:
         {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
+            //_jobs.push_back(std::make_unique<MakeDensityCube>(inputFileName));
             break;
         }
         case RunType::MAKE_ORBITALS_CUBE:
         {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
+            //_jobs.push_back(std::make_unique<MakeOrbitalsCube>(inputFileName));
             break;
         }
         case RunType::MAKE_ELF_CUBE:
         {
-            _jobs.push_back(std::make_unique<Job>(inputFileName));
+            //_jobs.push_back(std::make_unique<MakeELFCube>(inputFileName));
             break;
         }
         default:

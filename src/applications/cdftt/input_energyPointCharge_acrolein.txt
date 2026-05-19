@@ -2,16 +2,16 @@ Charges=-0.1
 Positions=6.25,-1.5,0.0
 
 RunType=ComputeEnergyWithPointCharges
-OutputPrefix=acrolein_enePC_-0.1_6.25_-1.5_0.0
+OutputPrefix=isdkfjsd
 
 AnalyticFiles=tests/Guegan2020/acrolein_200States.fchk
 TransitionsFile=tests/Guegan2020/acrolein_200States.log
 MaxNumberOfExcitedStates=49
 
-#Size=Custom
-#CustomSizeData=128,128,128,8,8,8,1.2598425196850394e-01,0,0,0,1.2598425196850394e-01,0,0,0,1.2598425196850394e-01
+Size=Custom
+CustomSizeData=128,128,128,8,8,8,1.2598425196850394e-01,0,0,0,1.2598425196850394e-01,0,0,0,1.2598425196850394e-01
 
 #Becke=3,41,5
 
-ShowProgress=False
-Verbose=1
+ShowProgress=True
+Verbose=0

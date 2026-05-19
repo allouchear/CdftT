@@ -8,8 +8,10 @@
 
 #include <Common/Atom.h>
 #include <Common/Constants.h>
-#include <JobControl/ComputeEnergyWithPointCharges.hpp>
+#include <JobControl/Job.h>
+#include <JobControl/Jobs/ComputeEnergyWithPointCharges.hpp>
 #include <Orbitals/ExcitedState.hpp>
+#include <Orbitals/Orbitals.h>
 
 
 //----------------------------------------------------------------------------------------------------//
@@ -1354,7 +1356,7 @@ void ComputeEnergyWithPointCharges::run()
     /****************/
     /* REGULAR GRID */
     /****************/
-    /*
+    
     // Read grid size
     GridSize gridSize;
     CustomSizeData customSizeData;
@@ -1388,9 +1390,9 @@ void ComputeEnergyWithPointCharges::run()
 
 
         // Print results
-        printResultsEnergyWithPointCharges(states, ionicMatrixes_regularGrid, chargeNucleiContributions, charges, chargesPositions, loopOnAtoms, atoms, outputPrefix + "_regularGrid", outputStream, verbose);
+        printResults(states, ionicMatrixes_regularGrid, chargeNucleiContributions, charges, chargesPositions, loopOnAtoms, atoms, outputPrefix + "_regularGrid", outputStream, verbose);
     }
-    */
+    
 
     /****************/
     /* BECKE GRID */

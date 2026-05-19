@@ -10,7 +10,7 @@
 #include <Utils/LM.h>
 
 
-void Orbitals::Save(std::string& tag)
+void Orbitals::Save(const std::string& tag)
 {
     if(tag.find(".wfx")!=std::string::npos)
         Save_wfx(tag);
@@ -25,7 +25,7 @@ void Orbitals::Save(std::string& tag)
     }
 }
 
-void Orbitals::Save_wfx(std::string& tag)
+void Orbitals::Save_wfx(const std::string& tag)
 {
     int n, nMO;
     std::ofstream s;
@@ -110,7 +110,7 @@ void Orbitals::Save_wfx(std::string& tag)
         }
     else
     {
-        vector<int> pc;
+        std::vector<int> pc;
         for(size_t i=0; i<_vcgtf.size(); i++)
             for(int j=0; j<_vcgtf[i].numberOfFunctions(); j++)
                 pc.push_back(_vcgtf[i].NumCenter());
@@ -219,7 +219,7 @@ void Orbitals::Save_wfx(std::string& tag)
     s.close();
 }
                                                             // Moldengab faire attention au format sphe/cart !!!!
-void Orbitals::Save_molden(std::string& tag)    
+void Orbitals::Save_molden(const std::string& tag)    
 {
     if(int(_vcgtfUnnormalized.size())==_numberOfGtf)
     {
@@ -405,7 +405,7 @@ void Orbitals::Save_molden(std::string& tag)
     s.close();
 }
 
-void Orbitals::Save_gab(std::string& tag)
+void Orbitals::Save_gab(const std::string& tag)
 {
     if(_mixte)
     {

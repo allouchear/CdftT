@@ -9,6 +9,14 @@
 // ENUM TYPES
 //----------------------------------------------------------------------------------------------------//
 
+enum class CubeType
+{
+    DENSITY,
+    ELF,
+    ORBITALS,
+    UNKNOWN
+};
+
 enum class ELFMethod
 {
     BECKE,
@@ -106,6 +114,7 @@ enum class SpinType
 
 namespace EnumConversionMaps
 {
+    extern std::unordered_map<CubeType, std::string> cubeType_string;
     extern std::unordered_map<ELFMethod, std::string> elfMethod_string;
     extern std::unordered_map<EnergyPointChargeMethod, std::string> energyPointChargeMethod_string;
     extern std::unordered_map<GridSaveType, std::string> gridSaveType_string;
@@ -131,24 +140,36 @@ template<typename T> T enum_from_string(const std::string& strValue, const std::
 #include <Utils/Utils_enumConversion.tpp>
 
 
+std::string to_string(CubeType type);
+CubeType cubeType_from_string(const std::string& strCubeType);
+
 std::string to_string(ELFMethod method);
 ELFMethod elfMethod_from_string(const std::string& strMethod);
+
 std::string to_string(EnergyPointChargeMethod method);
 EnergyPointChargeMethod energyPointChargeMethod_from_string(const std::string& strMethod);
+
 std::string to_string(GridSaveType saveType);
 GridSaveType gridSaveType_from_string(const std::string& strSaveType);
+
 std::string to_string(GridSize size);
 GridSize gridSize_from_string(const std::string& strSize);
+
 std::string to_string(HFType hfType);
 HFType hfType_from_string(const std::string& strHfType);
+
 std::string to_string(OrbitalType orbitalType);
 OrbitalType orbitalType_from_string(const std::string& strOrbitalType);
+
 std::string to_string(PartitionMethod method);
 PartitionMethod partitionMethod_from_string(const std::string& strMethod);
+
 std::string to_string(RunType runType);
 RunType runType_from_string(const std::string& strRunType);
+
 char to_char(SpinType spinType);
 std::string to_string(SpinType spinType);
+
 SpinType spinType_from_char(const char charSpinType);
 SpinType spinType_from_string(const std::string& strSpinType);
 

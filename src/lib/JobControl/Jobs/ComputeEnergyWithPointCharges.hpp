@@ -10,6 +10,11 @@
 #include <Orbitals/ExcitedState.hpp>
 
 
+/**
+ * @brief ComputeEnergyWithPointCharges job class.
+ * 
+ * This job is run when the "runType" parameter in the input file is set to "ComputeEnergyWithPointCharges".
+ */
 class ComputeEnergyWithPointCharges : public Job
 {
     private:

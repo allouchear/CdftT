@@ -11,6 +11,14 @@
 
 namespace EnumConversionMaps
 {
+    std::unordered_map<CubeType, std::string> cubeType_string =
+    {
+        { CubeType::DENSITY, "Density" },
+        { CubeType::ELF, "Electron Localisation Function" },
+        { CubeType::ORBITALS, "Orbitals" },
+        { CubeType::UNKNOWN, "UNKNOWN" }
+    };
+
     std::unordered_map<ELFMethod, std::string> elfMethod_string =
     {
         { ELFMethod::BECKE, "Becke" },
@@ -83,7 +91,6 @@ namespace EnumConversionMaps
         { RunType::COMPUTE_ENERGY_WITH_POINT_CHARGES, "ComputeEnergyWithPointCharges" },
         { RunType::COMPUTE_GRID_DIFFERENCE, "ComputeGridDifference" },
         { RunType::COMPUTE_INTEGRALS, "ComputeIntegrals" },
-        { RunType::COMPUTE_LINEAR_RESPONSE_WITH_POINT_CHARGES, "ComputeLinearResponseWithPointCharges" },
         { RunType::COMPUTE_PARTIAL_CHARGES, "ComputePartialCharges" },
         { RunType::CONVERT_ORBITALS, "ConvertOrbitals" },
         { RunType::HELP, "Help" },
@@ -114,6 +121,16 @@ namespace EnumConversionMaps
 //----------------------------------------------------------------------------------------------------//
 // ENUM <-> STRING/CHAR CONVERSION FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
+
+std::string to_string(CubeType type)
+{
+    return enum_to_string(type, EnumConversionMaps::cubeType_string);
+}
+
+CubeType cubeType_from_string(const std::string& strCubeType)
+{
+    return enum_from_string(strCubeType, EnumConversionMaps::cubeType_string, CubeType::UNKNOWN);
+}
 
 std::string to_string(ELFMethod method)
 {

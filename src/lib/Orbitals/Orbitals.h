@@ -475,7 +475,13 @@ class Orbitals
 
             //! Make a grid of electronic density
             /*! creates a grid of electronic density. Values are calculated with Orbitals::density(x, y, z)*/
-        Grid makeGrid(const Domain& d);
+        /**
+         * @brief Creates a grid that stores electronic density.
+         * 
+         * @param[in] domain The domain of the grid.
+         * @param[in] showProgress Whether to display a progress bar during grid creation.
+         */
+        Grid makeGrid(const Domain& domain, bool showProgress = false);
 
         /**
          * @brief Computes the total electronic density for all orbitals at a given point.
@@ -534,7 +540,16 @@ class Orbitals
 
             //! Make ELF grid
             /*! Make an ELF grid using Orbitals::ELF()*/
-        Grid makeELFgrid(const Domain& d,const double& epsilon=2.87e-5);
+        /**
+         * @brief Creates a grid that stores the Electron Localization Function (ELF) values.
+         * 
+         * @param[in] domain The domain of the grid.
+         * @param[in] elfMethod The method to compute ELF values (default is ELFMethod::SAVIN).
+         * @param[in] showProgress If true, shows progress of the grid creation.
+         * 
+         * @return Grid A grid containing the ELF values computed using the specified method.
+         */
+        Grid makeELFgrid(const Domain& domain, ELFMethod elfMethod = ELFMethod::SAVIN, bool showProgress = false);
 
 
             //! A normal member taking no arguments and returning a void value.
@@ -549,19 +564,19 @@ class Orbitals
 
             //! A normal member taking one argument and returning a void value.
             /*! Save all the data in Orbitals in a file (tag = name.format). */
-        void Save(std::string& tag);
+        void Save(const std::string& tag);
 
             //! A normal member taking one argument and returning a void value.
             /*! Save all the data in Orbitals in a file .wfx. */
-        void Save_wfx(std::string& tag);
+        void Save_wfx(const std::string& tag);
 
             //! A normal member taking one argument and returning a void value.
             /*! Save all the data in Orbitals in a file .molden. */
-        void Save_molden(std::string& tag);
+        void Save_molden(const std::string& tag);
 
             //! A normal member taking one argument and returning a void value.
             /*! Save all the data in Orbitals in a file .gab. */
-        void Save_gab(std::string& tag);
+        void Save_gab(const std::string& tag);
 
 
         //----------------------------------------------------------------------------------------------------//
