@@ -187,7 +187,7 @@ std::vector<std::vector<std::vector<double>>> Becke::getIonicPotentialMatrix(con
                     
                     if (distance > 1e-10)
                     {
-                        ionicMatrixAO[i][j] += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func(x, y, z) * vcgtf[j].func(x, y, z) / distance;
+                        ionicMatrixAO[i][j] += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func({ x, y, z }) * vcgtf[j].func({ x, y, z }) / distance;
                     }
                 }
             }
@@ -341,7 +341,7 @@ std::vector<std::vector<double>> Becke::getIonicPotentialVector(const std::array
                 
                 if (distance > 1e-10)
                 {
-                    ionicVectorAO[i] += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func(x, y, z) /* * unitPseudoCgtf.func(x, y, z)*/ / distance;
+                    ionicVectorAO[i] += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func({ x, y, z }) /* * unitPseudoCgtf.func({ x, y, z })*/ / distance;
                 }
             }
         }
@@ -474,7 +474,7 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getPhiStarPhiM
                     double y = _grid_points[I][J][1];
                     double z = _grid_points[I][J][2];
 
-                    phiStarPhiMatrixAO[I][i][j] += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func(x, y, z) * vcgtf[j].func(x, y, z);
+                    phiStarPhiMatrixAO[I][i][j] += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func({ x, y, z }) * vcgtf[j].func({ x, y, z });
                 }
             }
         }
@@ -572,7 +572,7 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbit
                         double y = _grid_points[I][J][1];
                         double z = _grid_points[I][J][2];
                         
-                        toiMatrixAO[i][j][k] += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func(x, y, z) * vcgtf[j].func(x, y, z) * vcgtf[k].func(x, y, z);
+                        toiMatrixAO[i][j][k] += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func({ x, y, z }) * vcgtf[j].func({ x, y, z }) * vcgtf[k].func({ x, y, z });
                     }
                 }
 
@@ -730,7 +730,7 @@ std::vector<std::vector<std::vector<std::vector<double>>>> Becke::getTripleOrbit
 // INTEGRATION METHODS
 //----------------------------------------------------------------------------------------------------//
 
-double Becke::multicenter_integration(std::function<double(const std::vector<GTF>&, double, double, double)> f, const std::vector<GTF>& p, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::multicenter_integration(std::function<double(const std::vector<GTF>&, const std::array<double, 3>&)> f, const std::vector<GTF>& p, int kmax, int lebedev_order, int radial_grid_factor)
 {    /*
     compute the integral
 
@@ -776,7 +776,7 @@ double Becke::multicenter_integration(std::function<double(const std::vector<GTF
         #pragma omp parallel for reduction(+:integ)
         #endif
         for(size_t J=0; J<_grid_weights[I].size(); J++)
-            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(p, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2]);       // evaluate function on the grid
+            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(p, { _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2] });       // evaluate function on the grid
         integral+=integ;
     }
 
@@ -810,7 +810,7 @@ double Becke::multicenter_integration(const Grid& g, int kmax, int lebedev_order
     return integral;
 }
 
-double Becke::multicenter_integration(std::function<double(const Orbitals&, int, int, double, double, double)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::multicenter_integration(std::function<double(const Orbitals&, int, int, const std::array<double, 3>&)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor)
 {    /*
     compute the integral
 
@@ -855,14 +855,14 @@ double Becke::multicenter_integration(std::function<double(const Orbitals&, int,
         #pragma omp parallel for reduction(+:integ)
         #endif
         for(size_t J=0; J<_grid_weights[I].size(); J++)
-            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, i, j, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2]);       // evaluate function on the grid
+            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, i, j, { _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2] });       // evaluate function on the grid
         integral+=integ;
     }
 
     return integral;
 }
 
-double Becke::multicenter_integration(std::function<double(const Orbitals&, int, int, double, double, double, SpinType)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor, SpinType spinType)
+double Becke::multicenter_integration(std::function<double(const Orbitals&, int, int, const std::array<double, 3>&, SpinType)> f, int i, int j, int kmax, int lebedev_order, int radial_grid_factor, SpinType spinType)
 {    /*
     compute the integral
 
@@ -908,7 +908,7 @@ double Becke::multicenter_integration(std::function<double(const Orbitals&, int,
         #pragma omp parallel for reduction(+:integ)
         #endif
         for(size_t J=0; J<_grid_weights[I].size(); J++)
-            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, i, j, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2], spinType);       // evaluate function on the grid
+            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, i, j, { _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2] }, spinType);       // evaluate function on the grid
 
         integral+=integ;
     }
@@ -916,7 +916,7 @@ double Becke::multicenter_integration(std::function<double(const Orbitals&, int,
     return integral;
 }
 
-double Becke::multicenter_integration(std::function<double(Orbitals&, int, int, double, double, double, SpinType, const std::array<double, 3>&, double)> f, int i, int j, SpinType spinType, const std::array<double, 3>& chargePosition, double charge, int kmax, int lebedev_order, int radial_grid_factor)
+double Becke::multicenter_integration(std::function<double(Orbitals&, int, int, const std::array<double, 3>&, SpinType, const std::array<double, 3>&, double)> f, int i, int j, SpinType spinType, const std::array<double, 3>& chargePosition, double charge, int kmax, int lebedev_order, int radial_grid_factor)
 {
     if (_multigrid == false)
     {
@@ -937,7 +937,7 @@ double Becke::multicenter_integration(std::function<double(Orbitals&, int, int, 
         #endif
         for (size_t J = 0; J < _grid_weights[I].size(); ++J)
         {
-            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, i, j, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2], spinType, chargePosition, charge); // evaluate function on the grid
+            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, i, j, { _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2] }, spinType, chargePosition, charge); // evaluate function on the grid
         }
         
         integral += integ;
@@ -970,7 +970,7 @@ std::vector<double> Becke::multicenter_sub_integration(const Grid& g,int kmax , 
 	return sub_integral;
 }
 
-std::vector<double> Becke::multicenter_sub_integration(std::function<double(const Orbitals&, double, double, double)> f, const Orbitals& orbitals, int kmax, int lebedev_order, int radial_grid_factor)
+std::vector<double> Becke::multicenter_sub_integration(std::function<double(const Orbitals&, const std::array<double, 3>&)> f, const Orbitals& orbitals, int kmax, int lebedev_order, int radial_grid_factor)
 {   
     /*
     compute the integral
@@ -1017,7 +1017,7 @@ std::vector<double> Becke::multicenter_sub_integration(std::function<double(cons
         #pragma omp parallel for reduction(+:integ)
         #endif
         for(size_t J=0; J<_grid_weights[I].size(); J++)
-            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(orbitals, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2]);       // evaluate function on the grid
+            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(orbitals, { _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2] });       // evaluate function on the grid
 
         sub_integral[I] = integ;
     }
@@ -1025,12 +1025,12 @@ std::vector<double> Becke::multicenter_sub_integration(std::function<double(cons
     return sub_integral;
 }
 
-std::vector<double> Becke::multicenter_sub_integration(std::function<double(const Orbitals&, double, double, double)> f, int kmax, int lebedev_order, int radial_grid_factor)
+std::vector<double> Becke::multicenter_sub_integration(std::function<double(const Orbitals&, const std::array<double, 3>&)> f, int kmax, int lebedev_order, int radial_grid_factor)
 {
     return multicenter_sub_integration(f, _orbitals, kmax, lebedev_order, radial_grid_factor);
 }
 
-std::vector<double> Becke::multicenter_sub_integration(std::function<double(const Orbitals&, int, int, double, double, double, SpinType)> f, int i, int j, SpinType spinType, int kmax, int lebedev_order, int radial_grid_factor)
+std::vector<double> Becke::multicenter_sub_integration(std::function<double(const Orbitals&, int, int, const std::array<double, 3>&, SpinType)> f, int i, int j, SpinType spinType, int kmax, int lebedev_order, int radial_grid_factor)
 {
     if(_multigrid == false)
     {
@@ -1051,7 +1051,7 @@ std::vector<double> Becke::multicenter_sub_integration(std::function<double(cons
         #endif
         for (size_t J = 0; J < _grid_weights[I].size(); J++)
         {
-            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, i, j, _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2], spinType); // evaluate function on the grid
+            integ += _grid_volumes[I][J] * _grid_weights[I][J] * f(_orbitals, i, j, { _grid_points[I][J][0], _grid_points[I][J][1], _grid_points[I][J][2] }, spinType); // evaluate function on the grid
         }
 
         sub_integral[I] = integ;
@@ -1096,7 +1096,7 @@ std::vector<double> Becke::getRhoLumoMinusRhoHomo(int kmax, int lebedev_order, i
     homo.set_orbitalEnergy(std::vector<std::vector<double>>({ { homoEnergy[ALPHA] }, { homoEnergy[BETA] } }));
     homo.set_energy(homoEnergy[ALPHA] + homoEnergy[BETA]);
 
-    std::vector<double> rhoHomoPerAtom = multicenter_sub_integration(static_cast<double (*)(const Orbitals&, double, double, double)>(density), homo, kmax, lebedev_order, radial_grid_factor);
+    std::vector<double> rhoHomoPerAtom = multicenter_sub_integration(static_cast<double (*)(const Orbitals&, const std::array<double, 3>& coordinates)>(density), homo, kmax, lebedev_order, radial_grid_factor);
 
     Orbitals lumo(_orbitals);
     lumo.set_numberOfMo(1);
@@ -1107,7 +1107,7 @@ std::vector<double> Becke::getRhoLumoMinusRhoHomo(int kmax, int lebedev_order, i
     lumo.set_orbitalEnergy(std::vector<std::vector<double>>({ { lumoEnergy[ALPHA] }, { lumoEnergy[BETA] } }));
     lumo.set_energy(lumoEnergy[ALPHA] + lumoEnergy[BETA]);
 
-    std::vector<double> rhoLumoPerAtom = multicenter_sub_integration(static_cast<double (*)(const Orbitals&, double, double, double)>(density), lumo, kmax, lebedev_order, radial_grid_factor);
+    std::vector<double> rhoLumoPerAtom = multicenter_sub_integration(static_cast<double (*)(const Orbitals&, const std::array<double, 3>& coordinates)>(density), lumo, kmax, lebedev_order, radial_grid_factor);
 
     std::vector<double> rhoLumoMinusRhoHomoPerAtom(rhoLumoPerAtom.size());
     for (size_t i = 0; i < rhoLumoPerAtom.size(); i++)
@@ -1509,7 +1509,7 @@ void Becke::partial_charge(int kmax, int lebedev_order, int radial_grid_factor)
     int Nat = _molecule.getNumberOfAtoms();
 
     std::vector<double> qn(Nat);
-    std::vector<double> In = multicenter_sub_integration(static_cast<double(*)(const Orbitals&, double, double, double)>(density), kmax, lebedev_order, radial_grid_factor); // must use the cast because density is an overloaded function
+    std::vector<double> In = multicenter_sub_integration(static_cast<double(*)(const Orbitals&, const std::array<double, 3>& coordinates)>(density), kmax, lebedev_order, radial_grid_factor); // must use the cast because density is an overloaded function
 
     for(int i=0; i<Nat ;i++)
     {
@@ -1599,7 +1599,7 @@ void Becke::chiAtomic(std::vector<std::vector<double>>& chiAtomic, int kmax, int
                     double y = _grid_points[I][J][1];
                     double z = _grid_points[I][J][2];
 
-                    sum += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func(x, y, z) * vcgtf[j].func(x, y, z);
+                    sum += _grid_weights[I][J] * _grid_volumes[I][J] * vcgtf[i].func({ x, y, z }) * vcgtf[j].func({ x, y, z });
                 }
 
                 overlapMatrixesAO[I][i][j] = sum;
@@ -1660,17 +1660,17 @@ void Becke::chiAtomic(std::vector<std::vector<double>>& chiAtomic, int kmax, int
     }
 }
 
-double Becke::density(const Orbitals& orbitals, double x, double y, double z)
+double Becke::density(const Orbitals& orbitals, const std::array<double, 3>& coordinates)
 {
-	return orbitals.density(x, y, z);
+	return orbitals.density(coordinates);
 }
 
-double Becke::density(const Orbitals& orbitals, int orbitalNumber, SpinType spinType, double x, double y, double z)
+double Becke::density(const Orbitals& orbitals, int orbitalNumber, SpinType spinType, const std::array<double, 3>& coordinates)
 {
-    return orbitals.density(orbitalNumber, spinType, x, y, z);
+    return orbitals.density(orbitalNumber, spinType, coordinates);
 }
 
-double Becke::density(const Orbitals& orbitals, const std::vector<int>& orbitalNumbers, const std::vector<SpinType>& orbitalSpins, double x, double y, double z)
+double Becke::density(const Orbitals& orbitals, const std::vector<int>& orbitalNumbers, const std::vector<SpinType>& orbitalSpins, const std::array<double, 3>& coordinates)
 {
     if (orbitalNumbers.size() != orbitalSpins.size())
     {
@@ -1678,19 +1678,15 @@ double Becke::density(const Orbitals& orbitals, const std::vector<int>& orbitalN
         std::exit(1);
     }
 
-    return orbitals.density(orbitalNumbers, orbitalSpins, x, y, z);
+    return orbitals.density(orbitalNumbers, orbitalSpins, coordinates);
 }
 
-double Becke::prodGTF(const std::vector<GTF>& p, double x, double y, double z)
+double Becke::prodGTF(const std::vector<GTF>& p, const std::array<double, 3>& coordinates)
 {
-    std::vector<double> c (3);
-    c[0]=x;
-    c[1]=y;
-    c[2]=z;
-    return p*c;
+    return p * coordinates;
 }
 
-double Becke::CGTFstarCGTF(const Orbitals& orbitals, int i, int j, double x, double y ,double z)
+double Becke::CGTFstarCGTF(const Orbitals& orbitals, int i, int j, const std::array<double, 3>& coordinates)
 {
     double c = 0.0;
 
@@ -1698,30 +1694,30 @@ double Becke::CGTFstarCGTF(const Orbitals& orbitals, int i, int j, double x, dou
 
     if(i == j)
     {
-        c = vcgtf[i].func(x, y, z);
+        c = vcgtf[i].func(coordinates);
         c *= c;
     }
     else
     {
-        c = vcgtf[i].func(x, y, z) * vcgtf[j].func(x, y, z);
+        c = vcgtf[i].func(coordinates) * vcgtf[j].func(coordinates);
     }
 
     return c;
 }
 
-double Becke::phi(const Orbitals& orbitals, int i, double x, double y, double z, SpinType spinType)
+double Becke::phi(const Orbitals& orbitals, int i, const std::array<double, 3>& coordinates, SpinType spinType)
 {
     double phi = 0.0;
     
     for(size_t j = 0; j < orbitals.get_vcgtf().size(); ++j)
     {
-        phi += orbitals.get_coefficients()[static_cast<int>(spinType)][i][j] * orbitals.get_vcgtf()[i].func(x, y, z);
+        phi += orbitals.get_coefficients()[static_cast<int>(spinType)][i][j] * orbitals.get_vcgtf()[i].func(coordinates);
     }
 
     return phi;
 }
 
-double Becke::phiStarPhi(const Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType)
+double Becke::phiStarPhi(const Orbitals& orbitals, int i, int j, const std::array<double, 3>& coordinates, SpinType spinType)
 {
     double phi_star_phi = 0.0;
     int spin = static_cast<int>(spinType);
@@ -1734,7 +1730,7 @@ double Becke::phiStarPhi(const Orbitals& orbitals, int i, int j, double x, doubl
 
         for (size_t k = 0; k < orbitals.get_vcgtf().size(); k++)
         {
-            phi_i += coefficients[spin][i][k] * vcgtf[k].func(x, y, z);
+            phi_i += coefficients[spin][i][k] * vcgtf[k].func(coordinates);
         }
 
         phi_star_phi = phi_i * phi_i;
@@ -1746,7 +1742,7 @@ double Becke::phiStarPhi(const Orbitals& orbitals, int i, int j, double x, doubl
 
         for (size_t k = 0; k < orbitals.get_vcgtf().size(); k++)
         {
-            double v_k = vcgtf[k].func(x, y, z);
+            double v_k = vcgtf[k].func(coordinates);
 
             phi_i += coefficients[spin][i][k] * v_k;
             phi_j += coefficients[spin][j][k] * v_k;
@@ -1758,13 +1754,13 @@ double Becke::phiStarPhi(const Orbitals& orbitals, int i, int j, double x, doubl
     return phi_star_phi;
 }
 
-double Becke::phiStarVionicStarPhi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType, const std::array<double, 3>& chargePosition, double charge)
+double Becke::phiStarVionicStarPhi(Orbitals& orbitals, int i, int j, const std::array<double, 3>& coordinates, SpinType spinType, const std::array<double, 3>& chargePosition, double charge)
 {
-    double distance = std::sqrt((chargePosition[0] - x) * (chargePosition[0] - x)
-                                + (chargePosition[1] - y) * (chargePosition[1] - y)
-                                + (chargePosition[2] - z) * (chargePosition[2] - z));
+    double distance = std::sqrt((chargePosition[0] - coordinates[0]) * (chargePosition[0] - coordinates[0])
+                                + (chargePosition[1] - coordinates[1]) * (chargePosition[1] - coordinates[1])
+                                + (chargePosition[2] - coordinates[2]) * (chargePosition[2] - coordinates[2]));
 
-    return (distance > 1e-10 ? - charge * phiStarPhi(orbitals, i, j, x, y, z, spinType) / distance : 0.0);
+    return (distance > 1e-10 ? - charge * phiStarPhi(orbitals, i, j, coordinates, spinType) / distance : 0.0);
 }
 
 

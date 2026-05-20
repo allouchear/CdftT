@@ -4,6 +4,8 @@ Positions=6.25,-1.5,0.0
 RunType=ComputeEnergyWithPointCharges
 OutputPrefix=isdkfjsd
 
+EnergyPointChargeMethods=Perturbative,Variational,LinearResponse
+
 AnalyticFiles=tests/Guegan2020/acrolein_200States.fchk
 TransitionsFile=tests/Guegan2020/acrolein_200States.log
 MaxNumberOfExcitedStates=49

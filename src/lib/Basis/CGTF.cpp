@@ -256,13 +256,13 @@ void CGTF::setFormat(std::string format)
     _l_format=format;
 }
 
-double CGTF::func(double x, double y, double z) const
+double CGTF::func(const std::array<double, 3>& coordinates) const
 {
     double r = 0.0;
 
     for(int i = 0; i < _numberOfFunctions; ++i)
     {
-        r += _coefficients[i] * _gtf[i].func(x, y, z);
+        r += _coefficients[i] * _gtf[i].func(coordinates);
     }
 
     return r;
@@ -308,21 +308,23 @@ std::ostream& operator<<(std::ostream &stream, const CGTF &cgtf)
     return stream;
 }
 
-double operator*(const std::vector<CGTF> &cgtfs, const std::vector<double> &coords)
+double operator*(const std::vector<CGTF>& cgtfs, const std::array<double, 3>& coordinates)
 {
-    double r=1.0;
+    double r = 1.0;
 
     for (size_t i = 0; i < cgtfs.size(); i++)
-        r *= cgtfs[i].func(coords[0], coords[1], coords[2]);
+    {
+        r *= cgtfs[i].func(coordinates);
+    }
 
     return r;
 }
-double CGTF::grad_CGTF(const double& x, const double& y, const double& z, int i)
+double CGTF::grad_CGTF(const std::array<double, 3>& coordinates, int i)
 {
     double v=0;
     for(size_t j=0; j<_gtf.size(); j++) 
     {
-        v += _coefficients[j]*_gtf[j].grad_GTF(x,y,z,i);
+        v += _coefficients[j]*_gtf[j].grad_GTF(coordinates, i);
     }
     return v;
 }

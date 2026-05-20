@@ -81,6 +81,11 @@ class ComputeEnergyWithPointCharges : public Job
          */
         void printResultsLinearResponse(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, const std::vector<Atom>& atoms, std::ostream& outputStream, int verbose = 0);
 
+        /**
+         * TODO
+         */
+        void useLinearResponseApproach(Orbitals& orbitals, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, const std::string& analyticFileName, const std::string& outputPrefix, const std::vector<int>& beckeParams, bool savePseudoOrbitals, bool showProgress, int verbose, std::ostream& outputStream);
+
 
     public:
         //----------------------------------------------------------------------------------------------------//

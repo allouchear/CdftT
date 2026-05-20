@@ -189,6 +189,41 @@ bool Job::readEnergies(std::vector<double>& energies)
     return read;
 }
 
+bool Job::readEnergyPointChargeMethods(std::vector<EnergyPointChargeMethod>& energyPointChargeMethods)
+{
+    std::vector<std::string> strEnergyPointChargeMethods;
+    bool read = readListType<std::string>(_inputFile, "EnergyPointChargeMethods", strEnergyPointChargeMethods);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"EnergyPointChargeMethods\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (EnergyPointChargeMethods=Variational)." << std::endl << std::endl;
+
+        energyPointChargeMethods = { EnergyPointChargeMethod::VARIATIONAL };
+    }
+
+    for (const std::string& strMethod : strEnergyPointChargeMethods)
+    {
+        EnergyPointChargeMethod method = energyPointChargeMethod_from_string(strMethod);
+
+        // Handle unknown method: exit program with error message.
+        if (method == EnergyPointChargeMethod::UNKNOWN)
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error: Energy point charge method \"" << strMethod << "\" unknown." << std::endl;
+            errorMessage << "Please check the documentation and the \"EnergyPointChargeMethods\" parameter values in the provided input file (" << _inputFileName << ").";
+
+            print_error(errorMessage.str());
+
+            std::exit(1);
+        }
+
+        energyPointChargeMethods.push_back(method);
+    }
+
+    return read;
+}
+
 bool Job::readGridFilesNames(std::vector<std::string>& gridFilesNames)
 {
     bool read = readListType<std::string>(_inputFile, "Grids", gridFilesNames);
@@ -664,6 +699,20 @@ bool Job::readSpinType(SpinType& spinType)
         print_error(errorMessage.str());
 
         std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readStatesNumbers(std::vector<int>& statesNumbers)
+{
+    bool read = readListType<int>(_inputFile, "StatesNumbers", statesNumbers);
+
+    if (!read)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Note: the \"StatesNumbers\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        errorMessage << "The program will keep all states." << std::endl << std::endl;
     }
 
     return read;

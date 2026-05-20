@@ -71,8 +71,12 @@ SlaterDeterminant::SlaterDeterminant(const Orbitals& orbitals):
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void SlaterDeterminant::updateFromTransition(int initialOrbitalNumber, SpinType initialSpin, int finalOrbitalNumber, SpinType finalSpin)
+bool SlaterDeterminant::updateFromTransition(int initialOrbitalNumber, SpinType initialSpin, int finalOrbitalNumber, SpinType finalSpin)
 {
+    // The transition will be tagged as valid if it has been done successfully, i.e. if the initial orbital was found in the occupied orbitals and replaced by the final orbital.
+    // Otherwise (e.g., if the initial orbital was not found in the occupied orbitals), the transition is considered invalid.
+    bool valid = false;
+
     // Get spin type int values
     const int ALPHA = static_cast<int>(SpinType::ALPHA);
     const int BETA = static_cast<int>(SpinType::BETA);
@@ -85,6 +89,7 @@ void SlaterDeterminant::updateFromTransition(int initialOrbitalNumber, SpinType 
             if (_occupiedOrbitals[ALPHA][i].first == initialOrbitalNumber)
             {
                 _occupiedOrbitals[ALPHA][i].first = finalOrbitalNumber;
+                valid = true;
                 break;
             }
         }
@@ -96,6 +101,7 @@ void SlaterDeterminant::updateFromTransition(int initialOrbitalNumber, SpinType 
             if (_occupiedOrbitals[BETA][i].first == initialOrbitalNumber)
             {
                 _occupiedOrbitals[BETA][i].first = finalOrbitalNumber;
+                valid = true;
                 break;
             }
         }
@@ -109,6 +115,8 @@ void SlaterDeterminant::updateFromTransition(int initialOrbitalNumber, SpinType 
 
         std::exit(1);
     }
+
+    return valid;
 }
 
 
@@ -149,6 +157,45 @@ std::vector<std::vector<std::pair<int, int>>> SlaterDeterminant::getDifferences(
     }
 
     return differences;
+}
+
+bool SlaterDeterminant::equivalent(const SlaterDeterminant& d_i, const SlaterDeterminant& d_j)
+{
+    bool equivalent = true;
+
+    // Get spin type int values
+    const int ALPHA = static_cast<int>(SpinType::ALPHA);
+    const int BETA = static_cast<int>(SpinType::BETA);
+    std::array<int, 2> spins = { ALPHA, BETA };
+
+    std::vector<std::vector<int>> occupiedOrbitalsNumbers_i(2, std::vector<int>(d_i._occupiedOrbitals[0].size()));
+    std::vector<std::vector<int>> occupiedOrbitalsNumbers_j(2, std::vector<int>(d_j._occupiedOrbitals[0].size()));
+
+    for (int spin : spins)
+    {
+        // Get and sort occupied orbitals numbers for first Slater determinant
+        for (size_t i = 0; i < d_i._occupiedOrbitals[spin].size(); ++i)
+        {
+            occupiedOrbitalsNumbers_i[spin][i] = d_i._occupiedOrbitals[spin][i].first;
+        }
+        std::sort(occupiedOrbitalsNumbers_i[spin].begin(), occupiedOrbitalsNumbers_i[spin].end());
+
+        // Get and sort occupied orbitals numbers for second Slater determinant
+        for (size_t i = 0; i < d_j._occupiedOrbitals[spin].size(); ++i)
+        {
+            occupiedOrbitalsNumbers_j[spin][i] = d_j._occupiedOrbitals[spin][i].first;
+        }
+        std::sort(occupiedOrbitalsNumbers_j[spin].begin(), occupiedOrbitalsNumbers_j[spin].end());
+        
+        // Compare sorted occupied orbitals numbers for both Slater determinants
+        if(occupiedOrbitalsNumbers_i[spin] != occupiedOrbitalsNumbers_j[spin])
+        {
+            equivalent = false;
+            break;
+        }
+    }
+
+    return equivalent;
 }
 
 double SlaterDeterminant::overlap(const SlaterDeterminant& d_i, const SlaterDeterminant& d_j)

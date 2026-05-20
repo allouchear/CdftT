@@ -88,6 +88,7 @@ namespace EnumConversionMaps
     {
         { RunType::COMPUTE_CONDENSED_LINEAR_RESPONSE, "ComputeCondensedLinearResponse" },
         { RunType::COMPUTE_DESCRIPTORS, "ComputeDescriptors" },
+        { RunType::COMPUTE_ELECTRON_DENSITY, "ComputeElectronDensity" },
         { RunType::COMPUTE_ENERGY_WITH_POINT_CHARGES, "ComputeEnergyWithPointCharges" },
         { RunType::COMPUTE_GRID_DIFFERENCE, "ComputeGridDifference" },
         { RunType::COMPUTE_INTEGRALS, "ComputeIntegrals" },

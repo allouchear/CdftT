@@ -231,11 +231,24 @@ class Domain
         //----------------------------------------------------------------------------------------------------//
 
         /**
+         * @brief Returns the values along the (x, y, z) axis of the point corresponding to the given grid indices.
+         *
+         * @param i Grid index i.
+         * @param j Grid index j.
+         * @param k Grid index k.
+         * 
+         * @return The (x, y, z) coordinates of the point.
+
+         */
+        std::array<double, 3> xyz(int i, int j, int k) const;
+
+        /**
          * @brief Returns the value along the first (x) axis of the point on indices i, j, k.
          *
          * @param i Grid index i.
          * @param j Grid index j.
          * @param k Grid index k.
+         * 
          * @return First (x) coordinate in space.
          */
         double x(int i, int j, int k) const;
@@ -246,6 +259,7 @@ class Domain
          * @param i Grid index i.
          * @param j Grid index j.
          * @param k Grid index k.
+         * 
          * @return Second (y) coordinate in space.
          */
         double y(int i, int j, int k) const;
@@ -256,6 +270,7 @@ class Domain
          * @param i Grid index i.
          * @param j Grid index j.
          * @param k Grid index k.
+         * 
          * @return Third (z) coordinate in space.
          */
         double z(int i, int j, int k) const;

@@ -935,7 +935,7 @@ bool LOG::readGroundStateEnergy(const std::string& logFileName, double& groundSt
     return (ok && found);
 }
 
-bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, int maxNumberOfExcitedStates)
+bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, int maxNumberOfExcitedStates, const std::vector<int>& statesNumbersToKeep)
 {
     bool ok = true;
 
@@ -975,7 +975,7 @@ bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedSta
             {
                 double energy = std::stod(energyRegexMatch[1]) * Constants::EV_TO_HARTREE;
 
-                ExcitedState excitedState(energy + groundStateEnergy);
+                ExcitedState excitedState(numberOfExcitedStatesRead + 1, energy + groundStateEnergy);
 
                 do
                 {
@@ -1041,8 +1041,12 @@ bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedSta
                 // Check that at least one transition was read
                 if (excitedState.getNumberOfTransitions() > 0)
                 {
-                    // Add excited state to the list
-                    excitedStates.push_back(excitedState);
+                    if (statesNumbersToKeep.empty() || std::find(statesNumbersToKeep.begin(), statesNumbersToKeep.end(), numberOfExcitedStatesRead + 1) != statesNumbersToKeep.end())
+                    {
+                        // Add excited state to the list
+                        excitedStates.push_back(excitedState);
+                    }
+                    
                     ++numberOfExcitedStatesRead;
                 }
                 else

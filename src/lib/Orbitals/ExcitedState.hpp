@@ -21,18 +21,27 @@ class ExcitedState
 {
     private:
         typedef std::pair<int, SpinType> OrbitalState;
-
-        /** @brief Energy of the excited state. */
-        double _energy;
-
-        /** @brief Indicates if the state is the ground state. */
-        bool _isGroundState;
         
         /** @brief Electronic transitions associated with the excited state. */
         std::vector<std::tuple<OrbitalState, OrbitalState, double>> _electronicTransitions;
 
+        /** @brief Energy of the excited state. */
+        double _energy;
+
+        /** @brief Number of the excited state. */
+        int _number;
+
         /** @brief Slater determinants associated with the excited state (one for each transition). */
         std::vector<std::pair<SlaterDeterminant, double>> _slaterDeterminants;
+
+
+        //----------------------------------------------------------------------------------------------------//
+        // PRIVATE METHODS
+        //----------------------------------------------------------------------------------------------------//
+        
+        void computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, int numberOfMo) const;
+
+        double computeGammaMatrixElement(int i, int j, SpinType spinType) const;
     
 
     public:
@@ -43,9 +52,10 @@ class ExcitedState
         /**
          * @brief Constructor.
          *
-         * @param energy Energy of the excited state, in Hartree.
+         * @param[in] number Number of the excited state.
+         * @param[in] energy Energy of the excited state, in Hartree.
          */
-        ExcitedState(const double energy);
+        ExcitedState(const int number, const double energy);
 
         /**
          * @brief Constructor for the ground state.
@@ -65,14 +75,14 @@ class ExcitedState
         double get_energy() const;
 
         /**
+         * @brief Returns the number of the excited state.
+         */
+        int get_number() const;
+
+        /**
          * @brief Returns the Slater determinants associated with the excited state along with their respective coefficient.
          */
         const std::vector<std::pair<SlaterDeterminant, double>>& get_slaterDeterminants() const;
-
-        /**
-         * @brief Returns whether the state is the ground state.
-         */
-        bool isGroundState() const;
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
@@ -95,9 +105,35 @@ class ExcitedState
         void computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant);
 
         /**
+         * @brief Computes the electronic density at coordinates (x,y,z).
+         *
+         * @param orbitals Orbitals object containing the molecular orbitals information.
+         * @param spinType Spin type (alpha, beta, or both) for which to compute the density.
+         * @param gammaMatrix The matrix of coefficients for calculation of the density
+         * @param coordinates Array containing the (x, y, z) coordinates at which to evaluate the density.
+         * 
+         * @return double The electronic density evaluated at (x, y, z).
+         */
+        double density(const Orbitals& orbitals, SpinType spinType, std::vector<std::vector<std::vector<double>>>& gammaMatrix, const std::array<double, 3>& coordinates) const;
+
+        /**
          * @brief Returns the number of electronic transitions associated with the excited state.
          */
         int getNumberOfTransitions() const;
+
+        /**
+         * @brief Returns whether the state is a ground state or an excited state.
+         */
+        bool isGroundState() const;
+
+        /**
+         * @brief Computes the density grid for the excited state.
+         * 
+         * @param[in] orbitals Orbitals object containing the molecular orbitals information.
+         * @param[out] grid Grid object on which to compute the density.
+         * @param[in] showProgress Whether to display a progress bar during grid creation.
+         */
+        void makeDensityGrid(Orbitals& orbitals, Grid& grid, bool showProgress = false);
 
         /** @brief Prints lambda diagnostic for the excited state.
          *
@@ -156,7 +192,7 @@ class ExcitedState
          * 
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1);
+        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
 
         /**
          * @brief Reads a transitions file and populates a vector of ExcitedState objects.
@@ -167,7 +203,7 @@ class ExcitedState
          * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1);
+        static bool readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
 
         /**
          * @brief Reads transitions from an Orca .out file and populates a vector of ExcitedState objects. *
@@ -177,7 +213,7 @@ class ExcitedState
          * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1);
+        static bool readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
 
         /////////////////////////
         // OTHER STATIC METHODS

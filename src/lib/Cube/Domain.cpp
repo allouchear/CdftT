@@ -225,6 +225,11 @@ void Domain::set_all(int Nval, int N1, int N2,int N3, double xmax, double ymax, 
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
+std::array<double, 3> Domain::xyz(int i, int j, int k) const
+{
+    return { x(i, j, k), y(i, j, k), z(i, j, k) };
+}
+
 double Domain::x(int i, int j, int k) const
 {
     return _origin[0] + _T[0][0] * i + _T[0][1] * j + _T[0][2] * k;

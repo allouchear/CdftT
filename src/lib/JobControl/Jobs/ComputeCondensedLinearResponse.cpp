@@ -80,7 +80,7 @@ void ComputeCondensedLinearResponse::run()
     // Build Becke grid
     std::cout << "Building Becke object... ";
     Becke becke;
-    Job::computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
+    computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
 
     // Keep a const reference on atoms
     std::vector<Atom> atoms = becke.get_orbitals().get_struct().get_atoms();

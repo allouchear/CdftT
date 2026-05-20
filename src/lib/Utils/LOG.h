@@ -227,7 +227,7 @@ class LOG
          * 
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitions(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, int maxNumberOfExcitedStates = -1);
+        static bool readTransitions(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, int maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
 };
 
     //! A function taking two arguments and returning a long int value.

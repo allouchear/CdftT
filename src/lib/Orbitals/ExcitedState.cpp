@@ -1,3 +1,4 @@
+#include <atomic>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -22,20 +23,95 @@
 
 
 //----------------------------------------------------------------------------------------------------//
+// PRVIATE METHODS
+//----------------------------------------------------------------------------------------------------//
+
+void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, int numberOfMo) const
+{
+    //Gamma matrix for alpha-alpha and beta-beta transitions
+    gammaMatrix.resize(2, std::vector<std::vector<double>>(numberOfMo, std::vector<double>(numberOfMo)));
+
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        SpinType spinType = static_cast<SpinType>(spin);
+
+        for(int p = 0; p < numberOfMo; ++p)
+        {
+            for(int q = 0; q <= p; ++q)
+            {
+                gammaMatrix[spin][p][q] = computeGammaMatrixElement(p + 1, q + 1, spinType); // Because MO numbers are 1-indexed
+
+                // Fill the symmetric element
+                if(p != q)
+                {
+                    gammaMatrix[spin][q][p] = gammaMatrix[spin][p][q];
+                }
+            }
+        }
+    }
+
+    // Remove core orbitals contributions from the gamma matrix
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for (int p = 0; p < numberOfMo; ++p)
+        {
+            gammaMatrix[spin][0][p] = gammaMatrix[spin][p][0] = 0.0;
+            gammaMatrix[spin][1][p] = gammaMatrix[spin][p][1] = 0.0;
+        }
+    }
+}
+
+double ExcitedState::computeGammaMatrixElement(int i, int j, SpinType spinType) const
+{
+    double element = 0.0;
+
+    for(size_t l = 0; l < _slaterDeterminants.size(); ++l)
+    {
+        // Make temporary SD on wich to apply the transition to check if it is valid (i.e. the orbital p from which to remove an electron was found in the SD)
+        SlaterDeterminant tmpSD = _slaterDeterminants[l].first;
+        if(tmpSD.updateFromTransition(i, spinType, j, spinType))
+        {
+            for(size_t m = 0; m < _slaterDeterminants.size(); ++m)
+            {
+                if(SlaterDeterminant::equivalent(tmpSD, _slaterDeterminants[m].first))
+                {
+                    std::vector<std::vector<std::pair<int,int>>> diff = SlaterDeterminant::getDifferences(tmpSD, _slaterDeterminants[m].first);
+
+                    //std::cout<<"Nperm = "<<(diff[0].size()+diff[1].size())/2<< " for p="<<p << " for q="<<q<<std::endl;
+                    
+                    int numberOfPermutations = (diff[0].size() + diff[1].size()) / 2;
+                    if(numberOfPermutations == 0 || numberOfPermutations == 2)
+                    {
+                        element += _slaterDeterminants[l].second * _slaterDeterminants[m].second;
+                    }
+                    else if(numberOfPermutations == 1)
+                    {
+                        element -= _slaterDeterminants[l].second * _slaterDeterminants[m].second;
+                    }
+                }
+            }            
+        }
+    }
+
+    return element;
+}
+
+
+//----------------------------------------------------------------------------------------------------//
 // CONSTRUCTOR
 //----------------------------------------------------------------------------------------------------//
 
-ExcitedState::ExcitedState(const double energy) :
-    _energy(energy),
-    _isGroundState(false),
+ExcitedState::ExcitedState(const int number, const double energy) :
     _electronicTransitions(),
+    _energy(energy),
+    _number(number),
     _slaterDeterminants()
 { }
 
 ExcitedState::ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant) :
-    _energy(energy),
-    _isGroundState(true),
     _electronicTransitions(),
+    _energy(energy),
+    _number(0),
     _slaterDeterminants({ { slaterDeterminant, 1.0 } })
 { }
 
@@ -49,14 +125,14 @@ double ExcitedState::get_energy() const
     return _energy;
 }
 
+int ExcitedState::get_number() const
+{
+    return _number;
+}
+
 const std::vector<std::pair<SlaterDeterminant, double>>& ExcitedState::get_slaterDeterminants() const
 {
     return _slaterDeterminants;
-}
-
-bool ExcitedState::isGroundState() const
-{
-    return _isGroundState;
 }
 
 
@@ -92,9 +168,117 @@ void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStat
     }
 }
 
+double ExcitedState::density(const Orbitals& orbitals, SpinType spinType, std::vector<std::vector<std::vector<double>>>& gammaMatrix, const std::array<double, 3>& coordinates) const
+{
+    double rho = 0.0;
+
+    int numberOfMo = orbitals.get_numberOfMo();
+
+    // Evaluate MOs at coordinates
+    std::vector<std::vector<double>> evaluatedMOs;
+    orbitals.evaluateAtPoint(evaluatedMOs, coordinates);
+
+    std::vector<SpinType> spins;
+    if (spinType == SpinType::ALPHA || spinType == SpinType::ALPHA_BETA)
+    {
+        spins.push_back(SpinType::ALPHA);
+    }
+    if (spinType == SpinType::BETA || spinType == SpinType::ALPHA_BETA)
+    {
+        spins.push_back(SpinType::BETA);
+    }
+
+    for (SpinType spinType : spins)
+    {
+        int spin = static_cast<int>(spinType);
+
+        for(int p = 0; p < numberOfMo; ++p)
+        {
+            for(int q = 0; q < numberOfMo; ++q)
+            {
+                rho += gammaMatrix[spin][p][q] * evaluatedMOs[spin][p] * evaluatedMOs[spin][q];
+            }
+        }
+    }
+
+    return rho;
+}
+
 int ExcitedState::getNumberOfTransitions() const
 {
     return static_cast<int>(_electronicTransitions.size());
+}
+
+bool ExcitedState::isGroundState() const
+{
+    return _number == 0;
+}
+
+void ExcitedState::makeDensityGrid(Orbitals& orbitals, Grid& grid, bool showProgress)
+{
+    int numberOfMo = orbitals.get_numberOfMo();
+
+    // Compute gamma matrix
+    std::vector<std::vector<std::vector<double>>> gammaMatrix;
+    computeGammaMatrix(gammaMatrix, numberOfMo);
+
+    Domain domain = grid.get_domain();
+
+    int N1 = domain.get_N1();
+    int N2 = domain.get_N2();
+    int N3 = domain.get_N3();
+
+    const int nbStepsTotal = N1 * N2 * N3;
+    std::atomic<int> progress(0);
+    int lastProgress = -1;
+
+    // Show progress bar at 0% at the beginning
+    if (showProgress)
+    {
+        print_progressBar(0, nbStepsTotal, lastProgress);
+    }
+
+    // Get spinType for computation
+    SpinType spinType = orbitals.get_alphaAndBeta() ? SpinType::ALPHA : SpinType::ALPHA_BETA;
+
+    #ifdef ENABLE_OMP
+    #pragma omp parallel
+    #endif
+    {
+        #ifdef ENABLE_OMP
+        #pragma omp for collapse(2)
+        #endif
+        for(int i = 0; i < N1; ++i)
+        {
+            for(int j = 0; j < N2; ++j)
+            {
+                for(int k = 0; k < N3; ++k)
+                {
+                    double rho = density(orbitals, spinType, gammaMatrix, domain.xyz(i, j, k));
+
+                    if (orbitals.get_alphaAndBeta()) // TO BE TESTED
+                    {
+                        rho *= 2;
+                    }
+
+                    grid.set_Vijkl(rho, i, j, k, 0);
+                }
+                    
+                if (showProgress)
+                {
+                    // Update at each N2 iteration for a smoother display
+                    int currentStep = progress.fetch_add(N3) + N3;
+                    
+                    #ifdef ENABLE_OMP
+                    #pragma omp critical
+                    #endif
+                    {
+                        print_progressBar(currentStep, nbStepsTotal, lastProgress);
+                    }
+                }
+            }
+        }
+    }
 }
 
 void ExcitedState::printLambdaDiagnostic(const Grid& grid) const
@@ -284,28 +468,28 @@ bool ExcitedState::readGroundStateEnergyFromTransitionsFile(const std::string& t
 /////////////////////////////////////
 // TRANSITIONS FILE READING METHODS
 
-bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates)
+bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates, const std::vector<int>& statesNumbersToKeep)
 {
     bool ok = true;
 
     if (to_lower(fileName.substr(fileName.length() - 4)) == ".log")
     {
-        ok = LOG::readTransitions(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates);
+        ok = LOG::readTransitions(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates, statesNumbersToKeep);
     }
     else if (to_lower(fileName.substr(fileName.length() - 4)) == ".out")
     {
-        ok = readTransitionsFromOutFile(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates);
+        ok = readTransitionsFromOutFile(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates, statesNumbersToKeep);
     }
     else
     {
         // Try to read as a transitions file
-        ok = readTransitionsFile(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates);
+        ok = readTransitionsFile(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates, statesNumbersToKeep);
     }
 
     return ok;
 }
 
-bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates)
+bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates, const std::vector<int>& statesNumbersToKeep)
 {
     bool ok = true;
 
@@ -370,7 +554,7 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
                     std::exit(1);
                 }
 
-                ExcitedState excitedState(energy + groundStateEnergy);
+                ExcitedState excitedState(numberOfExcitedStatesRead + 1, energy + groundStateEnergy);
 
                 // Read transitions
                 do
@@ -453,8 +637,12 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
                 // Check that at least one transition was read
                 if (excitedState.getNumberOfTransitions() > 0)
                 {
-                    // Add excited state to the list
-                    excitedStates.push_back(excitedState);
+                    if (statesNumbersToKeep.empty() || std::find(statesNumbersToKeep.begin(), statesNumbersToKeep.end(), numberOfExcitedStatesRead + 1) != statesNumbersToKeep.end())
+                    {
+                        // Add excited state to the list
+                        excitedStates.push_back(excitedState);
+                    }
+
                     ++numberOfExcitedStatesRead;
                 }
                 else
@@ -490,7 +678,7 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
     return ok;
 }
 
-bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates)
+bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates, const std::vector<int>& statesNumbersToKeep)
 {
     bool ok = true;
     bool hfTypeFound = false;
@@ -542,7 +730,7 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
             {
                 double energy = std::stod(energyRegexMatch[1]);
 
-                ExcitedState excitedState(energy + groundStateEnergy);
+                ExcitedState excitedState(numberOfExcitedStatesRead + 1, energy + groundStateEnergy);
 
                 do
                 {
@@ -590,8 +778,12 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
                 // Check that at least one transition was read
                 if (excitedState.getNumberOfTransitions() > 0)
                 {
-                    // Add excited state to the list
-                    excitedStates.push_back(excitedState);
+                    if (statesNumbersToKeep.empty() || std::find(statesNumbersToKeep.begin(), statesNumbersToKeep.end(), numberOfExcitedStatesRead + 1) != statesNumbersToKeep.end())
+                    {
+                        // Add excited state to the list
+                        excitedStates.push_back(excitedState);
+                    }
+                    
                     ++numberOfExcitedStatesRead;
                 }
                 else
@@ -627,7 +819,7 @@ std::vector<ExcitedState> ExcitedState::buildPerturbedStates(const std::vector<E
 
     for (size_t i = 0; i < unperturbedStates.size(); ++i)
     {
-        perturbedStates.emplace_back(energies[i]);
+        perturbedStates.emplace_back(i, energies[i]);
         ExcitedState& currentPerturbedState = perturbedStates.back();
 
         for (size_t k = 0; k < unperturbedStates.size(); ++k)
@@ -696,9 +888,9 @@ double ExcitedState::ionicPotential(const ExcitedState& psi_i, const ExcitedStat
 
 std::ostream& operator<<(std::ostream& stream, const ExcitedState& excitedState)
 {
-    stream << (excitedState._isGroundState ? "Ground" : "Excited") << " State Energy: " << excitedState._energy << " Hartree." << std::endl;
+    stream << (excitedState._number == 0 ? "Ground" : "Excited") << " State" << (excitedState._number != 0 ? (" #" + excitedState._number) : "") << " Energy: " << excitedState._energy << " Hartree." << std::endl;
 
-    if (!excitedState._isGroundState)
+    if (excitedState._number != 0)
     {
         stream << "  Electronic transitions:" << std::endl;
 

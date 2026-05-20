@@ -62,8 +62,10 @@ class SlaterDeterminant
          * @param[in] initialSpin The spin type (alpha or beta) of the electron being removed.
          * @param[in] finalOrbitalNumber The orbital number to which an electron is added.
          * @param[in] finalSpin The spin type (alpha or beta) of the electron being added.
+         * 
+         * @return True if the update was successful, false otherwise (e.g., if the transition is invalid).
          */
-        void updateFromTransition(int initialOrbitalNumber, SpinType initialSpin, int finalOrbitalNumber, SpinType finalSpin);
+        bool updateFromTransition(int initialOrbitalNumber, SpinType initialSpin, int finalOrbitalNumber, SpinType finalSpin);
 
 
         //----------------------------------------------------------------------------------------------------//
@@ -75,15 +77,27 @@ class SlaterDeterminant
          * 
          * @param d_i First Slater determinant.
          * @param d_j Second Slater determinant.
+         * 
          * @return A vector containing the differences in occupied orbitals for each spin type (first index corresponds to alpha spin, second to beta spin)
          */
         static std::vector<std::vector<std::pair<int, int>>> getDifferences(const SlaterDeterminant& d_i, const SlaterDeterminant& d_j);
+
+        /**
+         * @brief Determines whether two Slater determinants are equivalent (i.e., have the same occupied orbitals and occupation numbers, without accounting for orbital ordering).
+         * 
+         * @param d_i First Slater determinant.
+         * @param d_j Second Slater determinant.
+         * 
+         * @return True if the Slater determinants are equivalent, false otherwise.
+         */
+        static bool equivalent(const SlaterDeterminant& d_i, const SlaterDeterminant& d_j);
 
         /**
          * @brief Computes the overlap between two Slater determinants.
          *
          * @param[in] d_i First Slater determinant.
          * @param[in] d_j Second Slater determinant.
+         * 
          * @return The overlap < D_i | D_j > between the two Slater determinants.
          */
         static double overlap(const SlaterDeterminant& di, const SlaterDeterminant& dj);
@@ -94,6 +108,7 @@ class SlaterDeterminant
          * @param[in] d_i First Slater determinant.
          * @param[in] d_j Second Slater determinant.
          * @param[in] ionicMatrix Ionic matrix < phi_i | V_ion/electrons | phi_j > (the first index corresponds to alpha spin, the second to beta spin).
+         * 
          * @return The ionic potential matrix element < D_i | V_ion/electrons | D_j >.
          */
         static double ionicPotential(const SlaterDeterminant& d_i, const SlaterDeterminant& d_j, const std::vector<std::vector<std::vector<double>>>& ionicMatrix);
@@ -107,6 +122,7 @@ class SlaterDeterminant
          * 
          * @param lhs Left-hand side SlaterDeterminant.
          * @param rhs Right-hand side SlaterDeterminant.
+         * 
          * @return True if both Slater determinants are equal (have the same occupied orbitals and occupation numbers), false otherwise.
          */
         friend bool operator==(const SlaterDeterminant& lhs, const SlaterDeterminant& rhs);
@@ -116,6 +132,7 @@ class SlaterDeterminant
          *
          * @param lhs Left-hand side SlaterDeterminant.
          * @param rhs Right-hand side SlaterDeterminant.
+         * 
          * @return True if both Slater determinants are different (have different occupied orbitals or occupation numbers), false otherwise.
          */
         friend bool operator!=(const SlaterDeterminant& lhs, const SlaterDeterminant& rhs);
@@ -127,6 +144,7 @@ class SlaterDeterminant
          *
          * @param stream Output stream.
          * @param slaterDeterminant SlaterDeterminant to print.
+         * 
          * @return Reference to the output stream.
          */
         friend std::ostream& operator<<(std::ostream& stream, const SlaterDeterminant& slaterDeterminant);

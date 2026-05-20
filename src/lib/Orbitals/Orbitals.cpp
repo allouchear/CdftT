@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cmath>
 #include <cstdlib>
@@ -963,7 +964,7 @@ double Orbitals::density(int orbitalIndex, SpinType spinType, const std::vector<
     return rho;
 }
 
-void Orbitals::evaluateCgtfsAtPoint(std::vector<double>& evaluatedCgtfs, double x, double y, double z) const
+void Orbitals::evaluateCgtfsAtPoint(std::vector<double>& evaluatedCgtfs, const std::array<double, 3>& coordinates) const
 {
     if (evaluatedCgtfs.size() != _vcgtf.size())
     {
@@ -972,7 +973,7 @@ void Orbitals::evaluateCgtfsAtPoint(std::vector<double>& evaluatedCgtfs, double 
 
     for (size_t k = 0; k < _vcgtf.size(); ++k)
     {
-        evaluatedCgtfs[k] = _vcgtf[k].func(x, y, z);
+        evaluatedCgtfs[k] = _vcgtf[k].func(coordinates);
     }
 }
 
@@ -1145,6 +1146,29 @@ void Orbitals::set_vcgtf(const std::vector<CGTF>& vcgtf)
 //----------------------------------------------------------------------------------------------------//
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
+
+void Orbitals::evaluateAtPoint(std::vector<std::vector<double>>& evaluatedMOs, const std::array<double, 3>& coordinates) const
+{
+    // Evaluate all CGTFs at the given point
+    std::vector<double> evaluatedCgtfs;
+    evaluateCgtfsAtPoint(evaluatedCgtfs, coordinates);
+
+    // Evaluate MOs from evaluated CGTFs
+    evaluatedMOs.resize(2, std::vector<double>(_numberOfMo, 0.0));
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for(int i = 0; i < _numberOfMo; ++i)
+        {
+            double sum = 0.0;
+            for(size_t k = 0; k < evaluatedCgtfs.size(); ++k)
+            {
+                sum += _coefficients[spin][i][k] * evaluatedCgtfs[k];
+            }
+
+            evaluatedMOs[spin][i] = sum;
+        }
+    }
+}
 
 std::vector<std::vector<std::vector<double>>> Orbitals::getHomoCoefficients()
 {
@@ -1847,7 +1871,7 @@ void Orbitals::DenormaliseAllBasis()
         _vcgtf[k].denormaliseCGTF();
 }
 
-double Orbitals::func(double x, double y, double z) const
+double Orbitals::func(const std::array<double, 3>& coordinates) const
 {
     double r=0.0;
 
@@ -1863,7 +1887,7 @@ double Orbitals::func(double x, double y, double z) const
     }
 
     std::vector<double> evaluatedCgtfs(_vcgtf.size());
-    evaluateCgtfsAtPoint(evaluatedCgtfs, x, y, z);
+    evaluateCgtfsAtPoint(evaluatedCgtfs, coordinates);
 
     for(SpinType spinType : spins)
     {
@@ -2028,11 +2052,11 @@ void Orbitals::printDescriptors(int homoIndex, int lumoIndex)
     std::cout<<_descriptors<<std::endl;
 }
 
-double operator*(const Orbitals& a, const std::vector<double>& coord)
+double operator*(const Orbitals& a, const std::array<double, 3>& coordinates)
 {
     double r=1.0;
-    for(size_t i=1; i<coord.size(); i++)
-        r*=a.func(coord[0],coord[1],coord[2]);
+    for(size_t i = 1; i < coordinates.size(); ++i)
+        r *= a.func(coordinates);
     
     return r;
 }
@@ -2122,7 +2146,7 @@ Grid Orbitals::makeGrid(const Domain& domain, bool showProgress)
             {
                 for(int k = 0; k < N3; ++k)
                 {
-                    double rho = density(domain.x(i, j, k), domain.y(i, j, k), domain.z(i, j, k));
+                    double rho = density(domain.xyz(i, j, k));
                     g.set_Vijkl(rho, i, j, k, 0);
                 }
                     
@@ -2150,14 +2174,14 @@ Grid Orbitals::makeGrid(const Domain& domain, bool showProgress)
     return g;
 }
 
-double Orbitals::density(double x, double y, double z) const
+double Orbitals::density(const std::array<double, 3>& coordinates) const
 {
     double rho = 0.0;
     SpinType spinType = _alphaAndBeta ? SpinType::ALPHA : SpinType::ALPHA_BETA;
 
     // Evaluate all CGTFs at the given point (x, y, z) once and reuse the values for each orbital
     std::vector<double> evaluatedCgtfs(_vcgtf.size());
-    evaluateCgtfsAtPoint(evaluatedCgtfs, x, y, z);
+    evaluateCgtfsAtPoint(evaluatedCgtfs, coordinates);
 
     for(int orbitalIndex = 0; orbitalIndex < get_numberOfMo(); ++orbitalIndex)
     {
@@ -2167,16 +2191,16 @@ double Orbitals::density(double x, double y, double z) const
     return rho;
 }
 
-double Orbitals::density(int orbitalIndex, SpinType spinType, double x, double y, double z) const
+double Orbitals::density(int orbitalIndex, SpinType spinType, const std::array<double, 3>& coordinates) const
 {
     // Evaluate all CGTFs at the given point (x, y, z) once and reuse the values for each orbital
     std::vector<double> evaluatedCgtfs(_vcgtf.size());
-    evaluateCgtfsAtPoint(evaluatedCgtfs, x, y, z);
+    evaluateCgtfsAtPoint(evaluatedCgtfs, coordinates);
 
     return density(orbitalIndex, spinType, evaluatedCgtfs);
 }
 
-double Orbitals::density(const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins, double x, double y, double z) const
+double Orbitals::density(const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins, const std::array<double, 3>& coordinates) const
 {
     if (orbitalIndexes.size() != orbitalSpins.size())
     {
@@ -2188,7 +2212,7 @@ double Orbitals::density(const std::vector<int>& orbitalIndexes, const std::vect
 
     // Evaluate all CGTFs at the given point (x, y, z) once and reuse the values for each orbital
     std::vector<double> evaluatedCgtfs(_vcgtf.size());
-    evaluateCgtfsAtPoint(evaluatedCgtfs, x, y, z);
+    evaluateCgtfsAtPoint(evaluatedCgtfs, coordinates);
 
     for (size_t i = 0; i < orbitalIndexes.size(); ++i)
     {
@@ -2232,7 +2256,7 @@ Grid Orbitals::makeOrbGrid(const Domain& domain, const std::vector<int>& orbital
             {
                 for (int k = 0; k < N3; ++k)
                 {
-                    std::vector<double> phy = phis(domain.x(i, j, k), domain.y(i, j, k), domain.z(i, j, k), orbitalsNumbers, orbitalsSpins);
+                    std::vector<double> phy = phis(domain.xyz(i, j, k), orbitalsNumbers, orbitalsSpins);
 
                     for (int l = 0; l < domain.get_Nval(); ++l)
                     {
@@ -2264,12 +2288,12 @@ Grid Orbitals::makeOrbGrid(const Domain& domain, const std::vector<int>& orbital
     return g;
 }
 
-std::vector<double> Orbitals::phis(double x, double y, double z, const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins)
+std::vector<double> Orbitals::phis(const std::array<double, 3>& coordinates, const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins)
 {
     std::vector<double> values(orbitalIndexes.size(), 0.0);
 
     std::vector<double> evaluatedCgtfs(_vcgtf.size());
-    evaluateCgtfsAtPoint(evaluatedCgtfs, x, y, z);
+    evaluateCgtfsAtPoint(evaluatedCgtfs, coordinates);
 
     for (size_t i = 0; i < orbitalIndexes.size(); ++i)
     {
@@ -2285,7 +2309,7 @@ std::vector<double> Orbitals::phis(double x, double y, double z, const std::vect
     return values;
 }
 //epsilon=0 for Becke, epsilon =2.87e-5 for Savin. see Can. J. Chem. Vol. 74,1996 page 1088.
-double Orbitals::ELF(double x, double y, double z, double epsilon)
+double Orbitals::ELF(const std::array<double, 3>& coordinates, double epsilon)
 {
     double rho = 0.0;
     double sphi = 0.0;
@@ -2293,14 +2317,14 @@ double Orbitals::ELF(double x, double y, double z, double epsilon)
     int n = _alphaAndBeta ? 1 : 2;
 
     std::vector<double> v(_vcgtf.size());
-    evaluateCgtfsAtPoint(v, x, y, z);
+    evaluateCgtfsAtPoint(v, coordinates);
 
     std::vector<double> A(_vcgtf.size());
     std::vector< std::vector<double> > vg(3,A);
     for(size_t k=0;k<_vcgtf.size();k++)
     {
         for(int c=0;c<3;c++)
-            vg[c][k]=_vcgtf[k].grad_CGTF(x,y,z,c);
+            vg[c][k]=_vcgtf[k].grad_CGTF(coordinates, c);
     }
 
     double v1[3]={0,0,0};
@@ -2388,7 +2412,7 @@ Grid Orbitals::makeELFgrid(const Domain& domain, ELFMethod elfMethod, bool showP
             {
                 for(int k = 0; k < N3; ++k)
                 {
-                    double elf = ELF(domain.x(i,j,k), domain.y(i,j,k), domain.z(i,j,k), epsilon);
+                    double elf = ELF(domain.xyz(i,j,k), epsilon);
                     
                     g.set_Vijkl(elf, i, j, k, 0);
                 }

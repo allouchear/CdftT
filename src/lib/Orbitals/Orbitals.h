@@ -1,6 +1,7 @@
 #ifndef CDFTT_ORBITALS_H_INCLUDED
 #define CDFTT_ORBITALS_H_INCLUDED
 
+#include <array>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -112,11 +113,9 @@ class Orbitals
          * @brief Evaluates the CGTFs at the given point (x, y, z) and stores the results in the provided vector.
          * 
          * @param[in, out] evaluatedCgtfs A vector to store the evaluated CGTF values at the given point.
-         * @param[in] x Coordinate along the first (x) axis.
-         * @param[in] y Coordinate along the second (y) axis.
-         * @param[in] z Coordinate along the third (z) axis.
+         * @param[in] coordinates An array containing the (x, y, z) coordinates at which to evaluate the CGTFs.
          */
-        void evaluateCgtfsAtPoint(std::vector<double>& evaluatedCgtfs, double x, double y, double z) const;
+        void evaluateCgtfsAtPoint(std::vector<double>& evaluatedCgtfs, const std::array<double, 3>& coordinates) const;
 
         /**
          * @brief Computes the square of the molecular orbital value (phi^2) for a given spin-orbital with CGTFs already evaluated at a given point.
@@ -310,6 +309,14 @@ class Orbitals
         //----------------------------------------------------------------------------------------------------//
 
         /**
+         * @brief Evaluates the molecular orbitals at the given point (x, y, z) and stores the results in the provided 2D vector.
+         * 
+         * @param[out] evaluatedMOs A 2D vector to store the evaluated molecular orbital values at the given point. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals. The second dimension gives the value of the i-th orbital at the given point.
+         * @param[in] coordinates An array containing the (x, y, z) coordinates at which to evaluate the molecular orbitals.
+         */
+        void evaluateAtPoint(std::vector<std::vector<double>>& evaluatedMOs, const std::array<double, 3>& coordinates) const;
+
+        /**
          * @brief Returns the coefficients of the HOMO. The first dimension is for the spin and the second dimension is for the orbital (so it has a length of 1) to stay consistent with the _coefficients field.
          */
         std::vector<std::vector<std::vector<double>>> getHomoCoefficients();
@@ -435,9 +442,14 @@ class Orbitals
              *  Can be delete. It was developpe for LCAO. */
         void normaliseBasis();
 
-            //! A normal member taking three arguments and returning a double value.
-            /*! \return The value of the Orbitals at the point (x,y,z). */
-        double func(double x, double y, double z) const;
+        /**
+         * @brief Evaluates the molecular orbital values (phi) at a given point.
+         * 
+         * @param[in] coordinates An array containing the (x, y, z) coordinates
+         * 
+         * @return double The value of the molecular orbitals at the given point.
+         */
+        double func(const std::array<double, 3>& coordinates) const;
 
             //! A normal member taking no arguments and returning an int value.
             /*! \return The HOMO Molecular Orbital number. */
@@ -486,39 +498,33 @@ class Orbitals
         /**
          * @brief Computes the total electronic density for all orbitals at a given point.
          *
-         * @param[in] x Coordinate along the first (x) axis.
-         * @param[in] y Coordinate along the second (y) axis.
-         * @param[in] z Coordinate along the third (z) axis.
+         * @param[in] coordinates The (x, y, z) coordinates at which to compute the density.
          *
          * @return double Total electronic density at the given point.
          */
-        double density(double x, double y, double z) const;
+        double density(const std::array<double, 3>& coordinates) const;
 
         /**
          * @brief Computes the electronic density for a given spin-orbital at a given point.
          *
          * @param[in] orbitalIndex The index of the orbital (0-based) for which to compute the electronic density.
          * @param[in] spinType The spin type of the orbital for which to compute the density.
-         * @param[in] x Coordinate along the first (x) axis.
-         * @param[in] y Coordinate along the second (y) axis.
-         * @param[in] z Coordinate along the third (z) axis.
+         * @param[in] coordinates The (x, y, z) coordinates at which to compute the density.
          *
          * @return double Electronic density for the specified spin-orbital at the given point.
          */
-        double density(int orbitalIndex, SpinType spinType, double x, double y, double z) const;
+        double density(int orbitalIndex, SpinType spinType, const std::array<double, 3>& coordinates) const;
 
         /**
          * @brief Computes the total electronic density for given orbitals at a given point.
          *
          * @param[in] orbitalIndexes Vector of orbital indexes (0-based) for which to compute the density.
          * @param[in] orbitalSpins Vector of @ref SpinType for each orbital (must have the same length as orbitalIndexes).
-         * @param[in] x Coordinate along the first (x) axis.
-         * @param[in] y Coordinate along the second (y) axis.
-         * @param[in] z Coordinate along the third (z) axis.
+         * @param[in] coordinates The (x, y, z) coordinates at which to compute the density.
          *
          * @return double Total electronic density for the given spin-orbitals at the given point.
          */
-        double density(const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins, double x, double y, double z) const;
+        double density(const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins, const std::array<double, 3>& coordinates) const;
 
         /**
          * @brief Builds the Grid associated with the orbitals object.
@@ -532,11 +538,11 @@ class Orbitals
 
             //! Electronic density
             /*! Calculates and returns the electronic density from molecular orbitals */
-        std::vector<double> phis(double x, double y, double z, const std::vector<int>& nums, const std::vector<SpinType>& typesSpin);
+        std::vector<double> phis(const std::array<double, 3>& coordinates, const std::vector<int>& nums, const std::vector<SpinType>& typesSpin);
             
             //! Electron localisation function
             /*! Calculates and returns the ELF*/
-        double ELF(double x, double y, double z, double epsilon=2.87e-5);
+        double ELF(const std::array<double, 3>& coordinates, double epsilon=2.87e-5);
 
             //! Make ELF grid
             /*! Make an ELF grid using Orbitals::ELF()*/
@@ -598,6 +604,6 @@ class Orbitals
     //! An operator member taking two arguments and returning a double value.
     /*! coord = (x,y,z). 
      *  \return The value of Orbitals * Orbitals at the point (x,y,z). */
-double operator*(const Orbitals& a, const std::vector<double>& coord);
+double operator*(const Orbitals& a, const std::array<double, 3>& coordinates);
 
 #endif

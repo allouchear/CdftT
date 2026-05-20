@@ -190,7 +190,7 @@ class Becke
         //----------------------------------------------------------------------------------------------------//
 
         /**
-         * @brief Multicenter integration for functions of signature: double(const std::vector<GTF>&, double, double, double).
+         * @brief Multicenter integration for functions of signature: double(const std::vector<GTF>&, const std::array<double, 3>&).
          *
          * @param f Function to integrate.
          * @param p Vector of GTF passed to f.
@@ -200,10 +200,10 @@ class Becke
          *
          * @return double Value of the integral.
          */
-        double multicenter_integration(std::function<double(const std::vector<GTF>&, double, double, double)> f, const std::vector<GTF>& p, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+        double multicenter_integration(std::function<double(const std::vector<GTF>&, const std::array<double, 3>&)> f, const std::vector<GTF>& p, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
-         * @brief Multicenter integration for functions of signature: double(Orbitals&, int, int, double, double, double).
+         * @brief Multicenter integration for functions of signature: double(Orbitals&, int, int, const std::array<double, 3>&).
          *
          * @param f Function to integrate.
          * @param i Index of the first orbital.
@@ -214,10 +214,10 @@ class Becke
          *
          * @return double Value of the integral.
          */
-        double multicenter_integration(std::function<double(const Orbitals&, int, int, double, double, double)> f, int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+        double multicenter_integration(std::function<double(const Orbitals&, int, int, const std::array<double, 3>&)> f, int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
-         * @brief Multicenter integration for functions of signature: double(Orbitals&, int, int, double, double, double, SpinType).
+         * @brief Multicenter integration for functions of signature: double(Orbitals&, int, int, const std::array<double, 3>&, SpinType).
          *
          * @param f Function to integrate.
          * @param i Index of the first orbital.
@@ -229,7 +229,7 @@ class Becke
          *
          * @return double Value of the integral.
          */
-        double multicenter_integration(std::function<double(const Orbitals&, int, int, double, double, double, SpinType)> f, int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, SpinType spinType = SpinType::ALPHA);
+        double multicenter_integration(std::function<double(const Orbitals&, int, int, const std::array<double, 3>&, SpinType)> f, int i, int j, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5, SpinType spinType = SpinType::ALPHA);
 
         /**
          * @brief Multicenter integration from a density Grid.
@@ -250,7 +250,7 @@ class Becke
         /**
          * @brief TODO
          */
-        double multicenter_integration(std::function<double(Orbitals&, int, int, double, double, double, SpinType, const std::array<double, 3>&, double)> f, int i, int j, SpinType spinType, const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+        double multicenter_integration(std::function<double(Orbitals&, int, int, const std::array<double, 3>&, SpinType, const std::array<double, 3>&, double)> f, int i, int j, SpinType spinType, const std::array<double, 3>& chargePosition, double charge, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
          * @brief Returns the table of density integral values per atom.
@@ -265,7 +265,7 @@ class Becke
         std::vector<double> multicenter_sub_integration(const Grid& g, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
-         * @brief Returns the table of integral values per atom for a function of signature double(Orbitals&, double, double, double), evaluated on each grid (so on each atom).
+         * @brief Returns the table of integral values per atom for a function of signature double(Orbitals&, const std::array<double, 3>&), evaluated on each grid (so on each atom).
          *
          * @param[in] f Function to evaluate.
          * @param[in] orbitals Orbitals to use for the evaluation.
@@ -275,10 +275,10 @@ class Becke
          *
          * @return Table of integral values per atom.
          */
-        std::vector<double> multicenter_sub_integration(std::function<double(const Orbitals&, double, double, double)> f, const Orbitals& orbitals, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+        std::vector<double> multicenter_sub_integration(std::function<double(const Orbitals&, const std::array<double, 3>&)> f, const Orbitals& orbitals, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
-         * @brief Returns the table of integral values per atom for a function of signature double(Orbitals&, double, double, double), evaluated on each grid (so on each atom).
+         * @brief Returns the table of integral values per atom for a function of signature double(Orbitals&, const std::array<double, 3>&), evaluated on each grid (so on each atom).
          *
          * @param[in] f Function to evaluate.
          * @param[in] kmax Fuzzyness of the Voronoi polyhedrons (default 3).
@@ -287,10 +287,10 @@ class Becke
          *
          * @return Table of integral values per atom.
          */
-        std::vector<double> multicenter_sub_integration(std::function<double(const Orbitals&, double, double, double)> f, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+        std::vector<double> multicenter_sub_integration(std::function<double(const Orbitals&, const std::array<double, 3>&)> f, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
-         * @brief Returns the table of integral values per atom for a function of signature double(Orbitals&, int, int, double, double, double, SpinType), evaluated on each grid (so on each atom).
+         * @brief Returns the table of integral values per atom for a function of signature double(Orbitals&, int, int, const std::array<double, 3>&, SpinType), evaluated on each grid (so on each atom).
          *
          * @param[in] f Function to evaluate.
          * @param[in] i Index of the first orbital to use for the evaluation of f.
@@ -302,7 +302,7 @@ class Becke
          *
          * @return Table of integral values per atom.
          */
-        std::vector<double> multicenter_sub_integration(std::function<double(const Orbitals&, int, int, double, double, double, SpinType)> f, int i, int j, SpinType spinType = SpinType::ALPHA, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+        std::vector<double> multicenter_sub_integration(std::function<double(const Orbitals&, int, int, const std::array<double, 3>&, SpinType)> f, int i, int j, SpinType spinType = SpinType::ALPHA, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
 
         //----------------------------------------------------------------------------------------------------//
@@ -433,13 +433,11 @@ class Becke
          * @brief Returns the product of many Gaussian-Type Functions (GTFs) evaluated at (x,y,z).
          *
          * @param p Vector of GTFs.
-         * @param x X coordinate.
-         * @param y Y coordinate.
-         * @param z Z coordinate.
+         * @param coordinates An array containing the (x, y, z) coordinates at which to evaluate the product.
          * 
          * @return double Product value at the given point.
          */
-        static double prodGTF(const std::vector<GTF>& p, double x, double y, double z);
+        static double prodGTF(const std::vector<GTF>& p, const std::array<double, 3>& coordinates);
 
         /**
          * @brief Returns the value of the overlap integral between two Contracted Gaussian-Type Functions (CGTFs).
@@ -500,85 +498,73 @@ class Becke
         /**
          * @brief Returns the product of two Contracted Gaussian-Type Functions (CGTFs) evaluated at a point (x,y,z).
          *
-         * @param Orb Orbitals reference containing the CGTFs.
-         * @param i Index of first CGTF.
-         * @param j Index of second CGTF.
-         * @param x X coordinate.
-         * @param y Y coordinate.
-         * @param z Z coordinate.
+         * @param[in] orbitals Orbitals reference containing the CGTFs.
+         * @param[in] i Index of first CGTF.
+         * @param[in] j Index of second CGTF.
+         * @param[in] coordinates An array containing the (x, y, z) coordinates at which to evaluate the product.
          *
          * @return double Product value of the two CGTFs at (x,y,z).
          */
-        static double CGTFstarCGTF(const Orbitals& orbitals, int i, int j, double x, double y, double z);
+        static double CGTFstarCGTF(const Orbitals& orbitals, int i, int j, const std::array<double, 3>& coordinates);
 
         /**
          * @brief Electronic density value at point (x,y,z).
          *
-         * @param orbitals Orbitals object used to evaluate the density.
-         * @param x X coordinate.
-         * @param y Y coordinate.
-         * @param z Z coordinate.
+         * @param[in] orbitals Orbitals object used to evaluate the density.
+         * @param[in] coordinates An array containing the (x, y, z) coordinates at which to evaluate the density.
          *
          * @return double Electronic density at the given point.
          */
-        static double density(const Orbitals& orbitals, double x, double y, double z);
+        static double density(const Orbitals& orbitals, const std::array<double, 3>& coordinates);
 
         /**
          * @brief Electronic density value of the given spin-orbital at point (x,y,z).
          *
-         * @param orbitals Orbitals object used to evaluate the density.
-         * @param orbitalIndex Index of the orbital.
-         * @param orbitalSpin @ref SpinType of the orbital.
-         * @param x Coordinate on the first axis (x direction).
-         * @param y Coordinate on the second axis (y direction).
-         * @param z Coordinate on the third axis (z direction).
+         * @param[in] orbitals Orbitals object used to evaluate the density.
+         * @param[in] orbitalIndex Index of the orbital.
+         * @param[in] orbitalSpin @ref SpinType of the orbital.
+         * @param[in] coordinates An array containing the (x, y, z) coordinates at which to evaluate the density.
          *
          * @return double Electronic density at the given point.
          */
-        static double density(const Orbitals& orbitals, int orbitalIndex, SpinType orbitalSpin, double x, double y, double z);
+        static double density(const Orbitals& orbitals, int orbitalIndex, SpinType orbitalSpin, const std::array<double, 3>& coordinates);
 
         /**
          * @brief Electronic density value of the given spin-orbitals at point (x,y,z).
          *
-         * @param orbitals Orbitals object used to evaluate the density.
-         * @param orbitalIndexes Vector of orbital indexes.
-         * @param orbitalSpins Vector of @ref SpinType for each orbital (must have the same length as orbitalIndexes).
-         * @param x Coordinate on the first axis (x direction).
-         * @param y Coordinate on the second axis (y direction).
-         * @param z Coordinate on the third axis (z direction).
+         * @param[in] orbitals Orbitals object used to evaluate the density.
+         * @param[in] orbitalIndexes Vector of orbital indexes.
+         * @param[in] orbitalSpins Vector of @ref SpinType for each orbital (must have the same length as orbitalIndexes).
+         * @param[in] coordinates An array containing the (x, y, z) coordinates at which to evaluate the density.
          *
          * @return double Electronic density at the given point.
          */
-        static double density(const Orbitals& orbitals, const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins, double x, double y, double z);
+        static double density(const Orbitals& orbitals, const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins, const std::array<double, 3>& coordinates);
 
         /**
          * @brief Returns the value of the i-th orbital at point (x,y,z).
          *
-         * @param orbitals Orbitals reference.
-         * @param i Index of the chosen orbital.
-         * @param x X coordinate.
-         * @param y Y coordinate.
-         * @param z Z coordinate.
-         * @param spinType SpinType to consider (default ALPHA).
+         * @param[in] orbitals Orbitals reference.
+         * @param[in] i Index of the chosen orbital.
+         * @param[in] coordinates An array containing the (x, y, z) coordinates at which to evaluate the orbital.
+         * @param[in] spinType SpinType to consider (default ALPHA).
          *
          * @return double Value of the chosen orbital at the point (x,y,z).
          */
-        static double phi(const Orbitals& orbitals, int i, double x, double y, double z, SpinType spinType = SpinType::ALPHA);
+        static double phi(const Orbitals& orbitals, int i, const std::array<double, 3>& coordinates, SpinType spinType = SpinType::ALPHA);
 
         /**
          * @brief Returns the product of two orbitals of indexes i and j at a point (x,y,z).
          *
-         * @param Orb Orbitals reference.
-         * @param i Index of the first orbital.
-         * @param j Index of the second orbital.
-         * @param x X coordinate.
-         * @param y Y coordinate.
-         * @param z Z coordinate.
-         * @param spinType SpinType to consider (default ALPHA).
+         * @param[in] orbitals Orbitals reference.
+         * @param[in] i Index of the first orbital.
+         * @param[in] j Index of the second orbital.
+         * @param[in] coordinates An array containing the (x, y, z) coordinates at which to evaluate the product.
+         * @param[in] spinType SpinType to consider (default ALPHA).
          *
          * @return double Product value of the two orbitals at (x,y,z).
          */
-        static double phiStarPhi(const Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType = SpinType::ALPHA);
+        static double phiStarPhi(const Orbitals& orbitals, int i, int j, const std::array<double, 3>& coordinates, SpinType spinType = SpinType::ALPHA);
 
         /**
          * @brief Returns the product of two orbitals of indexes i and j at a point (x,y,z) multiplied by the electrostatic potential V_ionic created by a point charge.
@@ -586,16 +572,14 @@ class Becke
          * @param[in] orbitals Orbitals reference.
          * @param[in] i Index of the first orbital.
          * @param[in] j Index of the second orbital.
-         * @param[in] x X coordinate.
-         * @param[in] y Y coordinate.
-         * @param[in] z Z coordinate.
+         * @param[in] coordinates An array containing the (x, y, z) coordinates at which to evaluate the product.
          * @param[in] spinType Spin type (ALPHA, BETA, ALPHA_BETA).
          * @param[in] position Position of the charge.
          * @param[in] charge Value of the charge.
          *
          * @return Product value of the two orbitals at (x,y,z) multiplied by the electrostatic potential V_ionic.
          */
-        static double phiStarVionicStarPhi(Orbitals& orbitals, int i, int j, double x, double y, double z, SpinType spinType, const std::array<double, 3>& chargePosition, double charge);
+        static double phiStarVionicStarPhi(Orbitals& orbitals, int i, int j, const std::array<double, 3>& coordinates, SpinType spinType, const std::array<double, 3>& chargePosition, double charge);
 };
 
 #endif

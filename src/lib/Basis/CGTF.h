@@ -249,13 +249,24 @@ class CGTF
             /*! Insert the factor coefficient in the CGTF. */
         void setFactorCoef(double);
 
-            //! A normal membre taking three arguments and returning a double value.
-            /*! \return The value of the CGTF at the coordinates x,y,z. */
-        double func(double x, double y, double z) const;
+        /**
+         * @brief Evaluates the CGTF at given coordinates.
+         * 
+         * @param[in] coordinates An array containing the (x, y, z) coordinates at which to evaluate the CGTF.
+         * 
+         * @return double The value of the CGTF at the given coordinates.
+         */
+        double func(const std::array<double, 3>& coordinates) const;
             
-            //! Gradient of a CGTF
-            /*! Computes the ith component of the gradient of CGTF*/
-        double grad_CGTF(const double& x, const double& y, const double& z, int i);
+        /**
+         * @brief Computes the i-th component of the gradient of the CGTF at given coordinates.
+         * 
+         * @param[in] coordinates The (x, y, z) coordinates at which to compute the gradient.
+         * @param[in] i The index of the gradient component to compute (0 for x, 1 for y, 2 for z).
+         * 
+         * @return double The value of the i-th component of the gradient of the CGTF at the given coordinates.
+         */
+        double grad_CGTF(const std::array<double, 3>& coordinates, int i);
 };
 
 /**
@@ -287,9 +298,9 @@ std::ostream& operator<<(std::ostream &stream, const CGTF &cgtf);
  * returns the product of the evaluations.
  *
  * @param cgtfs std::vector of CGTF objects.
- * @param coords 3-element coordinate std::vector (x,y,z).
+ * @param coordinates An array containing the (x, y, z) coordinates at which to evaluate the product.
  * @return Product of the CGTFs values at the given coordinates.
  */
-double operator*(const std::vector<CGTF> &cgtfs, const std::vector<double> &coords);
+double operator*(const std::vector<CGTF> &cgtfs, const std::array<double, 3>& coordinates);
 
 #endif

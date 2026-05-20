@@ -126,7 +126,7 @@ void ComputeEnergyWithPointCharges::computeHamiltonianMatrix(const std::vector<E
             if (verbose >= 1)
             {
                 logStream << "< " << i << " | H | " << j << " > = " << std::setprecision(12) << psi_i_H_psi_j[i][j] << std::endl;
-                logStream << "< " << i << " | H - H0| " << j << " > = " << std::setprecision(12) << psi_i_HminusH0_psi_j[i][j] << std::endl;
+                logStream << "< " << i << " | H - H0 | " << j << " > = " << std::setprecision(12) << psi_i_HminusH0_psi_j[i][j] << std::endl;
                 log(logStream, outputStream);
             }
             if (verbose >= 2 && j != i)
@@ -1125,7 +1125,7 @@ void ComputeEnergyWithPointCharges::run()
             || analyticFilesNames[0].substr(analyticFilesNames[0].length() - 5) == ".fchk")
         {
             std::stringstream errorMessage;
-            errorMessage << "Error: incorrect number of analytic files names (one file expected)." << std::endl;
+            errorMessage << "Error: incorrect number of analytic files names (one file expected when using .log or .fchk files)." << std::endl;
             errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
 
             print_error(errorMessage.str(), outputStream);
@@ -1135,7 +1135,7 @@ void ComputeEnergyWithPointCharges::run()
         else if (analyticFilesNames.size() != 2)
         {
             std::stringstream errorMessage;
-            errorMessage << "Error: incorrect number of analytic files names (one or two file(s) expected)." << std::endl;
+            errorMessage << "Error: incorrect number of analytic files names (two files expected when not using .log or .fchk files)." << std::endl;
             errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
 
             print_error(errorMessage.str(), outputStream);
@@ -1145,12 +1145,17 @@ void ComputeEnergyWithPointCharges::run()
     }
 
 
-    // Read cutoff distance for nuclear contribution
+    // Read compute method
+    std::vector<EnergyPointChargeMethod> methods;
+    readEnergyPointChargeMethods(methods);
+
+
+    // Read cutoff distance for nuclear contribution -> variational only
     double nuclearCutoff;
     readNuclearCutoff(nuclearCutoff);
     
     
-    // Read transitions file
+    // Read transitions file -> perturbative and variational only
     std::string transitionsFileName;
     readTransitionsFileName(transitionsFileName);
 
@@ -1160,7 +1165,8 @@ void ComputeEnergyWithPointCharges::run()
     readMaxNumberOfExcitedStates(maxNbExcitedStates);
 
 
-    // Loading orbitals
+    // Load orbitals
+    std::cout << "Building Orbitals object... ";
     Orbitals orbitals;
     computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
     std::cout << std::endl;
@@ -1286,12 +1292,12 @@ void ComputeEnergyWithPointCharges::run()
     ExcitedState groundState(orbitals.get_energy(), groundStateSlaterDeterminant);
 
 
-    // Building states vector
+    // Build states vector
     std::vector<ExcitedState> states;
     states.push_back(groundState);
     
 
-    // Reading transitions file
+    // Read transitions file
     if (!transitionsFileName.empty())
     {
         std::cout << "Reading transitions from file: " << transitionsFileName << ". Please wait..." << std::endl;
@@ -1701,123 +1707,11 @@ void ComputeEnergyWithPointCharges::run()
     }
 }
 
-
-void ComputeEnergyWithPointCharges::run_computeLinearResponseWithPointCharges()
+void ComputeEnergyWithPointCharges::useLinearResponseApproach(Orbitals& orbitals, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, const std::string& analyticFileName, const std::string& outputPrefix, const std::vector<int>& beckeParams, bool savePseudoOrbitals, bool showProgress, int verbose, std::ostream& outputStream)
 {
-    // Read output file prefix
-    std::string outputPrefix;
-    readOutputPrefix(outputPrefix);
-
-
-    // Read option to save pseudo orbitals in cube format
-    bool savePseudoOrbitals;
-    readSavePseudoOrbitals(savePseudoOrbitals);
-
-
-    // Read progress bar display option
-    bool showProgress;
-    readShowProgress(showProgress);
-
-
-    // Read verbose level and open log file if needed
-    int verbose;
-    readVerbose(verbose);
-
     std::stringstream logStream;
-    
-    std::ofstream logFile;
-    if (verbose != 0)
-    {
-        logFile.open(outputPrefix + "_log.cdftt");
-        if (!logFile)
-        {
-            std::cout << "Warning: could not open log file " << outputPrefix << "_log.cdftt for writing." << std::endl;
-            std::cout << "The program will still display logging information on standard output." << std::endl << std::endl;
-        }
-    }
-    std::ostream& outputStream = ((verbose != 0 && logFile) ? logFile : std::cout);
-
-    
-    //Read analytic file name
-    std::vector<std::string> analyticFilesNames;
-    readAnalyticFilesNames(analyticFilesNames);
-
-
-    // TODO: check number of analytic files
-
-
-    // Loading orbitals
-    std::cout << "Building Orbitals object... ";
-    Orbitals orbitals;
-    computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
-    std::cout << std::endl;
-
-    // Keep a const reference on orbitals' atoms
     const std::vector<Atom>& atoms = orbitals.get_struct().get_atoms();
 
-    
-    // Read point charges
-    std::vector<double> charges;
-    readCharges(charges);
-    size_t nbCharges = charges.size();
-
-
-    // Read point charges positions
-    bool loopOnAtoms = false;
-    std::vector<std::array<double, 3>> chargesPositions;
-    readPositions(chargesPositions);
-
-    if (chargesPositions.empty())
-    {
-        logStream << "Note: the \"Positions\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        logStream << "The program will place the point charge" << (nbCharges > 1 ? "s" : "") << " on each atom successively." << std::endl << std::endl;
-        log(logStream, outputStream);
-
-        loopOnAtoms = true;
-        for (const Atom& atom : atoms)
-        {
-            chargesPositions.push_back(atom.get_coordinates());
-        }
-    }
-    size_t nbChargePositions = chargesPositions.size();
-
-
-    // Check number of charges positions
-    if (!loopOnAtoms && nbChargePositions != nbCharges)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of point charges positions." << std::endl;
-        errorMessage << "Please check the documentation and the positions specified in the \"ChargesPositions\" parameter in " << _inputFileName << '.';
-
-        print_error(errorMessage.str(), outputStream);
-
-        std::exit(1);
-    }
-
-
-    // Print charges information
-    logStream << "Number of point charges: " << nbCharges << std::endl;
-    log(logStream, outputStream);
-    if (!loopOnAtoms)
-    {
-        for (size_t i = 0; i < nbCharges; ++i)
-        {
-            logStream << "Point charge #" << i + 1 << ": " << charges[i] << " e at position (" << std::setprecision(10) << chargesPositions[i][0] << ", " << chargesPositions[i][1] << ", " << chargesPositions[i][2] << ")." << std::defaultfloat << std::endl;
-        }
-    }
-    else
-    {
-        for (size_t i = 0; i < nbCharges; ++i)
-        {
-            for (size_t j = 0; j < nbChargePositions; ++j)
-            {
-                logStream << "Run #" << i * nbChargePositions + j + 1 << ": point charge #" << i + 1 << " of " << charges[i] << " e, on " << atoms[j].get_name() << " at position (" << std::setprecision(10) << chargesPositions[j][0] << ", " << chargesPositions[j][1] << ", " << chargesPositions[j][2] << ")." << std::defaultfloat << std::endl;
-            }
-        }
-    }
-    logStream << std::endl;
-    log(logStream, outputStream);
-    
 
     /************/
     /* ANALYTIC */
@@ -1868,10 +1762,6 @@ void ComputeEnergyWithPointCharges::run_computeLinearResponseWithPointCharges()
     /* BECKE GRID */
     /**************/
 
-    // Read Becke grid parameters
-    std::vector<int> beckeParams;
-    readBecke(beckeParams);
-
     if (beckeParams.size() != 0)
     {
         logStream << std::endl << std::endl
@@ -1886,7 +1776,7 @@ void ComputeEnergyWithPointCharges::run_computeLinearResponseWithPointCharges()
         // Build Becke grid
         std::cout << "Building Becke object... ";
         Becke becke;
-        computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
+        computeOrbitalsOrBecke<Becke>(becke, analyticFileName);
 
 
         // Get triple-orbital-integral matrix for Becke grid
@@ -1971,11 +1861,5 @@ void ComputeEnergyWithPointCharges::run_computeLinearResponseWithPointCharges()
         // Print results
         printResultsLinearResponseWithPointCharges(eigenvalues_becke, sigmaVectors_becke_debug, charges, chargesPositions, loopOnAtoms, atoms, outputStream, verbose);
         */
-    }
-
-    
-    if (verbose != 0 && logFile)
-    {
-        logFile.close();
     }
 }

@@ -89,6 +89,15 @@ class Job
         bool readEnergies(std::vector<double>& energies);
 
         /**
+         * @brief Reads the energy point charge methods from the "EnergyPointChargeMethods" parameter in the input file.
+         * 
+         * @param[out] energyPointChargeMethods Reference to a vector where the parsed methods will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readEnergyPointChargeMethods(std::vector<EnergyPointChargeMethod>& energyPointChargeMethods);
+
+        /**
          * @brief Reads the name(s) of the grid file(s) (.cube files) from the "GridFiles" parameter in the input file.
          *
          * @param[out] gridFilesNames Reference to a vector where the read filename(s) will be stored.
@@ -233,6 +242,15 @@ class Job
          * @return True if the parameter was successfully read, false otherwise.
          */
         bool readSpinType(SpinType& spinType);
+
+        /**
+         * @brief Reads a list of state numbers from the "StatesNumbers" parameter in the input file.
+         *
+         * @param[out] statesNumbers Reference to a vector where the state numbers will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readStatesNumbers(std::vector<int>& statesNumbers);
 
         /**
          * @brief Reads the name of the file that describes excited states transitions from the "TransitionsFile" parameter in the input file.

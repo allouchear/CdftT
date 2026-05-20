@@ -2,6 +2,7 @@
 #include <JobControl/JobManager.hpp>
 
 #include <JobControl/Jobs/ComputeCondensedLinearResponse.hpp>
+#include <JobControl/Jobs/ComputeElectronDensity.hpp>
 #include <JobControl/Jobs/ComputeDescriptors.hpp>
 #include <JobControl/Jobs/ComputeEnergyWithPointCharges.hpp>
 #include <JobControl/Jobs/ComputeGridDifference.hpp>
@@ -53,6 +54,11 @@ void JobManager::createJob(const std::string& inputFileName, RunType runtype)
         case RunType::COMPUTE_DESCRIPTORS:
         {
             _jobs.push_back(std::make_unique<ComputeDescriptors>(inputFileName));
+            break;
+        }
+        case RunType::COMPUTE_ELECTRON_DENSITY:
+        {
+            _jobs.push_back(std::make_unique<ComputeElectronDensity>(inputFileName));
             break;
         }
         case RunType::COMPUTE_ENERGY_WITH_POINT_CHARGES:
