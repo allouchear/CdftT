@@ -20,10 +20,10 @@
 class ExcitedState
 {
     private:
-        typedef std::pair<int, SpinType> OrbitalState;
+        typedef std::pair<int, SpinType> SpinOrbital;
         
         /** @brief Electronic transitions associated with the excited state. */
-        std::vector<std::tuple<OrbitalState, OrbitalState, double>> _electronicTransitions;
+        std::vector<std::tuple<SpinOrbital, SpinOrbital, double>> _electronicTransitions;
 
         /** @brief Energy of the excited state. */
         double _energy;
@@ -95,7 +95,7 @@ class ExcitedState
          * @param[in] finalOrbital Final orbital state (number and spin).
          * @param[in] coefficient Coefficient of the transition.
          */
-        void addTransition(const OrbitalState& initialOrbital, const OrbitalState& finalOrbital, const double coefficient);
+        void addTransition(const SpinOrbital& initialOrbital, const SpinOrbital& finalOrbital, const double coefficient);
 
         /**
          * @brief Computes the Slater determinant of the excited state from the electronic transitions.

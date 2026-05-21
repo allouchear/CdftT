@@ -140,7 +140,7 @@ const std::vector<std::pair<SlaterDeterminant, double>>& ExcitedState::get_slate
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void ExcitedState::addTransition(const OrbitalState& initialOrbital, const OrbitalState& finalOrbital, const double coefficient)
+void ExcitedState::addTransition(const SpinOrbital& initialOrbital, const SpinOrbital& finalOrbital, const double coefficient)
 {
     _electronicTransitions.push_back(std::make_tuple(initialOrbital, finalOrbital, coefficient));
 }
@@ -896,8 +896,8 @@ std::ostream& operator<<(std::ostream& stream, const ExcitedState& excitedState)
 
         for (const auto& transition : excitedState._electronicTransitions)
         {
-            const ExcitedState::OrbitalState& initialOrbital = std::get<0>(transition);
-            const ExcitedState::OrbitalState& finalOrbital = std::get<1>(transition);
+            const ExcitedState::SpinOrbital& initialOrbital = std::get<0>(transition);
+            const ExcitedState::SpinOrbital& finalOrbital = std::get<1>(transition);
             const double& coefficient = std::get<2>(transition);
 
             stream << "    " << initialOrbital.first << to_char(initialOrbital.second)

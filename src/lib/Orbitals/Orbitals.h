@@ -74,7 +74,7 @@ class Orbitals
         /** @brief Table of occupation numbers for each orbital. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals. The second dimension gives the occupation number of the i-th orbital. */
         std::vector<std::vector<double>> _occupationNumber;
 
-        /** @brief Flag indicating whether alpha and beta spins are present. */
+        /** @brief Flag indicating how the spins are treated. If true, only alpha spin is considered (and is used to represent beta spin as well, i.e. the occupation number can be 2). Otherwise, alpha and beta spins are treated separately. */
         bool _alphaAndBeta;
 
         /** @brief Helper class to compute binomial coefficients. */
