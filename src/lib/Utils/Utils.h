@@ -33,7 +33,8 @@ void print_progressBar(int currentStep, int totalSteps, int& lastProgress);
 // FILE PARSING FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
 
-/** @brief Searches for the first occurrence of the specified parameter (eg: "RunType") in the input file and reads its value as a string.
+/**
+ * @brief Searches for the first occurrence of the specified parameter (eg: "RunType") in the input file and reads its value as a string.
  * 
  * The position of the input file stream is reset to the beginning of the file before searching.
  * The resulting value is trimmed of leading and trailing whitespaces.
@@ -41,34 +42,84 @@ void print_progressBar(int currentStep, int totalSteps, int& lastProgress);
  * @param[in] inputFile Input file stream to read from.
  * @param[in] parameter Parameter to search for.
  * @param[out] value Reference to a string where the read value will be stored.
+ * 
  * @return True if the parameter was found and read successfully; false otherwise.
  */
 bool readOneString(std::ifstream& inputFile, const std::string& parameter, std::string& value);
 
-/** @brief Searches for the first occurrence of the specified parameter (eg: "RunType") in the input file and reads its value as the specified type.
+/**
+ * @brief Builds a regex pattern to read an array of N elements, where elements are separated by commas or semicolons and the array is enclosed in parentheses.
+ * 
+ * @param[in] n Number of elements in the array.
+ * 
+ * @return A regex pattern string to read an array of N elements.
+ */
+std::string makeTupleRegex(const int n);
+
+/**
+ * @brief Searches for the first occurrence of the specified parameter (eg: "RunType") in the input file and reads its value as the specified type.
  *
  * The position of the input file stream is reset to the beginning of the file before searching.
  *
  * @tparam T Type of the value to read (e.g., int, double, ...).
+ * 
  * @param[in] inputFile Input file stream to read from.
  * @param[in] parameter Parameter to search for.
  * @param[out] value Reference to a type T variable where the read value will be stored.
+ * 
  * @return True if the parameter was found and read successfully; false otherwise.
  */
 template<typename T> bool readOneType(std::ifstream& inputFile, const std::string& tag, T& x);
 
-/** @brief Searches for the first occurrence of the specified parameter (eg: "RunType") in the input file and reads its value as a list of the specified type.
+/**
+ * @brief Searches for the first occurrence of the specified parameter (eg: "RunType") in the input file and reads its value as an array of the specified type.
+ * 
+ * The position of the input file stream is reset to the beginning of the file before searching.
+ * Arrays are defined by paretheses e.g. "(1.0, 2.0, 3.0)" for an array of 3 doubles.
+ * Accepted separators between array elements are commas or semicolons.
+ * 
+ * @tparam T Type of the values to read (e.g., int, double, ...).
+ * @tparam N Size of the array to read.
+ * 
+ * @param[in] inputFile Input file stream to read from.
+ * @param[in] parameter Parameter to search for.
+ * @param[out] value Reference to an array of type T where the read values will be stored.
+ * 
+ * @return True if the parameter was found and read successfully; false otherwise.
+ */
+template<typename T, const int N> bool readOneTypeArray(std::ifstream& inputFile, const std::string& tag, std::array<T, N>& x);
+
+/**
+ * @brief Searches for the first occurrence of the specified parameter (eg: "RunType") in the input file and reads its value as a list of the specified type.
  *
  * The position of the input file stream is reset to the beginning of the file before searching.
- * Accepted separators between list elements are spaces, commas, or semicolons.
+ * Accepted separators between list elements are commas or semicolons.
  *
  * @tparam T Type of the values to read (e.g., int, double, ...).
+ * 
  * @param[in] inputFile Input file stream to read from.
  * @param[in] parameter Parameter to search for.
  * @param[out] value Reference to a vector of type T where the read values will be stored.
  * @return True if the parameter was found and read successfully; false otherwise.
  */
 template<typename T> bool readListType(std::ifstream& inputFile, const std::string& tag, std::vector<T>& x);
+
+/**
+ * @brief Searches for the first occurrence of the specified parameter (eg: "RunType") in the input file and reads its value as a list of arrays of the specified type.
+ *
+ * The position of the input file stream is reset to the beginning of the file before searching.
+ * Arrays are defined by paretheses e.g. "(1.0, 2.0, 3.0), (4.0, 5.0, 6.0)" for two arrays of 3 doubles.
+ * Accepted separators between arrays and array elements are commas or semicolons.
+ *
+ * @tparam T Type of the values to read (e.g., int, double, ...).
+ * @tparam N Size of the arrays to read.
+ *
+ * @param[in] inputFile Input file stream to read from.
+ * @param[in] parameter Parameter to search for.
+ * @param[out] value Reference to a vector of arrays of type T where the read values will be stored.
+ * @return True if the parameter was found and read successfully; false otherwise.
+ */
+template<typename T, const int N> bool readListTypeArray(std::ifstream& inputFile, const std::string& tag, std::vector<std::array<T, N>>& x);
 
 #include <Utils/Utils_fileParsing.tpp>
 
@@ -83,6 +134,7 @@ template<typename T> bool readListType(std::ifstream& inputFile, const std::stri
  * @param[in] subDiagonal Sub-diagonal elements of the tridiagonal matrix.
  * @param[out] eigenValues Vector where the computed eigenvalues will be stored.
  * @param[out] eigenVectors Matrix (as a vector of vectors) where the computed eigenvectors will be stored.
+ * 
  * @return True if the diagonalisation was successful; false otherwise.
  */
 bool diagonalisationOfATridiagonalMatrix(std::vector<double>& subDiagonal, std::vector<double>& eigenValues, std::vector<std::vector<double>>& eigenVectors);
@@ -93,6 +145,7 @@ bool diagonalisationOfATridiagonalMatrix(std::vector<double>& subDiagonal, std::
  * @param[in] matrixLowerTriangle Lower triangle of a real, symmetric matrix.
  * @param[out] eigenValues Vector where the computed eigenvalues will be stored.
  * @param[out] eigenVectors Matrix (as a vector of vectors) where the computed eigenvectors will be stored.
+ * 
  * @return True if the computation was successful; false otherwise.
  */
 bool findEigenValuesAndEigenVectorsOfSymmetricalMatrix(const std::vector<std::vector<double>>& matrixLowerTriangle, std::vector<double>& eigenValues, std::vector<std::vector<double>>& eigenVectors);

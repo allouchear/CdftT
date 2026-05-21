@@ -181,6 +181,7 @@ void print_progressBar(int currentStep, int totalSteps, int& lastProgress)
 // FILE PARSING FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
 
+/*
 bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string& value)
 {
     bool ok = false;
@@ -230,13 +231,12 @@ bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string
                 pos = t2.find("=");
                 value = t.substr(pos + 1);
             }
-            /*
-            else // if no '=' is found, we assume a space separates tag and value
-            {
-                pos = t2.find(" ");
-                value = t.substr(pos + 1);
-            }
-            */
+            // else // if no '=' is found, we assume a space separates tag and value
+            // {
+            //     pos = t2.find(" ");
+            //     value = t.substr(pos + 1);
+            // }
+            
 
             if (value.length() > 0)
             {
@@ -247,6 +247,59 @@ bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string
     }
 
     return ok;
+}
+*/
+
+bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string& value)
+{
+    bool ok = false;
+
+    if (tag.length() >= 1)
+    {
+        inputFile.clear();
+        inputFile.seekg(0);
+
+        std::string line;
+        value = "";
+
+        while (!ok && !inputFile.eof())
+        {
+            std::getline(inputFile, line);
+            if (inputFile.fail())
+            {
+                break;
+            }
+
+            std::regex tagValueRegex("^\\s*" + tag + "\\s*=\\s*([^\\s]*[,|;]?[^\\s]*)(?:\\s|\\s#.*)*$", std::regex_constants::icase);
+            std::smatch tagValueRegexMatch;
+            if (std::regex_search(line, tagValueRegexMatch, tagValueRegex))
+            {
+                value = tagValueRegexMatch[1];
+                ok = true;
+            }
+        }
+    }
+
+    return ok;
+}
+
+std::string makeTupleRegex(const int n)
+{
+    std::string regexStr = "(\\(\\s*)";
+
+    for (int i = 0; i < n; ++i)
+    {
+        if (i != 0)
+        {
+            regexStr += "(\\s*,\\s*)";
+        }
+
+        regexStr += "(([^(),;]+))";
+    }
+
+    regexStr += "(\\s*\\))";
+
+    return regexStr;
 }
 
 

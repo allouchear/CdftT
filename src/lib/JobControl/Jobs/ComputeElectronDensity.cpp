@@ -79,7 +79,7 @@ void ComputeElectronDensity::run()
         errorMessage << "Error: incorrect number of analytic files names (one file expected)." << std::endl;
         errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
 
-        print_error(errorMessage.str());
+        print_error(errorMessage.str(), logStream);
 
         std::exit(1);
     }
@@ -91,7 +91,7 @@ void ComputeElectronDensity::run()
     readSize(gridSize, customSizeData);
 
 
-    // Read transitions file
+    // Read transitions file name
     std::string transitionsFileName;
     readTransitionsFileName(transitionsFileName);
 
@@ -139,15 +139,14 @@ void ComputeElectronDensity::run()
 
 
     // Compute Slater Determinants from electronic transitions for each state, 
-    int state_index_ = 0;
     for (ExcitedState& state : states)
     {
         state.computeSlaterDeterminants(groundStateSlaterDeterminant);
-        ++state_index_;
 
-        if(showProgress)
+        if (verbose >= 1)
         {
-            std::cout << "computed SD for state " << state_index_ << "/" << nbStates << " of energy " << state.get_energy()  <<" Hartree (dE=" << state.get_energy()-states[0].get_energy() << "); state got " << state.get_slaterDeterminants().size() << " Slater determinants" << std::endl;
+            logStream << state << std::endl;
+            log(logStream, outputStream);
         }
     }
     std::cout << std::endl;
