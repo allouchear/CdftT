@@ -107,13 +107,13 @@ class Job
         bool readExcitedStatesNumbers(std::vector<int>& excitedStatesNumbers);
 
         /**
-         * @brief Reads a list of orbital numbers to exclude from the density computation from the "ExcludedOrbitalsNumbers" parameter in the input file.
+         * @brief Reads a list of orbital numbers to exclude from the density computation from the "ExcludedOrbitals" parameter in the input file.
          *
-         * @param[out] excludedOrbitalsNumbers Reference to a vector where the excluded orbital numbers will be stored.
+         * @param[out] excludedOrbitals Reference to a vector where the excluded orbital numbers will be stored.
          * 
          * @return True if the parameter was successfully read, false otherwise.
          */
-        bool readExcludedOrbitalsNumbers(std::vector<int>& excludedOrbitalsNumbers);
+        bool readExcludedOrbitals(std::vector<int>& excludedOrbitals);
 
         /**
          * @brief Reads the name(s) of the grid file(s) (.cube files) from the "GridFiles" parameter in the input file.
@@ -132,16 +132,6 @@ class Job
          * @return True if the parameter was successfully read, false otherwise.
          */
         bool readGroundStateEnergy(double& energy);
-
-        /**
-         * @brief Reads the matrix elements to consider from the "MatrixElements" parameter in the input file.
-         *
-         * @param[out] matrixElements Reference to a vector where the read matrix elements will be stored.
-         * 
-         * @return True if the parameter was successfully read, false otherwise.
-
-         */
-        bool readMatrixElements(std::vector<std::array<int, 2>>& matrixElements);
 
         /**
          * @brief Reads the maximum number of excited states to consider from the "MaxNumberOfExcitedStates" parameter in the input file.
@@ -297,6 +287,15 @@ class Job
          * @return True if the parameter was successfully read, false otherwise.
          */
         bool readSpinType(SpinType& spinType);
+
+        /**
+         * @brief Reads the transition densities to consider from the "TransitionDensities" parameter in the input file.
+         *
+         * @param[out] transitionDensities Reference to a vector where the read transition densities will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readTransitionDensities(std::vector<std::array<int, 2>>& transitionDensities);
 
         /**
          * @brief Reads the name of the file that describes excited states transitions from the "TransitionsFile" parameter in the input file.
