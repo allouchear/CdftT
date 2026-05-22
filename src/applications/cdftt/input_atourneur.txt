@@ -9,7 +9,13 @@ AnalyticFiles=CO_atourneur.log
 Size=custom
 CustomSizeData=80,80,80,3,3,4.236939,0.075949,0,0,0,0.075949,0,0,0,0.103350
 
-#States=0,1,5,9,45,56 the excited states to compute (0=groundstate always taken)
-States=0,1,2
+RDMMethod=Gamma
+ExcitedStates=1,2
+IgnoredOrbitals=1,2
+MatrixElements=(0,0),(0,3),(1,1)
 
 OutputPrefix=CED_CO_STO-3G
+Precision=6
+
+verbose=1
+PrintRDM=True
