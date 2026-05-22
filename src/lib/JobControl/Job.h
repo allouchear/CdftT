@@ -152,6 +152,24 @@ class Job
         bool readNuclearCutoff(double& nuclearCutoff);
 
         /**
+         * @brief Reads the option that indicates if each charge is put on a different nucleus from the "OneChargePerNucleus" parameter in the input file.
+         * 
+         * @param[out] oneChargePerNucleus Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readOneChargePerNucleus(bool& oneChargePerNucleus);
+
+        /**
+         * @brief Reads the option that indicates if each charge has a single position from the "OnePositionPerCharge" parameter in the input file.
+         * 
+         * @param[out] onePositionPerCharge Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readOnePositionPerCharge(bool& onePositionPerCharge);
+
+        /**
          * @brief Reads a list of orbital numbers from the "OrbitalsNumbers" parameter in the input file.
          *
          * @param[out] orbitalsNumbers Reference to a vector where the orbital numbers will be stored.
@@ -257,6 +275,15 @@ class Job
          * @return True if the parameter was successfully read, false otherwise.
          */
         bool readShowProgress(bool& showProgress);
+
+        /**
+         * @brief Reads the single charge option from the "SingleCharge" parameter in the input file.
+         * 
+         * @param[out] singleCharge Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readSingleCharge(bool& singleCharge);
 
         /**
          * @brief Reads the selected grid size from the "Size" parameter in the input file.

@@ -327,6 +327,64 @@ bool Job::readNuclearCutoff(double& nuclearCutoff)
     return read;
 }
 
+bool Job::readOneChargePerNucleus(bool& oneChargePerNucleus)
+{
+    std::string strOneChargePerNucleus;
+    bool read = readOneString(_inputFile, "OneChargePerNucleus", strOneChargePerNucleus);
+
+    oneChargePerNucleus = false;
+    if (!read)
+    {
+        std::cout << "Note: the \"OneChargePerNucleus\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (OneChargePerNucleus=False)." << std::endl << std::endl;
+    }
+    else if (to_lower(strOneChargePerNucleus) == "true")
+    {
+        oneChargePerNucleus = true;
+    }
+    else if (to_lower(strOneChargePerNucleus) != "false")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"OneChargePerNucleus\" parameter (" << strOneChargePerNucleus << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"OneChargePerNucleus\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readOnePositionPerCharge(bool& onePositionPerCharge)
+{
+    std::string strOnePositionPerCharge;
+    bool read = readOneString(_inputFile, "OnePositionPerCharge", strOnePositionPerCharge);
+
+    onePositionPerCharge = false;
+    if (!read)
+    {
+        std::cout << "Note: the \"OnePositionPerCharge\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (OnePositionPerCharge=False)." << std::endl << std::endl;
+    }
+    else if (to_lower(strOnePositionPerCharge) == "true")
+    {
+        onePositionPerCharge = true;
+    }
+    else if (to_lower(strOnePositionPerCharge) != "false")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"OnePositionPerCharge\" parameter (" << strOnePositionPerCharge << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"OnePositionPerCharge\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
 bool Job::readOrbitalsNumbers(std::vector<int>& orbitalsNumbers)
 {
     bool read = readListType<int>(_inputFile, "OrbitalsNumbers", orbitalsNumbers);
@@ -656,6 +714,35 @@ bool Job::readShowProgress(bool& showProgress)
         std::stringstream errorMessage;
         errorMessage << "Error: incorrect value for the \"ShowProgress\" parameter (" << strShowProgress << ")." << std::endl;
         errorMessage << "Please check the documentation and the \"ShowProgress\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readSingleCharge(bool& singleCharge)
+{
+    std::string strSingleCharge;
+    bool read = readOneString(_inputFile, "SingleCharge", strSingleCharge);
+
+    singleCharge = false;
+    if (!read)
+    {
+        std::cout << "Note: the \"SingleCharge\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (SingleCharge=False)." << std::endl << std::endl;
+    }
+    else if (to_lower(strSingleCharge) == "true")
+    {
+        singleCharge = true;
+    }
+    else if (to_lower(strSingleCharge) != "false")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"SingleCharge\" parameter (" << strSingleCharge << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"SingleCharge\" parameter value in the provided input file (" << _inputFileName << ").";
 
         print_error(errorMessage.str());
 
