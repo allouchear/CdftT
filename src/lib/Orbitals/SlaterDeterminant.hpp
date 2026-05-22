@@ -16,7 +16,7 @@
 class SlaterDeterminant
 {
     private:
-        /** @brief Occupied orbitals and their occupation numbers. First index corresponds to alpha spin, second to beta spin. */
+        /** @brief Occupied orbitals (1-based) and their occupation numbers. First index corresponds to alpha spin, second to beta spin. */
         std::vector<std::vector<std::pair<int, double>>> _occupiedOrbitals;
 
 
@@ -50,6 +50,15 @@ class SlaterDeterminant
          */
         SlaterDeterminant(const Orbitals& orbitals);
 
+
+        //----------------------------------------------------------------------------------------------------//
+        // GETTERS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Returns the occupied orbitals (1-based) and their occupation numbers. The first index corresponds to alpha spin, the second to beta spin.
+         */
+        const std::vector<std::vector<std::pair<int, double>>>& get_occupiedOrbitals() const;
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS

@@ -485,10 +485,10 @@ class Orbitals
         void printDescriptors(int homoIndex, int lumoIndex);
 
 
-            //! Make a grid of electronic density
-            /*! creates a grid of electronic density. Values are calculated with Orbitals::density(x, y, z)*/
+        void makeDensityGrid(Grid& grid, const std::vector<std::vector<std::vector<double>>>& reducedDensityMatrix, bool showProgress = false) const;
+
         /**
-         * @brief Creates a grid that stores electronic density.
+         * @brief Creates a grid that stores electronic density (only for Ground State).
          * 
          * @param[in] domain The domain of the grid.
          * @param[in] showProgress Whether to display a progress bar during grid creation.
@@ -496,7 +496,7 @@ class Orbitals
         Grid makeGrid(const Domain& domain, bool showProgress = false);
 
         /**
-         * @brief Computes the total electronic density for all orbitals at a given point.
+         * @brief Computes the total electronic density for all orbitals at a given point (only for Ground State).
          *
          * @param[in] coordinates The (x, y, z) coordinates at which to compute the density.
          *
@@ -505,7 +505,7 @@ class Orbitals
         double density(const std::array<double, 3>& coordinates) const;
 
         /**
-         * @brief Computes the electronic density for a given spin-orbital at a given point.
+         * @brief Computes the electronic density for a given spin-orbital at a given point (only for Ground State).
          *
          * @param[in] orbitalIndex The index of the orbital (0-based) for which to compute the electronic density.
          * @param[in] spinType The spin type of the orbital for which to compute the density.
@@ -516,7 +516,7 @@ class Orbitals
         double density(int orbitalIndex, SpinType spinType, const std::array<double, 3>& coordinates) const;
 
         /**
-         * @brief Computes the total electronic density for given orbitals at a given point.
+         * @brief Computes the total electronic density for given orbitals at a given point (only for Ground State).
          *
          * @param[in] orbitalIndexes Vector of orbital indexes (0-based) for which to compute the density.
          * @param[in] orbitalSpins Vector of @ref SpinType for each orbital (must have the same length as orbitalIndexes).
@@ -525,6 +525,17 @@ class Orbitals
          * @return double Total electronic density for the given spin-orbitals at the given point.
          */
         double density(const std::vector<int>& orbitalIndexes, const std::vector<SpinType>& orbitalSpins, const std::array<double, 3>& coordinates) const;
+
+        /**
+         * @brief Computes the electronic density at coordinates (x,y,z).
+         *
+         * @param reducedDensityMatrix The matrix of coefficients for calculation of the density
+         * @param spinType Spin type (alpha, beta, or both) for which to compute the density.
+         * @param coordinates Array containing the (x, y, z) coordinates at which to evaluate the density.
+         * 
+         * @return double The electronic density evaluated at (x, y, z).
+         */
+        double density(const std::vector<std::vector<std::vector<double>>>& reducedDensityMatrix, SpinType spinType, const std::array<double, 3>& coordinates) const;
 
         /**
          * @brief Builds the Grid associated with the orbitals object.

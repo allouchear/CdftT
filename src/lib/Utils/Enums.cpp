@@ -84,6 +84,13 @@ namespace EnumConversionMaps
         { PartitionMethod::UNKNOWN, "UNKNOWN" }
     };
 
+    std::unordered_map<RDMMethod, std::string> rdmMethod_string =
+    {
+        { RDMMethod::GAMMA, "Gamma" },
+        { RDMMethod::X, "X" },
+        { RDMMethod::UNKNOWN, "UNKNOWN" }
+    };
+
     std::unordered_map<RunType, std::string> runType_string =
     {
         { RunType::COMPUTE_CONDENSED_LINEAR_RESPONSE, "ComputeCondensedLinearResponse" },
@@ -207,6 +214,17 @@ std::string to_string(PartitionMethod method)
 PartitionMethod partitionMethod_from_string(const std::string& strMethod)
 {
     return enum_from_string(strMethod, EnumConversionMaps::partitionMethod_string, PartitionMethod::UNKNOWN);
+}
+
+
+std::string to_string(RDMMethod method)
+{
+    return enum_to_string(method, EnumConversionMaps::rdmMethod_string);
+}
+
+RDMMethod rdmMethod_from_string(const std::string& strMethod)
+{
+    return enum_from_string(strMethod, EnumConversionMaps::rdmMethod_string, RDMMethod::UNKNOWN);
 }
 
 

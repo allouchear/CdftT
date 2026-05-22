@@ -935,7 +935,7 @@ bool LOG::readGroundStateEnergy(const std::string& logFileName, double& groundSt
     return (ok && found);
 }
 
-bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, int maxNumberOfExcitedStates, const std::vector<int>& statesNumbersToKeep)
+bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, int maxNumberOfExcitedStates, const std::vector<int>& excitedStatesNumbersToKeep)
 {
     bool ok = true;
 
@@ -953,10 +953,10 @@ bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedSta
         std::exit(1);
     }
 
-    int numberOfExcitedStatesRead = 0;
+    int currentExcitedStatesRead = 1;
 
     std::string line;
-    while (!logFile.eof() && (maxNumberOfExcitedStates == -1 || numberOfExcitedStatesRead < maxNumberOfExcitedStates))
+    while (!logFile.eof() && (maxNumberOfExcitedStates == -1 || currentExcitedStatesRead <= maxNumberOfExcitedStates))
     {
         // Read line
         std::getline(logFile, line);
@@ -975,7 +975,7 @@ bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedSta
             {
                 double energy = std::stod(energyRegexMatch[1]) * Constants::EV_TO_HARTREE;
 
-                ExcitedState excitedState(numberOfExcitedStatesRead + 1, energy + groundStateEnergy);
+                ExcitedState excitedState(currentExcitedStatesRead, energy + groundStateEnergy);
 
                 do
                 {
@@ -1041,13 +1041,13 @@ bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedSta
                 // Check that at least one transition was read
                 if (excitedState.getNumberOfTransitions() > 0)
                 {
-                    if (statesNumbersToKeep.empty() || std::find(statesNumbersToKeep.begin(), statesNumbersToKeep.end(), numberOfExcitedStatesRead + 1) != statesNumbersToKeep.end())
+                    if (excitedStatesNumbersToKeep.empty() || std::find(excitedStatesNumbersToKeep.begin(), excitedStatesNumbersToKeep.end(), currentExcitedStatesRead) != excitedStatesNumbersToKeep.end())
                     {
                         // Add excited state to the list
                         excitedStates.push_back(excitedState);
                     }
                     
-                    ++numberOfExcitedStatesRead;
+                    ++currentExcitedStatesRead;
                 }
                 else
                 {

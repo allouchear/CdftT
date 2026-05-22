@@ -82,6 +82,13 @@ enum class PartitionMethod
     UNKNOWN
 };
 
+enum class RDMMethod
+{
+    GAMMA,
+    X,
+    UNKNOWN
+};
+
 enum class RunType
 {
     COMPUTE_CONDENSED_LINEAR_RESPONSE,
@@ -123,6 +130,7 @@ namespace EnumConversionMaps
     extern std::unordered_map<HFType, std::string> hfType_string;
     extern std::unordered_map<OrbitalType, std::string> orbitalType_string;
     extern std::unordered_map<PartitionMethod, std::string> partitionMethod_string;
+    extern std::unordered_map<RDMMethod, std::string> rdmMethod_string;
     extern std::unordered_map<RunType, std::string> runType_string;
     extern std::unordered_map<SpinType, char> spinType_char;
     extern std::unordered_map<SpinType, std::string> spinType_string;
@@ -164,6 +172,9 @@ OrbitalType orbitalType_from_string(const std::string& strOrbitalType);
 
 std::string to_string(PartitionMethod method);
 PartitionMethod partitionMethod_from_string(const std::string& strMethod);
+
+std::string to_string(RDMMethod method);
+RDMMethod rdmMethod_from_string(const std::string& strMethod);
 
 std::string to_string(RunType runType);
 RunType runType_from_string(const std::string& strRunType);

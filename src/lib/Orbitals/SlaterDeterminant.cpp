@@ -47,23 +47,33 @@ SlaterDeterminant::SlaterDeterminant(const Orbitals& orbitals):
         // Alpha spin
         if (occupationNumbers[ALPHA][i] == 1)
         {
-            _occupiedOrbitals[ALPHA].emplace_back(i + 1, 1.0);
+            _occupiedOrbitals[ALPHA].emplace_back(i + 1, 1.0); // +1 because orbital numbers are 1-based
         }
         else if (occupationNumbers[ALPHA][i] == 2) // Case where _alpha_and_beta = true
         {
             // Alpha spin
-            _occupiedOrbitals[ALPHA].emplace_back(i + 1, 1.0);
+            _occupiedOrbitals[ALPHA].emplace_back(i + 1, 1.0); // +1 because orbital numbers are 1-based
 
             // Beta spin
-            _occupiedOrbitals[BETA].emplace_back(i + 1, 1.0);
+            _occupiedOrbitals[BETA].emplace_back(i + 1, 1.0); // +1 because orbital numbers are 1-based
         }
 
         // Beta spin
         if (occupationNumbers[BETA][i] == 1)
         {
-            _occupiedOrbitals[BETA].emplace_back(i + 1, 1.0);
+            _occupiedOrbitals[BETA].emplace_back(i + 1, 1.0); // +1 because orbital numbers are 1-based
         }
     }
+}
+
+
+//----------------------------------------------------------------------------------------------------//
+// GETTERS
+//----------------------------------------------------------------------------------------------------//
+
+const vector<std::vector<std::pair<int, double>>>& SlaterDeterminant::get_occupiedOrbitals() const
+{
+    return _occupiedOrbitals;
 }
 
 

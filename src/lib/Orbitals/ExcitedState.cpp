@@ -23,23 +23,65 @@
 
 
 //----------------------------------------------------------------------------------------------------//
-// PRVIATE METHODS
+// PRIVATE METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, int numberOfMo) const
+void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos)
 {
-    //Gamma matrix for alpha-alpha and beta-beta transitions
-    gammaMatrix.resize(2, std::vector<std::vector<double>>(numberOfMo, std::vector<double>(numberOfMo)));
+    const std::vector<std::pair<SlaterDeterminant, double>>& slaterDeterminants_i = psi_i.get_slaterDeterminants();
+    const std::vector<std::pair<SlaterDeterminant, double>>& slaterDeterminants_j = psi_j.get_slaterDeterminants();
+
+    int numberOfMo = orbitals.get_numberOfMo();
+
+    // Build gamma matrix
+    gammaMatrix.resize(2, std::vector<std::vector<double>>(numberOfMo, std::vector<double>(numberOfMo, 0.0)));
+
+    // Build list of kept MOs
+    std::vector<int> keptMoIndexes;
+    for (int i = 1; i <= numberOfMo; ++i)
+    {
+        if (std::find(ignoredMos.begin(), ignoredMos.end(), i) == ignoredMos.end())
+        {
+            keptMoIndexes.push_back(i - 1); // Convert from MO number (1-based) to MO index (0-based)
+        }
+    }
 
     for (int spin = 0; spin < 2; ++spin)
     {
         SpinType spinType = static_cast<SpinType>(spin);
 
-        for(int p = 0; p < numberOfMo; ++p)
+        for(int p : keptMoIndexes)
         {
-            for(int q = 0; q <= p; ++q)
+            for(int q : keptMoIndexes)
             {
-                gammaMatrix[spin][p][q] = computeGammaMatrixElement(p + 1, q + 1, spinType); // Because MO numbers are 1-indexed
+                for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_i : slaterDeterminants_i)
+                {
+                    // Make temporary SD on wich to apply the transition to check if it is valid (i.e. the orbital p from which to remove an electron was found in the SD)
+                    SlaterDeterminant tmpSD = slaterDeterminant_i.first;
+
+                    if(tmpSD.updateFromTransition(p + 1, spinType, q + 1, spinType)) // Because updateFromTransition() expects MO numbers (1-based)
+                    {
+                        for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_j : slaterDeterminants_j)
+                        {
+                            if(SlaterDeterminant::equivalent(tmpSD, slaterDeterminant_j.first))
+                            {
+                                std::vector<std::vector<std::pair<int, int>>> diff = SlaterDeterminant::getDifferences(tmpSD, slaterDeterminant_j.first);
+
+                                //std::cout<<"Nperm = "<<(diff[0].size()+diff[1].size())/2<< " for p="<<p << " for q="<<q<<std::endl;
+                                
+                                int numberOfPermutations = (diff[0].size() + diff[1].size()) / 2;
+                                if(numberOfPermutations == 0 || numberOfPermutations == 2)
+                                {
+                                    gammaMatrix[spin][p][q] += slaterDeterminant_i.second * slaterDeterminant_j.second;
+                                }
+                                else if(numberOfPermutations == 1)
+                                {
+                                    gammaMatrix[spin][p][q] -= slaterDeterminant_i.second * slaterDeterminant_j.second;
+                                }
+                            }
+                        }            
+                    }
+                }
 
                 // Fill the symmetric element
                 if(p != q)
@@ -49,51 +91,99 @@ void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double
             }
         }
     }
-
-    // Remove core orbitals contributions from the gamma matrix
-    for (int spin = 0; spin < 2; ++spin)
-    {
-        for (int p = 0; p < numberOfMo; ++p)
-        {
-            gammaMatrix[spin][0][p] = gammaMatrix[spin][p][0] = 0.0;
-            gammaMatrix[spin][1][p] = gammaMatrix[spin][p][1] = 0.0;
-        }
-    }
 }
 
-double ExcitedState::computeGammaMatrixElement(int i, int j, SpinType spinType) const
+void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi, const Orbitals& orbitals, const std::vector<int>& ignoredMos)
 {
-    double element = 0.0;
+    int numberOfMos = orbitals.get_numberOfMo();
 
-    for(size_t l = 0; l < _slaterDeterminants.size(); ++l)
+    size_t numberOfOccupiedOrbitals = orbitals.getOccupiedOrbitalNumbers().size();
+    size_t numberOfVirtualOrbitals = numberOfMos - numberOfOccupiedOrbitals;
+
+    // Build xMatrix matrixes
+    xMatrix.resize(2, std::vector<std::vector<double>>(numberOfMos, std::vector<double>(numberOfMos, 0.0)));
+
+    // Build other matrixes needed to compute xMatrix
+    std::vector<std::vector<std::vector<double>>> tmpX(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
+    std::vector<std::vector<std::vector<double>>> occupiedMOsBlock(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfOccupiedOrbitals, 0.0)));
+    std::vector<std::vector<std::vector<double>>> virtualMOsBlock(2, std::vector<std::vector<double>>(numberOfVirtualOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
+    
+    for (int spin = 0; spin < 2; ++spin)
     {
-        // Make temporary SD on wich to apply the transition to check if it is valid (i.e. the orbital p from which to remove an electron was found in the SD)
-        SlaterDeterminant tmpSD = _slaterDeterminants[l].first;
-        if(tmpSD.updateFromTransition(i, spinType, j, spinType))
+        for(size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
         {
-            for(size_t m = 0; m < _slaterDeterminants.size(); ++m)
+            for(size_t j = 0; j < numberOfVirtualOrbitals; ++j)
             {
-                if(SlaterDeterminant::equivalent(tmpSD, _slaterDeterminants[m].first))
+                for(size_t k = 0; k < psi._slaterDeterminants.size(); ++k)
                 {
-                    std::vector<std::vector<std::pair<int,int>>> diff = SlaterDeterminant::getDifferences(tmpSD, _slaterDeterminants[m].first);
+                    // Check if the electron from MO number (i + 1) has been excited to the MO number (j + 1 + numberOfOccupiedOrbitals)
+                    // i.e. there is a transition from the (i + 1)^th occupied MO to the (j + 1)^th virtual MO
 
-                    //std::cout<<"Nperm = "<<(diff[0].size()+diff[1].size())/2<< " for p="<<p << " for q="<<q<<std::endl;
-                    
-                    int numberOfPermutations = (diff[0].size() + diff[1].size()) / 2;
-                    if(numberOfPermutations == 0 || numberOfPermutations == 2)
+                    if (psi._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first == static_cast<int>(j + numberOfOccupiedOrbitals + 1)) // +1 because get_occupiedOrbitals() returns MO numbers (1-based) in the first pair value
                     {
-                        element += _slaterDeterminants[l].second * _slaterDeterminants[m].second;
+                        tmpX[spin][i][j] += psi._slaterDeterminants[k].second;
                     }
-                    else if(numberOfPermutations == 1)
-                    {
-                        element -= _slaterDeterminants[l].second * _slaterDeterminants[m].second;
-                    }
+                }                        
+            }
+        }
+
+        // Initialize first block of xMatrix (occupied MOs - occupied MOs))
+        for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
+        {
+            occupiedMOsBlock[spin][i][i] = 1;
+        }
+
+        // Compute matrix multiplication: - tmpX * tmpX^t
+        for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
+        {
+            for (size_t j = 0; j < numberOfOccupiedOrbitals; ++j)
+            {
+                for (size_t k = 0; k < numberOfVirtualOrbitals; ++k)
+                {
+                    occupiedMOsBlock[spin][i][j] -= tmpX[spin][i][k] * tmpX[spin][j][k];
                 }
-            }            
+            }
+        }
+
+        // Compute second block of xMatrix (virtual MOs - virtual MOs)
+        // Compute matrix multiplication: tmpX * tmpX^t
+        for (size_t i = 0; i < numberOfVirtualOrbitals; ++i)
+        {
+            for (size_t j = 0; j < numberOfVirtualOrbitals; ++j)
+            {
+                for(size_t k = 0; k < numberOfOccupiedOrbitals; ++k)
+                {
+                    virtualMOsBlock[spin][i][j] += tmpX[spin][k][i] * tmpX[spin][k][j];
+                }
+            }
+        }
+
+        // Fill xMatrix
+        for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
+        {
+            for (size_t j = 0; j < numberOfOccupiedOrbitals; ++j)
+            {
+                xMatrix[spin][i][j] = occupiedMOsBlock[spin][i][j];
+            }
+        }
+
+        for (size_t i = 0; i < numberOfVirtualOrbitals; ++i)
+        {
+            for (size_t j = 0; j < numberOfVirtualOrbitals; ++j)
+            {
+                xMatrix[spin][i + numberOfOccupiedOrbitals][j + numberOfOccupiedOrbitals] = virtualMOsBlock[spin][i][j];
+            }
+        }
+
+        // Set elements of xMatrix corresponding to ignored MOs to 0
+        for(int i : ignoredMos)
+        {
+            for (int j = 0; j < numberOfMos; ++j)
+            {
+                xMatrix[spin][i - 1][j] = xMatrix[spin][j][i - 1] = 0.0; // Convert i from MO number (1-based) to MO index (0-based)
+            }
         }
     }
-
-    return element;
 }
 
 
@@ -168,42 +258,6 @@ void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStat
     }
 }
 
-double ExcitedState::density(const Orbitals& orbitals, SpinType spinType, std::vector<std::vector<std::vector<double>>>& gammaMatrix, const std::array<double, 3>& coordinates) const
-{
-    double rho = 0.0;
-
-    int numberOfMo = orbitals.get_numberOfMo();
-
-    // Evaluate MOs at coordinates
-    std::vector<std::vector<double>> evaluatedMOs;
-    orbitals.evaluateAtPoint(evaluatedMOs, coordinates);
-
-    std::vector<SpinType> spins;
-    if (spinType == SpinType::ALPHA || spinType == SpinType::ALPHA_BETA)
-    {
-        spins.push_back(SpinType::ALPHA);
-    }
-    if (spinType == SpinType::BETA || spinType == SpinType::ALPHA_BETA)
-    {
-        spins.push_back(SpinType::BETA);
-    }
-
-    for (SpinType spinType : spins)
-    {
-        int spin = static_cast<int>(spinType);
-
-        for(int p = 0; p < numberOfMo; ++p)
-        {
-            for(int q = 0; q < numberOfMo; ++q)
-            {
-                rho += gammaMatrix[spin][p][q] * evaluatedMOs[spin][p] * evaluatedMOs[spin][q];
-            }
-        }
-    }
-
-    return rho;
-}
-
 int ExcitedState::getNumberOfTransitions() const
 {
     return static_cast<int>(_electronicTransitions.size());
@@ -212,73 +266,6 @@ int ExcitedState::getNumberOfTransitions() const
 bool ExcitedState::isGroundState() const
 {
     return _number == 0;
-}
-
-void ExcitedState::makeDensityGrid(Orbitals& orbitals, Grid& grid, bool showProgress)
-{
-    int numberOfMo = orbitals.get_numberOfMo();
-
-    // Compute gamma matrix
-    std::vector<std::vector<std::vector<double>>> gammaMatrix;
-    computeGammaMatrix(gammaMatrix, numberOfMo);
-
-    Domain domain = grid.get_domain();
-
-    int N1 = domain.get_N1();
-    int N2 = domain.get_N2();
-    int N3 = domain.get_N3();
-
-    const int nbStepsTotal = N1 * N2 * N3;
-    std::atomic<int> progress(0);
-    int lastProgress = -1;
-
-    // Show progress bar at 0% at the beginning
-    if (showProgress)
-    {
-        print_progressBar(0, nbStepsTotal, lastProgress);
-    }
-
-    // Get spinType for computation
-    SpinType spinType = orbitals.get_alphaAndBeta() ? SpinType::ALPHA : SpinType::ALPHA_BETA;
-
-    #ifdef ENABLE_OMP
-    #pragma omp parallel
-    #endif
-    {
-        #ifdef ENABLE_OMP
-        #pragma omp for collapse(2)
-        #endif
-        for(int i = 0; i < N1; ++i)
-        {
-            for(int j = 0; j < N2; ++j)
-            {
-                for(int k = 0; k < N3; ++k)
-                {
-                    double rho = density(orbitals, spinType, gammaMatrix, domain.xyz(i, j, k));
-
-                    if (orbitals.get_alphaAndBeta()) // TO BE TESTED
-                    {
-                        rho *= 2;
-                    }
-
-                    grid.set_Vijkl(rho, i, j, k, 0);
-                }
-                    
-                if (showProgress)
-                {
-                    // Update at each N2 iteration for a smoother display
-                    int currentStep = progress.fetch_add(N3) + N3;
-                    
-                    #ifdef ENABLE_OMP
-                    #pragma omp critical
-                    #endif
-                    {
-                        print_progressBar(currentStep, nbStepsTotal, lastProgress);
-                    }
-                }
-            }
-        }
-    }
 }
 
 void ExcitedState::printLambdaDiagnostic(const Grid& grid) const
@@ -468,28 +455,28 @@ bool ExcitedState::readGroundStateEnergyFromTransitionsFile(const std::string& t
 /////////////////////////////////////
 // TRANSITIONS FILE READING METHODS
 
-bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates, const std::vector<int>& statesNumbersToKeep)
+bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates, const std::vector<int>& excitedStatesNumbersToKeep)
 {
     bool ok = true;
 
     if (to_lower(fileName.substr(fileName.length() - 4)) == ".log")
     {
-        ok = LOG::readTransitions(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates, statesNumbersToKeep);
+        ok = LOG::readTransitions(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates, excitedStatesNumbersToKeep);
     }
     else if (to_lower(fileName.substr(fileName.length() - 4)) == ".out")
     {
-        ok = readTransitionsFromOutFile(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates, statesNumbersToKeep);
+        ok = readTransitionsFromOutFile(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates, excitedStatesNumbersToKeep);
     }
     else
     {
         // Try to read as a transitions file
-        ok = readTransitionsFile(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates, statesNumbersToKeep);
+        ok = readTransitionsFile(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates, excitedStatesNumbersToKeep);
     }
 
     return ok;
 }
 
-bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates, const std::vector<int>& statesNumbersToKeep)
+bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates, const std::vector<int>& excitedStatesNumbersToKeep)
 {
     bool ok = true;
 
@@ -507,10 +494,10 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
         std::exit(1);
     }
 
-    int numberOfExcitedStatesRead = 0;
+    int currentExcitedStatesRead = 1;
 
     std::string line;
-    while (!transitionsFile.eof() && (maxNumberOfExcitedStates == -1 || numberOfExcitedStatesRead < maxNumberOfExcitedStates))
+    while (!transitionsFile.eof() && (maxNumberOfExcitedStates == -1 || currentExcitedStatesRead <= maxNumberOfExcitedStates))
     {
         // Read line
         std::getline(transitionsFile, line);
@@ -554,7 +541,7 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
                     std::exit(1);
                 }
 
-                ExcitedState excitedState(numberOfExcitedStatesRead + 1, energy + groundStateEnergy);
+                ExcitedState excitedState(currentExcitedStatesRead, energy + groundStateEnergy);
 
                 // Read transitions
                 do
@@ -637,13 +624,13 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
                 // Check that at least one transition was read
                 if (excitedState.getNumberOfTransitions() > 0)
                 {
-                    if (statesNumbersToKeep.empty() || std::find(statesNumbersToKeep.begin(), statesNumbersToKeep.end(), numberOfExcitedStatesRead + 1) != statesNumbersToKeep.end())
+                    if (excitedStatesNumbersToKeep.empty() || std::find(excitedStatesNumbersToKeep.begin(), excitedStatesNumbersToKeep.end(), currentExcitedStatesRead) != excitedStatesNumbersToKeep.end())
                     {
                         // Add excited state to the list
                         excitedStates.push_back(excitedState);
                     }
 
-                    ++numberOfExcitedStatesRead;
+                    ++currentExcitedStatesRead;
                 }
                 else
                 {
@@ -678,7 +665,7 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
     return ok;
 }
 
-bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates, const std::vector<int>& statesNumbersToKeep)
+bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates, const std::vector<int>& excitedStatesNumbersToKeep)
 {
     bool ok = true;
     bool hfTypeFound = false;
@@ -698,10 +685,10 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
         std::exit(1);
     }
 
-    int numberOfExcitedStatesRead = 0;
+    int currentExcitedStatesRead = 1;
 
     std::string line;
-    while (!orcaOutFile.eof() && (maxNumberOfExcitedStates == -1 || numberOfExcitedStatesRead < maxNumberOfExcitedStates))
+    while (!orcaOutFile.eof() && (maxNumberOfExcitedStates == -1 || currentExcitedStatesRead <= maxNumberOfExcitedStates))
     {
         // Read line
         std::getline(orcaOutFile, line);
@@ -730,7 +717,7 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
             {
                 double energy = std::stod(energyRegexMatch[1]);
 
-                ExcitedState excitedState(numberOfExcitedStatesRead + 1, energy + groundStateEnergy);
+                ExcitedState excitedState(currentExcitedStatesRead, energy + groundStateEnergy);
 
                 do
                 {
@@ -778,13 +765,13 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
                 // Check that at least one transition was read
                 if (excitedState.getNumberOfTransitions() > 0)
                 {
-                    if (statesNumbersToKeep.empty() || std::find(statesNumbersToKeep.begin(), statesNumbersToKeep.end(), numberOfExcitedStatesRead + 1) != statesNumbersToKeep.end())
+                    if (excitedStatesNumbersToKeep.empty() || std::find(excitedStatesNumbersToKeep.begin(), excitedStatesNumbersToKeep.end(), currentExcitedStatesRead) != excitedStatesNumbersToKeep.end())
                     {
                         // Add excited state to the list
                         excitedStates.push_back(excitedState);
                     }
                     
-                    ++numberOfExcitedStatesRead;
+                    ++currentExcitedStatesRead;
                 }
                 else
                 {
@@ -880,6 +867,18 @@ double ExcitedState::ionicPotential(const ExcitedState& psi_i, const ExcitedStat
     }
 
     return sum;
+}
+
+void ExcitedState::reducedDensityMatrix(std::vector<std::vector<std::vector<double>>>& rdmMatrix, RDMMethod rdmMethod, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos)
+{
+    if (rdmMethod == RDMMethod::GAMMA)
+    {
+        computeGammaMatrix(rdmMatrix, psi_i, psi_j, orbitals, ignoredMos);
+    }
+    else if (rdmMethod == RDMMethod::X)
+    {
+        computeXMatrix(rdmMatrix, psi_i, orbitals, ignoredMos);
+    }
 }
 
 //----------------------------------------------------------------------------------------------------//

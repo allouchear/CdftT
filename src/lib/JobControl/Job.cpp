@@ -224,6 +224,34 @@ bool Job::readEnergyPointChargeMethods(std::vector<EnergyPointChargeMethod>& ene
     return read;
 }
 
+bool Job::readExcitedStatesNumbers(std::vector<int>& excitedStatesNumbers)
+{
+    bool read = readListType<int>(_inputFile, "ExcitedStatesNumbers", excitedStatesNumbers);
+
+    if (!read)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Note: the \"ExcitedStatesNumbers\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        errorMessage << "The program will keep all excited states." << std::endl << std::endl;
+    }
+
+    return read;
+}
+
+bool Job::readExcludedOrbitalsNumbers(std::vector<int>& excludedOrbitalsNumbers)
+{
+    bool read = readListType<int>(_inputFile, "ExcludedOrbitalsNumbers", excludedOrbitalsNumbers);
+
+    if (!read)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Note: the \"ExcludedOrbitalsNumbers\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        errorMessage << "The program will keep all orbitals for the computation." << std::endl << std::endl;
+    }
+
+    return read;
+}
+
 bool Job::readGridFilesNames(std::vector<std::string>& gridFilesNames)
 {
     bool read = readListType<std::string>(_inputFile, "Grids", gridFilesNames);
@@ -263,6 +291,19 @@ bool Job::readGridFilesNames(std::vector<std::string>& gridFilesNames)
 bool Job::readGroundStateEnergy(double& energy)
 {
     return readOneType<double>(_inputFile, "GroundStateEnergy", energy);
+}
+
+bool Job::readMatrixElements(std::vector<std::array<int, 2>>& matrixElements)
+{
+    bool read = readListTypeArray<int, 2>(_inputFile, "MatrixElements", matrixElements);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"MatrixElements\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will consider all matrix elements." << std::endl << std::endl;
+    }
+
+    return read;
 }
 
 bool Job::readMaxNumberOfExcitedStates(int& maxNumberOfExcitedStates)
@@ -473,6 +514,52 @@ bool Job::readPositions(std::vector<std::array<double, 3>>& positions)
     return read;
 }
 
+bool Job::readPrecision(int& precision)
+{
+    bool read = readOneType<int>(_inputFile, "Precision", precision);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"Precision\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (Precision=10)." << std::endl << std::endl;
+
+        precision = 10;
+    }
+
+    return read;
+}
+
+bool Job::readRDMMethod(RDMMethod& rdmMethod)
+{
+    std::string strRDMMethod;
+    bool read = readOneString(_inputFile, "RDMMethod", strRDMMethod);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"RDMMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (RDMMethod=Gamma)." << std::endl << std::endl;
+        rdmMethod = RDMMethod::GAMMA;
+    }
+    else
+    {
+        rdmMethod = rdmMethod_from_string(strRDMMethod);
+    }
+
+    // Handle unknown RDM method: exit program with error message.
+    if (rdmMethod == RDMMethod::UNKNOWN)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: RDM method \"" << strRDMMethod << "\" unknown." << std::endl;
+        errorMessage << "Please check the documentation and the \"RDMMethod\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
 bool Job::readRunType(RunType& runType)
 {
     std::string strRunType;
@@ -507,7 +594,7 @@ bool Job::readRunType(RunType& runType)
 bool Job::readSavePseudoOrbitals(bool& savePseudoOrbitals)
 {
     std::string strSavePseudoOrbitals;
-    bool read = readOneString(_inputFile, "SavePseudoOrbitals", strSavePseudoOrbitals) && to_lower(strSavePseudoOrbitals) == "true";
+    bool read = readOneString(_inputFile, "SavePseudoOrbitals", strSavePseudoOrbitals);
     
     savePseudoOrbitals = false;
     if (!read)
@@ -524,6 +611,35 @@ bool Job::readSavePseudoOrbitals(bool& savePseudoOrbitals)
         std::stringstream errorMessage;
         errorMessage << "Error: incorrect value for the \"SavePseudoOrbitals\" parameter (" << strSavePseudoOrbitals << ")." << std::endl;
         errorMessage << "Please check the documentation and the \"SavePseudoOrbitals\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readSaveReducedDensityMatrix(bool& saveReducedDensityMatrix)
+{
+    std::string strSaveReducedDensityMatrix;
+    bool read = readOneString(_inputFile, "SaveReducedDensityMatrix", strSaveReducedDensityMatrix);
+    
+    saveReducedDensityMatrix = false;
+    if (!read)
+    {
+        std::cout << "Note: the \"SaveReducedDensityMatrix\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (SaveReducedDensityMatrix=False)." << std::endl << std::endl;
+    }
+    else if (to_lower(strSaveReducedDensityMatrix) == "true")
+    {
+        saveReducedDensityMatrix = true;
+    }
+    else if (to_lower(strSaveReducedDensityMatrix) != "false")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"SaveReducedDensityMatrix\" parameter (" << strSaveReducedDensityMatrix << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"SaveReducedDensityMatrix\" parameter value in the provided input file (" << _inputFileName << ").";
 
         print_error(errorMessage.str());
 
@@ -699,20 +815,6 @@ bool Job::readSpinType(SpinType& spinType)
         print_error(errorMessage.str());
 
         std::exit(1);
-    }
-
-    return read;
-}
-
-bool Job::readStatesNumbers(std::vector<int>& statesNumbers)
-{
-    bool read = readListType<int>(_inputFile, "StatesNumbers", statesNumbers);
-
-    if (!read)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Note: the \"StatesNumbers\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        errorMessage << "The program will keep all states." << std::endl << std::endl;
     }
 
     return read;

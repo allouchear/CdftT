@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -101,9 +102,9 @@ void ComputeElectronDensity::run()
     readMaxNumberOfExcitedStates(maxNbExcitedStates);
 
 
-    // Read states numbers (0-based) to keep
-    std::vector<int> statesNumbers;
-    readStatesNumbers(statesNumbers);
+    // Read excited states numbers (1-based) to keep
+    std::vector<int> excitedStatesNumbers;
+    readExcitedStatesNumbers(excitedStatesNumbers);
 
 
     // Load orbitals
@@ -125,12 +126,12 @@ void ComputeElectronDensity::run()
     if (!transitionsFileName.empty())
     {
         std::cout << "Reading transitions from file: " << transitionsFileName << ". Please wait..." << std::endl;
-        ExcitedState::readTransitions(transitionsFileName, states, groundState.get_energy(), maxNbExcitedStates, statesNumbers);
+        ExcitedState::readTransitions(transitionsFileName, states, groundState.get_energy(), maxNbExcitedStates, excitedStatesNumbers);
     }
     else
     {
         std::cout << "Reading transitions from analytic file: " << analyticFilesNames[0] << ". Please wait..." << std::endl;
-        ExcitedState::readTransitions(analyticFilesNames[0], states, groundState.get_energy(), maxNbExcitedStates, statesNumbers);
+        ExcitedState::readTransitions(analyticFilesNames[0], states, groundState.get_energy(), maxNbExcitedStates, excitedStatesNumbers);
     }
 
     size_t nbStates = states.size();
@@ -152,21 +153,112 @@ void ComputeElectronDensity::run()
     std::cout << std::endl;
 
 
+    // Read orbitals numbers to exclude from the density computation
+    std::vector<int> excludedOrbitalsNumbers;
+    readExcludedOrbitalsNumbers(excludedOrbitalsNumbers);
+
+
+    // Read method to use for Reduced Density Matrix computation
+    RDMMethod rdmMethod;
+    readRDMMethod(rdmMethod);
+
+
+    // Read the option to save the reduced density matrix
+    bool saveRDM;
+    readSaveReducedDensityMatrix(saveRDM);
+
+
+    // Read precision for numerical values in the output files
+    int outputPrecision;
+    readPrecision(outputPrecision);
+
+
     // Build domain
     std::cout << "Building domain and grid, please wait..." << std::endl;
     Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, 1);
+    Grid grid;
+    grid.set_structure(orbitals.get_struct());
+    grid.set_domain(domain);
 
 
-    // Compute grid values for each excited states
+    std::ofstream outputFile;
+
+    // Compute electronic densities for each excited states
     for (size_t i = 0; i < nbStates; ++i)
     {
-        Grid grid;
-        grid.set_structure(orbitals.get_struct());
-        grid.set_domain(domain);
-        grid.reset();
+        std::vector<std::vector<std::vector<double>>> reducedDensityMatrix;
+        ExcitedState::reducedDensityMatrix(reducedDensityMatrix, rdmMethod, states[i], states[i], orbitals, excludedOrbitalsNumbers);
 
-        std::cout << "Computing grid for state #" << states[i].get_number() << " (" << i + 1 << " out of " << nbStates << "), please wait..." << std::endl;
-        states[i].makeDensityGrid(orbitals, grid, showProgress);
+        if (saveRDM || verbose >= 1)
+        {
+            if (saveRDM)
+            {
+                std::string outputFileName = outputPrefix + "_state" + std::to_string(states[i].get_number()) + "_RDM.cdftt";
+                outputFile.open(outputFileName);
+                if (!outputFile)
+                {
+                    std::stringstream errorMessage;
+                    errorMessage << "Error in ComputeElectronDensity::run(): could not open output file " << outputFileName << " for writing." << std::endl;
+
+                    print_error(errorMessage.str(), logStream);
+                    
+                    std::exit(1);
+                }
+
+                outputFile << std::scientific;
+                outputFile << std::setprecision(outputPrecision);
+            }
+
+            logStream << std::scientific;
+            logStream << std::setprecision(10);
+            for (int spin = 0; spin < 2; ++spin)
+            {
+                logStream << "Reduced Density Matrix for state #" << states[i].get_number() << " (spin " << ((spin == 0) ? "alpha" : "beta") << "):" << std::endl;
+
+                if (saveRDM)
+                {
+                    outputFile << "Spin " << ((spin == 0) ? "alpha" : "beta") << ':' << std::endl;
+                }
+
+                for(size_t i = 0; i < reducedDensityMatrix[spin].size(); ++i)
+                {
+                    for(size_t j = 0; j < reducedDensityMatrix[spin][i].size(); ++j)
+                    {
+                        logStream << std::right << std::setw(17) << reducedDensityMatrix[spin][i][j] << '\t';
+
+                        if (saveRDM)
+                        {
+                            outputFile << std::right << std::setw(17) << reducedDensityMatrix[spin][i][j] << '\t';
+                        }
+                    }
+
+                    logStream << std::endl;
+
+                    if (saveRDM)
+                    {
+                        outputFile << std::endl;
+                    }
+                }
+
+                logStream << std::endl;
+            
+                if (saveRDM)
+                {
+                    outputFile << std::endl;
+                }
+            }
+            logStream << std::defaultfloat << std::endl;
+            log(logStream, outputStream);
+
+            if (saveRDM)
+            {
+                outputFile.close();
+            }
+        }
+
+        std::cout << "Computing electronic density for state #" << states[i].get_number() << " (" << i + 1 << " out of " << nbStates << "), please wait..." << std::endl;
+        grid.reset();
+        orbitals.makeDensityGrid(grid, reducedDensityMatrix, showProgress);
 
         if (showProgress)
         {
@@ -174,8 +266,116 @@ void ComputeElectronDensity::run()
         }
 
         // Save grid
-        std::cout << "Writing cube file for state #" << states[i].get_number() << " (" << i + 1 << " out of " << nbStates << "), please wait..." << std::endl;
+        std::cout << "Writing density cube file for state #" << states[i].get_number() << " (" << i + 1 << " out of " << nbStates << "), please wait..." << std::endl;
         std::ofstream out(outputPrefix + "_state" + std::to_string(states[i].get_number()) + ".cube");
+        grid.save(out, showProgress);
+        out.close();
+
+        if (showProgress)
+        {
+            std::cout << std::endl;
+        }
+    }
+
+
+    // Read matrix elements to consider in the transitions reduced density matrix computation
+    std::vector<std::array<int, 2>> matrixElements;
+    readMatrixElements(matrixElements);
+
+    size_t nbMatrixElements = matrixElements.size();
+    logStream << "Total number of transition densities to compute: " << nbMatrixElements << std::endl << std::endl;
+    log(logStream, outputStream);
+
+
+    // Compute requested transition densities
+    int currentTransitionDensity = 1;
+    for (const std::array<int, 2>& matrixElement : matrixElements)
+    {
+        int i = matrixElement[0];
+        int j = matrixElement[1];
+
+        std::vector<std::vector<std::vector<double>>> reducedDensityMatrix;
+        ExcitedState::reducedDensityMatrix(reducedDensityMatrix, rdmMethod, states[i], states[j], orbitals, excludedOrbitalsNumbers);
+
+        if (saveRDM || verbose >= 1)
+        {
+            if (saveRDM)
+            {
+                std::string outputFileName = outputPrefix + "_transition_state" + std::to_string(states[i].get_number()) + "_state" + std::to_string(states[j].get_number()) + "_RDM.cdftt";
+                outputFile.open(outputFileName);
+                if (!outputFile)
+                {
+                    std::stringstream errorMessage;
+                    errorMessage << "Error in ComputeElectronDensity::run(): could not open output file " << outputFileName << " for writing." << std::endl;
+
+                    print_error(errorMessage.str(), logStream);
+                    
+                    std::exit(1);
+                }
+
+                outputFile << std::scientific;
+                outputFile << std::setprecision(outputPrecision);
+            }
+
+            logStream << std::scientific;
+            logStream << std::setprecision(10);
+            for (int spin = 0; spin < 2; ++spin)
+            {
+                logStream << "Reduced Density Matrix for transition between state #" << states[i].get_number() << " and state #" << states[j].get_number() << " (spin " << ((spin == 0) ? "alpha" : "beta") << "):" << std::endl;
+
+                if (saveRDM)
+                {
+                    outputFile << "Spin " << ((spin == 0) ? "alpha" : "beta") << ':' << std::endl;
+                }
+
+                for(size_t i = 0; i < reducedDensityMatrix[spin].size(); ++i)
+                {
+                    for(size_t j = 0; j < reducedDensityMatrix[spin][i].size(); ++j)
+                    {
+                        logStream << std::right << std::setw(17) << reducedDensityMatrix[spin][i][j] << '\t';
+
+                        if (saveRDM)
+                        {
+                            outputFile << std::right << std::setw(17) << reducedDensityMatrix[spin][i][j] << '\t';
+                        }
+                    }
+
+                    logStream << std::endl;
+
+                    if (saveRDM)
+                    {
+                        outputFile << std::endl;
+                    }
+                }
+
+                logStream << std::endl;
+            
+                if (saveRDM)
+                {
+                    outputFile << std::endl;
+                }
+            }
+            logStream << std::defaultfloat << std::endl;
+            log(logStream, outputStream);
+
+            if (saveRDM)
+            {
+                outputFile.close();
+            }
+        }
+
+        std::cout << "Computing electronic density for transition between state #" << states[i].get_number() << " and state #" << states[j].get_number() << " (" << currentTransitionDensity << " out of " << nbMatrixElements << "), please wait..." << std::endl;
+        grid.reset();
+        orbitals.makeDensityGrid(grid, reducedDensityMatrix, showProgress);
+
+        if (showProgress)
+        {
+            std::cout << std::endl;
+        }
+
+        // Save grid
+        std::cout << "Writing density cube file for transition between state #" << states[i].get_number() << " and state #" << states[j].get_number() << " (" << currentTransitionDensity << " out of " << nbMatrixElements << "), please wait..." << std::endl;
+        std::ofstream out(outputPrefix + "_transition_state" + std::to_string(states[i].get_number()) + "_state" + std::to_string(states[j].get_number()) + ".cube");
         grid.save(out, showProgress);
         out.close();
 

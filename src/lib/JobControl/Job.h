@@ -98,6 +98,24 @@ class Job
         bool readEnergyPointChargeMethods(std::vector<EnergyPointChargeMethod>& energyPointChargeMethods);
 
         /**
+         * @brief Reads a list of state numbers from the "ExcitedStatesNumbers" parameter in the input file.
+         *
+         * @param[out] excitedStatesNumbers Reference to a vector where the excited state numbers will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readExcitedStatesNumbers(std::vector<int>& excitedStatesNumbers);
+
+        /**
+         * @brief Reads a list of orbital numbers to exclude from the density computation from the "ExcludedOrbitalsNumbers" parameter in the input file.
+         *
+         * @param[out] excludedOrbitalsNumbers Reference to a vector where the excluded orbital numbers will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readExcludedOrbitalsNumbers(std::vector<int>& excludedOrbitalsNumbers);
+
+        /**
          * @brief Reads the name(s) of the grid file(s) (.cube files) from the "GridFiles" parameter in the input file.
          *
          * @param[out] gridFilesNames Reference to a vector where the read filename(s) will be stored.
@@ -114,6 +132,16 @@ class Job
          * @return True if the parameter was successfully read, false otherwise.
          */
         bool readGroundStateEnergy(double& energy);
+
+        /**
+         * @brief Reads the matrix elements to consider from the "MatrixElements" parameter in the input file.
+         *
+         * @param[out] matrixElements Reference to a vector where the read matrix elements will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+
+         */
+        bool readMatrixElements(std::vector<std::array<int, 2>>& matrixElements);
 
         /**
          * @brief Reads the maximum number of excited states to consider from the "MaxNumberOfExcitedStates" parameter in the input file.
@@ -187,6 +215,24 @@ class Job
         bool readPositions(std::vector<std::array<double, 3>>& positions);
 
         /**
+         * @brief Reads the precision for printed numerical values from the "Precision" parameter in the input file.
+         * 
+         * @param[out] precision Reference to an integer where the read precision value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readPrecision(int& precision);
+
+        /**
+         * @brief Reads the method used to compute the reduced density matrix (RDM) from the "RDMMethod" parameter in the input file.
+         * 
+         * @param[out] rdmMethod Reference to an RDMMethod variable where the parsed method will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readRDMMethod(RDMMethod& rdmMethod);
+
+        /**
          * @brief Reads the requested run type (job) from the "RunType" parameter in the input file.
          *
          * @param[out] runType Reference to a RunType variable where the parsed run type will be stored.
@@ -203,6 +249,15 @@ class Job
          * @return True if the parameter was successfully read, false otherwise.
          */
         bool readSavePseudoOrbitals(bool& savePseudoOrbitals);
+
+        /**
+         * @brief Reads the choice of saving the reduced density matrix from the "SaveReducedDensityMatrix" parameter in the input file.
+         * 
+         * @param[out] saveReducedDensityMatrix Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readSaveReducedDensityMatrix(bool& saveReducedDensityMatrix);
 
         /**
          * @brief Reads the show progress option from the "ShowProgress" parameter in the input file.
@@ -242,15 +297,6 @@ class Job
          * @return True if the parameter was successfully read, false otherwise.
          */
         bool readSpinType(SpinType& spinType);
-
-        /**
-         * @brief Reads a list of state numbers from the "StatesNumbers" parameter in the input file.
-         *
-         * @param[out] statesNumbers Reference to a vector where the state numbers will be stored.
-         * 
-         * @return True if the parameter was successfully read, false otherwise.
-         */
-        bool readStatesNumbers(std::vector<int>& statesNumbers);
 
         /**
          * @brief Reads the name of the file that describes excited states transitions from the "TransitionsFile" parameter in the input file.

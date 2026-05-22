@@ -36,12 +36,12 @@ class ExcitedState
 
 
         //----------------------------------------------------------------------------------------------------//
-        // PRIVATE METHODS
+        // PRIVATE STATIC METHODS
         //----------------------------------------------------------------------------------------------------//
         
-        void computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, int numberOfMo) const;
+        static void computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
 
-        double computeGammaMatrixElement(int i, int j, SpinType spinType) const;
+        static void computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
     
 
     public:
@@ -103,18 +103,6 @@ class ExcitedState
          * @param[in]  SlaterDeterminant Reference to the ground state Slater determinant.
          */
         void computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant);
-
-        /**
-         * @brief Computes the electronic density at coordinates (x,y,z).
-         *
-         * @param orbitals Orbitals object containing the molecular orbitals information.
-         * @param spinType Spin type (alpha, beta, or both) for which to compute the density.
-         * @param gammaMatrix The matrix of coefficients for calculation of the density
-         * @param coordinates Array containing the (x, y, z) coordinates at which to evaluate the density.
-         * 
-         * @return double The electronic density evaluated at (x, y, z).
-         */
-        double density(const Orbitals& orbitals, SpinType spinType, std::vector<std::vector<std::vector<double>>>& gammaMatrix, const std::array<double, 3>& coordinates) const;
 
         /**
          * @brief Returns the number of electronic transitions associated with the excited state.
@@ -239,6 +227,9 @@ class ExcitedState
          * @return The ionic potential matrix element < psi_i | V_ion/electrons | psi_j >.
          */
         static double ionicPotential(const ExcitedState& psi_i, const ExcitedState& psi_j, const std::vector<std::vector<std::vector<double>>>& ionicMatrixes);
+
+        static void reducedDensityMatrix(std::vector<std::vector<std::vector<double>>>& rdmMatrix, RDMMethod rdmMethod, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
+
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS
