@@ -285,19 +285,19 @@ bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string
 
 std::string makeTupleRegex(const int n)
 {
-    std::string regexStr = "(\\(\\s*)";
+    std::string regexStr = "\\(\\s*";
 
     for (int i = 0; i < n; ++i)
     {
         if (i != 0)
         {
-            regexStr += "(\\s*,\\s*)";
+            regexStr += "\\s*,\\s*";
         }
 
-        regexStr += "(([^(),;]+))";
+        regexStr += "([^(),;]+)";
     }
 
-    regexStr += "(\\s*\\))";
+    regexStr += "\\s*\\)";
 
     return regexStr;
 }

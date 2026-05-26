@@ -1,4 +1,4 @@
-LIBCDFTTDIR =/usr/home/lgardre-local/Work/CdftT
+LIBCDFTTDIR =/home/atourneur/Documents/CdftT
 
 include $(LIBCDFTTDIR)/CONFIG
 
