@@ -84,10 +84,10 @@ void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double
                 }
 
                 // Fill the symmetric element
-                if(p != q)
-                {
-                    gammaMatrix[spin][q][p] = gammaMatrix[spin][p][q];
-                }
+                //if(p != q)
+                //{
+                //    gammaMatrix[spin][q][p] = gammaMatrix[spin][p][q];
+                //}
             }
         }
     }
@@ -97,20 +97,20 @@ void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>&
 {
     int numberOfMos = orbitals.get_numberOfMo();
 
-    size_t numberOfOccupiedOrbitals = orbitals.getOccupiedOrbitalNumbers().size();
-    size_t numberOfVirtualOrbitals = numberOfMos - numberOfOccupiedOrbitals;
-
     // Build xMatrix matrixes
     xMatrix.resize(2, std::vector<std::vector<double>>(numberOfMos, std::vector<double>(numberOfMos, 0.0)));
-
-    // Build other matrixes needed to compute xMatrix
-    std::vector<std::vector<std::vector<double>>> tmpX1(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
-    std::vector<std::vector<std::vector<double>>> tmpX2(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
-    std::vector<std::vector<std::vector<double>>> occupiedMOsBlock(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfOccupiedOrbitals, 0.0)));
-    std::vector<std::vector<std::vector<double>>> virtualMOsBlock(2, std::vector<std::vector<double>>(numberOfVirtualOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
     
     for (int spin = 0; spin < 2; ++spin)
     {
+        size_t numberOfOccupiedOrbitals = orbitals.getOccupiedOrbitalNumbers()[spin].size();
+        size_t numberOfVirtualOrbitals = numberOfMos - numberOfOccupiedOrbitals;
+
+        // Build other matrixes needed to compute xMatrix
+        std::vector<std::vector<std::vector<double>>> tmpX1(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
+        std::vector<std::vector<std::vector<double>>> tmpX2(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
+        std::vector<std::vector<std::vector<double>>> occupiedMOsBlock(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfOccupiedOrbitals, 0.0)));
+        std::vector<std::vector<std::vector<double>>> virtualMOsBlock(2, std::vector<std::vector<double>>(numberOfVirtualOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
+
         for(size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
         {
             for(size_t j = 0; j < numberOfVirtualOrbitals; ++j)
@@ -124,6 +124,9 @@ void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>&
                     {
                         tmpX1[spin][i][j] += psi1._slaterDeterminants[k].second;
                     }
+                }
+                for(size_t k = 0; k < psi2._slaterDeterminants.size(); ++k)
+                {                
                     if (psi2._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first == static_cast<int>(j + numberOfOccupiedOrbitals + 1)) // +1 because get_occupiedOrbitals() returns MO numbers (1-based) in the first pair value
                     {
                         tmpX2[spin][i][j] += psi2._slaterDeterminants[k].second;
@@ -882,7 +885,7 @@ void ExcitedState::reducedDensityMatrix(std::vector<std::vector<std::vector<doub
     }
     else if (rdmMethod == RDMMethod::X)
     {
-        computeXMatrix(rdmMatrix, psi_i,psi_i, orbitals, ignoredMos);
+        computeXMatrix(rdmMatrix, psi_i,psi_j, orbitals, ignoredMos);
     }
 }
 

@@ -3,19 +3,19 @@ RunType=ComputeElectronDensity
 ShowProgress=True
 
 # Analytic file name
-AnalyticFiles=/home/atourneur/Documents/CdftT/test_ambroise/test_CO/input/CO_TDDFT_STO-3G_TDA_CUBE.log
+AnalyticFiles=/home/atourneur/Documents/CdftT/test_ambroise/test_CO/input/CO_plus1_TDDFT_STO-3G_TDA_CUBE.log
 
 # Grid configuration
 Size=custom
 CustomSizeData=80,80,80,3,3,4.236939,0.075949,0,0,0,0.075949,0,0,0,0.103350
 
 RDMMethod=Gamma
-ExcitedStates=1,2
-IgnoredOrbitals=(1),(2)
-MatrixElements=(0,0),(0,3),(1,1)
+ExcitedStatesNumbers=0,1,2,3
+ExcludedOrbitals=1,2
+TransitionDensities=(1,3)
 
-OutputPrefix=/home/atourneur/Documents/CdftT/test_ambroise/test_CO/test_new/cpp_Gamma
+OutputPrefix=/home/atourneur/Documents/CdftT/test_ambroise/test_CO/out_openshell/cpp_Gamma
 Precision=6
 
-verbose=1
+verbose=0
 SaveReducedDensityMatrix=True

@@ -261,8 +261,9 @@ class Grid
          * 
          * @param[in, out] name Output file stream opened on a .cube file.
          * @param[in] showProgress If true, shows a progress bar during saving.
+         * @param[in] setPrecision set precision for ofstream
          */
-        void save(std::ofstream& name, bool showProgress = false) const;
+        void save(std::ofstream& name, bool showProgress = false, int setPrecision = 14) const;
 
         /**
          * @brief Returns the value at grid indices (i,j,k,l).
