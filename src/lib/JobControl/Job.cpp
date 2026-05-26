@@ -238,9 +238,9 @@ bool Job::readExcitedStatesNumbers(std::vector<int>& excitedStatesNumbers)
     return read;
 }
 
-bool Job::readExcludedOrbitalsNumbers(std::vector<int>& excludedOrbitalsNumbers)
+bool Job::readExcludedOrbitals(std::vector<int>& excludedOrbitals)
 {
-    bool read = readListType<int>(_inputFile, "ExcludedOrbitalsNumbers", excludedOrbitalsNumbers);
+    bool read = readListType<int>(_inputFile, "ExcludedOrbitals", excludedOrbitals);
 
     if (!read)
     {
@@ -291,19 +291,6 @@ bool Job::readGridFilesNames(std::vector<std::string>& gridFilesNames)
 bool Job::readGroundStateEnergy(double& energy)
 {
     return readOneType<double>(_inputFile, "GroundStateEnergy", energy);
-}
-
-bool Job::readMatrixElements(std::vector<std::array<int, 2>>& matrixElements)
-{
-    bool read = readListTypeArray<int, 2>(_inputFile, "MatrixElements", matrixElements);
-
-    if (!read)
-    {
-        std::cout << "Note: the \"MatrixElements\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will consider all matrix elements." << std::endl << std::endl;
-    }
-
-    return read;
 }
 
 bool Job::readMaxNumberOfExcitedStates(int& maxNumberOfExcitedStates)
@@ -815,6 +802,19 @@ bool Job::readSpinType(SpinType& spinType)
         print_error(errorMessage.str());
 
         std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readTransitionDensities(std::vector<std::array<int, 2>>& transitionDensities)
+{
+    bool read = readListTypeArray<int, 2>(_inputFile, "TransitionDensities", transitionDensities);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"TransitionDensities\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will consider all transition densities." << std::endl << std::endl;
     }
 
     return read;
