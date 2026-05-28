@@ -19,6 +19,29 @@ class ComputeEnergyWithPointCharges : public Job
 {
     private:
         //----------------------------------------------------------------------------------------------------//
+        // TYPE DEFINITIONS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Represents a point charge.
+         */
+        struct PointCharge
+        {
+            /* @brief The charge of the point charge. */
+            double charge;
+
+            /* @brief The position of the point charge. */
+            std::array<double, 3> position;
+
+            /* @brief A description of the point charge (its charge and position, and the name of the atom it is placed on if this is the case). */
+            std::string description;
+        };
+
+        /** @brief Represents a run with a list of PointCharges. */
+        typedef std::vector<PointCharge> Run;
+        
+
+        //----------------------------------------------------------------------------------------------------//
         // PRIVATE METHODS
         //----------------------------------------------------------------------------------------------------//
 
@@ -58,33 +81,31 @@ class ComputeEnergyWithPointCharges : public Job
          * @param[in] states Vector of excited states of the system.
          * @param[in] ionicPotentialMatrixes Ionic potential matrixes (values of the < psi_i | V_ion/electrons | psi_i >).
          * @param[in] chargeNucleiContributions Values of the < psi_i | V_ion/nuclei | psi_i > contributions.
-         * @param[in] charges Charges of the point charges.
-         * @param[in] chargesPositions Positions of the point charges.
-         * @param[in] loopOnAtoms Whether to loop on atoms (in that case, each charge uses every chargePosition).
-         * @param[in] atoms Vector of atoms in the system (used if `loopOnAtoms` is true).
+         * @param[in] runs Vector of runs, where each run is a vector of PointCharges and their descriptions.
          * @param[in] outputPrefix Output filename prefix for saving results.
          * @param[in,out] outputStream Output stream for printing results.
          * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
          */
-        void printResults(const std::vector<ExcitedState>& states, const std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, const std::vector<Atom>& atoms, const std::string& outputPrefix, std::ostream& outputStream, int verbose = 0);
+        void printResults(const std::vector<ExcitedState>& states, const std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<Run>& runs, const std::string& outputPrefix, std::ostream& outputStream, int verbose = 0);
 
         /**
          * @brief Prints the results for the Linear Response approach.
          *
          * @param[in] eigenvalues Eigenvalues of the system.
          * @param[in] ionicPotentialVectors Ionic potential vectors.
-         * @param[in] charges Charges of the point charges.
-         * @param[in] chargesPositions Positions of the point charges.
-         * @param[in] loopOnAtoms Whether to loop on atoms (in that case, each charge uses every chargePosition).
+         * @param[in] runs Vector of runs, where each run is a vector of PointCharges and their descriptions.
          * @param[in,out] outputStream Output stream for printing results.
          * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
          */
-        void printResultsLinearResponse(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, const std::vector<Atom>& atoms, std::ostream& outputStream, int verbose = 0);
+        void printResultsLinearResponse(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<Run>& runs, std::ostream& outputStream, int verbose = 0);
+
+
+        void readChargesAndPositions(std::vector<Run>& runs, const std::vector<Atom>& atoms, std::ostream& outputStream);
 
         /**
          * TODO
          */
-        void useLinearResponseApproach(Orbitals& orbitals, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, const std::string& analyticFileName, const std::string& outputPrefix, const std::vector<int>& beckeParams, bool savePseudoOrbitals, bool showProgress, int verbose, std::ostream& outputStream);
+        void useLinearResponseApproach(Orbitals& orbitals, const std::vector<Run>& runs, const std::string& analyticFileName, const std::string& outputPrefix, const std::vector<int>& beckeParams, bool savePseudoOrbitals, bool showProgress, int verbose, std::ostream& outputStream);
 
 
     public:
@@ -108,60 +129,64 @@ class ComputeEnergyWithPointCharges : public Job
          * @brief Computes the contributions to the energy of the interactions between point charges and nuclei, i.e. the < psi_i | V_ion/nuclei | psi_i > values.
          * 
          * @param[in] atoms Vector of atoms in the system.
-         * @param[out] chargeNucleiContributions Output vector where the computed contributions will be stored. The first dimension corresponds to the charges, and the second dimension corresponds to the charge positions.
-         * @param[in] charges Vector of the charges of the point charges.
-         * @param[in] chargesPositions Vector of the positions of the point charges.
-         * @param[in] loopOnAtoms Whether to loop on atoms (in that case, each charge uses every chargePosition).
+         * @param[out] chargeNucleiContributions Output vector where the computed contributions will be stored. The first dimension corresponds to the run index, and the second dimension corresponds to the PointCharge index in the run.
+         * @param[in] runs Vector of runs, where each run is a vector of PointCharges and their descriptions.
          * @param[in] nuclearCutoff Distance cutoff under which the contribution of a nucleus is not taken into account (to avoid divergences when the point charge is very close to a nucleus).
          */
-        static void computeChargeNucleiContributions(const std::vector<Atom>& atoms, std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, double nuclearCutoff);
+        static void computeChargeNucleiContributions(const std::vector<Atom>& atoms, std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<Run>& runs, double nuclearCutoff);
 
         /**
          * @brief Computes the contributions to the energy of the interactions between point charges and electrons, i.e. the < psi_i | V_ion/electrons | psi_i > values.
          *
          * @param[in] becke Becke instance used for the computation.
-         * @param[out] ionicPotentialMatrixes Output matrix where the computed contributions will be stored.
-         * @param[in] charges Vector of the charges of the point charges.
-         * @param[in] chargesPositions Vector of the positions of the point charges.
-         * @param[in] loopOnAtoms Whether to loop on atoms (in that case, each charge uses every chargePosition).
+         * @param[out] ionicPotentialMatrixes Output matrix where the computed contributions will be stored. The first dimension corresponds to the run index, and the second dimension corresponds to the PointCharge index in the run.
+         * @param[in] runs Vector of runs, where each run is a vector of PointCharges and their descriptions.
          * @param[in] kmax Fuzzyness of the Voronoi polyhedrons (default 3).
          * @param[in] lebedev_order Lebedev order for angular quadrature (default 41).
          * @param[in] radial_grid_factor Radial grid multiplicative factor (default 5).
          */
-        static void computeIonicPotentialMatrixesFromBecke(Becke& becke, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+        static void computeIonicPotentialMatrixesFromBecke(Becke& becke, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<Run>& runs, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
          * @brief Computes the contributions to the energy of the interactions between point charges and electrons, i.e. the < psi_i | V_ion/electrons | psi_i > values.
          * 
          * @param[in] orbitals Orbitals instance used for the computation.
          * @param[in] grid Grid instance used for the computation.
-         * @param[out] ionicPotentialMatrixes Output matrix where the computed contributions will be stored.
-         * @param[in] charges Vector of the charges of the point charges.
-         * @param[in] chargesPositions Vector of the positions of the point charges.
-         * @param[in] loopOnAtoms Whether to loop on atoms (in that case, each charge uses every chargePosition).
+         * @param[out] ionicPotentialMatrixes Output matrix where the computed contributions will be stored. The first dimension corresponds to the run index, and the second dimension corresponds to the PointCharge index in the run.
+         * @param[in] runs Vector of runs, where each run is a vector of PointCharges and their descriptions.
          */
-        static void computeIonicPotentialMatrixesFromGrid(const Orbitals& orbitals, Grid& grid, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms);
+        static void computeIonicPotentialMatrixesFromGrid(const Orbitals& orbitals, Grid& grid, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<Run>& runs);
 
         /**
          * @brief Computes the contributions to the energy of the interactions between point charges and electrons, i.e. the < psi_i | V_ion/electrons | psi_i > values.
          * 
          * @param[in] orbitals Orbitals instance used for the computation.
-         * @param[out] ionicPotentialMatrixes Output matrix where the computed contributions will be stored.
-         * @param[in] charges Vector of the charges of the point charges.
-         * @param[in] chargesPositions Vector of the positions of the point charges.
-         * @param[in] loopOnAtoms Whether to loop on atoms (in that case, each charge uses every chargePosition).
+         * @param[out] ionicPotentialMatrixes Output matrix where the computed contributions will be stored. The first dimension corresponds to the run index, and the second dimension corresponds to the PointCharge index in the run.
+         * @param[in] runs Vector of runs, where each run is a vector of PointCharges and their descriptions.
          */
-        static void computeIonicPotentialMatrixesFromOrbitals(Orbitals& orbitals, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms);
+        static void computeIonicPotentialMatrixesFromOrbitals(Orbitals& orbitals, std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<Run>& runs);
 
         /**
-         * @brief Computes the contributions to the energy of the interactions between point charges and electrons, using a .
+         * @brief Computes the contributions to the energy of the interactions between point charges and electrons, using a Becke-grid-based approach.
+         * 
+         * @param[in] becke Becke instance used for the computation.
+         * @param[out] ionicPotentialVectors Output matrix where the computed contributions will be stored. The first dimension corresponds to the run index, the second dimension corresponds to the point charge index in the run, and the third dimension corresponds to the spin (0 for alpha, 1 for beta).
+         * @param[in] runs Vector of runs, where each run is a vector of PointCharges and their descriptions.
+         * @param[in] kmax Fuzzyness of the Voronoi polyhedrons (default 3).
+         * @param[in] lebedev_order Lebedev order for angular quadrature (default 41).
+         * @param[in] radial_grid_factor Radial grid multiplicative factor (default 5).
          */
-        static void computeIonicPotentialVectorsFromBecke(Becke& becke, std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
+        static void computeIonicPotentialVectorsFromBecke(Becke& becke, std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<Run>& runs, int kmax = 3, int lebedev_order = 41, int radial_grid_factor = 5);
 
         /**
-         * TODO
+         * @brief Computes the contributions to the energy of the interactions between point charges and electrons, using a grid-based approach.
+         * 
+         * @param[in] orbitals Orbitals instance used for the computation.
+         * @param[in] grid Grid instance used for the computation.
+         * @param[out] ionicPotentialVectors Output matrix where the computed contributions will be stored. The first dimension corresponds to the run index, the second dimension corresponds to the point charge index in the run, and the third dimension corresponds to the spin (0 for alpha, 1 for beta).
+         * @param[in] runs Vector of runs, where each run is a vector of PointCharges and their descriptions.
          */
-        static void computeIonicPotentialVectorsFromOrbitals(Orbitals& orbitals, std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<double>& charges, const std::vector<std::array<double, 3>>& chargesPositions, bool loopOnAtoms);
+        static void computeIonicPotentialVectorsFromOrbitals(Orbitals& orbitals, std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<Run>& runs);
 
         /**
          * TODO

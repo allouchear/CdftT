@@ -125,6 +125,12 @@ bool readListType(std::ifstream &inputFile, const std::string &tag, std::vector<
 
         std::sregex_iterator separatorRegexBegin(value.begin(), value.end(), separatorRegex);
         std::sregex_iterator separatorRegexEnd = std::sregex_iterator();
+
+        if (separatorRegexBegin == separatorRegexEnd)
+        {
+            ok = false;
+        }
+
         for (std::sregex_iterator it = separatorRegexBegin; ok && it != separatorRegexEnd; ++it)
         {
             std::smatch separatorRegexMatch = *it;
@@ -142,6 +148,17 @@ bool readListType(std::ifstream &inputFile, const std::string &tag, std::vector<
                 x.push_back(match);
             }
         }
+
+        if (!ok)
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error in readListType(): incorrect value or format for the \"" << tag << "\" parameter." << std::endl;
+            errorMessage << "Please check documentation and the \"" << tag << "\" parameter value in the input file.";
+
+            print_error(errorMessage.str());
+
+            std::exit(1);
+        }
     }
     else
     {
@@ -157,6 +174,8 @@ bool readListTypeArray(std::ifstream& inputFile, const std::string& tag, std::ve
     std::string value;
     bool ok = readOneString(inputFile, tag, value);
 
+    std::cout << "Value read for tag \"" << tag << "\": " << value << std::endl;
+
     if (ok)
     {
         // Get the regex pattern to read read an array of N elements
@@ -171,6 +190,12 @@ bool readListTypeArray(std::ifstream& inputFile, const std::string& tag, std::ve
 
             std::sregex_iterator tupleRegexBegin(value.begin(), value.end(), tupleRegex);
             std::sregex_iterator tupleRegexEnd = std::sregex_iterator();
+
+            if (tupleRegexBegin == tupleRegexEnd)
+            {
+                ok = false;
+            }
+
             for (std::sregex_iterator it = tupleRegexBegin; ok && it != tupleRegexEnd; ++it)
             {
                 std::smatch tupleRegexMatch = *it;
@@ -202,6 +227,17 @@ bool readListTypeArray(std::ifstream& inputFile, const std::string& tag, std::ve
         else
         {
             ok = false;
+        }
+
+        if (!ok)
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error in readListType(): incorrect value or format for the \"" << tag << "\" parameter." << std::endl;
+            errorMessage << "Please check documentation and the \"" << tag << "\" parameter value in the input file.";
+
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
     }
 

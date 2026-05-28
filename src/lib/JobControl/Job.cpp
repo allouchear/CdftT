@@ -117,9 +117,9 @@ bool Job::readCharges(std::vector<double>& charges)
     if (!read)
     {
         std::cout << "Note: the \"Charges\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (Charges=1)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (Charges = -1)." << std::endl << std::endl;
 
-        charges = { 1.0 };
+        charges = { - 1.0 };
     }
 
     return read;
@@ -132,7 +132,7 @@ bool Job::readCutoff(double& cutoff)
     if (!read)
     {
         std::cout << "Note: the \"Cutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (Cutoff=0)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (Cutoff = 0.0)." << std::endl << std::endl;
 
         cutoff = 0.0;
     }
@@ -148,7 +148,7 @@ bool Job::readELFMethod(ELFMethod& elfMethod)
     if (!read)
     {
         std::cout << "Note: the \"ELFMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (ELFMethod=Savin)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (ELFMethod = Savin)." << std::endl << std::endl;
         elfMethod = ELFMethod::SAVIN;
     }
     else
@@ -197,7 +197,7 @@ bool Job::readEnergyPointChargeMethods(std::vector<EnergyPointChargeMethod>& ene
     if (!read)
     {
         std::cout << "Note: the \"EnergyPointChargeMethods\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (EnergyPointChargeMethods=Variational)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (EnergyPointChargeMethods = Variational)." << std::endl << std::endl;
 
         energyPointChargeMethods = { EnergyPointChargeMethod::VARIATIONAL };
     }
@@ -315,7 +315,7 @@ bool Job::readNuclearCutoff(double& nuclearCutoff)
     if (!read)
     {
         std::cout << "Note: the \"NuclearCutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (NuclearCutoff=0.0529177210544)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (NuclearCutoff = 0.0529177210544)." << std::endl << std::endl;
 
         nuclearCutoff = 0.1;
     }
@@ -365,7 +365,7 @@ bool Job::readOnePositionPerCharge(bool& onePositionPerCharge)
     if (!read)
     {
         std::cout << "Note: the \"OnePositionPerCharge\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (OnePositionPerCharge=False)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (OnePositionPerCharge = False)." << std::endl << std::endl;
     }
     else if (to_lower(strOnePositionPerCharge) == "true")
     {
@@ -460,7 +460,7 @@ bool Job::readOutputPrefix(std::string& outputPrefix)
     if (!read)
     {
         std::cout << "Note: the \"OutputPrefix\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (OutputPrefix=\"output\")." << std::endl << std::endl;
+        std::cout << "The program will use the default value (OutputPrefix = \"output\")." << std::endl << std::endl;
 
         outputPrefix = "output";
     }
@@ -476,7 +476,7 @@ bool Job::readOrbitalType(OrbitalType& orbitalType)
     if (!read)
     {
         std::cout << "Note: the \"OrbitalType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (OrbitalType=All)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (OrbitalType = All)." << std::endl << std::endl;
         orbitalType = OrbitalType::ALL;
     }
     else
@@ -507,7 +507,7 @@ bool Job::readPartitionMethod(PartitionMethod& partitionMethod)
     if (!read)
     {
         std::cout << "Note: the \"PartitionMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (PartitionMethod=On-Grid)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (PartitionMethod = On-Grid)." << std::endl << std::endl;
         partitionMethod = PartitionMethod::AIM_ON_GRID;
     }
     else
@@ -532,31 +532,17 @@ bool Job::readPartitionMethod(PartitionMethod& partitionMethod)
 
 bool Job::readPositions(std::vector<std::array<double, 3>>& positions)
 {
-    std::vector<double> positionValues;
-    bool read = readListType<double>(_inputFile, "Positions", positionValues);
+    bool ok = readListTypeArray<double, 3>(_inputFile, "Positions", positions);
 
-    if (read && !positionValues.empty())
+    for (size_t i = 0; i < positions.size(); ++i)
     {
-        if (positionValues.size() % 3 != 0)
+        for (size_t j = 0; j < 3; ++j)
         {
-            std::stringstream errorMessage;
-            errorMessage << "Error: incorrect number of values for the \"Positions\" parameter (multiple of three values expected)." << std::endl;
-            errorMessage << "Please check documentation and the \"Positions\" parameter values in " << _inputFileName << '.';
-
-            print_error(errorMessage.str());
-
-            std::exit(1);
-        }
-
-        for (size_t i = 0; i < positionValues.size(); i += 3)
-        {
-            positions.push_back({ positionValues[i] * Constants::ANGSTROM_TO_BOHR_RADIUS,
-                                  positionValues[i + 1] * Constants::ANGSTROM_TO_BOHR_RADIUS,
-                                  positionValues[i + 2] * Constants::ANGSTROM_TO_BOHR_RADIUS });
+            positions[i][j] *= Constants::ANGSTROM_TO_BOHR_RADIUS;
         }
     }
 
-    return read;
+    return ok;
 }
 
 bool Job::readPrecision(int& precision)
@@ -566,7 +552,7 @@ bool Job::readPrecision(int& precision)
     if (!read)
     {
         std::cout << "Note: the \"Precision\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (Precision=10)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (Precision = 10)." << std::endl << std::endl;
 
         precision = 10;
     }
@@ -582,7 +568,7 @@ bool Job::readRDMMethod(RDMMethod& rdmMethod)
     if (!read)
     {
         std::cout << "Note: the \"RDMMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (RDMMethod=Gamma)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (RDMMethod = Gamma)." << std::endl << std::endl;
         rdmMethod = RDMMethod::GAMMA;
     }
     else
@@ -613,7 +599,7 @@ bool Job::readRunType(RunType& runType)
     if (!read)
     {
         std::cout << "Note: the \"RunType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (RunType=Help)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (RunType = Help)." << std::endl << std::endl;
         runType = RunType::HELP;
     }
     else
@@ -645,7 +631,7 @@ bool Job::readSavePseudoOrbitals(bool& savePseudoOrbitals)
     if (!read)
     {
         std::cout << "Note: the \"SavePseudoOrbitals\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (SavePseudoOrbitals=False)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (SavePseudoOrbitals = False)." << std::endl << std::endl;
     }
     else if (to_lower(strSavePseudoOrbitals) == "true")
     {
@@ -674,7 +660,7 @@ bool Job::readSaveReducedDensityMatrix(bool& saveReducedDensityMatrix)
     if (!read)
     {
         std::cout << "Note: the \"SaveReducedDensityMatrix\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (SaveReducedDensityMatrix=False)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (SaveReducedDensityMatrix = False)." << std::endl << std::endl;
     }
     else if (to_lower(strSaveReducedDensityMatrix) == "true")
     {
@@ -703,7 +689,7 @@ bool Job::readShowProgress(bool& showProgress)
     if (!read)
     {
         std::cout << "Note: the \"ShowProgress\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (ShowProgress=False)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (ShowProgress = False)." << std::endl << std::endl;
     }
     else if (to_lower(strShowProgress) == "true")
     {
@@ -728,17 +714,17 @@ bool Job::readSingleCharge(bool& singleCharge)
     std::string strSingleCharge;
     bool read = readOneString(_inputFile, "SingleCharge", strSingleCharge);
 
-    singleCharge = false;
+    singleCharge = true;
     if (!read)
     {
         std::cout << "Note: the \"SingleCharge\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (SingleCharge=False)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (SingleCharge = True)." << std::endl << std::endl;
     }
-    else if (to_lower(strSingleCharge) == "true")
+    else if (to_lower(strSingleCharge) == "false")
     {
-        singleCharge = true;
+        singleCharge = false;
     }
-    else if (to_lower(strSingleCharge) != "false")
+    else if (to_lower(strSingleCharge) != "true")
     {
         std::stringstream errorMessage;
         errorMessage << "Error: incorrect value for the \"SingleCharge\" parameter (" << strSingleCharge << ")." << std::endl;
@@ -760,7 +746,7 @@ bool Job::readSize(GridSize& gridSize, CustomSizeData& customSizeData)
     if (!read)
     {
         std::cout << "Note: the \"Size\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (Size=Medium)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (Size = Medium)." << std::endl << std::endl;
 
         gridSize = GridSize::MEDIUM;
     }
@@ -870,7 +856,7 @@ bool Job::readSpinType(SpinType& spinType)
     if (!read)
     {
         std::cout << "Note: the \"SpinType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (SpinType=Alpha-Beta)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (SpinType = Alpha-Beta)." << std::endl << std::endl;
 
         spinType = SpinType::ALPHA_BETA;
     }

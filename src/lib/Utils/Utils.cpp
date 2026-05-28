@@ -270,7 +270,7 @@ bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string
                 break;
             }
 
-            std::regex tagValueRegex("^\\s*" + tag + "\\s*=\\s*([^\\s]*[,|;]?[^\\s]*)(?:\\s|\\s#.*)*$", std::regex_constants::icase);
+            std::regex tagValueRegex("^\\s*" + tag + "\\s*=\\s*(.*?)\\s*(?:#.*)?$", std::regex_constants::icase);
             std::smatch tagValueRegexMatch;
             if (std::regex_search(line, tagValueRegexMatch, tagValueRegex))
             {
