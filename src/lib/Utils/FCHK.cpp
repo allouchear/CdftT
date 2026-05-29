@@ -181,6 +181,12 @@ vector<double> FCHK::read_one_block_real(std::ifstream& f, string b)
             return vector<double> ();
         else if(b=="NPA Charges")
             return vector<double> ();
+        else if(b=="Dipole Moment")
+        {
+            std::cout<<"Warning : dipole moment not found"<<std::endl;
+            std::cout<<"Dipole moment set to (0,0,0)"<<std::endl;
+            return vector<double> (3,0);
+        }
         else
         {
             std::stringstream errorMessage;
