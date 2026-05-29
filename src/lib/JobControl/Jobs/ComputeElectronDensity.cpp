@@ -4,6 +4,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <math.h>
 
 #include <JobControl/Job.h>
 #include <JobControl/Jobs/ComputeElectronDensity.hpp>
@@ -27,7 +29,7 @@ ComputeElectronDensity::ComputeElectronDensity(const std::string& inputFileName)
 // STATIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedState>& states, const Orbitals& orbitals, Grid& grid, const RDMMethod rdmMethod, const std::vector<int>& excludedOrbitalsNumbers, const std::string& outputPrefix, bool saveRDM, int outputPrecision, int verbose, std::ostream& logOutputStream, bool showProgress)
+void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedState>& states,std::vector<int>& excitedStatesNumbers, const Orbitals& orbitals, Grid& grid, const RDMMethod rdmMethod, const std::vector<int>& excludedOrbitalsNumbers, const std::string& outputPrefix, bool saveRDM, int outputPrecision, int verbose, std::ostream& logOutputStream, bool showProgress)
 {
     size_t nbStates = states.size();
 
@@ -35,8 +37,11 @@ void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedStat
     std::ofstream outputFile;
 
     // Compute electronic densities for each excited states
-    for (size_t i = 0; i < nbStates; ++i)
+    //for (size_t i = 0; i < nbStates; ++i)
+    int iter = 0;
+    for (size_t i : excitedStatesNumbers)
     {
+        iter += 1;
         std::vector<std::vector<std::vector<double>>> reducedDensityMatrix;
         ExcitedState::reducedDensityMatrix(reducedDensityMatrix, rdmMethod, states[i], states[i], orbitals, excludedOrbitalsNumbers);
 
@@ -119,7 +124,7 @@ void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedStat
             }
         }
 
-        std::cout << "Computing electronic density for state #" << states[i].get_number() << " (" << i + 1 << " out of " << nbStates << "), please wait..." << std::endl;
+        std::cout << "Computing electronic density for state #" << states[i].get_number() << " (" << iter << " out of " << excitedStatesNumbers.size() << "), please wait..." << std::endl;
         grid.reset();
         orbitals.makeDensityGrid(grid, reducedDensityMatrix, showProgress);
 
@@ -129,7 +134,7 @@ void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedStat
         }
 
         // Save grid
-        std::cout << "Writing density cube file for state #" << states[i].get_number() << " (" << i + 1 << " out of " << nbStates << "), please wait..." << std::endl;
+        std::cout << "Writing density cube file for state #" << states[i].get_number() << " (" << iter << " out of " << excitedStatesNumbers.size() << "), please wait..." << std::endl;
         std::ofstream out(outputPrefix + "_state" + std::to_string(states[i].get_number()) + ".cube");
         grid.save(out, showProgress, outputPrecision);
         out.close();
@@ -148,14 +153,16 @@ void ComputeElectronDensity::computeTransitionDensities(const std::vector<Excite
     std::stringstream logStream;
     std::ofstream outputFile;
 
-    int currentTransitionDensity = 1;
+    int currentTransitionDensity = 0;
     for (const std::array<int, 2>& transitionDensity : transitionDensities)
     {
+        currentTransitionDensity += 1;
         int i = transitionDensity[0];
         int j = transitionDensity[1];
 
         std::vector<std::vector<std::vector<double>>> reducedDensityMatrix;
         ExcitedState::reducedDensityMatrix(reducedDensityMatrix, rdmMethod, states[i], states[j], orbitals, excludedOrbitalsNumbers);
+
 
         if (saveRDM || verbose >= 1)
         {
@@ -330,6 +337,28 @@ void ComputeElectronDensity::run()
     std::vector<int> excitedStatesNumbers;
     readExcitedStatesNumbers(excitedStatesNumbers);
 
+    // Read transition densities to consider in the transitions reduced density matrix computation
+    std::vector<std::array<int, 2>> transitionDensities;
+    readTransitionDensities(transitionDensities);
+
+    //get highest state number among excitedStatesNumbers and transitionDensities
+    int highestState = 0;
+    for (auto pair : transitionDensities)
+    {
+        highestState = std::max(highestState,std::max(pair[0],pair[1]));
+    }
+    int maxExcitedStates;
+    if  (excitedStatesNumbers.size()>0)
+        maxExcitedStates = *std::max_element(excitedStatesNumbers.begin(),excitedStatesNumbers.end());
+    else
+        maxExcitedStates = 0;
+    highestState = std::max(highestState,maxExcitedStates);
+
+    std::vector<int> statesToCompute;
+    for (int i=0;i<=highestState;++i)
+    {
+        statesToCompute.push_back(i);
+    }
 
     // Load orbitals
     Orbitals orbitals;
@@ -350,16 +379,20 @@ void ComputeElectronDensity::run()
     if (!transitionsFileName.empty())
     {
         std::cout << "Reading transitions from file: " << transitionsFileName << ". Please wait..." << std::endl;
-        ExcitedState::readTransitions(transitionsFileName, states, groundState.get_energy(), maxNbExcitedStates, excitedStatesNumbers);
+        ExcitedState::readTransitions(transitionsFileName, states, groundState.get_energy(), maxNbExcitedStates, statesToCompute);
     }
     else
     {
         std::cout << "Reading transitions from analytic file: " << analyticFilesNames[0] << ". Please wait..." << std::endl;
-        ExcitedState::readTransitions(analyticFilesNames[0], states, groundState.get_energy(), maxNbExcitedStates, excitedStatesNumbers);
+        ExcitedState::readTransitions(analyticFilesNames[0], states, groundState.get_energy(), maxNbExcitedStates, statesToCompute);
     }
 
     size_t nbStates = states.size();
-    logStream << "Total number of states: " << nbStates;// << std::endl << std::endl;
+    logStream << "Total number of states: " << nbStates;
+    if (verbose>=1) 
+    {
+        std::cout << std::endl << std::endl;
+    }
     log(logStream, outputStream);
 
 
@@ -380,7 +413,7 @@ void ComputeElectronDensity::run()
     // Read orbitals numbers to exclude from the density computation
     std::vector<int> excludedOrbitals;
     readExcludedOrbitals(excludedOrbitals);
-    std::cout<<"excluded orbitalts : ";
+    std::cout<<"excluded orbitals : ";
     for (int i=0;i<excludedOrbitals.size();++i)
     {
         std::cout<<excludedOrbitals[i];
@@ -404,20 +437,16 @@ void ComputeElectronDensity::run()
 
 
     // Build domain
-    std::cout << "Building domain and grid, please wait..." << std::endl;
+    //std::cout << "Building domain and grid, please wait..." << std::endl;
     Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, 1);
     Grid grid;
     grid.set_structure(orbitals.get_struct());
     grid.set_domain(domain);
 
-
+    logStream << "Total number of electronic densities to compute: " << excitedStatesNumbers.size() << std::endl << std::endl;
+    log(logStream, outputStream);
     // Compute state electronic densities and save them in .cube files
-    computeStateDensities(states, orbitals, grid, rdmMethod, excludedOrbitals, outputPrefix, saveRDM, outputPrecision, verbose, outputStream, showProgress);
-
-
-    // Read transition densities to consider in the transitions reduced density matrix computation
-    std::vector<std::array<int, 2>> transitionDensities;
-    readTransitionDensities(transitionDensities);
+    computeStateDensities(states, excitedStatesNumbers, orbitals, grid, rdmMethod, excludedOrbitals, outputPrefix, saveRDM, outputPrecision, verbose, outputStream, showProgress);
 
     size_t nbTransitionDensities = transitionDensities.size();
     logStream << "Total number of transition densities to compute: " << nbTransitionDensities << std::endl << std::endl;

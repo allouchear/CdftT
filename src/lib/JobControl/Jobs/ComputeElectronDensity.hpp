@@ -30,7 +30,8 @@ class ComputeElectronDensity : public Job
         /**
          * @brief Computes electronic densities for a set of excited states and saves them in .cube files.
          * 
-         * @param[in] states Vector of excited states for which the densities will be computed.
+         * @param[in] states Vector of excited states (0 is ground state)
+         * @param[in] excitedStatesNumbers list of states to compute 
          * @param[in] orbitals Orbitals of the system.
          * @param[in] grid Grid on which the densities will be computed.
          * @param[in] rdmMethod Method to use for the reduced density matrix computation.
@@ -42,7 +43,7 @@ class ComputeElectronDensity : public Job
          * @param[in] logOutputStream Output stream for logging information during the computation.
          * @param[in] showProgress Whether to show a progress bar during the computation.
          */
-        static void computeStateDensities(const std::vector<ExcitedState>& states, const Orbitals& orbitals, Grid& grid, const RDMMethod rdmMethod, const std::vector<int>& excludedOrbitalsNumbers, const std::string& outputPrefix, bool saveRDM, int outputPrecision, int verbose, std::ostream& logOutputStream, bool showProgress);
+        static void computeStateDensities(const std::vector<ExcitedState>& states,std::vector<int>& excitedStatesNumbers, const Orbitals& orbitals, Grid& grid, const RDMMethod rdmMethod, const std::vector<int>& excludedOrbitalsNumbers, const std::string& outputPrefix, bool saveRDM, int outputPrecision, int verbose, std::ostream& logOutputStream, bool showProgress);
 
         /**
          * @brief Computes electronic densities for a set of transitions between excited states and saves them in .cube files.
