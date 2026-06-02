@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0, os.path.abspath("../source"))  # adjust as needed
 
 project = "CdftT"
-author = "Abdulrahman Allouche"
+author = "Ludovic Gardré \\and Dylan Bissuel \\and Dimitri Buffat \\and Tetautahi Maamaatuaiahutapu \\and Ambroise Tourneur \\and Abdul-Rahman Allouche"
 release = "0.1.0"
 
 # File extensions that are regarded as sources.
