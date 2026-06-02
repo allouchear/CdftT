@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <math.h>
+#include <ctime>
 
 #include <JobControl/Job.h>
 #include <JobControl/Jobs/ComputeElectronDensity.hpp>
@@ -270,6 +271,8 @@ void ComputeElectronDensity::computeTransitionDensities(const std::vector<Excite
 
 void ComputeElectronDensity::run()
 {
+    time_t start = time(NULL);
+
     // Read output file prefix
     std::string outputPrefix;
     readOutputPrefix(outputPrefix);
@@ -359,11 +362,15 @@ void ComputeElectronDensity::run()
     {
         statesToCompute.push_back(i);
     }
+    time_t end = time(NULL);
+    double t_readFiles = double(end-start);
 
+    time(&start);
     // Load orbitals
     Orbitals orbitals;
     computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
-
+    time(&end);
+    double t_loadOrbitals = double(end-start);
 
     // Get Ground Slater Determinant
     SlaterDeterminant groundStateSlaterDeterminant(orbitals);
@@ -374,7 +381,7 @@ void ComputeElectronDensity::run()
     std::vector<ExcitedState> states;
     states.push_back(groundState);
 
-
+    time(&start);
     // Read transitions file
     if (!transitionsFileName.empty())
     {
@@ -386,6 +393,8 @@ void ComputeElectronDensity::run()
         std::cout << "Reading transitions from analytic file: " << analyticFilesNames[0] << ". Please wait..." << std::endl;
         ExcitedState::readTransitions(analyticFilesNames[0], states, groundState.get_energy(), maxNbExcitedStates, statesToCompute);
     }
+    time(&end);
+    double t_getTransitions = double(end-start);
 
     size_t nbStates = states.size();
     logStream << "Total number of states: " << nbStates;
@@ -395,7 +404,7 @@ void ComputeElectronDensity::run()
     }
     log(logStream, outputStream);
 
-
+    time(&start);
     // Compute Slater Determinants from electronic transitions for each state, 
     for (ExcitedState& state : states)
     {
@@ -408,7 +417,8 @@ void ComputeElectronDensity::run()
         }
     }
     std::cout << std::endl;
-
+    time(&end);
+    double t_computeSD = double(end-start);
 
     // Read orbitals numbers to exclude from the density computation
     std::vector<int> excludedOrbitals;
@@ -435,26 +445,40 @@ void ComputeElectronDensity::run()
     int outputPrecision;
     readPrecision(outputPrecision);
 
-
+    time(&start);
     // Build domain
     //std::cout << "Building domain and grid, please wait..." << std::endl;
     Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, 1);
     Grid grid;
     grid.set_structure(orbitals.get_struct());
     grid.set_domain(domain);
+    time(&end);
+    double t_buildDomaine = double(end-start);
 
+    time(&start);
     logStream << "Total number of electronic densities to compute: " << excitedStatesNumbers.size() << std::endl << std::endl;
     log(logStream, outputStream);
     // Compute state electronic densities and save them in .cube files
     computeStateDensities(states, excitedStatesNumbers, orbitals, grid, rdmMethod, excludedOrbitals, outputPrefix, saveRDM, outputPrecision, verbose, outputStream, showProgress);
+    time(&end);
+    double t_computeDensity = double(end-start);
 
+    time(&start);
     size_t nbTransitionDensities = transitionDensities.size();
     logStream << "Total number of transition densities to compute: " << nbTransitionDensities << std::endl << std::endl;
     log(logStream, outputStream);
-
-
     // Compute requested transition densities
     computeTransitionDensities(states, transitionDensities, orbitals, grid, rdmMethod, excludedOrbitals, outputPrefix, saveRDM, outputPrecision, verbose, outputStream, showProgress);
+    time(&end);
+    double t_computeTransitions = double(end-start);
+
+    std::cout<<"time to read files : "<<t_readFiles<<"s"<<std::endl;
+    std::cout<<"time to load orbitals : "<<t_loadOrbitals<<"s"<<std::endl;
+    std::cout<<"time to get transitions : "<<t_getTransitions<<"s"<<std::endl;
+    std::cout<<"time to rcompute SD : "<<t_computeSD<<"s"<<std::endl;
+    std::cout<<"time to build domaine : "<<t_buildDomaine<<"s"<<std::endl;
+    std::cout<<"time to compute densities : "<<t_computeDensity<<"s"<<std::endl;
+    std::cout<<"time to compute transitions : "<<t_computeTransitions<<"s"<<std::endl;
 }
 
 

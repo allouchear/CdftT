@@ -49,49 +49,44 @@ void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double
     for (int spin = 0; spin < 2; ++spin)
     {
         SpinType spinType = static_cast<SpinType>(spin);
-
-        for(int p : keptMoIndexes)
+        #ifdef ENABLE_OMP
+        #pragma omp parallel
+        #endif
         {
-            for(int q : keptMoIndexes)
+            #ifdef ENABLE_OMP
+            #pragma omp for collapse(2)
+            #endif
+            for(int p : keptMoIndexes)
             {
-                for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_i : slaterDeterminants_i)
+                for(int q : keptMoIndexes)
                 {
-                    // Make temporary SD on wich to apply the transition to check if it is valid (i.e. the orbital p from which to remove an electron was found in the SD)
-                    SlaterDeterminant tmpSD = slaterDeterminant_i.first;
-
-                    if(tmpSD.updateFromTransition(p + 1, spinType, q + 1, spinType)) // Because updateFromTransition() expects MO numbers (1-based)
+                    for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_i : slaterDeterminants_i)
                     {
-                        for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_j : slaterDeterminants_j)
-                        {
-                            if(SlaterDeterminant::equivalent(tmpSD, slaterDeterminant_j.first))
-                            {
-                                std::vector<std::vector<std::pair<int, int>>> diff = SlaterDeterminant::getDifferences(tmpSD, slaterDeterminant_j.first);
+                        // Make temporary SD on wich to apply the transition to check if it is valid (i.e. the orbital p from which to remove an electron was found in the SD)
+                        SlaterDeterminant tmpSD = slaterDeterminant_i.first;
 
-                                //std::cout<<"Nperm = "<<(diff[0].size()+diff[1].size())/2<< " for p="<<p << " for q="<<q<<std::endl;
-                                
-                                int numberOfPermutations = (diff[0].size() + diff[1].size()) / 2;
-                                if(numberOfPermutations == 0 || numberOfPermutations == 2)
-                                //if(numberOfPermutations%2==0)
+                        if(tmpSD.updateFromTransition(p + 1, spinType, q + 1, spinType)) // Because updateFromTransition() expects MO numbers (1-based)
+                        {
+                            for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_j : slaterDeterminants_j)
+                            {
+                                if(SlaterDeterminant::equivalent(tmpSD, slaterDeterminant_j.first))
                                 {
-                                    gammaMatrix[spin][p][q] += slaterDeterminant_i.second * slaterDeterminant_j.second;
-                                    //std::cout<<"Nperm = "<<(diff[0].size()+diff[1].size())/2<< " for p="<<p << " for q="<<q<<", adding coef "<<slaterDeterminant_i.second * slaterDeterminant_j.second<<std::endl;
+                                    std::vector<std::vector<std::pair<int, int>>> diff = SlaterDeterminant::getDifferences(tmpSD, slaterDeterminant_j.first);
+
+                                    int numberOfPermutations = (diff[0].size() + diff[1].size()) / 2;
+                                    if(numberOfPermutations == 0 || numberOfPermutations == 2)
+                                    {
+                                        gammaMatrix[spin][p][q] += slaterDeterminant_i.second * slaterDeterminant_j.second;
+                                    }
+                                    else if(numberOfPermutations ==1)
+                                    {
+                                        gammaMatrix[spin][p][q] -= slaterDeterminant_i.second * slaterDeterminant_j.second;
+                                    }
                                 }
-                                else if(numberOfPermutations ==1)//if(numberOfPermutations == 1)
-                                {
-                                    gammaMatrix[spin][p][q] -= slaterDeterminant_i.second * slaterDeterminant_j.second;
-                                    //std::cout<<"Nperm = "<<(diff[0].size()+diff[1].size())/2<< " for p="<<p << " for q="<<q<<", adding coef "<<-slaterDeterminant_i.second * slaterDeterminant_j.second<<std::endl;
-                                }
-                                //else    std::cout<<"nb permutations : "<<numberOfPermutations;
-                            }
-                        }            
+                            }            
+                        }
                     }
                 }
-
-                // Fill the symmetric element
-                //if(p != q)
-                //{
-                //    gammaMatrix[spin][q][p] = gammaMatrix[spin][p][q];
-                //}
             }
         }
     }
@@ -938,7 +933,10 @@ void ExcitedState::reducedDensityMatrix(std::vector<std::vector<std::vector<doub
 {
     if (rdmMethod == RDMMethod::GAMMA)
     {
+        time_t start = time(NULL);
         computeGammaMatrix(rdmMatrix, psi_i, psi_j, orbitals, ignoredMos);
+        time_t end = time(NULL);
+        std::cout<<"compute time of matrix : "<<double(end-start)<<"s"<<std::endl;
     }
     else if (rdmMethod == RDMMethod::X)
     {
