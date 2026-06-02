@@ -260,9 +260,10 @@ class Grid
          * @brief Saves the grid to a .cube file.
          * 
          * @param[in, out] name Output file stream opened on a .cube file.
-         * @param[in] showProgress If true, shows a progress bar during saving.
+         * @param[in] showProgress If true, shows a progress bar during saving (default false).
+         * @param[in] precision Precision for decimal values in the output file (default 14).
          */
-        void save(std::ofstream& name, bool showProgress = false) const;
+        void save(std::ofstream& name, bool showProgress = false, int precision = 14) const;
 
         /**
          * @brief Returns the value at grid indices (i,j,k,l).

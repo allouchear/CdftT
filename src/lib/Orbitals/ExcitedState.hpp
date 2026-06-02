@@ -39,9 +39,15 @@ class ExcitedState
         // PRIVATE STATIC METHODS
         //----------------------------------------------------------------------------------------------------//
         
+        /**
+         * TODO
+         */
         static void computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
 
-        static void computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
+        /**
+         * TODO
+         */
+        static void computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi1, const ExcitedState& psi2, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
     
 
     public:

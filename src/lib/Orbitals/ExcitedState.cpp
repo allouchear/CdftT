@@ -49,140 +49,198 @@ void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double
     for (int spin = 0; spin < 2; ++spin)
     {
         SpinType spinType = static_cast<SpinType>(spin);
-
-        for(int p : keptMoIndexes)
+        #ifdef ENABLE_OMP
+        #pragma omp parallel
+        #endif
         {
-            for(int q : keptMoIndexes)
+            #ifdef ENABLE_OMP
+            #pragma omp for collapse(2)
+            #endif
+            for(int p : keptMoIndexes)
             {
-                for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_i : slaterDeterminants_i)
+                for(int q : keptMoIndexes)
                 {
-                    // Make temporary SD on wich to apply the transition to check if it is valid (i.e. the orbital p from which to remove an electron was found in the SD)
-                    SlaterDeterminant tmpSD = slaterDeterminant_i.first;
-
-                    if(tmpSD.updateFromTransition(p + 1, spinType, q + 1, spinType)) // Because updateFromTransition() expects MO numbers (1-based)
+                    for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_i : slaterDeterminants_i)
                     {
-                        for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_j : slaterDeterminants_j)
+                        // Make temporary SD on wich to apply the transition to check if it is valid (i.e. the orbital p from which to remove an electron was found in the SD)
+                        SlaterDeterminant tmpSD = slaterDeterminant_i.first;
+
+                        if(tmpSD.updateFromTransition(p + 1, spinType, q + 1, spinType)) // Because updateFromTransition() expects MO numbers (1-based)
                         {
-                            if(SlaterDeterminant::equivalent(tmpSD, slaterDeterminant_j.first))
+                            for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_j : slaterDeterminants_j)
                             {
-                                std::vector<std::vector<std::pair<int, int>>> diff = SlaterDeterminant::getDifferences(tmpSD, slaterDeterminant_j.first);
+                                if(SlaterDeterminant::equivalent(tmpSD, slaterDeterminant_j.first))
+                                {
+                                    std::vector<std::vector<std::pair<int, int>>> diff = SlaterDeterminant::getDifferences(tmpSD, slaterDeterminant_j.first);
 
-                                //std::cout<<"Nperm = "<<(diff[0].size()+diff[1].size())/2<< " for p="<<p << " for q="<<q<<std::endl;
-                                
-                                int numberOfPermutations = (diff[0].size() + diff[1].size()) / 2;
-                                if(numberOfPermutations == 0 || numberOfPermutations == 2)
-                                {
-                                    gammaMatrix[spin][p][q] += slaterDeterminant_i.second * slaterDeterminant_j.second;
+                                    int numberOfPermutations = (diff[0].size() + diff[1].size()) / 2;
+                                    if(numberOfPermutations == 0 || numberOfPermutations == 2)
+                                    {
+                                        gammaMatrix[spin][p][q] += slaterDeterminant_i.second * slaterDeterminant_j.second;
+                                    }
+                                    else if(numberOfPermutations == 1)
+                                    {
+                                        gammaMatrix[spin][p][q] -= slaterDeterminant_i.second * slaterDeterminant_j.second;
+                                    }
                                 }
-                                else if(numberOfPermutations == 1)
-                                {
-                                    gammaMatrix[spin][p][q] -= slaterDeterminant_i.second * slaterDeterminant_j.second;
-                                }
-                            }
-                        }            
+                            }            
+                        }
                     }
-                }
-
-                // Fill the symmetric element
-                if(p != q)
-                {
-                    gammaMatrix[spin][q][p] = gammaMatrix[spin][p][q];
                 }
             }
         }
     }
 }
 
-void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi, const Orbitals& orbitals, const std::vector<int>& ignoredMos)
+void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi1, const ExcitedState& psi2, const Orbitals& orbitals, const std::vector<int>& ignoredMos)
 {
     int numberOfMos = orbitals.get_numberOfMo();
-
-    size_t numberOfOccupiedOrbitals = orbitals.getOccupiedOrbitalNumbers().size();
-    size_t numberOfVirtualOrbitals = numberOfMos - numberOfOccupiedOrbitals;
-
     // Build xMatrix matrixes
     xMatrix.resize(2, std::vector<std::vector<double>>(numberOfMos, std::vector<double>(numberOfMos, 0.0)));
 
-    // Build other matrixes needed to compute xMatrix
-    std::vector<std::vector<std::vector<double>>> tmpX(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
-    std::vector<std::vector<std::vector<double>>> occupiedMOsBlock(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfOccupiedOrbitals, 0.0)));
-    std::vector<std::vector<std::vector<double>>> virtualMOsBlock(2, std::vector<std::vector<double>>(numberOfVirtualOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
-    
-    for (int spin = 0; spin < 2; ++spin)
+    int state1Number = psi1.get_number();
+    int state2Number = psi2.get_number();
+
+    // if electronic density
+    if (state1Number == state2Number)
     {
-        for(size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
+        for (int spin = 0; spin < 2; ++spin)
         {
-            for(size_t j = 0; j < numberOfVirtualOrbitals; ++j)
-            {
-                for(size_t k = 0; k < psi._slaterDeterminants.size(); ++k)
-                {
-                    // Check if the electron from MO number (i + 1) has been excited to the MO number (j + 1 + numberOfOccupiedOrbitals)
-                    // i.e. there is a transition from the (i + 1)^th occupied MO to the (j + 1)^th virtual MO
+            size_t numberOfOccupiedOrbitals = orbitals.getOccupiedOrbitalNumbers()[spin].size();
+            size_t numberOfVirtualOrbitals = numberOfMos - numberOfOccupiedOrbitals;
 
-                    if (psi._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first == static_cast<int>(j + numberOfOccupiedOrbitals + 1)) // +1 because get_occupiedOrbitals() returns MO numbers (1-based) in the first pair value
+            // Build other matrixes needed to compute xMatrix
+            std::vector<std::vector<std::vector<double>>> tmpX(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
+            std::vector<std::vector<std::vector<double>>> occupiedMOsBlock(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfOccupiedOrbitals, 0.0)));
+            std::vector<std::vector<std::vector<double>>> virtualMOsBlock(2, std::vector<std::vector<double>>(numberOfVirtualOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
+
+            for(size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
+            {
+                for(size_t j = 0; j < numberOfVirtualOrbitals; ++j)
+                {
+                    for(size_t k = 0; k < psi1._slaterDeterminants.size(); ++k)
                     {
-                        tmpX[spin][i][j] += psi._slaterDeterminants[k].second;
+                        // Check if the electron from MO number (i + 1) has been excited to the MO number (j + 1 + numberOfOccupiedOrbitals)
+                        // i.e. there is a transition from the (i + 1)^th occupied MO to the (j + 1)^th virtual MO
+
+                        if (psi1._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first == static_cast<int>(j + numberOfOccupiedOrbitals + 1)) // +1 because get_occupiedOrbitals() returns MO numbers (1-based) in the first pair value
+                        {
+                            tmpX[spin][i][j] += psi1._slaterDeterminants[k].second;
+                        }
+                    }                  
+                }
+            }
+
+            // Initialize first block of xMatrix (occupied MOs - occupied MOs))
+            for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
+            {
+                occupiedMOsBlock[spin][i][i] = 1;
+            }
+
+            // Compute matrix multiplication: - tmpX * tmpX^T
+            for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
+            {
+                for (size_t j = 0; j < numberOfOccupiedOrbitals; ++j)
+                {
+                    for (size_t k = 0; k < numberOfVirtualOrbitals; ++k)
+                    {
+                        occupiedMOsBlock[spin][i][j] -= tmpX[spin][i][k] * tmpX[spin][j][k];
                     }
-                }                        
+                }
             }
-        }
 
-        // Initialize first block of xMatrix (occupied MOs - occupied MOs))
-        for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
-        {
-            occupiedMOsBlock[spin][i][i] = 1;
-        }
-
-        // Compute matrix multiplication: - tmpX * tmpX^t
-        for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
-        {
-            for (size_t j = 0; j < numberOfOccupiedOrbitals; ++j)
+            // Compute second block of xMatrix (virtual MOs - virtual MOs)
+            // Compute matrix multiplication: tmpX^T * tmpX
+            for (size_t i = 0; i < numberOfVirtualOrbitals; ++i)
             {
-                for (size_t k = 0; k < numberOfVirtualOrbitals; ++k)
+                for (size_t j = 0; j < numberOfVirtualOrbitals; ++j)
                 {
-                    occupiedMOsBlock[spin][i][j] -= tmpX[spin][i][k] * tmpX[spin][j][k];
+                    for(size_t k = 0; k < numberOfOccupiedOrbitals; ++k)
+                    {
+                        virtualMOsBlock[spin][i][j] += tmpX[spin][k][i] * tmpX[spin][k][j];
+                    }
+                }
+            }
+
+            // Fill xMatrix
+            for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
+            {
+                for (size_t j = 0; j < numberOfOccupiedOrbitals; ++j)
+                {
+                    xMatrix[spin][i][j] = occupiedMOsBlock[spin][i][j];
+                }
+            }
+
+            for (size_t i = 0; i < numberOfVirtualOrbitals; ++i)
+            {
+                for (size_t j = 0; j < numberOfVirtualOrbitals; ++j)
+                {
+                    xMatrix[spin][i + numberOfOccupiedOrbitals][j + numberOfOccupiedOrbitals] = virtualMOsBlock[spin][i][j];
+                }
+            }
+
+            // Set elements of xMatrix corresponding to ignored MOs to 0
+            for(int i : ignoredMos)
+            {
+                for (int j = 0; j < numberOfMos; ++j)
+                {
+                    xMatrix[spin][i - 1][j] = xMatrix[spin][j][i - 1] = 0.0; // Convert i from MO number (1-based) to MO index (0-based)
                 }
             }
         }
-
-        // Compute second block of xMatrix (virtual MOs - virtual MOs)
-        // Compute matrix multiplication: tmpX * tmpX^t
-        for (size_t i = 0; i < numberOfVirtualOrbitals; ++i)
+    }
+    else if (state1Number == 0) // else if transition from ground state density
+    {
+        for (int spin = 0; spin < 2; ++spin)
         {
-            for (size_t j = 0; j < numberOfVirtualOrbitals; ++j)
+            size_t numberOfOccupiedOrbitals = orbitals.getOccupiedOrbitalNumbers()[spin].size();
+            size_t numberOfVirtualOrbitals = numberOfMos - numberOfOccupiedOrbitals;
+
+            std::vector<std::vector<double>> tmp(std::vector<std::vector<double>>(numberOfMos, std::vector<double>(numberOfMos, 0.0)));
+
+
+            // Build X
+            std::vector<std::vector<double>> X(std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
+            for(size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
             {
-                for(size_t k = 0; k < numberOfOccupiedOrbitals; ++k)
+                for(size_t j = 0; j < numberOfVirtualOrbitals; ++j)
                 {
-                    virtualMOsBlock[spin][i][j] += tmpX[spin][k][i] * tmpX[spin][k][j];
+                    for(size_t k = 0; k < psi2.get_slaterDeterminants().size(); ++k)            
+                    {
+                        //look for excitations from GS
+                        if (psi2.get_slaterDeterminants()[k].first.get_occupiedOrbitals()[0][i].first == static_cast<int>(j + numberOfOccupiedOrbitals + 1)) // +1 because get_occupiedOrbitals() returns MO numbers (1-based) in the first pair value
+                        {
+                            X[i][j] += psi2.get_slaterDeterminants()[k].second;
+                        }
+                    }
+
+                    xMatrix[spin][i][numberOfOccupiedOrbitals+j] = X[i][j];
+                }
+            }
+            double norm = 0.0;
+            for (auto& row : xMatrix[spin])
+            {
+                for (auto& element : row)
+                {
+                    norm += element*element;
+                }
+            }
+            norm = std::sqrt(norm);
+            std::cout<<" norm : "<<norm<<std::endl;
+            for (auto& row : xMatrix[spin])
+            {
+                for (auto& element : row)
+                {
+                    element /= norm;
                 }
             }
         }
-
-        // Fill xMatrix
-        for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
-        {
-            for (size_t j = 0; j < numberOfOccupiedOrbitals; ++j)
-            {
-                xMatrix[spin][i][j] = occupiedMOsBlock[spin][i][j];
-            }
-        }
-
-        for (size_t i = 0; i < numberOfVirtualOrbitals; ++i)
-        {
-            for (size_t j = 0; j < numberOfVirtualOrbitals; ++j)
-            {
-                xMatrix[spin][i + numberOfOccupiedOrbitals][j + numberOfOccupiedOrbitals] = virtualMOsBlock[spin][i][j];
-            }
-        }
-
-        // Set elements of xMatrix corresponding to ignored MOs to 0
-        for(int i : ignoredMos)
-        {
-            for (int j = 0; j < numberOfMos; ++j)
-            {
-                xMatrix[spin][i - 1][j] = xMatrix[spin][j][i - 1] = 0.0; // Convert i from MO number (1-based) to MO index (0-based)
-            }
-        }
+    }
+    else // otherwise call other method
+    {
+        std::cout<<"Warning : case \" transition "<<state1Number<<" to "<<state2Number<<" \" not suitable for  X method."<<std::endl;
+        std::cout<<"switching to Gamma method."<<std::endl;
+        ExcitedState::reducedDensityMatrix(xMatrix, RDMMethod::GAMMA, psi1, psi2, orbitals, ignoredMos);
     }
 }
 
@@ -873,11 +931,14 @@ void ExcitedState::reducedDensityMatrix(std::vector<std::vector<std::vector<doub
 {
     if (rdmMethod == RDMMethod::GAMMA)
     {
+        time_t start = time(NULL);
         computeGammaMatrix(rdmMatrix, psi_i, psi_j, orbitals, ignoredMos);
+        time_t end = time(NULL);
+        std::cout<<"compute time of matrix : "<<double(end-start)<<"s"<<std::endl;
     }
     else if (rdmMethod == RDMMethod::X)
     {
-        computeXMatrix(rdmMatrix, psi_i, orbitals, ignoredMos);
+        computeXMatrix(rdmMatrix, psi_i,psi_j, orbitals, ignoredMos);
     }
 }
 

@@ -1,4 +1,7 @@
+#include <algorithm>
+#include <cmath>
 #include <cstdlib>
+#include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -27,7 +30,7 @@ ComputeElectronDensity::ComputeElectronDensity(const std::string& inputFileName)
 // STATIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedState>& states, const Orbitals& orbitals, Grid& grid, const RDMMethod rdmMethod, const std::vector<int>& excludedOrbitalsNumbers, const std::string& outputPrefix, bool saveRDM, int outputPrecision, int verbose, std::ostream& logOutputStream, bool showProgress)
+void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedState>& states,std::vector<int>& excitedStatesNumbers, const Orbitals& orbitals, Grid& grid, const RDMMethod rdmMethod, const std::vector<int>& excludedOrbitalsNumbers, const std::string& outputPrefix, bool saveRDM, int outputPrecision, int verbose, std::ostream& logOutputStream, bool showProgress)
 {
     size_t nbStates = states.size();
 
@@ -35,8 +38,11 @@ void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedStat
     std::ofstream outputFile;
 
     // Compute electronic densities for each excited states
-    for (size_t i = 0; i < nbStates; ++i)
+    //for (size_t i = 0; i < nbStates; ++i)
+    int iter = 0;
+    for (size_t i : excitedStatesNumbers)
     {
+        iter += 1;
         std::vector<std::vector<std::vector<double>>> reducedDensityMatrix;
         ExcitedState::reducedDensityMatrix(reducedDensityMatrix, rdmMethod, states[i], states[i], orbitals, excludedOrbitalsNumbers);
 
@@ -60,12 +66,18 @@ void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedStat
                 outputFile << std::setprecision(outputPrecision);
             }
 
-            logStream << std::scientific;
-            logStream << std::setprecision(10);
+            if (verbose >= 1)
+            {
+                logStream << std::scientific;
+                logStream << std::setprecision(10);
+            }
+
             for (int spin = 0; spin < 2; ++spin)
             {
-                logStream << "Reduced Density Matrix for state #" << states[i].get_number() << " (spin " << ((spin == 0) ? "alpha" : "beta") << "):" << std::endl;
-
+                if (verbose >= 1)
+                {
+                    logStream << "Reduced Density Matrix for state #" << states[i].get_number() << " (spin " << ((spin == 0) ? "alpha" : "beta") << "):" << std::endl;
+                }
                 if (saveRDM)
                 {
                     outputFile << "Spin " << ((spin == 0) ? "alpha" : "beta") << ':' << std::endl;
@@ -75,39 +87,45 @@ void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedStat
                 {
                     for(size_t j = 0; j < reducedDensityMatrix[spin][i].size(); ++j)
                     {
-                        logStream << std::right << std::setw(17) << reducedDensityMatrix[spin][i][j] << '\t';
-
+                        if (verbose >= 1)
+                        {
+                            logStream << std::right << std::setw(17) << reducedDensityMatrix[spin][i][j] << '\t';
+                        }
                         if (saveRDM)
                         {
                             outputFile << std::right << std::setw(17) << reducedDensityMatrix[spin][i][j] << '\t';
                         }
                     }
-
-                    logStream << std::endl;
-
+                    if (verbose >= 1)
+                    {
+                        logStream << std::endl;
+                    }
                     if (saveRDM)
                     {
                         outputFile << std::endl;
                     }
                 }
-
-                logStream << std::endl;
-            
+                if (verbose >= 1)
+                {
+                    logStream << std::endl;
+                }
                 if (saveRDM)
                 {
                     outputFile << std::endl;
                 }
             }
-            logStream << std::defaultfloat << std::endl;
-            log(logStream, logOutputStream);
-
+            if (verbose >= 1)
+            {
+                logStream << std::defaultfloat << std::endl;
+                log(logStream, logOutputStream);
+            }
             if (saveRDM)
             {
                 outputFile.close();
             }
         }
 
-        std::cout << "Computing electronic density for state #" << states[i].get_number() << " (" << i + 1 << " out of " << nbStates << "), please wait..." << std::endl;
+        std::cout << "Computing electronic density for state #" << states[i].get_number() << " (" << iter << " out of " << excitedStatesNumbers.size() << "), please wait..." << std::endl;
         grid.reset();
         orbitals.makeDensityGrid(grid, reducedDensityMatrix, showProgress);
 
@@ -117,9 +135,9 @@ void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedStat
         }
 
         // Save grid
-        std::cout << "Writing density cube file for state #" << states[i].get_number() << " (" << i + 1 << " out of " << nbStates << "), please wait..." << std::endl;
+        std::cout << "Writing density cube file for state #" << states[i].get_number() << " (" << iter << " out of " << excitedStatesNumbers.size() << "), please wait..." << std::endl;
         std::ofstream out(outputPrefix + "_state" + std::to_string(states[i].get_number()) + ".cube");
-        grid.save(out, showProgress);
+        grid.save(out, showProgress, outputPrecision);
         out.close();
 
         if (showProgress)
@@ -165,11 +183,18 @@ void ComputeElectronDensity::computeTransitionDensities(const std::vector<Excite
                 outputFile << std::setprecision(outputPrecision);
             }
 
-            logStream << std::scientific;
-            logStream << std::setprecision(10);
+            if (verbose >= 1)
+            {
+                logStream << std::scientific;
+                logStream << std::setprecision(10);
+            }
+
             for (int spin = 0; spin < 2; ++spin)
             {
-                logStream << "Reduced Density Matrix for transition between state #" << states[i].get_number() << " and state #" << states[j].get_number() << " (spin " << ((spin == 0) ? "alpha" : "beta") << "):" << std::endl;
+                if (verbose >= 1)
+                {            
+                    logStream << "Reduced Density Matrix for transition between state #" << states[i].get_number() << " and state #" << states[j].get_number() << " (spin " << ((spin == 0) ? "alpha" : "beta") << "):" << std::endl;
+                }
 
                 if (saveRDM)
                 {
@@ -180,32 +205,42 @@ void ComputeElectronDensity::computeTransitionDensities(const std::vector<Excite
                 {
                     for(size_t j = 0; j < reducedDensityMatrix[spin][i].size(); ++j)
                     {
-                        logStream << std::right << std::setw(17) << reducedDensityMatrix[spin][i][j] << '\t';
+                        if (verbose >= 1)
+                        {
+                            logStream << std::right << std::setw(17) << reducedDensityMatrix[spin][i][j] << '\t';
+                        }
 
                         if (saveRDM)
                         {
                             outputFile << std::right << std::setw(17) << reducedDensityMatrix[spin][i][j] << '\t';
                         }
                     }
-
-                    logStream << std::endl;
+                    if (verbose >= 1)
+                    {
+                        logStream << std::endl;
+                    }
 
                     if (saveRDM)
                     {
                         outputFile << std::endl;
                     }
                 }
+                if (verbose >= 1)
+                {
+                    logStream << std::endl;
+                }
 
-                logStream << std::endl;
-            
                 if (saveRDM)
                 {
                     outputFile << std::endl;
                 }
             }
-            logStream << std::defaultfloat << std::endl;
-            log(logStream, logOutputStream);
-
+            if (verbose >= 1)
+            {
+                logStream << std::defaultfloat << std::endl;
+                log(logStream, logOutputStream);
+            }
+            
             if (saveRDM)
             {
                 outputFile.close();
@@ -224,13 +259,15 @@ void ComputeElectronDensity::computeTransitionDensities(const std::vector<Excite
         // Save grid
         std::cout << "Writing density cube file for transition between state #" << states[i].get_number() << " and state #" << states[j].get_number() << " (" << currentTransitionDensity << " out of " << nbTransitionDensities << "), please wait..." << std::endl;
         std::ofstream out(outputPrefix + "_transition_state" + std::to_string(states[i].get_number()) + "_state" + std::to_string(states[j].get_number()) + ".cube");
-        grid.save(out, showProgress);
+        grid.save(out, showProgress, outputPrecision);
         out.close();
 
         if (showProgress)
         {
             std::cout << std::endl;
         }
+
+        ++currentTransitionDensity;
     }
 }
 
@@ -241,6 +278,8 @@ void ComputeElectronDensity::computeTransitionDensities(const std::vector<Excite
 
 void ComputeElectronDensity::run()
 {
+    time_t start = time(NULL);
+
     // Read output file prefix
     std::string outputPrefix;
     readOutputPrefix(outputPrefix);
@@ -308,11 +347,37 @@ void ComputeElectronDensity::run()
     std::vector<int> excitedStatesNumbers;
     readExcitedStatesNumbers(excitedStatesNumbers);
 
+    // Read transition densities to consider in the transitions reduced density matrix computation
+    std::vector<std::array<int, 2>> transitionDensities;
+    readTransitionDensities(transitionDensities);
 
+    //get highest state number among excitedStatesNumbers and transitionDensities
+    int highestState = 0;
+    for (auto pair : transitionDensities)
+    {
+        highestState = std::max(highestState,std::max(pair[0],pair[1]));
+    }
+    int maxExcitedStates;
+    if  (excitedStatesNumbers.size()>0)
+        maxExcitedStates = *std::max_element(excitedStatesNumbers.begin(),excitedStatesNumbers.end());
+    else
+        maxExcitedStates = 0;
+    highestState = std::max(highestState,maxExcitedStates);
+
+    std::vector<int> statesToCompute;
+    for (int i=0;i<=highestState;++i)
+    {
+        statesToCompute.push_back(i);
+    }
+    time_t end = time(NULL);
+    double t_readFiles = double(end-start);
+
+    time(&start);
     // Load orbitals
     Orbitals orbitals;
     computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
-
+    time(&end);
+    double t_loadOrbitals = double(end-start);
 
     // Get Ground Slater Determinant
     SlaterDeterminant groundStateSlaterDeterminant(orbitals);
@@ -323,24 +388,30 @@ void ComputeElectronDensity::run()
     std::vector<ExcitedState> states;
     states.push_back(groundState);
 
-
+    time(&start);
     // Read transitions file
     if (!transitionsFileName.empty())
     {
         std::cout << "Reading transitions from file: " << transitionsFileName << ". Please wait..." << std::endl;
-        ExcitedState::readTransitions(transitionsFileName, states, groundState.get_energy(), maxNbExcitedStates, excitedStatesNumbers);
+        ExcitedState::readTransitions(transitionsFileName, states, groundState.get_energy(), maxNbExcitedStates, statesToCompute);
     }
     else
     {
         std::cout << "Reading transitions from analytic file: " << analyticFilesNames[0] << ". Please wait..." << std::endl;
-        ExcitedState::readTransitions(analyticFilesNames[0], states, groundState.get_energy(), maxNbExcitedStates, excitedStatesNumbers);
+        ExcitedState::readTransitions(analyticFilesNames[0], states, groundState.get_energy(), maxNbExcitedStates, statesToCompute);
     }
+    time(&end);
+    double t_getTransitions = double(end-start);
 
     size_t nbStates = states.size();
-    logStream << "Total number of states: " << nbStates << std::endl << std::endl;
+    logStream << "Total number of states: " << nbStates;
+    if (verbose>=1) 
+    {
+        std::cout << std::endl << std::endl;
+    }
     log(logStream, outputStream);
 
-
+    time(&start);
     // Compute Slater Determinants from electronic transitions for each state, 
     for (ExcitedState& state : states)
     {
@@ -353,12 +424,19 @@ void ComputeElectronDensity::run()
         }
     }
     std::cout << std::endl;
-
+    time(&end);
+    double t_computeSD = double(end-start);
 
     // Read orbitals numbers to exclude from the density computation
     std::vector<int> excludedOrbitals;
     readExcludedOrbitals(excludedOrbitals);
-
+    std::cout<<"excluded orbitals : ";
+    for (int i=0;i<excludedOrbitals.size();++i)
+    {
+        std::cout<<excludedOrbitals[i];
+        if (i!=excludedOrbitals.size()-1) {std::cout<<",";}
+    }
+    std::cout<<std::endl<<std::endl<<std::endl;
 
     // Read method to use for Reduced Density Matrix computation
     RDMMethod rdmMethod;
@@ -374,30 +452,40 @@ void ComputeElectronDensity::run()
     int outputPrecision;
     readPrecision(outputPrecision);
 
-
+    time(&start);
     // Build domain
-    std::cout << "Building domain and grid, please wait..." << std::endl;
+    //std::cout << "Building domain and grid, please wait..." << std::endl;
     Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, 1);
     Grid grid;
     grid.set_structure(orbitals.get_struct());
     grid.set_domain(domain);
+    time(&end);
+    double t_buildDomaine = double(end-start);
 
-
+    time(&start);
+    logStream << "Total number of electronic densities to compute: " << excitedStatesNumbers.size() << std::endl << std::endl;
+    log(logStream, outputStream);
     // Compute state electronic densities and save them in .cube files
-    computeStateDensities(states, orbitals, grid, rdmMethod, excludedOrbitals, outputPrefix, saveRDM, outputPrecision, verbose, outputStream, showProgress);
+    computeStateDensities(states, excitedStatesNumbers, orbitals, grid, rdmMethod, excludedOrbitals, outputPrefix, saveRDM, outputPrecision, verbose, outputStream, showProgress);
+    time(&end);
+    double t_computeDensity = double(end-start);
 
-
-    // Read transition densities to consider in the transitions reduced density matrix computation
-    std::vector<std::array<int, 2>> transitionDensities;
-    readTransitionDensities(transitionDensities);
-
+    time(&start);
     size_t nbTransitionDensities = transitionDensities.size();
     logStream << "Total number of transition densities to compute: " << nbTransitionDensities << std::endl << std::endl;
     log(logStream, outputStream);
-
-
     // Compute requested transition densities
     computeTransitionDensities(states, transitionDensities, orbitals, grid, rdmMethod, excludedOrbitals, outputPrefix, saveRDM, outputPrecision, verbose, outputStream, showProgress);
+    time(&end);
+    double t_computeTransitions = double(end-start);
+
+    std::cout<<"time to read files : "<<t_readFiles<<"s"<<std::endl;
+    std::cout<<"time to load orbitals : "<<t_loadOrbitals<<"s"<<std::endl;
+    std::cout<<"time to get transitions : "<<t_getTransitions<<"s"<<std::endl;
+    std::cout<<"time to rcompute SD : "<<t_computeSD<<"s"<<std::endl;
+    std::cout<<"time to build domaine : "<<t_buildDomaine<<"s"<<std::endl;
+    std::cout<<"time to compute densities : "<<t_computeDensity<<"s"<<std::endl;
+    std::cout<<"time to compute transitions : "<<t_computeTransitions<<"s"<<std::endl;
 }
 
 

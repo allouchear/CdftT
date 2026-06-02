@@ -1190,10 +1190,10 @@ Grid Grid::coarser_Grid()
     return g;
 }
 
-void Grid::save(std::ofstream& fileName, bool showProgress) const
+void Grid::save(std::ofstream& fileName, bool showProgress, int precision) const
 {
     fileName << std::scientific;
-    fileName << std::setprecision(14);
+    fileName << std::setprecision(precision);
 
     // Get domain information
     int numberOfValuesPerGridPoint = _domain.get_Nval();

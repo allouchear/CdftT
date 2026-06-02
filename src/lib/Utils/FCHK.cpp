@@ -166,51 +166,57 @@ vector<int> FCHK::read_one_block_int(std::ifstream& f, string b)
     return data;
 }
 
-vector<double> FCHK::read_one_block_real(std::ifstream& f, string b)
+std::vector<double> FCHK::read_one_block_real(std::ifstream& f, string b)
 {
-    string p;
-    vector<double> data;
+    std::string p;
+    std::vector<double> data;
     int n;
     double d;
 
-    long int pos=LocaliseData(f,b);
+    long int pos = LocaliseData(f, b);
 
-    if(pos==-1)
+    if (pos != -1)
     {
-        if((b=="Beta Orbital Energies" || b=="Beta MO coefficients") && _ok_alpha==2)
-            return vector<double> ();
-        else if(b=="NPA Charges")
-            return vector<double> ();
-        else
+        f.seekg(pos);
+        getline(f, p);
+        std::stringstream ss(p);
+
+        do
         {
-            std::stringstream errorMessage;
-            errorMessage << "Error in FCHK::read_one_block_real(): " << b << " : data not found." << std::endl;
-            errorMessage << "Data required, please check your file.";
-            print_error(errorMessage.str());
+            ss >> p;
+        } while(p.find("N=") == string::npos);
 
-            std::exit(1);
-        }
-    }
-
-    f.seekg(pos);
-    getline(f,p);
-    std::stringstream ss(p);
-
-    do{
-        ss>>p;
-    }while(p.find("N=")==string::npos);
         ss>>n;
 
-    data=vector<double> (n);
+        data = vector<double>(n, 0.0);
 
-    for(int i=0; i<n; i++)
-    {
-        f>>d;
-        data[i]=d;
+        for(int i = 0; i < n; ++i)
+        {
+            f >> d;
+            data[i] = d;
+        }
+
+        if(b == "Alpha Orbital Energies" || b == "Alpha MO coefficients")
+        {
+            _ok_alpha++;
+        }
     }
+    else if(b == "Dipole Moment")
+    {
+        std::cout << "Warning: dipole moment not found." << std::endl;
+        std::cout << "Dipole moment set to (0, 0, 0)." << std::endl;
+        
+        data = vector<double>(3, 0.0);
+    }
+    else
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in FCHK::read_one_block_real(): " << b << " : data not found." << std::endl;
+        errorMessage << "Data required, please check your file.";
+        print_error(errorMessage.str());
 
-    if(b=="Alpha Orbital Energies" || b=="Alpha MO coefficients")
-        _ok_alpha++;
+        std::exit(1);
+    }
 
     return data;
 }
