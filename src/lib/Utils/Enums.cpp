@@ -28,9 +28,9 @@ namespace EnumConversionMaps
 
     std::unordered_map<EnergyPointChargeMethod, std::string> energyPointChargeMethod_string =
     {
+        { EnergyPointChargeMethod::LINEAR_RESPONSE, "LinearResponse" },
         { EnergyPointChargeMethod::PERTURBATIVE, "Perturbative" },
         { EnergyPointChargeMethod::VARIATIONAL, "Variational" },
-        { EnergyPointChargeMethod::LINEAR_RESPONSE, "LinearResponse" },
         { EnergyPointChargeMethod::UNKNOWN, "UNKNOWN" }
     };
 

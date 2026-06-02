@@ -863,40 +863,45 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
             {
                 // Several charges with several positions: we check if the user wants a bijective mapping between charges and positions (same number of charges and positions) or if the program should loop on the charges and positions independently.
                 
-                bool onePositionPerCharge;
-                readOnePositionPerCharge(onePositionPerCharge);
+                bool chargesPositionsBijections;
+                readChargesPositionsBijections(chargesPositionsBijections);
 
-                if (onePositionPerCharge)
+                if (chargesPositionsBijections)
                 {
                     // Several charges with several positions and a bijective mapping between them: we place each charge on its corresponding position.
 
-                    // We first check if the number of charges and positions specified in the input file are the same.
-                    if (nbCharges != nbChargePositions)
+                    // We first check if the number of positions is a multiple of the number of charges.
+                    if (nbChargePositions % nbCharges != 0)
                     {
                         std::stringstream errorMessage;
-                        errorMessage << "Error in ComputeEnergyWithPointCharges::readChargesAndPositions(): the parameter \"OnePositionPerCharge\" is set to true (bijective mapping between charges and positions) but the number of charges and positions specified in the input file (" << _inputFileName << ") are different." << std::endl;
-                        errorMessage << "Please check the documentation, and \"OnePositionPerCharge\", \"Charges\" and \"Positions\" parameters in " << _inputFileName << ".";
+                        errorMessage << "Error in ComputeEnergyWithPointCharges::readChargesAndPositions(): the parameter \"ChargesPositionsBijections\" is set to true (bijective mapping between charges and positions) but the number of positions is not a multiple of the number of charges in the input file (" << _inputFileName << ")." << std::endl;
+                        errorMessage << "Please check the documentation, and \"ChargesPositionsBijections\", \"Charges\" and \"Positions\" parameters in " << _inputFileName << ".";
 
                         print_error(errorMessage.str(), outputStream);
 
                         std::exit(1);
                     }
 
-                    for (size_t i = 0; i < nbCharges; ++i)
+                    for (size_t i = 0; i < nbChargePositions / nbCharges; ++i)
                     {
-                        PointCharge pointCharge;
-                        pointCharge.charge = charges[i];
-                        pointCharge.position = chargesPositions[i];
+                        for (size_t j = 0; j < nbCharges; ++j)
+                        {
+                            size_t positionIndex = i * nbCharges + j;
 
-                        std::stringstream description;
-                        description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
-                        pointCharge.description = description.str();
+                            PointCharge pointCharge;
+                            pointCharge.charge = charges[j];
+                            pointCharge.position = chargesPositions[positionIndex];
 
-                        Run run(1, pointCharge);
-                        runs.push_back(run);
+                            std::stringstream description;
+                            description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                            pointCharge.description = description.str();
+
+                            Run run(1, pointCharge);
+                            runs.push_back(run);
+                        }
                     }
                 }
-                else // onePositionPerCharge == false
+                else // chargesPositionsBijection == false
                 {
                     // Several charges with several positions and no bijective mapping between them: the program will loop on the charges and positions independently to place each charge on each position successively.
                     
@@ -923,40 +928,45 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
             {
                 // Several charges with no positions: we check if the user wants a bijective mapping between charges and atom positions (same number of charges and atoms) or if the program should loop on the charges and atom positions independently.
                 
-                bool oneChargePerNucleus;
-                readOneChargePerNucleus(oneChargePerNucleus);
+                bool chargesPositionsBijections;
+                readChargesPositionsBijections(chargesPositionsBijections);
 
-                if (oneChargePerNucleus)
+                if (chargesPositionsBijections)
                 {
                     // Several charges with no positions and a bijective mapping between them: we place each charge on its corresponding atom.
 
-                    // We first check if the number of charges and atoms specified in the input file are the same.
-                    if (nbCharges != nbAtoms)
+                    // We first check if the number of charges is a multiple of the number of atoms.
+                    if (nbCharges % nbAtoms != 0)
                     {
                         std::stringstream errorMessage;
-                        errorMessage << "Error in ComputeEnergyWithPointCharges::readChargesAndPositions(): the parameter \"OneChargePerNucleus\" is set to true (bijective mapping between charges and atom positions) but the number of charges and atoms specified in the input file (" << _inputFileName << ") are different." << std::endl;
-                        errorMessage << "Please check the documentation, and \"OneChargePerNucleus\", \"Charges\" and \"Positions\" parameters in " << _inputFileName << ".";
+                        errorMessage << "Error in ComputeEnergyWithPointCharges::readChargesAndPositions(): the parameter \"ChargesPositionsBijections\" is set to true (bijective mapping between charges and atom positions) but the number of charges specified in the input file (" << _inputFileName << ") is not a multiple of the number of atoms." << std::endl;
+                        errorMessage << "Please check the documentation, and \"ChargesPositionsBijections\", \"Charges\" and \"Positions\" parameters in " << _inputFileName << ".";
 
                         print_error(errorMessage.str(), outputStream);
 
                         std::exit(1);
                     }
 
-                    for (size_t i = 0; i < nbCharges; ++i)
+                    for (size_t i = 0; i < nbCharges / nbAtoms; ++i)
                     {
-                        PointCharge pointCharge;
-                        pointCharge.charge = charges[i];
-                        pointCharge.position = atoms[i].get_coordinates();
+                        for (size_t j = 0; j < nbAtoms; ++j)
+                        {
+                            size_t chargeIndex = i * nbAtoms + j;
 
-                        std::stringstream description;
-                        description << "Point charge of " << pointCharge.charge << " e, on " + atoms[i].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
-                        pointCharge.description = description.str();
+                            PointCharge pointCharge;
+                            pointCharge.charge = charges[chargeIndex];
+                            pointCharge.position = chargesPositions[j];
 
-                        Run run(1, pointCharge);
-                        runs.push_back(run);
+                            std::stringstream description;
+                            description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                            pointCharge.description = description.str();
+
+                            Run run(1, pointCharge);
+                            runs.push_back(run);
+                        }
                     }
                 }
-                else // oneChargePerNucleus == false
+                else // chargesPositionsBijection == false
                 {
                     // Several charges with no positions and no bijective mapping between them: the program will loop on the charges and atom positions independently to place each charge on each atom successively.
                     
@@ -1098,43 +1108,47 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
             {
                 // Several charges with no positions: we check if the user wants a bijective mapping between charges and atoms (same number of charges and atoms) or if the program should place the same charge on all atoms successively.
 
-                bool oneChargePerNucleus;
-                readOneChargePerNucleus(oneChargePerNucleus);
+                bool chargesPositionsBijections;
+                readChargesPositionsBijections(chargesPositionsBijections);
 
-                if (oneChargePerNucleus)
+                if (chargesPositionsBijections)
                 {
                     // Several charges with no positions and a bijective mapping between them: we place each charge on its corresponding atom.
 
-                    // We first check if the number of charges and atoms specified in the input file are the same.
-                    if (nbCharges != nbAtoms)
+                    if (nbAtoms / nbCharges != 0)
                     {
                         std::stringstream errorMessage;
-                        errorMessage << "Error in ComputeEnergyWithPointCharges::readChargesAndPositions(): the parameter \"OneChargePerNucleus\" is set to true (bijective mapping between charges and atom positions) but the number of charges and atoms specified in the input file (" << _inputFileName << ") are different." << std::endl;
-                        errorMessage << "Please check the documentation, and \"OneChargePerNucleus\", \"Charges\" and \"Positions\" parameters in " << _inputFileName << ".";
+                        errorMessage << "Error in ComputeEnergyWithPointCharges::readChargesAndPositions(): the parameter \"ChargesPositionsBijections\" is set to true (bijective mapping between charges and atom positions) but the number of charges specified in the input file (" << _inputFileName << ") is not a multiple of the number of atoms." << std::endl;
+                        errorMessage << "Please check the documentation, and \"ChargesPositionsBijections\", \"Charges\" and \"Positions\" parameters in " << _inputFileName << ".";
 
                         print_error(errorMessage.str(), outputStream);
 
                         std::exit(1);
                     }
 
-                    Run run;
-
-                    for (size_t i = 0; i < nbCharges; ++i)
+                    for (size_t i = 0; i < nbCharges / nbAtoms; ++i)
                     {
-                        PointCharge pointCharge;
-                        pointCharge.charge = charges[i];
-                        pointCharge.position = atoms[i].get_coordinates();
+                        Run run;
 
-                        std::stringstream description;
-                        description << "Point charge #" << i + 1 << " of " << pointCharge.charge << " e, on " + atoms[i].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
-                        pointCharge.description = description.str();
+                        for (size_t j = 0; j < nbAtoms; ++j)
+                        {
+                            size_t chargeIndex = i * nbAtoms + j;
 
-                        run.push_back(pointCharge);
+                            PointCharge pointCharge;
+                            pointCharge.charge = charges[chargeIndex];
+                            pointCharge.position = chargesPositions[j];
+
+                            std::stringstream description;
+                            description << "Point charge #" << j + 1 << " of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                            pointCharge.description = description.str();
+
+                            run.push_back(pointCharge);
+                        }
+
+                        runs.push_back(run);
                     }
-
-                    runs.push_back(run);
                 }
-                else // oneChargePerNucleus == false
+                else // chargesPositionsBijection == false
                 {
                     // Several charges with no positions and no bijective mapping between them: we place each charge on all atom positions successively.
 

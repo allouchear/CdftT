@@ -26,9 +26,9 @@ enum class ELFMethod
 
 enum class EnergyPointChargeMethod
 {
+    LINEAR_RESPONSE,
     PERTURBATIVE,
     VARIATIONAL,
-    LINEAR_RESPONSE,
     UNKNOWN
 };
 

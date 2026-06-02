@@ -106,6 +106,26 @@ bool Job::readBecke(std::vector<int>& beckeParameters)
 
         std::exit(1);
     }
+    else if (!read)
+    {
+        std::string defaultBeckeStr;
+        read = readOneString(_inputFile, "Becke", defaultBeckeStr);
+
+        if (to_lower(defaultBeckeStr) == "default")
+        {
+            beckeParameters = { 3, 41, 5 };
+        }
+        else
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error: incorrect value for the \"Becke\" parameter (either three integers or \"Default\" string expected)." << std::endl;
+            errorMessage << "Please check documentation and the \"Becke\" parameter values in " << _inputFileName << '.';
+
+            print_error(errorMessage.str());
+
+            std::exit(1);
+        }
+    }
 
     return read;
 }
@@ -120,6 +140,35 @@ bool Job::readCharges(std::vector<double>& charges)
         std::cout << "The program will use the default value (Charges = -1)." << std::endl << std::endl;
 
         charges = { - 1.0 };
+    }
+
+    return read;
+}
+
+bool Job::readChargesPositionsBijections(bool& chargesPositionsBijections)
+{
+    std::string strChargesPositionsBijections;
+    bool read = readOneString(_inputFile, "ChargesPositionsBijections", strChargesPositionsBijections);
+
+    chargesPositionsBijections = false;
+    if (!read)
+    {
+        std::cout << "Note: the \"ChargesPositionsBijections\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (ChargesPositionsBijections = False)." << std::endl << std::endl;
+    }
+    else if (to_lower(strChargesPositionsBijections) == "true")
+    {
+        chargesPositionsBijections = true;
+    }
+    else if (to_lower(strChargesPositionsBijections) != "false")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"ChargesPositionsBijections\" parameter (" << strChargesPositionsBijections << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"ChargesPositionsBijections\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
     }
 
     return read;
@@ -300,7 +349,7 @@ bool Job::readMaxNumberOfExcitedStates(int& maxNumberOfExcitedStates)
     if (!read)
     {
         std::cout << "Note: the \"MaxNumberOfExcitedStates\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will consider all excited states available in the excited states file (MaxNumberOfExcitedStates=-1)." << std::endl << std::endl;
+        std::cout << "The program will consider all excited states available in the excited states file (MaxNumberOfExcitedStates = -1)." << std::endl << std::endl;
 
         maxNumberOfExcitedStates = -1;
     }
@@ -315,71 +364,13 @@ bool Job::readNuclearCutoff(double& nuclearCutoff)
     if (!read)
     {
         std::cout << "Note: the \"NuclearCutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (NuclearCutoff = 0.0529177210544)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (NuclearCutoff = 0.1 Å)." << std::endl << std::endl;
 
-        nuclearCutoff = 0.1;
+        nuclearCutoff = 0.1 * Constants::ANGSTROM_TO_BOHR_RADIUS;
     }
     else
     {
         nuclearCutoff *= Constants::ANGSTROM_TO_BOHR_RADIUS;
-    }
-
-    return read;
-}
-
-bool Job::readOneChargePerNucleus(bool& oneChargePerNucleus)
-{
-    std::string strOneChargePerNucleus;
-    bool read = readOneString(_inputFile, "OneChargePerNucleus", strOneChargePerNucleus);
-
-    oneChargePerNucleus = false;
-    if (!read)
-    {
-        std::cout << "Note: the \"OneChargePerNucleus\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (OneChargePerNucleus=False)." << std::endl << std::endl;
-    }
-    else if (to_lower(strOneChargePerNucleus) == "true")
-    {
-        oneChargePerNucleus = true;
-    }
-    else if (to_lower(strOneChargePerNucleus) != "false")
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect value for the \"OneChargePerNucleus\" parameter (" << strOneChargePerNucleus << ")." << std::endl;
-        errorMessage << "Please check the documentation and the \"OneChargePerNucleus\" parameter value in the provided input file (" << _inputFileName << ").";
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-    return read;
-}
-
-bool Job::readOnePositionPerCharge(bool& onePositionPerCharge)
-{
-    std::string strOnePositionPerCharge;
-    bool read = readOneString(_inputFile, "OnePositionPerCharge", strOnePositionPerCharge);
-
-    onePositionPerCharge = false;
-    if (!read)
-    {
-        std::cout << "Note: the \"OnePositionPerCharge\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (OnePositionPerCharge = False)." << std::endl << std::endl;
-    }
-    else if (to_lower(strOnePositionPerCharge) == "true")
-    {
-        onePositionPerCharge = true;
-    }
-    else if (to_lower(strOnePositionPerCharge) != "false")
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect value for the \"OnePositionPerCharge\" parameter (" << strOnePositionPerCharge << ")." << std::endl;
-        errorMessage << "Please check the documentation and the \"OnePositionPerCharge\" parameter value in the provided input file (" << _inputFileName << ").";
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
     }
 
     return read;
@@ -460,9 +451,14 @@ bool Job::readOutputPrefix(std::string& outputPrefix)
     if (!read)
     {
         std::cout << "Note: the \"OutputPrefix\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (OutputPrefix = \"output\")." << std::endl << std::endl;
+        std::cout << "The program will use the default value (OutputPrefix = \"\")." << std::endl << std::endl;
 
-        outputPrefix = "output";
+        outputPrefix = "";
+    }
+
+    if (!outputPrefix.empty() && outputPrefix.back() != '_')
+    {
+        outputPrefix += '_';
     }
 
     return read;

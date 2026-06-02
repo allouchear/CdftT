@@ -99,7 +99,9 @@ class ComputeEnergyWithPointCharges : public Job
          */
         void printResultsLinearResponse(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<Run>& runs, std::ostream& outputStream, int verbose = 0);
 
-
+        /**
+         * TODO
+         */
         void readChargesAndPositions(std::vector<Run>& runs, const std::vector<Atom>& atoms, std::ostream& outputStream);
 
         /**
