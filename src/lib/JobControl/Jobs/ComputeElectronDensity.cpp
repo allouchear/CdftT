@@ -264,7 +264,7 @@ void ComputeElectronDensity::computeTransitionDensities(const std::vector<Excite
         grid.save(out, showProgress, outputPrecision);
         out.close();
         end = clock();
-        std::cout<<"compute time of writting grid : "<<double(end-start)/CLOCKS_PER_SEC<<"s"<<std::endl;
+        std::cout<<std::endl<<"compute time of writting grid : "<<double(end-start)/CLOCKS_PER_SEC<<"s"<<std::endl;
 
         if (showProgress)
         {
@@ -486,7 +486,7 @@ void ComputeElectronDensity::run()
     std::cout<<"time to read files : "<<t_readFiles<<"s"<<std::endl;
     std::cout<<"time to load orbitals : "<<t_loadOrbitals<<"s"<<std::endl;
     std::cout<<"time to get transitions : "<<t_getTransitions<<"s"<<std::endl;
-    std::cout<<"time to rcompute SD : "<<t_computeSD<<"s"<<std::endl;
+    std::cout<<"time to compute SD : "<<t_computeSD<<"s"<<std::endl;
     std::cout<<"time to build domaine : "<<t_buildDomaine<<"s"<<std::endl;
     std::cout<<"time to compute densities : "<<t_computeDensity<<"s"<<std::endl;
     std::cout<<"time to compute transitions : "<<t_computeTransitions<<"s"<<std::endl;
