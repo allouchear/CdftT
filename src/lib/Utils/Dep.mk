@@ -1,47 +1,45 @@
 Enums.o: Enums.cpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Enums.hpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp
-FCHK.o: FCHK.cpp /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/FCHK.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Enums.hpp \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils_fileParsing.tpp
+FCHK.o: FCHK.cpp /home/atourneur/Documents/CdftT/src/lib/Utils/FCHK.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils_fileParsing.tpp
 MOLDENGAB.o: MOLDENGAB.cpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Constants.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp
-LM.o: LM.cpp /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LM.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp
-LOG.o: LOG.cpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Constants.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/ExcitedState.hpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Grid.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Structure.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Atom.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Common/PeriodicTable.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Element.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Domain.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Enums.hpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/Orbitals.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/CGTF.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/GTF.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Descriptors.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/FCHK.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/WFX.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/SlaterDeterminant.hpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h
+ /home/atourneur/Documents/CdftT/src/lib/Common/Constants.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/MOLDENGAB.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils_fileParsing.tpp
+LM.o: LM.cpp /home/atourneur/Documents/CdftT/src/lib/Utils/LM.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils_fileParsing.tpp
+LOG.o: LOG.cpp /home/atourneur/Documents/CdftT/src/lib/Common/Constants.h \
+ /home/atourneur/Documents/CdftT/src/lib/Orbitals/ExcitedState.hpp \
+ /home/atourneur/Documents/CdftT/src/lib/Cube/Grid.h \
+ /home/atourneur/Documents/CdftT/src/lib/Common/Structure.h \
+ /home/atourneur/Documents/CdftT/src/lib/Common/Atom.h \
+ /home/atourneur/Documents/CdftT/src/lib/Common/PeriodicTable.h \
+ /home/atourneur/Documents/CdftT/src/lib/Common/Element.h \
+ /home/atourneur/Documents/CdftT/src/lib/Cube/Domain.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Enums.hpp \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils_fileParsing.tpp \
+ /home/atourneur/Documents/CdftT/src/lib/Orbitals/Orbitals.h \
+ /home/atourneur/Documents/CdftT/src/lib/Basis/CGTF.h \
+ /home/atourneur/Documents/CdftT/src/lib/Basis/GTF.h \
+ /home/atourneur/Documents/CdftT/src/lib/Common/Descriptors.h \
+ /home/atourneur/Documents/CdftT/src/lib/Cube/GridCP.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/FCHK.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/MOLDENGAB.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/WFX.h \
+ /home/atourneur/Documents/CdftT/src/lib/Orbitals/SlaterDeterminant.hpp \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/LOG.h
 Timer.o: Timer.cpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Timer.hpp
-Utils.o: Utils.cpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp
-WFX.o: WFX.cpp /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/WFX.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Timer.hpp
+Utils.o: Utils.cpp /home/atourneur/Documents/CdftT/src/lib/Utils/Utils.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils_fileParsing.tpp
+WFX.o: WFX.cpp /home/atourneur/Documents/CdftT/src/lib/Utils/WFX.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils.h \
+ /home/atourneur/Documents/CdftT/src/lib/Utils/Utils_fileParsing.tpp
