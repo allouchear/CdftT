@@ -208,7 +208,7 @@ std::vector<double> FCHK::read_one_block_real(std::ifstream& f, string b)
         
         data = vector<double>(3, 0.0);
     }
-    else if (((b != "Beta Orbital Energies" && b != "Beta MO coefficients") || _ok_alpha != 2) || b != "NPA Charges")
+    else if (((b != "Beta Orbital Energies" && b != "Beta MO coefficients") || _ok_alpha != 2) && b != "NPA Charges")
     {
         std::stringstream errorMessage;
         errorMessage << "Error in FCHK::read_one_block_real(): " << b << " : data not found." << std::endl;
