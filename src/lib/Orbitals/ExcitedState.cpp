@@ -931,10 +931,10 @@ void ExcitedState::reducedDensityMatrix(std::vector<std::vector<std::vector<doub
 {
     if (rdmMethod == RDMMethod::GAMMA)
     {
-        time_t start = time(NULL);
+        clock_t start = clock();
         computeGammaMatrix(rdmMatrix, psi_i, psi_j, orbitals, ignoredMos);
-        time_t end = time(NULL);
-        std::cout<<"compute time of matrix : "<<double(end-start)<<"s"<<std::endl;
+        clock_t end = clock();
+        std::cout<<"compute time of matrix : "<<double(end-start)/CLOCKS_PER_SEC<<"s"<<std::endl;
     }
     else if (rdmMethod == RDMMethod::X)
     {
