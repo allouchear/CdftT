@@ -5,7 +5,7 @@
 #include <Cube/Domain.h>
 #include <Cube/Grid.h>
 #include <JobControl/Job.h>
-#include <JobControl/Jobs/LambdaDiagnostic.hpp>
+#include <JobControl/Jobs/RunLambdaDiagnostic.hpp>
 #include <Orbitals/Orbitals.h>
 #include <Orbitals/ExcitedState.hpp>
 #include <Utils/Enums.hpp>
@@ -15,7 +15,7 @@
 // CONSTRUCTOR
 //----------------------------------------------------------------------------------------------------//
 
-LambdaDiagnostic::LambdaDiagnostic(const std::string& inputFileName):
+RunLambdaDiagnostic::RunLambdaDiagnostic(const std::string& inputFileName):
     Job(inputFileName)
 { }
 
@@ -24,7 +24,7 @@ LambdaDiagnostic::LambdaDiagnostic(const std::string& inputFileName):
 // STATIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void LambdaDiagnostic::print(const std::string& analyticFileName, const std::string& transitionsFileName, GridSize gridSize, CustomSizeData customSizeData)
+void RunLambdaDiagnostic::print(const std::string& analyticFileName, const std::string& transitionsFileName, GridSize gridSize, CustomSizeData customSizeData)
 {
     // Loading orbitals
     Orbitals orbitals;
@@ -64,7 +64,7 @@ void LambdaDiagnostic::print(const std::string& analyticFileName, const std::str
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void LambdaDiagnostic::run()
+void RunLambdaDiagnostic::run()
 {
     //Read analytic file name
     std::vector<std::string> analyticFilesNames;

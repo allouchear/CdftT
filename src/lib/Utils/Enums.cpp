@@ -102,10 +102,10 @@ namespace EnumConversionMaps
         { RunType::COMPUTE_PARTIAL_CHARGES, "ComputePartialCharges" },
         { RunType::CONVERT_ORBITALS, "ConvertOrbitals" },
         { RunType::HELP, "Help" },
-        { RunType::LAMBDA_DIAGNOSTIC, "LambdaDiagnostic" },
         { RunType::MAKE_DENSITY_CUBE, "MakeDensityCube" },
         { RunType::MAKE_ELF_CUBE, "MakeELFCube" },
         { RunType::MAKE_ORBITALS_CUBE, "MakeOrbitalsCube" },
+        { RunType::RUN_LAMBDA_DIAGNOSTIC, "RunLambdaDiagnostic" },
         { RunType::UNKNOWN, "UNKNOWN" }
     };
 

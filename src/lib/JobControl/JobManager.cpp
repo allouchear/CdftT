@@ -10,7 +10,7 @@
 #include <JobControl/Jobs/ComputePartialCharges.hpp>
 #include <JobControl/Jobs/ConvertOrbitals.hpp>
 #include <JobControl/Jobs/Help.hpp>
-#include <JobControl/Jobs/LambdaDiagnostic.hpp>
+#include <JobControl/Jobs/RunLambdaDiagnostic.hpp>
 #include <JobControl/Jobs/MakeDensityCube.hpp>
 #include <JobControl/Jobs/MakeELFCube.hpp>
 #include <JobControl/Jobs/MakeOrbitalsCube.hpp>
@@ -83,32 +83,32 @@ void JobManager::createJob(const std::string& inputFileName, RunType runtype)
         }
         case RunType::CONVERT_ORBITALS:
         {
-            //_jobs.push_back(std::make_unique<ConvertOrbitals>(inputFileName));
+            _jobs.push_back(std::make_unique<ConvertOrbitals>(inputFileName));
             break;
         }
         case RunType::HELP:
         {
-            //_jobs.push_back(std::make_unique<Help>());
-            break;
-        }
-        case RunType::LAMBDA_DIAGNOSTIC:
-        {
-            //_jobs.push_back(std::make_unique<LambdaDiagnostic>(inputFileName));
+            _jobs.push_back(std::make_unique<Help>());
             break;
         }
         case RunType::MAKE_DENSITY_CUBE:
         {
-            //_jobs.push_back(std::make_unique<MakeDensityCube>(inputFileName));
+            _jobs.push_back(std::make_unique<MakeDensityCube>(inputFileName));
             break;
         }
         case RunType::MAKE_ORBITALS_CUBE:
         {
-            //_jobs.push_back(std::make_unique<MakeOrbitalsCube>(inputFileName));
+            _jobs.push_back(std::make_unique<MakeOrbitalsCube>(inputFileName));
             break;
         }
         case RunType::MAKE_ELF_CUBE:
         {
-            //_jobs.push_back(std::make_unique<MakeELFCube>(inputFileName));
+            _jobs.push_back(std::make_unique<MakeELFCube>(inputFileName));
+            break;
+        }
+        case RunType::RUN_LAMBDA_DIAGNOSTIC:
+        {
+            _jobs.push_back(std::make_unique<RunLambdaDiagnostic>(inputFileName));
             break;
         }
         default:

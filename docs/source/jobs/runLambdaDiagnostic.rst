@@ -1,5 +1,5 @@
-Show the Lambda Diagnostic: ``lambdaDiagnostic``
-================================================
+Run the Lambda Diagnostic: ``RunLambdaDiagnostic``
+==================================================
 
 This job prints the result of the Lambda diagnostic test, as described by Peach et al., that judges the reliability of TDDFT excited states calculations. It also allows to validate the grid size configuration by computing overlap integrals between the orbitals involved in the excited states.
 

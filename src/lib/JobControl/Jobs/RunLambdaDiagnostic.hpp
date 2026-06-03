@@ -1,5 +1,5 @@
-#ifndef CDFTT_LAMBDADIAGNOSTIC_HPP_INCLUDED
-#define CDFTT_LAMBDADIAGNOSTIC_HPP_INCLUDED
+#ifndef CDFTT_RUNLAMBDADIAGNOSTIC_HPP_INCLUDED
+#define CDFTT_RUNLAMBDADIAGNOSTIC_HPP_INCLUDED
 
 #include <string>
 
@@ -7,11 +7,11 @@
 #include <Utils/Enums.hpp>
 
 
-/** @brief LambdaDiagnostic job class.
+/** @brief RunLambdaDiagnostic job class.
  *
- *  This job is run when the "runType" parameter in the input file is set to "LambdaDiagnostic".
+ *  This job is run when the "runType" parameter in the input file is set to "RunLambdaDiagnostic".
  */
-class LambdaDiagnostic : public Job
+class RunLambdaDiagnostic : public Job
 {
     public:
         //----------------------------------------------------------------------------------------------------//
@@ -19,9 +19,9 @@ class LambdaDiagnostic : public Job
         //----------------------------------------------------------------------------------------------------//
 
         /**
-         * @brief Constructor for the LambdaDiagnostic class.
+         * @brief Constructor for the RunLambdaDiagnostic class.
          */
-        LambdaDiagnostic(const std::string& inputFileName);
+        RunLambdaDiagnostic(const std::string& inputFileName);
 
 
         //----------------------------------------------------------------------------------------------------//
@@ -44,9 +44,9 @@ class LambdaDiagnostic : public Job
         //----------------------------------------------------------------------------------------------------//
 
         /**
-         * @brief Runs the "LambdaDiagnostic" job: performs lambda diagnostic analysis.
+         * @brief Runs the "RunLambdaDiagnostic" job: performs lambda diagnostic analysis.
          */
         void run() override;
 };
 
-#endif // CDFTT_LAMBDADIAGNOSTIC_HPP_INCLUDED
+#endif // CDFTT_RUNLAMBDADIAGNOSTIC_HPP_INCLUDED

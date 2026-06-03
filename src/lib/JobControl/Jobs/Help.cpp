@@ -113,7 +113,7 @@ std::unordered_map<RunType, std::string> Help::_s_availableJobs =
         "Example input files for each job are also given. In this format, comment lines are specified by a hash character (#) at the start of the line"
     },
     {
-        RunType::LAMBDA_DIAGNOSTIC,
+        RunType::RUN_LAMBDA_DIAGNOSTIC,
         "Prints the result of the Lambda diagnostic test, as described by Peach et al., that judges the reliability of TDDFT excited states calculations."
         "It also allows to validate the grid size configuration by computing overlap integrals between the orbitals involved in the excited states.\n\n"
         
