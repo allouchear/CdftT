@@ -9,6 +9,7 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include <chrono>
 
 #ifdef ENABLE_OMP
 #include <omp.h>
@@ -931,10 +932,10 @@ void ExcitedState::reducedDensityMatrix(std::vector<std::vector<std::vector<doub
 {
     if (rdmMethod == RDMMethod::GAMMA)
     {
-        clock_t start = clock();
+        auto start = std::chrono::high_resolution_clock::now();
         computeGammaMatrix(rdmMatrix, psi_i, psi_j, orbitals, ignoredMos);
-        clock_t end = clock();
-        std::cout<<"compute time of matrix : "<<double(end-start)/CLOCKS_PER_SEC<<"s"<<std::endl;
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout<<"compute time of matrix : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count()/1000.0<<"s"<<std::endl;
     }
     else if (rdmMethod == RDMMethod::X)
     {
