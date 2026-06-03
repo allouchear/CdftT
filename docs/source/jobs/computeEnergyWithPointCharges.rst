@@ -205,21 +205,21 @@ Possible values are:
 - ``0`` (default): No log file is generated.
 - ``1``: A log file is generated containing:
 
-  - the description of the excited states (read from the file describing the electronic transitions in the unperturbed system)
-  - the matrix elements :math:`\langle \, i \, \middle| \, \hat{H} \, \middle| \, j \, \rangle` and :math:`\langle \, i \, \middle| \, \hat{H} - \hat{H}_0 \, \middle| \, j \, \rangle` (triangular matrix: only elements with :math:`j \leq i` are written)
+    - the description of the excited states (read from the file describing the electronic transitions in the unperturbed system)
+    - the matrix elements :math:`\langle \, i \, \middle| \, \hat{H} \, \middle| \, j \, \rangle` and :math:`\langle \, i \, \middle| \, \hat{H} - \hat{H}_0 \, \middle| \, j \, \rangle` (triangular matrix: only elements with :math:`j \leq i` are written)
 
 - ``2``: In addition with the information given for verbose level 1, the log file includes:
 
-  - the Slater determinants that contribute to each excited state with their coefficients
-  - the detail of the computation of the matrix elements :math:`\langle \, i \, \middle| \, \hat{H} \, \middle| \, j \, \rangle` and :math:`\langle \, i \, \middle| \, \hat{H} - \hat{H}_0 \, \middle| \, j \, \rangle`: :math:`\langle \, i \, \middle| \, \hat{H} \, \middle| \, j \, \rangle`, :math:`\langle \, i \, \middle| \, V_{\mathrm{ions/nuclei}} \, \middle| \, j \, \rangle` and :math:`\langle \, i \, \middle| \, V_{\mathrm{ions/electrons}} \, \middle| \, j \, \rangle`. In the case of multiple charges, the contributions of each individual charge are summed.
+    - the Slater determinants that contribute to each excited state with their coefficients
+    - the detail of the computation of the matrix elements :math:`\langle \, i \, \middle| \, \hat{H} \, \middle| \, j \, \rangle` and :math:`\langle \, i \, \middle| \, \hat{H} - \hat{H}_0 \, \middle| \, j \, \rangle`: :math:`\langle \, i \, \middle| \, \hat{H} \, \middle| \, j \, \rangle`, :math:`\langle \, i \, \middle| \, V_{\mathrm{ions/nuclei}} \, \middle| \, j \, \rangle` and :math:`\langle \, i \, \middle| \, V_{\mathrm{ions/electrons}} \, \middle| \, j \, \rangle`. In the case of multiple charges, the contributions of each individual charge are summed.
 
 
 - ``3``: In addition with the information given for verbose levels 1 and 2, the log file includes:
 
-  - the information about the orbitals read from the analytic file
-  - the contribution of each individual charge in the case of multiple charges (i.e. :math:`\langle \, i \, \middle| \, V_{1/\mathrm{nuclei}} \, | \, j \, \rangle`, :math:`\langle \, i \, \middle| \, V_{2/\mathrm{nuclei}} \, \middle| \, j \, \rangle`, ..., :math:`\langle \, i \, \middle| \, V_{N/\mathrm{nuclei}} \, \middle| \, j \, \rangle` and :math:`\langle i \, \middle| \, V_{1/\mathrm{electrons}} \, \middle| \, j \, \rangle`, :math:`\langle i \, \middle| \, V_{2/\mathrm{electrons}} \, \middle| \, j \, \rangle`, ..., :math:`\langle \, i \, \middle| \, V_{N/\mathrm{electrons}} \, \middle| \, j \, \rangle`, where :math:`N` is the number of charges.)
-  - the eigenvalues (energies) and their associated eigenvectors before their sorting (the final results are sorted by increasing energy)
-  - the projection of the perturbed states onto the unperturbed basis (with the contribution of each state). 
+    - the information about the orbitals read from the analytic file
+    - the contribution of each individual charge in the case of multiple charges (i.e. :math:`\langle \, i \, \middle| \, V_{1/\mathrm{nuclei}} \, | \, j \, \rangle`, :math:`\langle \, i \, \middle| \, V_{2/\mathrm{nuclei}} \, \middle| \, j \, \rangle`, ..., :math:`\langle \, i \, \middle| \, V_{N/\mathrm{nuclei}} \, \middle| \, j \, \rangle` and :math:`\langle i \, \middle| \, V_{1/\mathrm{electrons}} \, \middle| \, j \, \rangle`, :math:`\langle i \, \middle| \, V_{2/\mathrm{electrons}} \, \middle| \, j \, \rangle`, ..., :math:`\langle \, i \, \middle| \, V_{N/\mathrm{electrons}} \, \middle| \, j \, \rangle`, where :math:`N` is the number of charges.)
+    - the eigenvalues (energies) and their associated eigenvectors before their sorting (the final results are sorted by increasing energy)
+    - the projection of the perturbed states onto the unperturbed basis (with the contribution of each state). 
 
 
 
@@ -254,7 +254,7 @@ Here is an example input file for this job:
 
 .. code-block:: none
     :linenos:
-    
+
     # This is a comment line, it will be ignored by the program. Blank lines are also ignored.
     # RunType = Help
     RunType = ComputeEnergyWithPointCharges
@@ -278,10 +278,10 @@ Here is an example input file for this job:
     # Coordinates of the charge(s), in Angstrom
     Positions = (2.0, 2.0, 2.0), (-1.0, -1.5, -3.0)
     ChargesPositionsBijections = False   # The -0.1 and -0.3 charges will be put at both positions (2.0, 2.0, 2.0) and (-1.0, -1.5, -3.0) so there will be four runs in total:
-      # Run 1: charge -0.1 at position (2.0, 2.0, 2.0)
-      # Run 2: charge -0.1 at position (-1.0, -1.5, -3.0)
-      # Run 3: charge -0.3 at position (2.0, 2.0, 2.0)
-      # Run 4: charge -0.3 at position (-1.0, -1.5, -3.0)
+                                         # Run 1: charge -0.1 at position (2.0, 2.0, 2.0)
+                                         # Run 2: charge -0.1 at position (-1.0, -1.5, -3.0)
+                                         # Run 3: charge -0.3 at position (2.0, 2.0, 2.0)
+                                         # Run 4: charge -0.3 at position (-1.0, -1.5, -3.0)
     
     # Method to use for the computation of the new energy levels
     EnergyPointChargeMethods = Perturbative, Variational

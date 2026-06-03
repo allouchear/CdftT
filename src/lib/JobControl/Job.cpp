@@ -303,13 +303,13 @@ bool Job::readExcludedOrbitals(std::vector<int>& excludedOrbitals)
 
 bool Job::readGridFilesNames(std::vector<std::string>& gridFilesNames)
 {
-    bool read = readListType<std::string>(_inputFile, "Grids", gridFilesNames);
+    bool read = readListType<std::string>(_inputFile, "GridFilesNames", gridFilesNames);
 
     if (!read)
     {
         std::stringstream errorMessage;
         errorMessage << "Error: could not find grid files names." << std::endl;
-        errorMessage << "Please check if the \"Grids\" parameter is defined and set in the provided input file (" << _inputFileName << ").";
+        errorMessage << "Please check if the \"GridFilesNames\" parameter is defined and set in the provided input file (" << _inputFileName << ").";
 
         print_error(errorMessage.str());
 
@@ -326,7 +326,7 @@ bool Job::readGridFilesNames(std::vector<std::string>& gridFilesNames)
         {
             std::stringstream errorMessage;
             errorMessage << "Error: cannot determine file format from file name \"" << fileName << "\" (no file extension)." << std::endl;
-            errorMessage << "Please check the documentation and the \"Grids\" parameter value in the provided input file (" << _inputFileName << ").";
+            errorMessage << "Please check the documentation and the \"GridFilesNames\" parameter value in the provided input file (" << _inputFileName << ").";
 
             print_error(errorMessage.str());
 
