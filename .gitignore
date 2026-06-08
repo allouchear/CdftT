@@ -29,3 +29,18 @@ src/applications/cdftt/cdftt
 
 # custom file to switch includes from angle brackets to relative paths (with quotes) to help with IDEs that don't support the angle bracket syntax
 src/lib/switch_includes.sh
+
+# Test related files - executables and backlog notes
+build/tests/test_compute_descriptors
+build/tests/test_compute_energy_with_point_charges
+build/tests/test_compute_grid_difference
+build/tests/test_compute_integrals
+build/tests/test_compute_partial_charges
+build/tests/test_convert_orbitals
+build/tests/test_help
+build/tests/test_job_components
+build/tests/test_lambda_diagnostic
+build/tests/test_make_density_cube
+build/tests/test_make_elf_cube
+build/tests/test_make_orbitals_cube
+tests/*.md
