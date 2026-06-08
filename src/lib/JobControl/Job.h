@@ -223,6 +223,15 @@ class Job
         bool readPrecision(int& precision);
 
         /**
+         * @brief Reads the slater determinant coef limit for printed numerical values from the "SDLimit" parameter in the input file.
+         * 
+         * @param[out] SDlimit Reference to a double where the read SDLimit value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readSDLimit(double& SDLimit);
+
+        /**
          * @brief Reads the method used to compute the reduced density matrix (RDM) from the "RDMMethod" parameter in the input file.
          * 
          * @param[out] rdmMethod Reference to an RDMMethod variable where the parsed method will be stored.

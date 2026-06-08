@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <numeric>
 
 #include <JobControl/Job.h>
 #include <JobControl/Jobs/ComputeElectronDensity.hpp>
@@ -377,8 +378,8 @@ void ComputeElectronDensity::run()
     auto end = std::chrono::high_resolution_clock::now();
     double t_readFiles = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count()/1000.0;
 
-    start = std::chrono::high_resolution_clock::now();
     // Load orbitals
+    start = std::chrono::high_resolution_clock::now();
     Orbitals orbitals;
     computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
     end = std::chrono::high_resolution_clock::now();
@@ -388,13 +389,12 @@ void ComputeElectronDensity::run()
     SlaterDeterminant groundStateSlaterDeterminant(orbitals);
     ExcitedState groundState(orbitals.get_energy(), groundStateSlaterDeterminant);
 
-
     // Build states vector
     std::vector<ExcitedState> states;
     states.push_back(groundState);
 
-    start = std::chrono::high_resolution_clock::now();
     // Read transitions file
+    start = std::chrono::high_resolution_clock::now();
     if (!transitionsFileName.empty())
     {
         std::cout << "Reading transitions from file: " << transitionsFileName << ". Please wait..." << std::endl;
@@ -416,11 +416,15 @@ void ComputeElectronDensity::run()
     }
     log(logStream, outputStream);
 
+    double SDLimit;
+    readSDLimit(SDLimit);
+
+    // Compute Slater Determinants from electronic transitions for each state, and set the argsort array
     start = std::chrono::high_resolution_clock::now();
-    // Compute Slater Determinants from electronic transitions for each state, 
     for (ExcitedState& state : states)
     {
         state.computeSlaterDeterminants(groundStateSlaterDeterminant);
+        state.set_argsortCoefs(SDLimit);
 
         if (verbose >= 1)
         {
@@ -467,6 +471,7 @@ void ComputeElectronDensity::run()
     end = std::chrono::high_resolution_clock::now();
     double t_buildDomaine = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count()/1000.0;
 
+
     start = std::chrono::high_resolution_clock::now();
     logStream << "Total number of electronic densities to compute: " << excitedStatesNumbers.size() << std::endl << std::endl;
     log(logStream, outputStream);
@@ -474,6 +479,7 @@ void ComputeElectronDensity::run()
     computeStateDensities(states, excitedStatesNumbers, orbitals, grid, rdmMethod, excludedOrbitals, outputPrefix, saveRDM, outputPrecision, verbose, outputStream, showProgress);
     end = std::chrono::high_resolution_clock::now();
     double t_computeDensity = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count()/1000.0;
+
 
     start = std::chrono::high_resolution_clock::now();
     size_t nbTransitionDensities = transitionDensities.size();
@@ -484,10 +490,11 @@ void ComputeElectronDensity::run()
     end = std::chrono::high_resolution_clock::now();
     double t_computeTransitions = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count()/1000.0;
 
+    
     std::cout<<"time to read files : "<<t_readFiles<<"s"<<std::endl;
     std::cout<<"time to load orbitals : "<<t_loadOrbitals<<"s"<<std::endl;
     std::cout<<"time to get transitions : "<<t_getTransitions<<"s"<<std::endl;
-    std::cout<<"time to compute SD : "<<t_computeSD<<"s"<<std::endl;
+    std::cout<<"time to compute SD + sort coefs: "<<t_computeSD<<"s"<<std::endl;
     std::cout<<"time to build domaine : "<<t_buildDomaine<<"s"<<std::endl;
     std::cout<<"time to compute densities : "<<t_computeDensity<<"s"<<std::endl;
     std::cout<<"time to compute transitions : "<<t_computeTransitions<<"s"<<std::endl;

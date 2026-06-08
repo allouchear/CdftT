@@ -34,7 +34,8 @@ class ExcitedState
         /** @brief Slater determinants associated with the excited state (one for each transition). */
         std::vector<std::pair<SlaterDeterminant, double>> _slaterDeterminants;
 
-
+        /** @brief argsort of the coefficients of the Slater determinants */
+        std::vector<size_t> _argsortCoefs;
         //----------------------------------------------------------------------------------------------------//
         // PRIVATE STATIC METHODS
         //----------------------------------------------------------------------------------------------------//
@@ -89,6 +90,20 @@ class ExcitedState
          * @brief Returns the Slater determinants associated with the excited state along with their respective coefficient.
          */
         const std::vector<std::pair<SlaterDeterminant, double>>& get_slaterDeterminants() const;
+
+        /**
+         * @brief Returns the argsort of the coefficients of the Slater determinants
+         */
+        std::vector<size_t> get_argsortCoefs() const;
+
+        //----------------------------------------------------------------------------------------------------//
+        // SETTERS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief sets _argsortCoefs, as a vector of indices giving the _slaterDeterminants of coefficients above a given treshold in descending order
+         */        
+        void set_argsortCoefs(double treshold);
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
