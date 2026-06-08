@@ -1,4 +1,4 @@
-OBJECTS = Enums.o Utils.o LM.o WFX.o FCHK.o MOLDENGAB.o LOG.o
+OBJECTS = Enums.o FCHK.o MOLDENGAB.o LM.o LOG.o Timer.o Utils.o WFX.o
 
 
 include $(LIBCDFTTDIR)/CONFIG

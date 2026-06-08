@@ -1,0 +1,11 @@
+Charges=-0.1,0.1
+#Positions=-2.0,-0.5,-0.5
+RunType=LinearResponse
+AnalyticFiles=tests/Guegan2020/acrolein.fchk
+OutputPrefix=OLD__LRF_acrolein
+ShowProgress=False
+SavePseudoOrbitals=True
+Size=Custom
+CustomSizeData=128,128,128,5,5,5,7.87401574803148e-02,0,0,0,7.87401574803148e-02,0,0,0,7.87401574803148e-02
+Becke=5,41,9
+Verbose=1

@@ -1,17 +1,21 @@
+#include <array>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include "../Common/Constants.h"
-#include "../Utils/MOLDENGAB.h"
+#include <Common/Constants.h>
+#include <Utils/MOLDENGAB.h>
+#include <Utils/Utils.h>
 
 
 MOLDENGAB::MOLDENGAB() :
-    _symbol(),
-    _atomic_number(),
-    _coord(),
+    _symbols(),
+    _atomic_numbers(),
+    _coordinates(),
     _shell_types(),
     _L_types(),
     _exposants(),
@@ -23,7 +27,6 @@ MOLDENGAB::MOLDENGAB() :
     _MO_coefs(),
     _occupation(),
     _spin_types(),
-    _coord_type("None"),
     _basis_or_gto("None"),
     _number_of_atoms(0),
     _number_of_MO_coefs(0),
@@ -41,10 +44,10 @@ MOLDENGAB::MOLDENGAB() :
     _mixte(false)
 { }
 
-MOLDENGAB::MOLDENGAB(std::ifstream& file) :
-    _symbol(),
-    _atomic_number(),
-    _coord(),
+MOLDENGAB::MOLDENGAB(std::ifstream& moldenGabFile) :
+    _symbols(),
+    _atomic_numbers(),
+    _coordinates(),
     _shell_types(),
     _L_types(),
     _exposants(),
@@ -56,7 +59,6 @@ MOLDENGAB::MOLDENGAB(std::ifstream& file) :
     _MO_coefs(),
     _occupation(),
     _spin_types(),
-    _coord_type("None"),
     _basis_or_gto("None"),
     _number_of_atoms(0),
     _number_of_MO_coefs(0),
@@ -74,10 +76,10 @@ MOLDENGAB::MOLDENGAB(std::ifstream& file) :
     _mixte(false)
 {
 
-    file.clear();
-    file.seekg(0,file.beg);
+    moldenGabFile.clear();
+    moldenGabFile.seekg(0,moldenGabFile.beg);
     std::string p;
-    getline(file,p);
+    getline(moldenGabFile,p);
 
     if(p.find("[Molden Format]") != std::string::npos)
     {
@@ -93,44 +95,28 @@ MOLDENGAB::MOLDENGAB(std::ifstream& file) :
         {
             _cart_sphe = "sphe";
         }
-        else if(p.find("Cart") != std::string::npos)
-        {
-            _cart_sphe = "cart";
-        }
         else
         {
-            std::cout << "Error, can't recognize data format (sphe/cart)." << std::endl;
-            std::cout << "Please check your file." << std::endl;
-
-            exit(1);
+            _cart_sphe = "cart"; // if not found, we assume cartesian (gabedit default format)
         }
     }
     else
     {
-        std::cout << "Error, can't recognize file format." << std::endl;
-        std::cout << "Please check your file." << std::endl;
+        std::stringstream errorMessage;
+        errorMessage << "Error in MOLDENGAB::MOLDENGAB(): can't recognize file format." << std::endl;
+        errorMessage << "Please check your file.";
+        print_error(errorMessage.str());
 
-        exit(1);
+        std::exit(1);
     }
 
-    read_atom_data(file);
+    read_atom_data(moldenGabFile);
 
-    _number_of_atoms = _atomic_number.size();
+    _number_of_atoms = _atomic_numbers.size();
     _n_at_basis = std::vector<int>(_number_of_atoms);
     
-    read_basis_data(file);
-    read_MO_data(file);
-
-    if(_coord_type == "Angs")
-    {
-        for(int i = 0; i < _number_of_atoms; ++i)
-        {
-            for(int j = 0; j < 3; ++j)
-            {
-                _coord[i][j] *= Constants::ANGSTROM_TO_BOHR_RADIUS;
-            }
-        }
-    }
+    read_basis_data(moldenGabFile);
+    read_MO_data(moldenGabFile);
 
     if(_alpha_and_beta)
     {
@@ -159,245 +145,288 @@ MOLDENGAB::MOLDENGAB(std::ifstream& file) :
     }
 }
 
-void MOLDENGAB::read_atom_data(std::ifstream& f)
+void MOLDENGAB::read_atom_data(std::ifstream& moldenGabFile)
 {
-    std::string p;
-    int an;
-    std::vector<double> c (3);
-    long int pos=LocaliseDataMolGabBefore(f,"[Atoms]");
+    std::string line;
+    std::string word;
 
-    if(pos==-1)
+    std::string coord_type;
+
+    int atomicNumber;
+    std::array<double, 3> coords;
+
+    long int position = LocaliseDataMolGabBefore(moldenGabFile,"[Atoms]");
+
+    if(position == -1)
     {
-        std::cout<<"Atoms data not found"<<std::endl;
-        std::cout<<"Data required, please check your file"<<std::endl;
-        exit(1);
+        std::stringstream errorMessage;
+        errorMessage << "Error in MOLDENGAB::read_atom_data(): Atoms data not found." << std::endl;
+        errorMessage << "Data required, please check your file.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
     }
 
-    f.seekg(pos);
-    getline(f,p);
-    std::stringstream t(p);
-    t>>p;
-    t>>_coord_type;
+    moldenGabFile.seekg(position);
+    getline(moldenGabFile, line);
+    std::stringstream sstream(line);
+    sstream >> word;
+    sstream >> coord_type;
     
-    getline(f,p);
+    getline(moldenGabFile, line);
+    do
+    {
+        std::stringstream sstream2(line);
 
-    do{
-        std::stringstream s(p);
-        s>>p;    
-        _symbol.push_back(p);
-        s>>p;
-        s>>an;
-        _atomic_number.push_back(an);
-        s>>c[0];
-        s>>c[1];
-        s>>c[2];
-        _coord.push_back(c);
-        getline(f,p);
-    }while(p.find("[")==std::string::npos);
+        // Atom symbol
+        sstream2 >> word;    
+        _symbols.push_back(word);
+
+        // Atom number in the system (not stored)
+        sstream2 >> word;
+
+        // Atomic number
+        sstream2 >> atomicNumber;
+        _atomic_numbers.push_back(atomicNumber);
+
+        // Coordinates
+        sstream2 >> coords[0];
+        sstream2 >> coords[1];
+        sstream2 >> coords[2];
+
+        if (coord_type == "Angs")
+        {
+            for(int i = 0; i < 3; ++i)
+            {
+                coords[i] *= Constants::ANGSTROM_TO_BOHR_RADIUS;
+            }
+        }
+
+        _coordinates.push_back(coords);
+
+        getline(moldenGabFile, line);
+    } while(line.find("[") == std::string::npos);
 }
 
-void MOLDENGAB::read_basis_data(std::ifstream& f)
+void MOLDENGAB::read_basis_data(std::ifstream& moldenGabFile)
 {
-    std::string p;
+    long int position = LocaliseDataMolGab(moldenGabFile, _basis_or_gto);
 
-    long int pos=LocaliseDataMolGab(f, _basis_or_gto);
-
-    if(pos==-1)
+    if(position == -1)
     {
-        std::cout<<"Basis (GTO) data not found"<<std::endl;
-        std::cout<<"Data required, please check your file"<<std::endl;
-        exit(1);
+        std::stringstream errorMessage;
+        errorMessage << "Error in MOLDENGAB::read_basis_data(): Basis (GTO) data not found." << std::endl;
+        errorMessage << "Data required, please check your file.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
     }
 
-    f.seekg(pos);
-    int n= _atomic_number.size();
+    moldenGabFile.seekg(position);
+    int nbAtoms = _atomic_numbers.size();
 
-    for(int i=0; i<n; i++)
-        read_one_basis_data(f);
+    for(int i = 0; i < nbAtoms; ++i)
+    {
+        read_one_basis_data(moldenGabFile);
+    }
 
-    int m=_shell_types.size();
+    int m = _shell_types.size();
     
     long int posd, posf, posg;
 
-    if(_format=="molden")
+    if(_format == "molden")
     {
-        posd = LocaliseDataMolGab(f, "[5D]");
-        posf = LocaliseDataMolGab(f, "[7F]");
-        posg = LocaliseDataMolGab(f, "[9G]");
+        posd = LocaliseDataMolGab(moldenGabFile, "[5D]");
+        if (posd == -1)
+        {
+            posd = LocaliseDataMolGab(moldenGabFile, "[5d]");
+        }
 
-        if((posd==-1 && (posf!=-1 || posg!=1)) || (posf==-1 && (posd!=-1 || posg!=1)) || (posg==-1 && (posf!=-1 || posd!=1)))
-            _mixte=true;
+        posf = LocaliseDataMolGab(moldenGabFile, "[7F]");
+        if (posf == -1)
+        {
+            posf = LocaliseDataMolGab(moldenGabFile, "[7f]");
+        }
+
+        posg = LocaliseDataMolGab(moldenGabFile, "[9G]");
+        if (posg == -1)
+        {
+            posg = LocaliseDataMolGab(moldenGabFile, "[9g]");
+        }
+
+        if((posd == -1 && (posf !=- 1 || posg != 1))
+           || (posf == -1 && (posd !=- 1 || posg != 1 ))
+           || (posg == -1 && (posf !=- 1 || posd != 1)))
+        {
+            _mixte = true;
+        }
+    }
+    else if(_format == "gabedit" && _cart_sphe == "sphe")
+    {
+        posd = posf = posg = 0;
+    }
+    else
+    {
+        posd = posf = posg = -1;
     }
 
-    else if(_format=="gabedit" && _cart_sphe=="sphe")
-        posd = posf = posg = 0;
-
-    else
-        posd = posf = posg =-1;
-
-    for(int i=0; i<m; i++)
+    for(int i = 0; i < m; ++i)
     {
-        if(_shell_types[i]=="s" || _shell_types[i]=="S")
+        if(_shell_types[i] == "s" || _shell_types[i] == "S")
         {
             _L_types.push_back(0);
-            _number_of_MO_coefs+=1;
+            _number_of_MO_coefs += 1;
         }
-
-        else if(_shell_types[i]=="p" || _shell_types[i]=="P")
+        else if(_shell_types[i] == "p" || _shell_types[i] == "P")
         {
             _L_types.push_back(1);
-            _number_of_MO_coefs+=3;
+            _number_of_MO_coefs += 3;
         }
-
-        else if((_shell_types[i]=="d" || _shell_types[i]=="D") && posd==-1)
+        else if((_shell_types[i] == "d" || _shell_types[i] == "D") && posd == -1)
         {
             _L_types.push_back(2);
-            _number_of_MO_coefs+=6;
+            _number_of_MO_coefs += 6;
         }
-        
-        else if((_shell_types[i]=="d" || _shell_types[i]=="D") && posd!=-1)
+        else if((_shell_types[i] == "d" || _shell_types[i] == "D") && posd != -1)
         {
             _L_types.push_back(-2);
-            _number_of_MO_coefs+=5;
+            _number_of_MO_coefs += 5;
         }
-        
-        else if((_shell_types[i]=="f" || _shell_types[i]=="F") && posf==-1)
+        else if((_shell_types[i] == "f" || _shell_types[i] == "F") && posf == -1)
         {
             _L_types.push_back(3);
-            _number_of_MO_coefs+=10;
+            _number_of_MO_coefs += 10;
         }
-
-        else if((_shell_types[i]=="f" || _shell_types[i]=="F") && posf!=-1)
+        else if((_shell_types[i] == "f" || _shell_types[i] == "F") && posf != -1)
         {
             _L_types.push_back(-3);
-            _number_of_MO_coefs+=7;
+            _number_of_MO_coefs += 7;
         }
-        
-        else if((_shell_types[i]=="g" || _shell_types[i]=="G") && posg==-1)
+        else if((_shell_types[i] == "g" || _shell_types[i] == "G") && posg == -1)
         {
             _L_types.push_back(4);
-            _number_of_MO_coefs+=15;
+            _number_of_MO_coefs += 15;
         }
-
-        else if((_shell_types[i]=="g" || _shell_types[i]=="G") && posg!=-1)
+        else if((_shell_types[i] == "g" || _shell_types[i] == "G") && posg != -1)
         {
             _L_types.push_back(-4);
-            _number_of_MO_coefs+=9;
+            _number_of_MO_coefs += 9;
         }
-
-        else if(_format=="molden")
+        else if(_format == "molden")
         {
-            int N=int(toupper(_shell_types[i][0]))-int('F')+3;
+            int N = int(toupper(_shell_types[i][0])) - int('F') + 3;
             _L_types.push_back(-N);
-            _number_of_MO_coefs+= 2*abs(N)+1;
+            _number_of_MO_coefs += 2 * std::abs(N) + 1;
         }
-
-        else if(_cart_sphe=="sphe")
+        else if(_cart_sphe == "sphe")
         {
-            int N=int(toupper(_shell_types[i][0]))-int('F')+3;
+            int N = int(toupper(_shell_types[i][0])) - int('F') + 3;
             _L_types.push_back(-N);
-            _number_of_MO_coefs+= 2*abs(N)+1;
+            _number_of_MO_coefs += 2 * std::abs(N) + 1;
         }
-
-        else if(_cart_sphe=="cart")
+        else if(_cart_sphe == "cart")
         {
-            int N=int(toupper(_shell_types[i][0]))-int('F')+3;
+            int N = int(toupper(_shell_types[i][0])) - int('F') + 3;
             _L_types.push_back(N);
-            _number_of_MO_coefs+= 2*N+1;
+            _number_of_MO_coefs += 2 * N + 1;
         }
-
         else
         {
-            std::cout<<"Error, shell type no recognize."<<std::endl;
-            std::cout<<"Please check your file"<<std::endl;
-            exit(1);
+            std::stringstream errorMessage;
+            errorMessage << "Error in MOLDENGAB::read_basis_data(): shell type not recognized." << std::endl;
+            errorMessage << "Please check your file.";
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
     }
 
     _number_of_MO=_number_of_MO_coefs;
 }
 
-void MOLDENGAB::read_one_basis_data(std::istream& f)
+void MOLDENGAB::read_one_basis_data(std::istream& moldenGabFile)
 {
-    std::string p, t;
-    int n, m;
-    int v = 0;
-    double pc, c;
+    std::string line;
+    std::string shellType;
 
-    getline(f, p);
-    std::stringstream k(p);
-    k >> m;
-    getline(f, p);
-    
-    do{
-        _num_center.push_back(m);
-        std::stringstream s(p);
-        s>>p;
-        _shell_types.push_back(p);
-        s>>n;
-        _number_of_gtf.push_back(n);
-        s>>c;
+    int centerNumber;
+    int nbGTF;
+    int nbGTFCenter = 0;
 
-        for(int i=0; i<n; i++)
+    double factorCoeff;
+    double exposant, coeff;
+
+    getline(moldenGabFile, line);
+    std::stringstream sstream(line);
+    sstream >> centerNumber;
+
+    getline(moldenGabFile, line);
+    do
+    {
+        _num_center.push_back(centerNumber);
+
+        std::stringstream sstream2(line);
+        sstream2 >> shellType;
+        _shell_types.push_back(shellType);
+
+        sstream2 >> nbGTF;
+        _number_of_gtf.push_back(nbGTF);
+
+        sstream2 >> factorCoeff;
+
+        for(int i = 0; i < nbGTF; ++i)
         {
-            v++;
-            _factor_coefs.push_back(c);
-            getline(f,p);
-            if(p.find("D")!=std::string::npos)
-                p.replace(p.find("D"),1,"E");
-            else if(p.find("d")!=std::string::npos)
-                p.replace(p.find("d"),1,"e");
+            ++nbGTFCenter;
+            _factor_coefs.push_back(factorCoeff);
 
-            if(p.find("D")!=std::string::npos)
-                p.replace(p.find("D"),1,"E");
-            else if(p.find("d")!=std::string::npos)
-                p.replace(p.find("d"),1,"e");
+            getline(moldenGabFile, line);
+            line = std::regex_replace(line, std::regex("D|d"), "e");
 
-            std::stringstream ss(p);
-            ss>>pc;
-            _exposants.push_back(pc);
-            ss>>pc;
-            _cgtf_coefs.push_back(pc);
+            std::stringstream sstream3(line);
+            sstream3 >> exposant;
+            _exposants.push_back(exposant);
+
+            sstream3 >> coeff;
+            _cgtf_coefs.push_back(coeff);
         }
 
-        getline(f,p);
-        t=p;
-        while(t.find(" ")!=std::string::npos)
-            t.erase(t.find(" "),1);
+        getline(moldenGabFile,line);
+    } while(!trim_whitespaces(line, true, true).empty());
 
-    }while(!t.empty());
-    m--;
-    _n_at_basis[m]=v;
+    _n_at_basis[centerNumber - 1] = nbGTFCenter;
 }
 
-void MOLDENGAB::read_MO_data(std::ifstream& f)
+void MOLDENGAB::read_MO_data(std::ifstream& moldenGabFile)
 {
     std::string p,t;
     double a;
     std::vector<double> aa;
 
-    if(LocaliseDataMolGab(f,"Spin= Beta")!=-1)
+    if(LocaliseDataMolGab(moldenGabFile,"Spin= Beta")!=-1)
     {
         _alpha_and_beta=false;
     }
 
-    long int pos=LocaliseDataMolGab(f, "[MO]");
+    long int pos=LocaliseDataMolGab(moldenGabFile, "[MO]");
 
     if(pos==-1)
     {
-        std::cout<<"Basis (GTO) data not found"<<std::endl;
-        std::cout<<"Data required, please check your file"<<std::endl;
-        exit(1);
+        std::stringstream errorMessage;
+        errorMessage << "Error in MOLDENGAB::read_MO_data(): Basis (GTO) data not found." << std::endl;
+        errorMessage << "Data required, please check your file.";
+        print_error(errorMessage.str());
+        
+        std::exit(1);
     }
 
-    f.seekg(pos);
-    getline(f,p);
+    moldenGabFile.seekg(pos);
+    getline(moldenGabFile,p);
 
     do{
         for(int j=0; j<4; j++)
         {
             if(j!=0)
-                getline(f,p);
+                getline(moldenGabFile,p);
             std::stringstream s(p);
             s>>p;
 
@@ -420,7 +449,7 @@ void MOLDENGAB::read_MO_data(std::ifstream& f)
 
         for(int k=0; k<_number_of_MO_coefs; k++)
         {
-            getline(f,p);
+            getline(moldenGabFile,p);
             std::stringstream ss(p);
             ss>>p;
             ss>>a;
@@ -428,7 +457,7 @@ void MOLDENGAB::read_MO_data(std::ifstream& f)
         }
         _MO_coefs.push_back(aa);
         aa=std::vector<double> ();
-        getline(f,p);
+        getline(moldenGabFile,p);
         t=p;
         while(t.find(" ")!=std::string::npos)
             t.erase(t.find(" "),1);
@@ -440,13 +469,13 @@ void MOLDENGAB::read_MO_data(std::ifstream& f)
 void MOLDENGAB::PrintData()
 {
     std::cout<<"Number of atoms = "<<_number_of_atoms<<std::endl;
-    for(size_t i=0; i<_symbol.size(); i++)
-        std::cout<<"Symbol "<<i<<" = "<<_symbol[i]<<std::endl;
-    for(size_t i=0; i<_atomic_number.size(); i++)
-        std::cout<<"Atomic number "<<i<<" = "<<_atomic_number[i]<<std::endl;
-    for(size_t i=0; i<_coord.size(); i++)
-        for(size_t j=0; j<_coord[i].size(); j++)
-            std::cout<<"Coordinates "<<j<<" for atom "<<i<<" = "<<_coord[i][j]<<std::endl;
+    for(size_t i=0; i<_symbols.size(); i++)
+        std::cout<<"Symbol "<<i<<" = "<<_symbols[i]<<std::endl;
+    for(size_t i=0; i<_atomic_numbers.size(); i++)
+        std::cout<<"Atomic number "<<i<<" = "<<_atomic_numbers[i]<<std::endl;
+    for(size_t i=0; i<_coordinates.size(); i++)
+        for(size_t j=0; j<_coordinates[i].size(); j++)
+            std::cout<<"Coordinates "<<j<<" for atom "<<i<<" = "<<_coordinates[i][j]<<std::endl;
     for(size_t i=0; i<_num_center.size(); i++)
         std::cout<<"Num center "<<i<<" = "<<_num_center[i]<<std::endl;
     for(size_t i=0; i<_n_at_basis.size(); i++)
@@ -479,7 +508,6 @@ void MOLDENGAB::PrintData()
         std::cout<<"Beta Occupation "<<i<<" = "<<_beta_occupation[i]<<std::endl;
     for(size_t i=0; i<_spin_types.size(); i++)
         std::cout<<"Spin types "<<i<<" = "<<_spin_types[i]<<std::endl;
-    std::cout<<"Coordinates type = "<<_coord_type<<std::endl;
     std::cout<<"Number of MO = "<<_number_of_MO<<std::endl;
     std::cout<<"Number of MO coefficients = "<<_number_of_MO_coefs<<std::endl;
 

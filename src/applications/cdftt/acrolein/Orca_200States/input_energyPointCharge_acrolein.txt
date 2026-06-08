@@ -1,0 +1,6 @@
+Charges=-0.1,-0.3
+RunType=ComputeEnergyWithPointCharges
+AnalyticFiles=../tests/Guegan2020/acrolein_orca_200States.gab
+TransitionsFile=../tests/Guegan2020/acrolein_orca_200States.out
+OutputPrefix=acrolein_orca_200States
+#Verbose=3

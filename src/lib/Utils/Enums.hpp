@@ -9,10 +9,34 @@
 // ENUM TYPES
 //----------------------------------------------------------------------------------------------------//
 
+enum class CubeType
+{
+    DENSITY,
+    ELF,
+    ORBITALS,
+    UNKNOWN
+};
+
 enum class ELFMethod
 {
     BECKE,
     SAVIN,
+    UNKNOWN
+};
+
+enum class EnergyPointChargeMethod
+{
+    LINEAR_RESPONSE,
+    PERTURBATIVE,
+    VARIATIONAL,
+    UNKNOWN
+};
+
+enum class GridSaveType
+{
+    DENSITY,
+    GRADIENT,
+    ORBITALS,
     UNKNOWN
 };
 
@@ -22,6 +46,13 @@ enum class GridSize
     CUSTOM,
     FINE,
     MEDIUM,
+    UNKNOWN
+};
+
+enum class HFType
+{
+    RHF,
+    UHF,
     UNKNOWN
 };
 
@@ -51,19 +82,29 @@ enum class PartitionMethod
     UNKNOWN
 };
 
+enum class RDMMethod
+{
+    GAMMA,
+    X,
+    UNKNOWN
+};
+
 enum class RunType
 {
+    COMPUTE_CONDENSED_LINEAR_RESPONSE,
     COMPUTE_DESCRIPTORS,
+    COMPUTE_ELECTRON_DENSITY,
     COMPUTE_ENERGY_WITH_POINT_CHARGES,
     COMPUTE_GRID_DIFFERENCE,
     COMPUTE_INTEGRALS,
+    COMPUTE_LINEAR_RESPONSE_WITH_POINT_CHARGES,
     COMPUTE_PARTIAL_CHARGES,
     CONVERT_ORBITALS,
     HELP,
-    LAMBDA_DIAGNOSTIC,
     MAKE_DENSITY_CUBE,
-    MAKE_ORBITALS_CUBE,
     MAKE_ELF_CUBE,
+    MAKE_ORBITALS_CUBE,
+    RUN_LAMBDA_DIAGNOSTIC,
     UNKNOWN
 };
 
@@ -81,10 +122,15 @@ enum class SpinType
 
 namespace EnumConversionMaps
 {
+    extern std::unordered_map<CubeType, std::string> cubeType_string;
     extern std::unordered_map<ELFMethod, std::string> elfMethod_string;
+    extern std::unordered_map<EnergyPointChargeMethod, std::string> energyPointChargeMethod_string;
+    extern std::unordered_map<GridSaveType, std::string> gridSaveType_string;
     extern std::unordered_map<GridSize, std::string> gridSize_string;
+    extern std::unordered_map<HFType, std::string> hfType_string;
     extern std::unordered_map<OrbitalType, std::string> orbitalType_string;
     extern std::unordered_map<PartitionMethod, std::string> partitionMethod_string;
+    extern std::unordered_map<RDMMethod, std::string> rdmMethod_string;
     extern std::unordered_map<RunType, std::string> runType_string;
     extern std::unordered_map<SpinType, char> spinType_char;
     extern std::unordered_map<SpinType, std::string> spinType_string;
@@ -103,18 +149,39 @@ template<typename T> T enum_from_string(const std::string& strValue, const std::
 #include "../Utils/Utils_enumConversion.tpp"
 
 
+std::string to_string(CubeType type);
+CubeType cubeType_from_string(const std::string& strCubeType);
+
 std::string to_string(ELFMethod method);
 ELFMethod elfMethod_from_string(const std::string& strMethod);
+
+std::string to_string(EnergyPointChargeMethod method);
+EnergyPointChargeMethod energyPointChargeMethod_from_string(const std::string& strMethod);
+
+std::string to_string(GridSaveType saveType);
+GridSaveType gridSaveType_from_string(const std::string& strSaveType);
+
 std::string to_string(GridSize size);
 GridSize gridSize_from_string(const std::string& strSize);
-std::string to_string(OrbitalType type);
-OrbitalType orbitalType_from_string(const std::string& strType);
+
+std::string to_string(HFType hfType);
+HFType hfType_from_string(const std::string& strHfType);
+
+std::string to_string(OrbitalType orbitalType);
+OrbitalType orbitalType_from_string(const std::string& strOrbitalType);
+
 std::string to_string(PartitionMethod method);
 PartitionMethod partitionMethod_from_string(const std::string& strMethod);
+
+std::string to_string(RDMMethod method);
+RDMMethod rdmMethod_from_string(const std::string& strMethod);
+
 std::string to_string(RunType runType);
 RunType runType_from_string(const std::string& strRunType);
+
 char to_char(SpinType spinType);
 std::string to_string(SpinType spinType);
+
 SpinType spinType_from_char(const char charSpinType);
 SpinType spinType_from_string(const std::string& strSpinType);
 

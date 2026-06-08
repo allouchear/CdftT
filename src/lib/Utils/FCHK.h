@@ -58,7 +58,7 @@ class FCHK
         vector<double> _beta_mo_coefficients; // or vector<vector<double>> --> ??
 
         /** @brief Total energy of the system. */
-        double _total_energy;
+        double _scf_energy;
 
         /** @brief Mulliken charges for all atoms. */
         vector<double> _mulliken_charges;
@@ -206,7 +206,7 @@ class FCHK
         /**
          * @brief Returns the total energy of the system.
          */
-        double TotalEnergy() { return _total_energy; }
+        double ScfEnergy() { return _scf_energy; }
 
         /**
          * @brief Returns the Mulliken charges for all atoms.
@@ -339,6 +339,19 @@ class FCHK
          * @return True if mixed basis sets (Cartesian and spherical) are used, false otherwise.
          */
         bool Mixte() { return _mixte; }
+
+        //----------------------------------------------------------------------------------------------------//
+        // STATIC METHODS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Reads the energy of the ground state.
+         *
+         * @param[in] logFileName Name of the log file to read.
+         * @param[out] energy Energy of the ground state, in Hartree.
+         * @return True if reading was successful, false otherwise.
+         */
+        static bool readGroundStateEnergy(const std::string& fchkFileName, double& energy);
 };
 
 /**

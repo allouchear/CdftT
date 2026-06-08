@@ -3,7 +3,11 @@
 #include <string>
 #include <vector>
 
-#include "../Common/Structure.h"
+#include <Common/Structure.h>
+#include <Utils/FCHK.h>
+#include <Utils/LOG.h>
+#include <Utils/MOLDENGAB.h>
+#include <Utils/WFX.h>
 
 
 //----------------------------------------------------------------------------------------------------//
@@ -28,6 +32,15 @@ const std::vector<Atom>& Structure::get_atoms() const
     return _atoms;
 }
 
+
+//----------------------------------------------------------------------------------------------------//
+// OTHER PUBLIC METHODS
+//----------------------------------------------------------------------------------------------------//
+
+int Structure::getNumberOfAtoms() const
+{
+    return static_cast<int>(_atoms.size());
+}
 
 void Structure::read_From_Cube(ifstream& nameFile, int Natoms,const PeriodicTable& Table )
 {
@@ -69,10 +82,10 @@ Structure Structure::add(const Structure& S)
 {
     try
     {
-        for(int j=0; j<S.number_of_atoms(); j++)
+        for(int j=0; j<S.getNumberOfAtoms(); j++)
         {    
             bool b=true;
-            for(int k=0; k<number_of_atoms(); k++)
+            for(int k=0; k<getNumberOfAtoms(); k++)
             {
                 if( _atoms[k].computeDistance(S._atoms[j])==0 )
                 {
@@ -89,7 +102,7 @@ Structure Structure::add(const Structure& S)
             }
             if(b)
             {
-                    cout<<"added"<<endl;
+                    std::cout<<"added"<<std::endl;
                     _atoms.push_back(S._atoms[j]);
             }
         }
@@ -97,8 +110,8 @@ Structure Structure::add(const Structure& S)
     }
     catch(std::string error)
     {
-        cout<<error<<endl;
-        exit(1);
+        std::cerr<<error<<std::endl;
+        std::exit(1);
     }
 }
 

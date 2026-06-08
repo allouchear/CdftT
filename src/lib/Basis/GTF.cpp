@@ -58,9 +58,24 @@ Binomial& GTF::get_bino()
 }
 
 
+//----------------------------------------------------------------------------------------------------//
+// SETTERS
+//----------------------------------------------------------------------------------------------------//
+
+void GTF::set_coefficient(const double coefficient)
+{
+    _coefficient = coefficient;
+}
+
+void GTF::set_exponent(const double exponent)
+{
+    _exponent = exponent;
+}
 
 
-
+//----------------------------------------------------------------------------------------------------//
+// OTHER PUBLIC METHODS
+//----------------------------------------------------------------------------------------------------//
 
 double GTF::GTFstarGTF (GTF& right)
 {
@@ -467,7 +482,7 @@ double GTF::ionicPotentialGTF(const GTF& right, const std::array<double, 3>& C, 
     return -Z * sum;
 }
 
-double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)    
+double GTF::ERIGTF(const GTF& q, const GTF& r, const GTF& s)
 {
     int I,Ip,R,Rp,U;
     int J,Jp,S,Sp,N;
@@ -562,11 +577,11 @@ double GTF::ERIGTF(GTF& q, GTF& r, GTF& s)
     return sum;
 }
 
-double GTF::func(double x, double y, double z) const
+double GTF::func(const std::array<double, 3>& coordinates) const
 {
-    double xA = x - _coord[0];
-    double yA = y - _coord[1];
-    double zA = z - _coord[2];
+    double xA = coordinates[0] - _coord[0];
+    double yA = coordinates[1] - _coord[1];
+    double zA = coordinates[2] - _coord[2];
 
     return _coefficient * power(xA, _l[0]) * power(yA, _l[1]) * power(zA, _l[2]) * exp(- _exponent * (xA * xA + yA * yA + zA * zA));
 }
@@ -581,7 +596,7 @@ void GTF::operator*=(double c)
     _coefficient *= c;
 }
 
-void GTF::push_back(const double& a, const double& c, const std::array<double, 3>& coord, const std::vector<int>& l, Binomial& B)
+void GTF::push_back(const double& a, const double& c, const std::array<double, 3>& coord, const std::vector<int>& l, const Binomial& B)
 {
     _exponent=a;
     _coefficient=c;
@@ -611,24 +626,40 @@ std::ostream& operator<<(std::ostream& flux, const GTF& gtf)
     return flux;
 }
 
-double operator*(const std::vector<GTF>& a, const std::vector<double>& b)
+double operator*(const std::vector<GTF>& gtfs, const std::array<double, 3>& coordinates)
 {
-    double r=1.0;
+    double r = 1.0;
 
-    for(size_t i=0; i<a.size(); i++)
-        r*=a[i].func(b[0],b[1],b[2]);
+    for(size_t i = 0; i < gtfs.size(); ++i)
+    {
+        r *= gtfs[i].func(coordinates);
+    }
     
     return r;
 }
-double GTF::grad_GTF(const double& x, const double& y, const double& z, int i)
+
+double GTF::grad_GTF(const std::array<double, 3>& coordinates, int i)
 {
-    double xA[3] = {x-_coord[0], y-_coord[1], z-_coord[2]};
-    int k=(i+1)%3;
-    int j=(i+2)%3;
-    double expo =(xA[i]*xA[i]+xA[j]*xA[j]+xA[k]*xA[k])*_exponent;
-    if(expo > 40) return 1e-14;
-    if(_l[i]==0)
-        return -2*_exponent*xA[i]*_coefficient*power(xA[k], _l[k])*power(xA[j], _l[j])*exp(-expo);
-    else
-        return _coefficient*exp(-expo)*power(xA[i], _l[i]-1)*power(xA[k], _l[k])*power(xA[j], _l[j])*(_l[i]-2*_exponent*xA[i]*xA[i]);
+    double componentValue = 1e-14;
+
+    double xA[3] = { coordinates[0] - _coord[0], coordinates[1] - _coord[1], coordinates[2] - _coord[2] };
+
+    int k = (i + 1) % 3;
+    int j = (i + 2) % 3;
+
+    double expo =(xA[i] * xA[i] + xA[j] * xA[j] + xA[k] * xA[k]) * _exponent;
+
+    if(expo < 40)
+    {
+        if(_l[i] == 0)
+        {
+            componentValue = -2 * _exponent * xA[i] * _coefficient * power(xA[k], _l[k]) * power(xA[j], _l[j]) * std::exp(- expo);
+        }
+        else
+        {
+            componentValue = _coefficient * std::exp(- expo) * power(xA[i], _l[i] - 1) * power(xA[k], _l[k]) * power(xA[j], _l[j]) * (_l[i] - 2 * _exponent * xA[i] * xA[i]);
+        }
+    }
+
+    return componentValue;
 }

@@ -3,17 +3,25 @@
 
 #include <fstream>
 #include <vector>
+<<<<<<< HEAD
 #include "../Common/Structure.h"
 #include "../Cube/Domain.h"
+=======
 
-using std::ifstream;
-using std::ofstream;
-using std::vector;
+#include <Common/Structure.h>
+#include <Cube/Domain.h>
+#include <Utils/Enums.hpp>
+
+
+// Forward declarations to avoid circular dependencies
+class Orbitals;
+>>>>>>> origin/dev
+
 
 /**
  * @brief Grid class.
  *
- * This class represents a 3D grid for storing scalar or vector fields, typically used for molecular densities and related quantities.
+ * This class represents a 3D grid for storing scalar or std::vector fields, typically used for molecular densities and related quantities.
  */
 class Grid
 {
@@ -24,8 +32,14 @@ class Grid
         /** @brief Structure object describing the molecule/structure on the grid. */
         Structure _structure;
 
-        /** @brief Values for each grid point. The first three dimensions are spatial dimensions (x,y,z). The fourth dimensions stores the values. */
-        vector<vector<vector<vector<double>>>> _values;
+        /** @brief Values for each grid point. The first three dimensions are spatial dimensions (x,y,z). The fourth dimensions stores the values (e.g. one value per orbital). */
+        std::vector<std::vector<std::vector<std::vector<double>>>> _values;
+
+        // debug
+        std::vector<std::vector<double>> __debug_AOMatrix;
+        std::vector<std::vector<std::vector<double>>> __debug_MOMatrix;
+        double __debug_totalSumAO = 0.0;
+        std::vector<double> __debug_totalSumMO = std::vector<double>(2, 0.0);
 
         //----------------------------------------------------------------------------------------------------//
         // PRIVATE METHODS
@@ -38,9 +52,9 @@ class Grid
          * @param j Grid index along the second (y) axis.
          * @param k Grid index along the third (z) axis.
          * @param rhocenter Reference to current density value. --> or density of center ??
-         * @param trajectory Vector of trajectory points.
+         * @param trajectory std::vector of trajectory points.
          */
-        void next_Density(int i, int j, int k, double& rhocenter, vector<vector<int>>& trajectory);
+        void next_Density(int i, int j, int k, double& rhocenter, std::vector<std::vector<int>>& trajectory);
 
         /**
          * @brief Adds surrounding density points to the trajectory.
@@ -48,10 +62,10 @@ class Grid
          * @param i Grid index along the first (x) axis.
          * @param j Grid index along the second (y) axis.
          * @param k Grid index along the third (z) axis.
-         * @param equals Vector of equal points.
+         * @param equals std::vector of equal points.
          * @param rhocenter Reference to current density value. --> or density of center ??
          */
-        void addSurroundingDensity(int i, int j, int k, vector<vector<int>>& equals, double& rhocenter);
+        void addSurroundingDensity(int i, int j, int k, std::vector<std::vector<int>>& equals, double& rhocenter);
 
         /**
          * @brief Sets boundary values to the closest interior value. Used by gradient and laplacian.
@@ -69,7 +83,7 @@ class Grid
         /**
          * @brief Default constructor.
          *
-         * Initializes all attributes to default values (calls default constructor on object members, empty vectors.).
+         * Initializes all attributes to default values (calls default constructor on object members, empty std::vectors.).
          */
         Grid();
 
@@ -88,7 +102,7 @@ class Grid
          * @param nameFile Input file stream opened on a .cube file.
          * @param table PeriodicTable reference.
          */
-        Grid(ifstream& nameFile, const PeriodicTable& table);
+        Grid(std::ifstream& nameFile, const PeriodicTable& table);
 
         //----------------------------------------------------------------------------------------------------//
         // GETTERS
@@ -105,11 +119,11 @@ class Grid
         Structure get_structure() const;
 
         /**
-         * @brief Returns the grid data as a 4D vector.
+         * @brief Returns the grid data as a 4D std::vector.
          * 
-         * This method is slow since it copies a 4D vector. Avoid it if possible.
+         * This method is slow since it copies a 4D std::vector. Avoid it if possible.
          */
-        vector<vector<vector<vector<double>>>> get_values() const;
+        std::vector<std::vector<std::vector<std::vector<double>>>> get_values() const;
 
         //----------------------------------------------------------------------------------------------------//
         // SETTERS
@@ -128,11 +142,13 @@ class Grid
         /**
          * @brief Sets the grid data.
          */
-        void set_values(const vector<vector<vector<vector<double>>>>& U);
+        void set_values(const std::vector<std::vector<std::vector<std::vector<double>>>>& U);
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
         //----------------------------------------------------------------------------------------------------//
+
+        std::vector<std::vector<std::vector<double>>> getIonicPotentialMatrix(const Orbitals& orbitals, const std::array<double, 3>& chargePosition, double charge, bool debug = false, bool printMOMatrix = false);
 
         /**
          * @brief Resets all grid values to zero and resizes _values to match the domain size.
@@ -145,16 +161,16 @@ class Grid
          * @param nameFile Input file stream opened on a .cube file.
          * @param table PeriodicTable reference.
          */
-        void readFromCube(ifstream& nameFile, const PeriodicTable& table);
+        void readFromCube(std::ifstream& nameFile, const PeriodicTable& table);
 
         /**
          * @brief Sets the value at grid indices (i,j,k,l).
          * 
          * @param rho Value to set
-         * @param i Grid index i
-         * @param j Grid index j
-         * @param k Grid index k
-         * @param l Value index l
+         * @param i Grid index i (first spatial dimension).
+         * @param j Grid index j (second spatial dimension).
+         * @param k Grid index k (third spatial dimension).
+         * @param l Value index l (e.g. orbital index).
          */
         void set_Vijkl(double rho, int i, int j, int k, int l);
 
@@ -177,7 +193,7 @@ class Grid
          * @param R Charge position.
          * @return Coulomb grid.
          */
-        Grid coulomb_Grid(double q, vector<double> R);
+        Grid coulomb_Grid(double q, std::vector<double> R);
 
         /**
          * @brief Integrates the values over the domain.
@@ -195,7 +211,7 @@ class Grid
          * @param fcz Laplacian component along the third (z) axis.
          * @param cc Output central coefficient.
          */
-        void coefs_Laplacian(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz, double& cc) const;
+        void coefs_Laplacian(int nBound, std::vector<double>& fcx, std::vector<double>& fcy, std::vector<double>& fcz, double& cc) const;
 
         /**
          * @brief Returns a grid which values contain the Laplacian of this grid.
@@ -214,7 +230,7 @@ class Grid
          * @param fcy Gradient component along the second (y) axis.
          * @param fcz Gradient component along the third (z) axis.
          */
-        void coefs_Gradient(int nBound, vector<double>& fcx, vector<double>& fcy, vector<double>& fcz) const;
+        void coefs_Gradient(int nBound, std::vector<double>& fcx, std::vector<double>& fcy, std::vector<double>& fcz) const;
 
         /**
          * @brief Returns a grid which values contain the gradient of this grid.
@@ -248,9 +264,11 @@ class Grid
         /**
          * @brief Saves the grid to a .cube file.
          * 
-         * @param name Output file stream opened on a .cube file.
+         * @param[in, out] name Output file stream opened on a .cube file.
+         * @param[in] showProgress If true, shows a progress bar during saving (default false).
+         * @param[in] precision Precision for decimal values in the output file (default 14).
          */
-        void save(ofstream& name);
+        void save(std::ofstream& name, bool showProgress = false, int precision = 14) const;
 
         /**
          * @brief Returns the value at grid indices (i,j,k,l).
@@ -270,17 +288,17 @@ class Grid
          * @param j Grid index j.
          * @param k Grid index k.
          * @param Current Reference to current value.
-         * @param traj Trajectory vector.
+         * @param traj Trajectory std::vector.
          */
-        void next(int i, int j, int k, double& Current, vector<vector<int>>& traj);
+        void next(int i, int j, int k, double& Current, std::vector<std::vector<int>>& traj);
 
         /**
          * @brief Computes atom-attractor differences for a set of attractor points.
          * 
-         * @param attract Vector of attractor points.
-         * @return Vector of differences for each atom.
+         * @param attract std::vector of attractor points.
+         * @return std::vector of differences for each atom.
          */
-        vector<double> atom_attract_diff(const vector<vector<int>>& attract);
+        std::vector<double> atom_attract_diff(const std::vector<std::vector<int>>& attract);
 
         /**
          * @brief Adds surrounding equal points to the trajectory.
@@ -288,10 +306,10 @@ class Grid
          * @param i Grid index i.
          * @param j Grid index j.
          * @param k Grid index k.
-         * @param equals Vector of equal points.
+         * @param equals std::vector of equal points.
          * @param current Reference to current value.
          */
-        void addSurroundingEqualPoints(int i,int j,int k, vector<vector<int>>& equals, double& current);
+        void addSurroundingEqualPoints(int i,int j,int k, std::vector<std::vector<int>>& equals, double& current);
 
         /**
          * @brief Computes Atoms in Molecules (AIM) regions on the grid.
@@ -320,9 +338,9 @@ class Grid
          * @brief Measures the size of the molecular structure and returns the largest sizes in each direction.
          * 
          * @param scale Scale factor.
-         * @return Vector of largest sizes in each direction (x,y,z).
+         * @return std::vector of largest sizes in each direction (x,y,z).
          */
-        vector<double> sizeUpMol(double scale);
+        std::vector<double> sizeUpMol(double scale);
 
         /**
          * @brief Returns the electronic density at a point in space, weighted by the distance to grid points.
@@ -339,11 +357,12 @@ class Grid
          *
          * @param[in] leftOrbitalIndex Index of the left orbital.
          * @param[in] rightOrbitalIndex Index of the right orbital.
+         * @param[in] spinType Spin type of the orbitals (ALPHA, BETA or ALPHA_BETA).
          * @param[in] chargePosition Position of the charge.
          * @param[in] charge Value of the charge.
          * @return Product value of the orbitals multiplied by the electrostatic potential V_ionic.
          */
-        double phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, const std::array<double, 3>& chargePosition, const double charge);
+        double phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge) const;
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS

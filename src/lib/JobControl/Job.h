@@ -6,12 +6,24 @@
 #include <set>
 #include <vector>
 
+<<<<<<< HEAD
 #include "../Common/Descriptors.h"
 #include "../Common/PeriodicTable.h"
 #include "../Cube/GridCP.h"
 #include "../Orbitals/Orbitals.h"
 #include "../Utils/Enums.hpp"
 #include "../Utils/Utils.h"
+=======
+#include <Becke/Becke.h>
+#include <Common/Descriptors.h>
+#include <Common/PeriodicTable.h>
+#include <Cube/Grid.h>
+#include <Cube/GridCP.h>
+#include <Orbitals/ExcitedState.hpp>
+#include <Orbitals/Orbitals.h>
+#include <Utils/Enums.hpp>
+#include <Utils/Utils.h>
+>>>>>>> origin/dev
 
 
 /**
@@ -21,354 +33,319 @@
  */
 class Job
 {
-    private:
-        /** @brief Periodic table used for element lookups. */
-        PeriodicTable _table;
-
+    protected:
         /** @brief Name of the input file to parse. */
         std::string _inputFileName;
 
         /** @brief Input file stream opened on the input file. */
         std::ifstream _inputFile;
 
-        /** @brief List of available job names (displayed in help). */
-        std::vector<std::string> _jobsList;
-
-        /** @brief Descriptions of the available jobs. */
-        std::vector<std::string> _jobDescription;
-
 
         //----------------------------------------------------------------------------------------------------//
-        // SPECIFIC PARAMETERS READING FROM INPUT FILE
+        // READING PARAMETERS FROM INPUT FILE
         //----------------------------------------------------------------------------------------------------//
 
         /**
          * @brief Reads the name(s) of the analytic file(s) from the "AnalyticFiles" parameter in the input file.
          *
          * @param[out] analyticFilesNames Reference to a vector where the read filename(s) will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames);
+        bool readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames);
+
+        /**
+         * @brief Reads the Becke parameters from the "Becke" parameter in the input file.
+         *
+         * @param[out] beckeParameters Reference to a vector where the read Becke parameters will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readBecke(std::vector<int>& beckeParameters);
 
         /** @brief Reads the charges of the point charges from the "Charges" parameter in the input file.
          * 
          * @param[out] charges Reference to a vector of doubles where the read charge values will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readCharges(std::vector<double>& charges);
+        bool readCharges(std::vector<double>& charges);
+
+        /**
+         * @brief Reads the option that indicates if each charge has a single position from the "ChargesPositionsBijections" parameter in the input file.
+         * 
+         * @param[out] chargesPositionsBijections Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readChargesPositionsBijections(bool& chargesPositionsBijections);
 
         /** @brief Reads the numeric cutoff used by some partitioning methods from the "Cutoff" parameter in the input file.
          * 
          * @param[out] cutoff Reference to a double where the read cutoff value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readCutoff(double& cutoff);
+        bool readCutoff(double& cutoff);
 
         /**
          * @brief Reads the method used to compute the Electron Localization Function (ELF) from the "ELFMethod" parameter in the input file.
          *
          * @param[out] elfMethod Reference to an ELFMethod variable where the parsed method will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readELFMethod(ELFMethod& elfMethod);
+        bool readELFMethod(ELFMethod& elfMethod);
 
         /**
          * @brief Reads the energies from the "Energies" parameter in the input file.
          *
          * @param[out] energies Reference to a vector where the energy values will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readEnergies(std::vector<double>& energies);
+        bool readEnergies(std::vector<double>& energies);
+
+        /**
+         * @brief Reads the energy point charge methods from the "EnergyPointChargeMethods" parameter in the input file.
+         * 
+         * @param[out] energyPointChargeMethods Reference to a vector where the parsed methods will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readEnergyPointChargeMethods(std::vector<EnergyPointChargeMethod>& energyPointChargeMethods);
+
+        /**
+         * @brief Reads a list of state numbers from the "ExcitedStatesNumbers" parameter in the input file.
+         *
+         * @param[out] excitedStatesNumbers Reference to a vector where the excited state numbers will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readExcitedStatesNumbers(std::vector<int>& excitedStatesNumbers);
+
+        /**
+         * @brief Reads a list of orbital numbers to exclude from the density computation from the "ExcludedOrbitals" parameter in the input file.
+         *
+         * @param[out] excludedOrbitals Reference to a vector where the excluded orbital numbers will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readExcludedOrbitals(std::vector<int>& excludedOrbitals);
 
         /**
          * @brief Reads the name(s) of the grid file(s) (.cube files) from the "GridFiles" parameter in the input file.
          *
          * @param[out] gridFilesNames Reference to a vector where the read filename(s) will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readGridFilesNames(std::vector<std::string>& gridFilesNames);
+        bool readGridFilesNames(std::vector<std::string>& gridFilesNames);
+
+        /**
+         * @brief Reads the energy of the ground state from the "GroundStateEnergy" parameter in the input file.
+         * 
+         * @param[out] energy Reference to a double where the read energy value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readGroundStateEnergy(double& energy);
+
+        /**
+         * @brief Reads the maximum number of excited states to consider from the "MaxNumberOfExcitedStates" parameter in the input file.
+         *
+         * @param[out] maxNumberOfExcitedStates Reference to an integer where the read value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readMaxNumberOfExcitedStates(int& maxNumberOfExcitedStates);
 
         /**
          * @brief Reads the cutoff distance for nuclear contribution from the "NuclearCutoff" parameter in the input file.
          *
          * @param[out] nuclearCutoff Reference to a double where the read cutoff distance will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readNuclearCutoff(double& nuclearCutoff);
+        bool readNuclearCutoff(double& nuclearCutoff);
 
         /**
          * @brief Reads a list of orbital numbers from the "OrbitalsNumbers" parameter in the input file.
          *
          * @param[out] orbitalsNumbers Reference to a vector where the orbital numbers will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readOrbitalsNumbers(std::vector<int>& orbitalsNumbers);
+        bool readOrbitalsNumbers(std::vector<int>& orbitalsNumbers);
 
         /**
          * @brief Reads a list of orbitals spins from the "OrbitalsSpins" parameter in the input file.
          *
          * @param[out] orbitalsSpins Reference to a vector where the parsed spin types will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readOrbitalsSpins(std::vector<SpinType>& orbitalsSpins);
+        bool readOrbitalsSpins(std::vector<SpinType>& orbitalsSpins);
 
         /**
          * @brief Reads the selected orbital type from the "OrbitalType" parameter in the input file.
          *
          * @param[out] orbitalType Reference to an OrbitalType variable where the parsed selected orbital type will be stored.
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readOrbitalType(OrbitalType& orbitalType);
+        bool readOrbitalType(OrbitalType& orbitalType);
+
+        /**
+         * @brief Reads the output filename prefix from the "OutputPrefix" parameter in the input file.
+         *
+         * @param[out] outputPrefix Reference to a string where the read output prefix will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readOutputPrefix(std::string& outputPrefix);
 
         /**
          * @brief Reads the partition method from the "PartitionMethod" parameter in the input file.
          *
          * @param[out] partitionMethod Reference to a PartitionMethod variable where the parsed method will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readPartitionMethod(PartitionMethod& partitionMethod);
+        bool readPartitionMethod(PartitionMethod& partitionMethod);
 
         /**
          * @brief Reads 3-coordinate positions from the "Positions" parameter in the input file.
          *
          * @param[out] positions Reference to a vector of arrays of three doubles where the read positions will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readPositions(std::vector<std::array<double, 3>>& positions);
+        bool readPositions(std::vector<std::array<double, 3>>& positions);
+
+        /**
+         * @brief Reads the precision for printed numerical values from the "Precision" parameter in the input file.
+         * 
+         * @param[out] precision Reference to an integer where the read precision value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readPrecision(int& precision);
+
+        /**
+         * @brief Reads the method used to compute the reduced density matrix (RDM) from the "RDMMethod" parameter in the input file.
+         * 
+         * @param[out] rdmMethod Reference to an RDMMethod variable where the parsed method will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readRDMMethod(RDMMethod& rdmMethod);
 
         /**
          * @brief Reads the requested run type (job) from the "RunType" parameter in the input file.
          *
          * @param[out] runType Reference to a RunType variable where the parsed run type will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readRunType(RunType& runType);
+        bool readRunType(RunType& runType);
 
         /**
-         * @brief Reads the selected grid size from the "GridSize" parameter in the input file.
+         * @brief Reads the save pseudo-orbitals option from the "SavePseudoOrbitals" parameter in the input file.
+         * 
+         * @param[out] savePseudoOrbitals Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readSavePseudoOrbitals(bool& savePseudoOrbitals);
+
+        /**
+         * @brief Reads the choice of saving the reduced density matrix from the "SaveReducedDensityMatrix" parameter in the input file.
+         * 
+         * @param[out] saveReducedDensityMatrix Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readSaveReducedDensityMatrix(bool& saveReducedDensityMatrix);
+
+        /**
+         * @brief Reads the show progress option from the "ShowProgress" parameter in the input file.
+         * 
+         * @param[out] showProgress Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readShowProgress(bool& showProgress);
+
+        /**
+         * @brief Reads the single charge option from the "SingleCharge" parameter in the input file.
+         * 
+         * @param[out] singleCharge Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readSingleCharge(bool& singleCharge);
+
+        /**
+         * @brief Reads the selected grid size from the "Size" parameter in the input file.
          * 
          * If the selected grid size is "Custom", this function also reads the custom size parameters from the "CustomSizeData" parameter.
          *
          * @param[out] gridSize Reference to a GridSize variable where the parsed grid size will be stored.
          * @param[out] customSizeData Reference to a CustomSizeData variable where the custom size parameters will be stored (if applicable).
+         * 
+         * @return True if the "Size" parameter was successfully read, false otherwise.
          */
-        void readSize(GridSize& gridSize, CustomSizeData& customSizeData);
+        bool readSize(GridSize& gridSize, CustomSizeData& customSizeData);
 
         /**
-         * @brief Reads a list of spins (`SpinList`) from input.
+         * @brief Reads a list of spins from the "SpinList" parameter in the input file.
          *
          * @param[out] spinList Vector filled with parsed spin types.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readSpinList(std::vector<SpinType>& spinList);
+        bool readSpinList(std::vector<SpinType>& spinList);
 
         /**
          * @brief Reads the selected spin type from the "SpinType" parameter in the input file.
          *
          * @param[out] spinType Reference to a SpinType variable where the parsed spin type value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readSpinType(SpinType& spinType);
+        bool readSpinType(SpinType& spinType);
+
+        /**
+         * @brief Reads the transition densities to consider from the "TransitionDensities" parameter in the input file.
+         *
+         * @param[out] transitionDensities Reference to a vector where the read transition densities will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readTransitionDensities(std::vector<std::array<int, 2>>& transitionDensities);
 
         /**
          * @brief Reads the name of the file that describes excited states transitions from the "TransitionsFile" parameter in the input file.
          *
          * @param[out] transitionsFileName Reference to a string where the read filename will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readTransitionsFileName(std::string& transitionsFileName);
+        bool readTransitionsFileName(std::string& transitionsFileName);
 
         /**
          * @brief Reads the verbosity level from the "Verbose" parameter in the input file.
          * 
          * @param[out] verbose Reference to an integer where the read verbosity level will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
          */
-        void readVerbose(int& verbose);
+        bool readVerbose(int& verbose);
 
 
         //----------------------------------------------------------------------------------------------------//
-        // JOBS
+        // STATIC PROTECTED METHODS
         //----------------------------------------------------------------------------------------------------//
-
-        /**
-         * @brief Sets the list of available jobs and their descriptions.
-         */
-        void setJobList();
-
-        /**
-         * @brief Runs the job associated with the "Help" runtype.
-         */
-        void run_help();
-
-        /**
-         * @brief Runs the job associated with the "ComputeDescriptors" runtype.
-         */
-        void run_computeDescriptors();
-
-        /**
-         * @brief Runs the job associated with the "ComputeEnergyWithPointCharges" runtype.
-         */
-        void run_computeEnergyWithPointCharges();
-
-        /**
-         * @brief Runs the job associated with the "ComputeGridDifference" runtype.
-         */
-
-        void run_computeGridDifference();
-
-        /**
-         * @brief Runs the job associated with the "ComputeIntegrals" runtype.
-         */
-        void run_computeIntegrals();
-
-        /**
-         * @brief Runs the job associated with the "ComputePartialCharges" runtype.
-         */
-        void run_computePartialCharges();
-
-        /**
-         * @brief Runs the job associated with the "LambdaDiagnostic" runtype.
-         */
-        void run_lambdaDiagnostic();
-
-        /**
-         * @brief Runs the job associated with the "MakeDensityCube" runtype.
-         */
-        void run_makeDensityCube();
-
-        /**
-         * @brief Runs the job associated with the "MakeOrbitalsCube" runtype.
-         */
-        void run_makeOrbitalsCube();
-
-        /**
-         * @brief Runs the job associated with the "MakeELFCube" runtype.
-         */
-        void run_makeELFCube();
-
-        /**
-         * @brief Runs the job associated with the "ConvertOrbitals" runtype.
-         */
-        void run_convertOrbitals();
-
-
-        /**
-         * @brief Builds basins from a grid using `partitionMethod`.
-         *
-         * @param[out] gcp GridCP reference that will be populated with the constructed basins.
-         * @param[in] GridFileName Path to the input grid (.cube file) used to build basins.
-         * @param[in] partitionMethod Selected partition method.
-         */
-        void buildBasins(GridCP& gcp, const std::string& GridFileName, PartitionMethod partitionMethod);
-
-        /**
-         * @brief Builds basins by sign of grid values (BBS/B2S partition methods).
-         *
-         * @param[out] gcp GridCP reference that will be populated with sign-based basins.
-         * @param[in] GridFileName Path to the grid file used as input.
-         * @param[in] cutoff Numerical cutoff below which values are considered zero.
-         * @param[in] two If true, builds exactly two basins.
-         */
-        void buildBasinsBySign(GridCP& gcp, const std::string& GridFileName,  double cutoff, bool two);
-        
-        /**
-         * @brief Integrates the provided grids over the domain of a Critical Points grid (GridCP).
-         *
-         * @param[in,out] gcp GridCP reference that defines the integration domain and stores results.
-         * @param[in] GridFileNames Filenames of grids to integrate.
-         */
-        void computeLocalIntegrals(GridCP& gcp, const std::vector<std::string>& GridFileNames);
-
-        /**
-         * @brief Prints critical points information from a Critical Points grid (GridCP). (Not implemented yet.)
-         */
-        void printCriticalPoints();
-
-        /**
-         * @brief Computes the difference between two grids and saves the result to an output file.
-         *
-         * @param[in] minuendGridFilename Left (minuend) input grid filename.
-         * @param[in] subtrahendGridFilename Right (subtrahend) input grid filename.
-         * @param[in] outputGridFilename Output filename for the difference grid.
-         */
-        void ComputeGridDifference(const std::string& minuendGridFilename, const std::string& subtrahendGridFilename, const std::string& outputGridFilename);
-
-        /**
-         * @brief Computes partial atomic charges from a grid using the specified method.
-         *
-         * @param[in] gridFilename Input grid filename used for partitioning and integration.
-         * @param[in] partitionMethod Partition method to use (AIM, VDD, Becke, ...).
-         * @return Vector of computed partial charges.
-         */
-        std::vector<double> computePartialCharges(const std::string& gridFilename, PartitionMethod partitionMethod);
-
-        /**
-         * @brief Computes partial charges and energy values from an analytic file.
-         *
-         * @param[out] energies Reference to vector where energy results will be stored.
-         * @param[in] analyticFileName Analytic file path.
-         * @return Vector of computed partial charges.
-         */
-        std::vector<double> computePartialChargesAndEnergy(std::vector<double>& energies, const std::string& analyticFileName);
-            
-        /**
-         * @brief Opens the configured input file.
-         */
-        void openInputFile();
-            
-        /**
-         * @brief Prints the list of available run types and their descriptions.
-         */
-        void printListOfRunTypes();
-
-        /**
-         * @brief Computes descriptors from three grid files using ionization energy and electron affinity.
-         *
-         * @param[in] gridFileName1 Name of the electrophilic grid file.
-         * @param[in] gridFileName2 Name of the nucleophilic grid file.
-         * @param[in] gridFileName3 Name of the radical grid file.
-         * @param[in] ionizationEnergy Ionization energy.
-         * @param[in] electronAffinity Electron affinity.
-         * @param[in] partitionMethod Selected partition method.
-         * @return Descriptors object containing computed descriptors.
-         */
-        Descriptors computeDescriptors(const std::string& gridFileName1, const std::string& gridFileName2, const std::string& gridFileName3, double ionizationEnergy, double electronAffinity, PartitionMethod partitionMethod);
-
-        /**
-         * @brief Computes descriptors from three grid files using these file energies.
-         *
-         * @param[in] gridFileName1 Name of the first grid file.
-         * @param[in] gridFileName2 Name of the second grid file.
-         * @param[in] gridFileName3 Name of the third grid file.
-         * @param[in] energies Vector of energies respectively corresponding to the files.
-         * @param[in] partitionMethod Selected partition method.
-         * @return Descriptors object containing computed descriptors.
-         */
-        Descriptors computeDescriptors(const std::string& gridFileName1, const std::string& gridFileName2, const std::string& gridFileName3, const std::vector<double>& energies, PartitionMethod partitionMethod);
-
-        /**
-         * @brief Extracts the molecular structure from an analytic file.
-         *
-         * @param[in] analyticFileName Name of the analytic file.
-         * @return Parsed Structure instance.
-         */
-        Structure returnStruct(const std::string& analyticFileName);
-
-        /**
-         * @brief Builds an Orbitals or Becke helper object from an analytic file.
-         *
-         * @tparam T Analytic file parser type (WFX, MOLDENGAB, FCHK, LOG, ...).
-         * @tparam U Resulting class type (Orbitals or Becke).
-         * @param[in] analyticFileName Name of the analytic file.
-         * @return Constructed instance of type U, initialised with analytic data.
-         */
-        template<typename T, typename U> U computeOrbitalsOrBecke(const std::string& analyticFileName);
-
-        /**
-         * @brief Detects the analytic file format and initialises an instance of the chosen class.
-         *
-         * @tparam T Resulting class type (Orbitals or Becke).
-         * @param[out] analyticObject Constructed instance of type T, initialised with analytic data.
-         * @param[in] analyticFileName Path to analytic file; detection by extension.
-         */
-        template<typename T> void computeOrbitalsOrBecke(T& analyticObject, const std::string& analyticFileName);
-
-        /**
-         * @brief Creates and saves a grid file (.cube) from the passed Orbitals instance, over a defined domain.
-         *
-         * @param[in] orbitals Orbitals instance providing densities/orbitals.
-         * @param[in] domain Domain describing grid geometry.
-         * @param[in] cubeFileName Output filename for the cube.
-         * @param[in] TypeFlag 0=density, 1=orbitals, else ELF.
-         * @param[in] elfMethod ELF method selection (SAVIN/BECKE) when creating ELF.
-         * @param[in] nums Orbital indices used for orbital grids.
-         * @param[in] typesSpin Spin flags for orbital grids.
-         */
-        void createCube(Orbitals& orbitals, const Domain& domain, const std::string& cubeFileName, int TypeFlag, const ELFMethod elfMethod = ELFMethod::SAVIN, std::vector<int> nums = {0}, std::vector<int> typesSpin = {0});
 
         /**
          * @brief Builds a `Domain` suitable for cube creation from `orb` and sizing options.
@@ -379,8 +356,72 @@ class Job
          * @param[in] Nval Number of values per grid point (used by Domain::set_all).
          * @return Configured `Domain` instance.
          */
-        Domain buildDomainForCube(Orbitals& orb, const GridSize gridSize, const CustomSizeData& customSizeData, const int& Nval);
+        static Domain buildDomainForCube(Orbitals& orb, const GridSize gridSize, const CustomSizeData& customSizeData, const int& Nval);
 
+        /**
+         * @brief Builds an Orbitals or Becke helper object from an analytic file.
+         *
+         * @tparam T Analytic file parser type (WFX, MOLDENGAB, FCHK, LOG, ...).
+         * @tparam U Resulting class type (Orbitals or Becke).
+         * @param[in] analyticFileName Name of the analytic file.
+         * @return Constructed instance of type U, initialised with analytic data.
+         */
+        template<typename T, typename U>
+        static U computeOrbitalsOrBecke(const std::string& analyticFileName);
+
+        /**
+         * @brief Detects the analytic file format and initialises an instance of the chosen class.
+         *
+         * @tparam T Resulting class type (Orbitals or Becke).
+         * @param[out] analyticObject Constructed instance of type T, initialised with analytic data.
+         * @param[in] analyticFileName Path to analytic file; detection by extension.
+         */
+        template <typename T>
+        static void computeOrbitalsOrBecke(T& analyticObject, const std::string& analyticFileName);
+
+        /**
+         * @brief Creates and saves a grid file (.cube) from the passed Orbitals instance, over a defined domain.
+         *
+         * @param[in] orbitals Orbitals instance providing densities/orbitals.
+         * @param[in] domain Domain describing grid geometry.
+         * @param[in] cubeFileName Output filename for the cube.
+         * @param[in] cubeType Type of cube file to create (density, orbitals, ELF).
+         * @param[in] elfMethod ELF method selection (SAVIN/BECKE) when creating ELF.
+         * @param[in] nums Orbital indices used for orbital grids.
+         * @param[in] typesSpin Spin type for orbital grids.
+         */
+        static void createCube(Orbitals& orbitals, const Domain& domain, const std::string& cubeFileName, CubeType cubeType, bool showProgress = false, const ELFMethod elfMethod = ELFMethod::UNKNOWN, std::vector<int> nums = {0}, std::vector<SpinType> typesSpin = { SpinType::ALPHA });
+
+        /**
+         * @brief Selects all molecular orbitals for the requested spin configuration.
+         *
+         * @param[out] orbnums Output vector of orbital indices.
+         * @param[out] orbspin Output vector of spin types corresponding to `orbnums`.
+         * @param[in] o Orbitals instance for occupation info.
+         * @param[in] spinType Requested spin selection.
+         * @param[in] numberOfOrbitals Number of MOs available.
+         */
+        static void setAllOrbitals(std::vector<int> &orbnums, std::vector<SpinType> &orbspin, Orbitals &o, SpinType spinType, int numberOfOrbitals);
+
+        /**
+         * @brief Applies a custom orbital index list and corresponding spin list.
+         *
+         * @param[in,out] orbnums Input orbital indices (1-based expected; converted internally).
+         * @param[out] orbspin Output vector filled with parsed spin types.
+         * @param[in] spinList Input vector of SpinType values corresponding to custom orbitals.
+         */
+        static void setCustomOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, const std::vector<SpinType>& spinList);
+
+        /**
+         * @brief Selects occupied molecular orbitals according to occupations and spin selection.
+         *
+         * @param[out] orbnums Output vector of occupied orbital indices.
+         * @param[out] orbspin Output vector of spin types for each selected orbital.
+         * @param[in] o Orbitals instance containing occupation numbers.
+         * @param[in] spinType Requested spin selection.
+         * @param[in] N Number of MOs available.
+         */
+        static void setOccupiedOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, int N);
 
         /**
          * @brief Configures `orbitalsNumbers` and `orbitalsSpins` based on selection.
@@ -393,115 +434,108 @@ class Job
          * @param[in] spinType Spin selection (Alpha/Beta/Alpha-Beta).
          * @param[in] spinList Optional custom spin list for custom orbital selections.
          */
-        void setOrbitals(Orbitals& o, const int numberOfOrbitals, std::vector<int>& orbitalsNumbers, std::vector<int>& orbitalsSpins, const OrbitalType orbitalType, SpinType spinType, const std::vector<SpinType>& spinList = {});
+        static void setOrbitals(Orbitals& o, const int numberOfOrbitals, std::vector<int>& orbitalsNumbers, std::vector<SpinType>& orbitalsSpins, const OrbitalType orbitalType, SpinType spinType, const std::vector<SpinType>& spinList = {});
 
         /**
-         * @brief Selects all molecular orbitals for the requested spin configuration.
+         * @brief Selects HOMO orbital(s) according to spin selection.
          *
-         * @param[out] orbnums Output vector of orbital indices.
-         * @param[out] orbspin Output vector of spin flags corresponding to `orbnums`.
-         * @param[in] o Orbitals instance for occupation info.
+         * @param[out] orbnums Output vector set to HOMO index(es).
+         * @param[out] orbspin Output vector set to corresponding spin(s).
+         * @param[in] o Orbitals instance used to query occupations.
          * @param[in] spinType Requested spin selection.
-         * @param[in] numberOfOrbitals Number of MOs available.
          */
-        void setAllOrb(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType, const int& numberOfOrbitals);
-
-              /**
-               * @brief Selects occupied molecular orbitals according to occupations and spin selection.
-               *
-               * @param[out] orbnums Output vector of occupied orbital indices.
-               * @param[out] orbspin Output vector of spin flags for each selected orbital.
-               * @param[in] o Orbitals instance containing occupation numbers.
-               * @param[in] spinType Requested spin selection.
-               * @param[in] N Number of MOs available.
-               */
-           void setOccOrb(vector<int>& orbnums, vector<int>& orbspin, Orbitals& o, SpinType spinType, const int& N);
-        
-              /**
-               * @brief Selects virtual (unoccupied) molecular orbitals according to spin selection.
-               *
-               * @param[out] orbnums Output vector of virtual orbital indices.
-               * @param[out] orbspin Output vector of spin flags for each selected orbital.
-               * @param[in] o Orbitals instance containing occupation numbers.
-               * @param[in] spinType Requested spin selection.
-               * @param[in] N Number of MOs available.
-               */
-           void setVirtOrb(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType, const int &N);
-
-              /**
-               * @brief Selects LUMO orbital(s) according to spin selection.
-               *
-               * @param[out] orbnums Output vector set to LUMO index(es).
-               * @param[out] orbspin Output vector set to corresponding spin(s).
-               * @param[in] o Orbitals instance used to query occupations.
-               * @param[in] spinType Requested spin selection.
-               */
-           void setLumo(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType);
-
-              /**
-               * @brief Selects HOMO orbital(s) according to spin selection.
-               *
-               * @param[out] orbnums Output vector set to HOMO index(es).
-               * @param[out] orbspin Output vector set to corresponding spin(s).
-               * @param[in] o Orbitals instance used to query occupations.
-               * @param[in] spinType Requested spin selection.
-               */
-           void setHomo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType);
+        static void setHomo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType);
 
         /**
          * @brief Selects HOMO and LUMO together according to spin selection.
          *
          * @param[out] orbnums Output vector containing HOMO and LUMO indices.
-         * @param[out] orbspin Output vector of corresponding spin flags.
+         * @param[out] orbspin Output vector of corresponding spin types.
          * @param[in] o Orbitals instance for occupation info.
          * @param[in] spinType Requested spin selection.
          */
-        void setHomoLumo(std::vector<int> &orbnums, std::vector<int> &orbspin, Orbitals &o, SpinType spinType);
+        static void setHomoLumo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType);
 
-              /**
-               * @brief Applies a custom orbital index list and corresponding spin list.
-               *
-               * @param[in,out] orbnums Input orbital indices (1-based expected; converted internally).
-               * @param[out] orbspin Output vector filled with parsed spin flags.
-               * @param[in] spinList Input vector of SpinType values corresponding to custom orbitals.
-               */
-           void setCustom(std::vector<int>& orbnums, std::vector<int>& orbspin, const std::vector<SpinType>& spinList);
+        /**
+         * @brief Selects LUMO orbital(s) according to spin selection.
+         *
+         * @param[out] orbnums Output vector set to LUMO index(es).
+         * @param[out] orbspin Output vector set to corresponding spin(s).
+         * @param[in] o Orbitals instance used to query occupations.
+         * @param[in] spinType Requested spin selection.
+         */
+        static void setLumo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType);
 
-              /**
-               * @brief Computes descriptors with the finite-difference Becke method from analytic files.
-               *
-               * @param[in] ANAFileName1 First analytic input file.
-               * @param[in] ANAFileName2 Second analytic input file.
-               * @param[in] ANAFileName3 Third analytic input file.
-               */
-           void computeDescriptorsFD(const std::string& ANAFileName1, const std::string& ANAFileName2, const std::string& ANAFileName3);
+        /**
+         * @brief Selects virtual (unoccupied) molecular orbitals according to spin selection.
+         *
+         * @param[out] orbnums Output vector of virtual orbital indices.
+         * @param[out] orbspin Output vector of spin types for each selected orbital.
+         * @param[in] o Orbitals instance containing occupation numbers.
+         * @param[in] spinType Requested spin selection.
+         * @param[in] N Number of MOs available.
+         */
+        static void setVirtualOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, int N);
+
+
+        //----------------------------------------------------------------------------------------------------//
+        // OTHER PRIVATE METHODS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * TODO
+         */
+        Orbitals computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<double>>>& lrfMatrix, std::vector<std::vector<double>>& eigenvalues, std::vector<std::vector<std::vector<double>>>& eigenvectors, const std::string& outputPrefix, bool savePseudoOrbitals, std::ostream& outputStream, int verbose, bool showProgress = false);
+
+        /**
+         * @brief Opens the configured input file.
+         */
+        void openInputFile();
+
+        /**
+         * @brief Prints critical points information from a Critical Points grid (GridCP). (Not implemented yet.)
+         */
+        void printCriticalPoints();
 
 
     public:
-            /**
-             * @brief Default constructor.
-             *
-             * Sets `_inputFileName` to "input.txt", initialises job lists and
-             * opens the input file stream.
-             */
+        //----------------------------------------------------------------------------------------------------//
+        // CONSTRUCTORS AND DESTRUCTOR
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Default constructor.
+         *
+         * Sets `_inputFileName` to "input.txt", initialises job lists and
+         * opens the input file stream.
+         */
         Job();
 
-            /**
-             * @brief Construct a Job instance with a custom input filename.
-             * @param inputFileName Path to the input file to use.
-             */
-        Job(std::string inputFileName);
+        /**
+         * @brief Construct a Job instance with a custom input filename.
+         * @param inputFileName Path to the input file to use.
+         */
+        Job(const std::string& inputFileName);
 
-            /**
-             * @brief Destructor closes the input file stream.
-             */
+        /**
+         * @brief Destructor. Closes the input file stream.
+         */
         ~Job();
 
-            /**
-             * @brief Parse input and run the selected job.
-             */
-        void run();
+
+        //----------------------------------------------------------------------------------------------------//
+        // OTHER PUBLIC METHODS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Looks for the "runType" parameter in the input file and runs either the according job.
+         * 
+         * If the "runType" parameter is not found or if its value does not correspond to a valid job, this method will run the "Help" job.
+         */
+        virtual void run() = 0;
 };
+
+#include <JobControl/Job.tpp>
 
 #endif /* CDFTT_JOB_H_INCLUDED */
 

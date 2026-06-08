@@ -1,20 +1,34 @@
 #ifndef CDFTT_MOLDENGAB_H_INCLUDED
 #define CDFTT_MOLDENGAB_H_INCLUDED
 
+#include <array>
 #include <fstream>
 #include <istream>
 #include <string>
 #include <vector>
 
-
+/**
+ * @brief MOLDENGAB class.
+ * 
+ * This class is used to read and store data from .molden and .gab files, which contain information about molecular structures, basis sets, and molecular orbitals.
+ */
 class MOLDENGAB
 {
     private:
-        std::vector<std::string> _symbol;
-        std::vector<int> _atomic_number;
-        std::vector<std::vector<double>> _coord;
+        /** @brief Vector containing the atomic symbols. */
+        std::vector<std::string> _symbols;
+
+        /** @brief Vector containing the atomic numbers. */
+        std::vector<int> _atomic_numbers;
+
+        /** @brief Vector containing the coordinates of each atom (3-element array). */
+        std::vector<std::array<double, 3>> _coordinates;
+
+        /** @brief Vector containing the shell types ("S", "P", "D", ...). */
         std::vector<std::string> _shell_types;
+
         std::vector<int> _L_types;
+
         std::vector<double> _exposants;
         std::vector<int> _number_of_gtf;
         std::vector<int> _num_center;
@@ -24,7 +38,6 @@ class MOLDENGAB
         std::vector<std::vector<double>> _MO_coefs;
         std::vector<double> _occupation;
         std::vector<std::string> _spin_types;
-        std::string _coord_type;
         std::string _basis_or_gto;
         int _number_of_atoms;
         int _number_of_MO_coefs;
@@ -50,9 +63,12 @@ class MOLDENGAB
             /*! This constructor is used to set all of the parameters on 0 or "None" value. */
         MOLDENGAB();
 
-            //! A constructor taking one argument.
-            /*! This constructor is used to set all of the parameters with the data in the file. */
-        MOLDENGAB(std::ifstream& f);
+        /**
+         * @brief Constructor from a .molden or .gab file.
+         * 
+         * @param[in] moldenGabFile Input file stream for the .molden or .gab file to read.
+         */
+        MOLDENGAB(std::ifstream& moldenGabFile);
 
             //! A default desctructor.
             /*! We don't use it. */
@@ -60,19 +76,19 @@ class MOLDENGAB
 
             //! A normal member taking one argument and returning a void value.
             /*! Set all the atomic data on the value in the file. */
-        void read_atom_data(std::ifstream& f);
+        void read_atom_data(std::ifstream& moldenGabFile);
 
             //! A normal member taking one argument and returning a void value.
             /*! Set all the basis data on the value in the file. */
-        void read_basis_data(std::ifstream& f);
+        void read_basis_data(std::ifstream& moldenGabFile);
 
             //! A normal member taking one argument and returning a void value.
             /*! Set all the molecular orbitals data on the value in the file. */
-        void read_MO_data(std::ifstream& f);
+        void read_MO_data(std::ifstream& moldenGabFile);
 
             //! A normal member taking one argument and returning a void value.
             /*! Read one basis data in the file. */
-        void read_one_basis_data(std::istream& f);
+        void read_one_basis_data(std::istream& moldenGabFile);
 
             //! A normal member taking one argument and returning a void value.
             /*! Print all the data save in the object. */
@@ -80,15 +96,15 @@ class MOLDENGAB
 
             //! A normal member taking no arguments and returning a std::vector<std::string> value.
             /*! \return The table of symbol of each atoms. */
-        std::vector<std::string> Symbol() {return _symbol;}
+        std::vector<std::string> Symbol() {return _symbols;}
 
             //! A normal member taking no arguments and returning a std::vector<int> value.
             /*! \return The table of atomic number of each atoms. */
-        std::vector<int> AtomicNumbers() {return _atomic_number;}
+        std::vector<int> AtomicNumbers() {return _atomic_numbers;}
 
             //! A normal member taking no arguments and returning a std::vector<std::vector<double>> value.
             /*! \return The table of coordinates of each atoms. */
-        std::vector<std::vector<double>> Coordinates() {return _coord;}
+        std::vector<std::array<double, 3>> Coordinates() {return _coordinates;}
 
             //! A normal member taking no arguments and returning a std::vector<std::string> value.
             /*! \return The table of shell type of each shell. */
@@ -133,10 +149,6 @@ class MOLDENGAB
             //! A normal member taking no arguments and returning a std::vector<std::string> value.
             /*! \return The table of spin type (Alpha or Beta) for each molecular orbital. */
         std::vector<std::string> SpinTypes() {return _spin_types;}
-
-            //! A normal member taking no arguments and returning a std::string value.
-            /*! \return The unis of coordinates (Angs or AU). */
-        std::string CoordinatesType() {return _coord_type;}
 
             //! A normal member taking no arguments and returning a std::string value.
             /*! \return If their is Basis or GTO (because their is different in a .gab or a .molden). */

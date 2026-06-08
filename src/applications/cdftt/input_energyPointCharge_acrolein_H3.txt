@@ -1,6 +1,0 @@
-Charges=-0.1
-RunType=ComputeEnergyWithPointCharges
-AnalyticFiles=tests/Guegan2020/acrolein.fchk
-TransitionsFile=tests/Guegan2020/acrolein.log
-Positions=-0.446147,1.526721,-0.000175
-Verbose=3

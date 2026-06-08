@@ -1,5 +1,6 @@
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -16,12 +17,16 @@ CGTF::CGTF()
     _bino = Binomial();
 }
 
-CGTF::CGTF(std::vector<GTF> gtfs) : _gtf(gtfs)
-{
-    _numberOfFunctions=_gtf.size();
-    _coefficients=std::vector<double> (_numberOfFunctions, 1);
-    _bino = gtfs[0].get_bino();
-}
+CGTF::CGTF(std::vector<GTF> gtfs) :
+    _num_center(0),
+    _numberOfFunctions(gtfs.size()),
+    _l_type(""),
+    _l_format(""),
+    _factor_coef(1.0),
+    _gtf(gtfs),
+    _coefficients(gtfs.size(), 1.0),
+    _bino(gtfs[0].get_bino())
+{ }
 
 void CGTF::setCoef(double c)
 {
@@ -50,7 +55,7 @@ void CGTF::normaliseCGTF()
 
     for(n=0 ; n<_numberOfFunctions ; n++)
         _gtf[n].normaliseRadialGTF();
-
+    
     for(n=0 ; n<_numberOfFunctions ; n++)
         sum += _coefficients[n]*_coefficients[n]* _gtf[n].overlapGTF(_gtf[n]);
 
@@ -66,8 +71,9 @@ void CGTF::normaliseCGTF()
     }
     else
     {
-        std::cout<<"A Contacted Gaussian Type function is nul"<<std::endl;
-        exit(1);
+        print_error("A Contracted Gaussian Type Function is null.");
+
+        std::exit(1);
     }
 }
 
@@ -79,17 +85,17 @@ void CGTF::denormaliseCGTF()
         _gtf[n].denormaliseRadialGTF();
 }
 
-double CGTF::overlapCGTF(CGTF &right)
+double CGTF::overlapCGTF(CGTF& right)
 {
     double sum = 0.0;
 
     //std::cout<<"Number of Function GTF in CGTF = "<<_numberOfFunctions<<std::endl;
 
-    for(int n = 0; n < _numberOfFunctions; ++n)
+    for(int i = 0; i < _numberOfFunctions; ++i)
     {
-        for(int np = 0; np < right._numberOfFunctions; ++np)
+        for(int j = 0; j < right._numberOfFunctions; ++j)
         {
-            sum += _coefficients[n] * right._coefficients[np] * _gtf[n].overlapGTF(right._gtf[np]);
+            sum += _coefficients[i] * right._coefficients[j] * _gtf[i].overlapGTF(right._gtf[j]);
         }
     }
 
@@ -98,34 +104,41 @@ double CGTF::overlapCGTF(CGTF &right)
     return sum;
 }
 
-double CGTF::overlap3CGTF(CGTF &midle, CGTF &right)
+double CGTF::overlap3CGTF(CGTF& midle, CGTF& right)
 {
-    double sum=0.0;
-    int n;
-    int np;
-    int ns;
+    double sum = 0.0;
 
-    for(n=0;n<_numberOfFunctions;n++)
-        for(np=0;np<midle.numberOfFunctions();np++)
-            for(ns=0;ns<right.numberOfFunctions();ns++)
-                sum += _gtf[n].overlap3GTF(midle.gtf()[np],right.gtf()[ns]);
+    for(int i = 0; i < _numberOfFunctions ; ++i)
+    {
+        for(int j = 0; j < midle._numberOfFunctions ; ++j)
+        {
+            for(int k = 0; k < right._numberOfFunctions ; ++k)
+            {
+                sum += _coefficients[i] * midle._coefficients[j] * right._coefficients[k] * _gtf[i].overlap3GTF(midle.gtf()[j], right.gtf()[k]);
+            }
+        }
+    }
 
     return sum;
 }
 
 double CGTF::overlap4CGTF(CGTF &middleLeft, CGTF &middleRight, CGTF &right)
 {
-    double sum=0.0;
-    int np;
-    int nq;
-    int nr;
-    int ns;
+    double sum = 0.0;
 
-    for (np = 0; np < _numberOfFunctions; np++)
-        for (nq = 0; nq < middleLeft.numberOfFunctions(); nq++)
-            for (nr = 0; nr < middleRight.numberOfFunctions(); nr++)
-                for (ns = 0; ns < right.numberOfFunctions(); ns++)
-                    sum += _gtf[np].overlap4GTF(middleLeft.gtf()[nq], middleRight.gtf()[nr], right.gtf()[ns]);
+    for (int i = 0; i < _numberOfFunctions; ++i)
+    {
+        for (int j = 0; j < middleLeft._numberOfFunctions; ++j)
+        {
+            for (int k = 0; k < middleRight._numberOfFunctions; ++k)
+            {
+                for (int l = 0; l < right._numberOfFunctions; ++l)
+                {
+                    sum += _coefficients[i] * middleLeft._coefficients[j] * middleRight._coefficients[k] * right._coefficients[l] * _gtf[i].overlap4GTF(middleLeft.gtf()[j], middleRight.gtf()[k], right.gtf()[l]);
+                }
+            }
+        }
+    }
 
     return sum;
 }
@@ -243,13 +256,13 @@ void CGTF::setFormat(std::string format)
     _l_format=format;
 }
 
-double CGTF::func(double x, double y, double z) const
+double CGTF::func(const std::array<double, 3>& coordinates) const
 {
     double r = 0.0;
 
     for(int i = 0; i < _numberOfFunctions; ++i)
     {
-        r += _coefficients[i] * _gtf[i].func(x, y, z);
+        r += _coefficients[i] * _gtf[i].func(coordinates);
     }
 
     return r;
@@ -285,27 +298,33 @@ bool operator==(const CGTF& left, const CGTF& right)
 
 std::ostream& operator<<(std::ostream &stream, const CGTF &cgtf)
 {
-    for (int i = 0; i < cgtf.numberOfFunctions(); i++)
-        stream << std::setw(20) << cgtf.coefficients()[i] << cgtf.gtf()[i] << std::endl;
+    stream << std::scientific;
+
+    for (int i = 0; i < cgtf.numberOfFunctions(); ++i)
+    {
+        stream << std::left << std::setw(20) << cgtf.coefficients()[i] << cgtf.gtf()[i] << std::endl;
+    }
 
     return stream;
 }
 
-double operator*(const std::vector<CGTF> &cgtfs, const std::vector<double> &coords)
+double operator*(const std::vector<CGTF>& cgtfs, const std::array<double, 3>& coordinates)
 {
-    double r=1.0;
+    double r = 1.0;
 
     for (size_t i = 0; i < cgtfs.size(); i++)
-        r *= cgtfs[i].func(coords[0], coords[1], coords[2]);
+    {
+        r *= cgtfs[i].func(coordinates);
+    }
 
     return r;
 }
-double CGTF::grad_CGTF(const double& x, const double& y, const double& z, int i)
+double CGTF::grad_CGTF(const std::array<double, 3>& coordinates, int i)
 {
     double v=0;
     for(size_t j=0; j<_gtf.size(); j++) 
     {
-        v += _coefficients[j]*_gtf[j].grad_GTF(x,y,z,i);
+        v += _coefficients[j]*_gtf[j].grad_GTF(coordinates, i);
     }
     return v;
 }

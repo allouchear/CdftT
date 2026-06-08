@@ -1,11 +1,11 @@
 #ifndef CDFTT_LM_H_INCLUDED
 #define CDFTT_LM_H_INCLUDED
 
-#include<iostream>
-#include<vector>
-#include "../Utils/Utils.h"
+#include <iostream>
+#include <vector>
 
-using namespace std;
+#include <Utils/Utils.h>
+
 
     //! A LXYZ class.
     /*! This class will be used in the Zlm class. */
@@ -13,7 +13,7 @@ class LXYZ {
 
 private:
     double _coef;
-    vector<int> _l;
+    std::vector<int> _l;
 
 public:
         //! A default constructor.
@@ -22,7 +22,7 @@ public:
 
         //! A constructor taking two arguments.
         /*! This constructor is used to set all of the parameters. */
-    LXYZ(vector<int> L, double C);
+    LXYZ(std::vector<int> L, double C);
 
         //! A default desctructor.
         /*! We don't use it. */
@@ -32,9 +32,9 @@ public:
         /*! \return The coefficient. */
     double coef() {return _coef;}
 
-        //! A normal member taking no arguments and returning a vector<int> value.
+        //! A normal member taking no arguments and returning a std::vector<int> value.
         /*! \return The table of l (lx, ly, lz). */
-    vector<int> l() {return _l;}
+    std::vector<int> l() {return _l;}
 };
 
     //! A Zlm class.
@@ -45,7 +45,7 @@ private:
     int _l;
     int _m;
     int _numberOfCoefficients;
-    vector<LXYZ> _lxyz;
+    std::vector<LXYZ> _lxyz;
     Binomial _bino;
 
 public:
@@ -65,9 +65,9 @@ public:
         /*! \return The number of coefficient. */
     int numberOfCoefficients() {return _numberOfCoefficients;}
 
-        //! A normal member taking no arguments and returning a vector<LXYZ> value.
+        //! A normal member taking no arguments and returning a std::vector<LXYZ> value.
         /*! \return The table of LXYZ. */
-    vector<LXYZ> lxyz() {return _lxyz;}
+    std::vector<LXYZ> lxyz() {return _lxyz;}
 
         //! A normal member taking no arguments and returning a void value.
         /*! Set all of the parameters on 0 or "None" value. */
@@ -81,6 +81,6 @@ public:
     //! A function taking two arguments and returning a void value.
     /*! Actualise the different tables of coefficients and the l to construct our basis in Orbitals. 
      * This function use the Zlm classe. */
-void getlTable(int L, vector<int>& nCoefs, vector<vector<double>>& coefs, vector<vector<vector<int>>>& l, Binomial& Bin);
+void getlTable(int L, std::vector<int>& nCoefs, std::vector<std::vector<double>>& coefs, std::vector<std::vector<std::vector<int>>>& l, Binomial& Bin);
 
 #endif

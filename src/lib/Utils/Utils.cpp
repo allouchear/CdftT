@@ -1,10 +1,14 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
+#include <functional>
+#include <iomanip>
 #include <iostream>
 #include <numeric>
 #include <regex>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -14,6 +18,18 @@
 //----------------------------------------------------------------------------------------------------//
 // STRING MANAGEMENT FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
+
+std::string int_to_string_withLeadingZeros(const int value, const int maxValue)
+{
+    // Count the number of digits in max
+    int nbDigits = std::to_string(std::abs(maxValue)).length();
+    
+    // Format value with leading zeros
+    std::stringstream sstreamWithLeadingZeros;
+    sstreamWithLeadingZeros << std::setfill('0') << std::setw(nbDigits) << value;
+    
+    return sstreamWithLeadingZeros.str();
+}
 
 std::string to_lower(const std::string& str)
 {
@@ -61,6 +77,28 @@ std::string trim_whitespaces(const std::string& str, bool leading, bool trailing
 // PRINT FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
 
+void log(std::stringstream& messageStream, std::ostream& outputStream)
+{
+    std::vector<std::reference_wrapper<std::ostream>> outputStreams;
+
+    outputStreams.emplace_back(outputStream);
+    if (&outputStream != &std::cout)
+    {
+        outputStreams.emplace_back(std::cout);
+    }
+
+    for (auto& output : outputStreams)
+    {
+        if (output.get())
+        {
+            output.get() << messageStream.str();
+        }
+    }
+
+    messageStream.clear();
+    messageStream.str(std::string());
+}
+
 void print_title(const std::string& title)
 {
     std::stringstream sstreamTitle;
@@ -81,13 +119,61 @@ void print_title(const std::string& title)
     std::cout << '\\' << dashes << '/' << std::endl << std::endl;
 }
 
-void print_error(const std::string& errorMessage)
+void print_error(const std::string& errorMessage, std::ostream& outputStream)
 {
-    std::cerr << "!!!!!!!!!" << std::endl;
-    std::cerr << "! ERROR !" << std::endl;
-    std::cerr << "!!!!!!!!!" << std::endl << std::endl;
+    std::vector<std::reference_wrapper<std::ostream>> outputStreams;
+    
+    if (&outputStream != &std::cout)
+    {
+        outputStreams.emplace_back(outputStream);
+    }
+    
+    if (&outputStream != &std::cerr)
+    {
+        outputStreams.emplace_back(std::cerr);
+    }
 
-    std::cerr << errorMessage << std::endl;
+    for (auto& output : outputStreams)
+    {
+        if (output.get())
+        {
+            output.get() << "!!!!!!!!!" << std::endl;
+            output.get() << "! ERROR !" << std::endl;
+            output.get() << "!!!!!!!!!" << std::endl << std::endl;
+
+            output.get() << errorMessage << std::endl;
+        }
+    }
+}
+
+void print_progressBar(int currentStep, int totalSteps, int& lastProgress)
+{
+    int currentProgress = (currentStep * 100) / totalSteps;
+
+    if (currentProgress > lastProgress)
+    {
+        lastProgress = currentProgress;
+
+        std::cout << "\rProgress: [";
+
+        for (int p = 0; p < 100; ++p)
+        {
+            if (p < currentProgress)
+            {
+                std::cout << "=";
+            }
+            else if (p == currentProgress)
+            {
+                std::cout << ">";
+            }
+            else
+            {
+                std::cout << " ";
+            }
+        }
+
+        std::cout << "] " << currentProgress << "%" << std::flush;
+    }
 }
 
 
@@ -95,6 +181,7 @@ void print_error(const std::string& errorMessage)
 // FILE PARSING FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
 
+/*
 bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string& value)
 {
     bool ok = false;
@@ -132,7 +219,8 @@ bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string
             std::size_t pos = t2.find(TAG);
 
             // If tag not found, continue to next line
-            if (pos == std::string::npos)
+            // Or if tag found but not as a parameter name (i.e. not at the beginning of the line), continue to next line
+            if (pos == std::string::npos || pos != 0)
             {
                 continue;
             }
@@ -143,11 +231,12 @@ bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string
                 pos = t2.find("=");
                 value = t.substr(pos + 1);
             }
-            else // if no '=' is found, we assume a space separates tag and value
-            {
-                pos = t2.find(" ");
-                value = t.substr(pos + 1);
-            }
+            // else // if no '=' is found, we assume a space separates tag and value
+            // {
+            //     pos = t2.find(" ");
+            //     value = t.substr(pos + 1);
+            // }
+            
 
             if (value.length() > 0)
             {
@@ -158,6 +247,59 @@ bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string
     }
 
     return ok;
+}
+*/
+
+bool readOneString(std::ifstream& inputFile, const std::string& tag, std::string& value)
+{
+    bool ok = false;
+
+    if (tag.length() >= 1)
+    {
+        inputFile.clear();
+        inputFile.seekg(0);
+
+        std::string line;
+        value = "";
+
+        while (!ok && !inputFile.eof())
+        {
+            std::getline(inputFile, line);
+            if (inputFile.fail())
+            {
+                break;
+            }
+
+            std::regex tagValueRegex("^\\s*" + tag + "\\s*=\\s*(.*?)\\s*(?:#.*)?$", std::regex_constants::icase);
+            std::smatch tagValueRegexMatch;
+            if (std::regex_search(line, tagValueRegexMatch, tagValueRegex))
+            {
+                value = tagValueRegexMatch[1];
+                ok = true;
+            }
+        }
+    }
+
+    return ok;
+}
+
+std::string makeTupleRegex(const int n)
+{
+    std::string regexStr = "\\(\\s*";
+
+    for (int i = 0; i < n; ++i)
+    {
+        if (i != 0)
+        {
+            regexStr += "\\s*,\\s*";
+        }
+
+        regexStr += "([^(),;]+)";
+    }
+
+    regexStr += "\\s*\\)";
+
+    return regexStr;
 }
 
 
@@ -411,7 +553,8 @@ void sortEigenValuesAndEigenVectors(std::vector<double>& eigenValues, std::vecto
     if (eigenVectors.size() != dimension)
     {
         print_error("Error in sortEigenValuesAndEigenVectors(): eigenVectors size does not match eigenValues size.");
-        exit(1);
+        
+        std::exit(1);
     }
 
     // Create a vector of indices
@@ -577,20 +720,32 @@ double Factorial::double_factorial(int n)
     return _tab[n];
 }
 
-Binomial::Binomial()
+Binomial::Binomial():
+    _fact(),
+    _tab()
+{ }
+
+Binomial::Binomial(int n):
+    _fact(n),
+    _tab(n, std::vector<double>(0))
 {
-    _fact = Factorial();
-    _tab = std::vector<std::vector<double>>();
+    init();
 }
 
-Binomial::Binomial(int i, Factorial& F) : _fact(F)
+Binomial::Binomial(int i, const Factorial& factorial):
+    _fact(factorial),
+    _tab(i, std::vector<double>(0))
 {
-    std::vector<double> V(0);
-    _tab = std::vector<std::vector<double>>(i, V);
-    for (size_t k = 0; k < _tab.size(); k++)
+    init();
+}
+
+void Binomial::init()
+{
+    for (size_t k = 0; k < _tab.size(); ++k)
     {
-        _tab[k].resize(k+1);
-        for (size_t l = 0; l <= k; l++)
+        _tab[k].resize(k + 1);
+
+        for (size_t l = 0; l <= k; ++l)
         {
             _tab[k][l] = _fact.factorial(k) / _fact.factorial(l) / _fact.factorial(k - l);
         }
@@ -718,7 +873,7 @@ double F(int n, double t, Factorial& factorial)
             if (n + i >= MAXFACT)
             {
                 std::cout << "Divergence in F, Ionic integrals" << std::endl;
-                exit(1);
+                std::exit(1);
             }
 
             T *= et;
@@ -786,13 +941,15 @@ std::vector<double> getFTable(int nuMax, double t, bool debug)
     if (nuMax < 0)
     {
         print_error("Error in getFTable(int nuMax, double t): nuMax must be non-negative.");
-        exit(1);
+        
+        std::exit(1);
     }
 
     if (t < 0.0)
     {
         print_error("Error in getFTable(int nuMax, double t): t must be non-negative.");
-        exit(1);
+        
+        std::exit(1);
     }
 
     if (debug)

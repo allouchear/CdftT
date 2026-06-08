@@ -1,5 +1,7 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <sstream>
 
 #include "../Utils/FCHK.h"
@@ -20,7 +22,7 @@ FCHK::FCHK()
     _alpha_mo_coefficients=vector<double> (); // or vector<vector<double>>
     _beta_orbital_energies=vector<double> ();
     _beta_mo_coefficients=vector<double> (); // or vector<vector<double>>
-    _total_energy=0.0;
+    _scf_energy=0.0;
     _mulliken_charges=vector<double> ();
     _npa_charges=vector<double> ();
     _dipole_moment=vector<double> ();
@@ -75,9 +77,12 @@ int FCHK::read_one_int(std::ifstream& f, string b)
 
     if(pos==-1)
     {
-        std::cout<<b+" : data not found"<<std::endl;
-        std::cout<<"Data required, please check your file"<<std::endl;
-        exit(1);
+        std::stringstream errorMessage;
+        errorMessage << "Error in FCHK::read_one_int(): " << b << " : data not found." << std::endl;
+        errorMessage << "Data required, please check your file.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
     }
 
     f.seekg(pos);
@@ -102,9 +107,12 @@ double FCHK::read_one_real(std::ifstream& f, string b)
 
     if(pos==-1)
     {
-        std::cout<<b+" : data not found"<<std::endl;
-        std::cout<<"Data required, please check your file"<<std::endl;
-        exit(1);
+        std::stringstream errorMessage;
+        errorMessage << "Error in FCHK::read_one_real(): " << b << " : data not found." << std::endl;
+        errorMessage << "Data required, please check your file.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
     }
 
     f.seekg(pos);
@@ -130,9 +138,12 @@ vector<int> FCHK::read_one_block_int(std::ifstream& f, string b)
 
     if(pos==-1)
     {
-        std::cout<<b+" : data not found"<<std::endl;
-        std::cout<<"Data required, please check your file"<<std::endl;
-        exit(1);
+        std::stringstream errorMessage;
+        errorMessage << "Error in FCHK::read_one_block_int(): " << b << " : data not found." << std::endl;
+        errorMessage << "Data required, please check your file.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
     }
 
     f.seekg(pos);
@@ -155,47 +166,57 @@ vector<int> FCHK::read_one_block_int(std::ifstream& f, string b)
     return data;
 }
 
-vector<double> FCHK::read_one_block_real(std::ifstream& f, string b)
+std::vector<double> FCHK::read_one_block_real(std::ifstream& f, string b)
 {
-    string p;
-    vector<double> data;
+    std::string p;
+    std::vector<double> data;
     int n;
     double d;
 
-    long int pos=LocaliseData(f,b);
+    long int pos = LocaliseData(f, b);
 
-    if(pos==-1)
+    if (pos != -1)
     {
-        if((b=="Beta Orbital Energies" || b=="Beta MO coefficients") && _ok_alpha==2)
-            return vector<double> ();
-        else if(b=="NPA Charges")
-            return vector<double> ();
-        else
+        f.seekg(pos);
+        getline(f, p);
+        std::stringstream ss(p);
+
+        do
         {
-            std::cout << b + " : data not found, but required. Please check your file." << std::endl;
-            exit(1);
-        }
-    }
+            ss >> p;
+        } while(p.find("N=") == string::npos);
 
-    f.seekg(pos);
-    getline(f,p);
-    std::stringstream ss(p);
-
-    do{
-        ss>>p;
-    }while(p.find("N=")==string::npos);
         ss>>n;
 
-    data=vector<double> (n);
+        data = vector<double>(n, 0.0);
 
-    for(int i=0; i<n; i++)
-    {
-        f>>d;
-        data[i]=d;
+        for(int i = 0; i < n; ++i)
+        {
+            f >> d;
+            data[i] = d;
+        }
+
+        if(b == "Alpha Orbital Energies" || b == "Alpha MO coefficients")
+        {
+            _ok_alpha++;
+        }
     }
+    else if(b == "Dipole Moment")
+    {
+        std::cout << "Warning: dipole moment not found." << std::endl;
+        std::cout << "Dipole moment set to (0, 0, 0)." << std::endl;
+        
+        data = vector<double>(3, 0.0);
+    }
+    else if (((b != "Beta Orbital Energies" && b != "Beta MO coefficients") || _ok_alpha != 2) && b != "NPA Charges")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in FCHK::read_one_block_real(): " << b << " : data not found." << std::endl;
+        errorMessage << "Data required, please check your file.";
+        print_error(errorMessage.str());
 
-    if(b=="Alpha Orbital Energies" || b=="Alpha MO coefficients")
-        _ok_alpha++;
+        std::exit(1);
+    }
 
     return data;
 }
@@ -215,7 +236,7 @@ void FCHK::read_file_fchk(std::ifstream& file)
     string k = "Alpha MO coefficients";
     string l = "Beta Orbital Energies";
     string m = "Beta MO coefficients";
-    string n = "Total Energy";
+    string n = "SCF Energy";
     string o = "Mulliken Charges";
     string p = "NPA Charges";
     string q = "Dipole Moment";
@@ -242,7 +263,7 @@ void FCHK::read_file_fchk(std::ifstream& file)
     _alpha_mo_coefficients=read_one_block_real(file, k); // or vector<vector<double>>
     _beta_orbital_energies=read_one_block_real(file, l);
     _beta_mo_coefficients=read_one_block_real(file, m); // or vector<vector<double>>
-    _total_energy=read_one_real(file, n);
+    _scf_energy=read_one_real(file, n);
     _mulliken_charges=read_one_block_real(file, o);
     _npa_charges=read_one_block_real(file, p);
     _dipole_moment=read_one_block_real(file, q);
@@ -336,7 +357,7 @@ void FCHK::PrintData()
         std::cout<<"Beta orbital energies "<<i<<" : "<<_beta_orbital_energies[i]<<std::endl;
     for(size_t i=0; i<_beta_mo_coefficients.size(); i++)
         std::cout<<"Beta MO coefficients "<<i<<" : "<<_beta_mo_coefficients[i]<<std::endl;
-    std::cout<<"Total energy : "<<_total_energy<<std::endl;
+    std::cout<<"SCF energy : "<<_scf_energy<<std::endl;
     for(size_t i=0; i<_mulliken_charges.size(); i++)
         std::cout<<"Mulliken charges "<<i<<" : "<<_mulliken_charges[i]<<std::endl;
     for(size_t i=0; i<_npa_charges.size(); i++)
@@ -362,4 +383,54 @@ void FCHK::PrintData()
     std::cout<<"Number of contracted shells : "<<_number_of_contracted_shells<<std::endl;
     std::cout<<"Number of primitive shells : "<<_number_of_primitive_shells<<std::endl;
     std::cout<<"Highest angular momentum : "<<_highest_angular_momentum<<std::endl;
+}
+
+
+//----------------------------------------------------------------------------------------------------//
+// STATIC METHODS
+//----------------------------------------------------------------------------------------------------//
+
+bool FCHK::readGroundStateEnergy(const std::string& fchkFileName, double& groundStateEnergy)
+{
+    bool ok = true;
+    bool found = false;
+
+    std::ifstream logFile(fchkFileName);
+    if (!logFile)
+    {
+        print_error("Error in FCHK::readGroundStateEnergy(): could not read file " + fchkFileName + ".");
+        std::exit(1);
+    }
+
+    std::string line;
+    while (!logFile.eof() && !found)
+    {
+        std::getline(logFile, line);
+        line = trim_whitespaces(line, true, true);
+
+        if (line.empty())
+        {
+            continue;
+        }
+        else
+        {
+            std::regex energyRegex("SCF Energy\\s+R\\s+(-?\\d+(?:\\.\\d+)?(?:E(?:\\+|-)\\d+)?)");
+            std::smatch energyRegexMatch;
+            if (std::regex_search(line, energyRegexMatch, energyRegex))
+            {
+                groundStateEnergy = std::stod(energyRegexMatch[1]);
+                found = true;
+            }
+        }
+    }
+
+    logFile.close();
+
+    if (!found)
+    {
+        print_error("Error in FCHK::readGroundStateEnergy(): could not read energy from FCHK file.");
+        std::exit(1);
+    }
+    
+    return (ok && found);
 }

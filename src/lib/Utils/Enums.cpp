@@ -11,11 +11,35 @@
 
 namespace EnumConversionMaps
 {
+    std::unordered_map<CubeType, std::string> cubeType_string =
+    {
+        { CubeType::DENSITY, "Density" },
+        { CubeType::ELF, "Electron Localisation Function" },
+        { CubeType::ORBITALS, "Orbitals" },
+        { CubeType::UNKNOWN, "UNKNOWN" }
+    };
+
     std::unordered_map<ELFMethod, std::string> elfMethod_string =
     {
         { ELFMethod::BECKE, "Becke" },
         { ELFMethod::SAVIN, "Savin" },
         { ELFMethod::UNKNOWN, "UNKNOWN" }
+    };
+
+    std::unordered_map<EnergyPointChargeMethod, std::string> energyPointChargeMethod_string =
+    {
+        { EnergyPointChargeMethod::LINEAR_RESPONSE, "LinearResponse" },
+        { EnergyPointChargeMethod::PERTURBATIVE, "Perturbative" },
+        { EnergyPointChargeMethod::VARIATIONAL, "Variational" },
+        { EnergyPointChargeMethod::UNKNOWN, "UNKNOWN" }
+    };
+
+    std::unordered_map<GridSaveType, std::string> gridSaveType_string =
+    {
+        { GridSaveType::DENSITY, "Density" },
+        { GridSaveType::GRADIENT, "Gradient" },
+        { GridSaveType::ORBITALS, "Orbitals" },
+        { GridSaveType::UNKNOWN, "UNKNOWN" }
     };
 
     std::unordered_map<GridSize, std::string> gridSize_string =
@@ -25,6 +49,13 @@ namespace EnumConversionMaps
         { GridSize::FINE, "Fine" },
         { GridSize::MEDIUM, "Medium" },
         { GridSize::UNKNOWN, "UNKNOWN" }
+    };
+
+    std::unordered_map<HFType, std::string> hfType_string =
+    {
+        { HFType::RHF, "RHF" },
+        { HFType::UHF, "UHF" },
+        { HFType::UNKNOWN, "UNKNOWN" }
     };
 
     std::unordered_map<OrbitalType, std::string> orbitalType_string =
@@ -53,19 +84,28 @@ namespace EnumConversionMaps
         { PartitionMethod::UNKNOWN, "UNKNOWN" }
     };
 
+    std::unordered_map<RDMMethod, std::string> rdmMethod_string =
+    {
+        { RDMMethod::GAMMA, "Gamma" },
+        { RDMMethod::X, "X" },
+        { RDMMethod::UNKNOWN, "UNKNOWN" }
+    };
+
     std::unordered_map<RunType, std::string> runType_string =
     {
+        { RunType::COMPUTE_CONDENSED_LINEAR_RESPONSE, "ComputeCondensedLinearResponse" },
         { RunType::COMPUTE_DESCRIPTORS, "ComputeDescriptors" },
+        { RunType::COMPUTE_ELECTRON_DENSITY, "ComputeElectronDensity" },
         { RunType::COMPUTE_ENERGY_WITH_POINT_CHARGES, "ComputeEnergyWithPointCharges" },
         { RunType::COMPUTE_GRID_DIFFERENCE, "ComputeGridDifference" },
         { RunType::COMPUTE_INTEGRALS, "ComputeIntegrals" },
         { RunType::COMPUTE_PARTIAL_CHARGES, "ComputePartialCharges" },
         { RunType::CONVERT_ORBITALS, "ConvertOrbitals" },
         { RunType::HELP, "Help" },
-        { RunType::LAMBDA_DIAGNOSTIC, "LambdaDiagnostic" },
         { RunType::MAKE_DENSITY_CUBE, "MakeDensityCube" },
-        { RunType::MAKE_ORBITALS_CUBE, "MakeOrbitalsCube" },
         { RunType::MAKE_ELF_CUBE, "MakeELFCube" },
+        { RunType::MAKE_ORBITALS_CUBE, "MakeOrbitalsCube" },
+        { RunType::RUN_LAMBDA_DIAGNOSTIC, "RunLambdaDiagnostic" },
         { RunType::UNKNOWN, "UNKNOWN" }
     };
 
@@ -90,6 +130,16 @@ namespace EnumConversionMaps
 // ENUM <-> STRING/CHAR CONVERSION FUNCTIONS
 //----------------------------------------------------------------------------------------------------//
 
+std::string to_string(CubeType type)
+{
+    return enum_to_string(type, EnumConversionMaps::cubeType_string);
+}
+
+CubeType cubeType_from_string(const std::string& strCubeType)
+{
+    return enum_from_string(strCubeType, EnumConversionMaps::cubeType_string, CubeType::UNKNOWN);
+}
+
 std::string to_string(ELFMethod method)
 {
     return enum_to_string(method, EnumConversionMaps::elfMethod_string);
@@ -98,6 +148,28 @@ std::string to_string(ELFMethod method)
 ELFMethod elfMethod_from_string(const std::string& strMethod)
 {
     return enum_from_string(strMethod, EnumConversionMaps::elfMethod_string, ELFMethod::UNKNOWN);
+}
+
+
+std::string to_string(EnergyPointChargeMethod method)
+{
+    return enum_to_string(method, EnumConversionMaps::energyPointChargeMethod_string);
+}
+
+EnergyPointChargeMethod energyPointChargeMethod_from_string(const std::string& strMethod)
+{
+    return enum_from_string(strMethod, EnumConversionMaps::energyPointChargeMethod_string, EnergyPointChargeMethod::UNKNOWN);
+}
+
+
+std::string to_string(GridSaveType saveType)
+{
+    return enum_to_string(saveType, EnumConversionMaps::gridSaveType_string);
+}
+
+GridSaveType gridSaveType_from_string(const std::string& strSaveType)
+{
+    return enum_from_string(strSaveType, EnumConversionMaps::gridSaveType_string, GridSaveType::UNKNOWN);
 }
 
 
@@ -112,14 +184,25 @@ GridSize gridSize_from_string(const std::string& strSize)
 }
 
 
-std::string to_string(OrbitalType type)
+std::string to_string(HFType hfType)
 {
-    return enum_to_string(type, EnumConversionMaps::orbitalType_string);
+    return enum_to_string(hfType, EnumConversionMaps::hfType_string);
 }
 
-OrbitalType orbitalType_from_string(const std::string& strType)
+HFType hfType_from_string(const std::string& strHfType)
 {
-    return enum_from_string(strType, EnumConversionMaps::orbitalType_string, OrbitalType::UNKNOWN);
+    return enum_from_string(strHfType, EnumConversionMaps::hfType_string, HFType::UNKNOWN);
+}
+
+
+std::string to_string(OrbitalType orbitalType)
+{
+    return enum_to_string(orbitalType, EnumConversionMaps::orbitalType_string);
+}
+
+OrbitalType orbitalType_from_string(const std::string& strOrbitalType)
+{
+    return enum_from_string(strOrbitalType, EnumConversionMaps::orbitalType_string, OrbitalType::UNKNOWN);
 }
 
 
@@ -131,6 +214,17 @@ std::string to_string(PartitionMethod method)
 PartitionMethod partitionMethod_from_string(const std::string& strMethod)
 {
     return enum_from_string(strMethod, EnumConversionMaps::partitionMethod_string, PartitionMethod::UNKNOWN);
+}
+
+
+std::string to_string(RDMMethod method)
+{
+    return enum_to_string(method, EnumConversionMaps::rdmMethod_string);
+}
+
+RDMMethod rdmMethod_from_string(const std::string& strMethod)
+{
+    return enum_from_string(strMethod, EnumConversionMaps::rdmMethod_string, RDMMethod::UNKNOWN);
 }
 
 

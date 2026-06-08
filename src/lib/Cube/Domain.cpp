@@ -4,9 +4,16 @@
 #include <string>
 #include <sstream>
 
+<<<<<<< HEAD
 #include "../Common/Atom.h"
 #include "../Common/Constants.h"
 #include "../Cube/Domain.h"
+=======
+#include <Common/Atom.h>
+#include <Common/Constants.h>
+#include <Common/Structure.h>
+#include <Cube/Domain.h>
+>>>>>>> origin/dev
 
 
 //----------------------------------------------------------------------------------------------------//
@@ -31,7 +38,7 @@ Domain::Domain() :
     _dv(0)
 { }
 
-Domain::Domain(ifstream& nameFile) :
+Domain::Domain(std::ifstream& nameFile) :
     _Nval(1),
     _N1(0),
     _N2(0),
@@ -204,7 +211,7 @@ void Domain::set_Tij(double value, int i, int j)
     _T[i][j] = value;
 }
 
-void Domain::set_all(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax, const array<array<double, 3>, 3>& T)
+void Domain::set_all(int Nval, int N1, int N2,int N3, double xmax, double ymax, double zmax, const std::array<std::array<double, 3>, 3>& T)
 {
     _Nval = Nval;
 
@@ -223,6 +230,11 @@ void Domain::set_all(int Nval, int N1, int N2,int N3, double xmax, double ymax, 
 //----------------------------------------------------------------------------------------------------//
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
+
+std::array<double, 3> Domain::xyz(int i, int j, int k) const
+{
+    return { x(i, j, k), y(i, j, k), z(i, j, k) };
+}
 
 double Domain::x(int i, int j, int k) const
 {
@@ -254,7 +266,7 @@ int Domain::k(double x, double y, double z) const
     return floor((x - _origin[0]) * _inv_T[2][0] + (y - _origin[1]) * _inv_T[2][1] + (z - _origin[2]) * _inv_T[2][2]);
 }
 
-void Domain::readFromCube(ifstream& nameFile)
+void Domain::readFromCube(std::ifstream& nameFile)
 {
     std::string s;
     getline(nameFile,s);
@@ -385,9 +397,9 @@ double Domain::sizeUpMol(const Structure& S, double scale)
     double dmax = 0;
 
     std::vector<Atom> atoms = S.get_atoms();
-    for (int i = 0; i < S.number_of_atoms(); i++)
+    for (int i = 0; i < S.getNumberOfAtoms(); i++)
     {
-        for (int j = 0; j < S.number_of_atoms(); j++)
+        for (int j = 0; j < S.getNumberOfAtoms(); j++)
         {
             if (i == j)
             {

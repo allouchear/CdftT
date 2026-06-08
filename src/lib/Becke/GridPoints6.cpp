@@ -1,7 +1,10 @@
+<<<<<<< HEAD
 #include<iostream>
 #include "../Becke/GridPoints.h"
+=======
+#include <Becke/GridPoints.h>
+>>>>>>> origin/dev
 
-using namespace std;
 
 void GridPoints::GridPoints6()
 {

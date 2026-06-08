@@ -65,6 +65,23 @@ class GTF
 
 
         //----------------------------------------------------------------------------------------------------//
+        // SETTERS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Sets the coefficient value.
+         * @param[in] coefficient The new coefficient value.
+         */
+        void set_coefficient(const double coefficient);
+
+        /**
+         * @brief Sets the exponent value.
+         * @param[in] exponent The new exponent value.
+         */
+        void set_exponent(const double exponent);
+
+
+        //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
         //----------------------------------------------------------------------------------------------------//
 
@@ -152,9 +169,16 @@ class GTF
         
             //! A normal member taking three arguments and returning a double value.
             /*! \return The eri ???. */
-        double ERIGTF(GTF&, GTF&, GTF&);
+        double ERIGTF(const GTF&, const GTF&,const GTF&);
             
-        double func(double x, double y, double z) const;
+        /**
+         * @brief Evaluates the GTF at given coordinates.
+         * 
+         * @param[in] coordinates An array containing the (x, y, z) coordinates at which to evaluate the GTF.
+         * 
+         * @return double The value of the GTF at the given coordinates.
+         */
+        double func(const std::array<double, 3>& coordinates) const;
         
             //! An operator member taking one argument and returning a void value.
         void operator*=(double);
@@ -164,11 +188,17 @@ class GTF
 
             //! A normal membre taking five arguments and returning a void value.
             /*! Insert all the data in the GTF. */
-        void push_back(const double&, const double&, const std::array<double, 3>&, const std::vector<int>&, Binomial&);
+        void push_back(const double&, const double&, const std::array<double, 3>&, const std::vector<int>&, const Binomial&);
         
-            //! Gradient of GTF
-            /*! Get the ith component of the gradient of a GTF*/
-        double grad_GTF(const double& x, const double& y, const double& z, int i);
+        /**
+         * @brief Computes the i-th component of the gradient of the GTF at the given coordinates.
+         * 
+         * @param[in] coordinates The (x, y, z) coordinates at which to compute the gradient.
+         * @param[in] i The index of the component of the gradient to compute (0 for x, 1 for y, 2 for z).
+         * 
+         * @return double The value of the i-th component of the gradient of the GTF at the given coordinates.
+         */
+        double grad_GTF(const std::array<double, 3>& coordinates, int i);
 
 };
 
@@ -180,8 +210,14 @@ bool operator==(GTF, GTF);
     /*! Print all the data of one GTF */
 std::ostream& operator<<(std::ostream&, const GTF& gtf);
 
-    //! An operator member taking two arguments and returning a double value.
-    /*! \return The double value of a product between a std::vector of GTF at the coordinates x,y,z*/
-double operator*(const std::vector<GTF>&, const std::vector<double>&);
+/**
+ * @brief Overloads the multiplication operator for a vector of GTFs and a set of coordinates, returning the product of the GTFs evaluated at those coordinates.
+ * 
+ * @param gtfs std::vector of GTF objects.
+ * @param coordinates An array containing the (x, y, z) coordinates at which to evaluate the product of the GTFs.
+ * 
+ * @return double The product of the GTFs evaluated at the given coordinates.
+ */
+double operator*(const std::vector<GTF>& gtfs, const std::array<double, 3>& coordinates);
 
 #endif

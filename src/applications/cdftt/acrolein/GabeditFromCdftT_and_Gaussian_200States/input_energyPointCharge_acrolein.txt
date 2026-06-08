@@ -1,0 +1,6 @@
+Charges=-0.1,-0.3
+RunType=ComputeEnergyWithPointCharges
+AnalyticFiles=../tests/Guegan2020/acrolein_200States_convertedWithCdftT.gab
+TransitionsFile=../tests/Guegan2020/acrolein_200States.log
+OutputPrefix=acrolein_gabeditFromCdftT_and_gaussian_200States
+#Verbose=3

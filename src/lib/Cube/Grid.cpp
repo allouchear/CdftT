@@ -1,5 +1,8 @@
+#include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <vector>
 
@@ -7,9 +10,16 @@
 #include <omp.h>
 #endif
 
+<<<<<<< HEAD
 #include "../Cube/Grid.h"
 #include "../Cube/GridCP.h"
 #include "../Common/Constants.h"
+=======
+#include <Cube/Grid.h>
+#include <Common/Constants.h>
+#include <Orbitals/Orbitals.h>
+#include <Utils/Enums.hpp>
+>>>>>>> origin/dev
 
 
 //----------------------------------------------------------------------------------------------------//
@@ -22,9 +32,9 @@ void Grid::next_Density(int i, int j, int k, double& rhocenter, std::vector<std:
     std::vector<int> v = trajectory.back();
 
     // Initialize indices for neighboring points
-    int I[3] = {max(0, i - 1), i, min(i + 1, _domain.get_N1() - 1)};
-    int J[3] = {max(0, j - 1), j, min(j + 1, _domain.get_N2() - 1)};
-    int K[3] = {max(0, k - 1), k, min(k + 1, _domain.get_N3() - 1)};
+    int I[3] = {std::max(0, i - 1), i, std::min(i + 1, _domain.get_N1() - 1)};
+    int J[3] = {std::max(0, j - 1), j, std::min(j + 1, _domain.get_N2() - 1)};
+    int K[3] = {std::max(0, k - 1), k, std::min(k + 1, _domain.get_N3() - 1)};
 
     double drhomax = 0;
     std::vector<double> ds(3);
@@ -80,9 +90,9 @@ void Grid::addSurroundingDensity(int i, int j, int k, std::vector<std::vector<in
     std::vector<int> v(3);
 
     // Initialize indices for neighboring points
-    int I[3] = {max(0, i - 1), i, min(i + 1, _domain.get_N1() - 1)};
-    int J[3] = {max(0, j - 1), j, min(j + 1, _domain.get_N2() - 1)};
-    int K[3] = {max(0, k - 1), k, min(k + 1, _domain.get_N3() - 1)};
+    int I[3] = {std::max(0, i - 1), i, std::min(i + 1, _domain.get_N1() - 1)};
+    int J[3] = {std::max(0, j - 1), j, std::min(j + 1, _domain.get_N2() - 1)};
+    int K[3] = {std::max(0, k - 1), k, std::min(k + 1, _domain.get_N3() - 1)};
 
     for (int ic = 0; ic < 3; ic++)
     {
@@ -302,6 +312,91 @@ void Grid::set_values(const std::vector<std::vector<std::vector<std::vector<doub
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
+std::vector<std::vector<std::vector<double>>> Grid::getIonicPotentialMatrix(const Orbitals& orbitals, const std::array<double, 3>& chargePosition, double charge, bool debug, bool printMOMatrix)
+{
+    int numberOfMo = orbitals.get_numberOfMo();
+
+    // debug
+    if (__debug_MOMatrix.size() == 0)
+    {
+        __debug_MOMatrix = std::vector<std::vector<std::vector<double>>>(2, std::vector<std::vector<double>>(numberOfMo, std::vector<double>()));
+    }
+
+    // Build ionic potential matrix in MO basis
+    std::vector<std::vector<std::vector<double>>> ionicMatrixMO = std::vector<std::vector<std::vector<double>>>(2, std::vector<std::vector<double>>(numberOfMo, std::vector<double>()));
+
+    int spin, i;
+    for (spin = 0; spin < 2; ++spin)
+    {
+        for (i = 0; i < numberOfMo; ++i)
+        {
+            ionicMatrixMO[spin][i].resize(i + 1, 0.0);
+
+            // debug
+            __debug_MOMatrix[spin][i].resize(i + 1, 0.0);
+        }
+    }
+
+    // Compute ionic potential matrix elements in MO basis
+    int j;
+    // #ifdef ENABLE_OMP
+    // #pragma omp parallel for private(spin, i, j)
+    // #endif
+    for (spin = 0; spin < 2; ++spin)
+    {
+        SpinType s = static_cast<SpinType>(spin);
+        
+        for (i = 0; i < numberOfMo; ++i)
+        {
+            for (j = 0; j <= i; ++j)
+            {
+                ionicMatrixMO[spin][i][j] = phiStarVionicStarPhi(i, j, s, chargePosition, charge);
+            }
+        }
+    }
+
+    // debug
+    if (debug)
+    {
+        for (spin = 0; spin < 2; ++spin)
+        {
+            std::cout << std::scientific;
+            std::cout << std::setprecision(10);
+            
+            if (printMOMatrix)
+            {
+                std::cout << "Ionic potential matrix in MO basis for " << to_string(static_cast<SpinType>(spin)) << " spin:" << std::endl;
+            }
+
+            for (i = 0; i < numberOfMo; ++i)
+            {
+                for (j = 0; j <= i; ++j)
+                {
+                    __debug_MOMatrix[spin][i][j] += ionicMatrixMO[spin][i][j];
+                    __debug_totalSumMO[spin] += (i == j ? ionicMatrixMO[spin][i][j] : 2.0 * ionicMatrixMO[spin][i][j]);
+
+                    if (printMOMatrix)
+                    {
+                        std::cout << std::right << std::setw(17) << __debug_MOMatrix[spin][i][j] << '\t';
+                    }
+                }
+
+                if (printMOMatrix)
+                {
+                    std::cout << std::endl;
+                }
+            }
+            
+            if (printMOMatrix)
+            {
+                std::cout << std::defaultfloat << "Total sum of MO matrix elements for " << to_string(static_cast<SpinType>(spin)) << " spin: " << std::setprecision(10) << __debug_totalSumMO[spin] << std::endl;
+            }
+        }
+    }
+
+    return ionicMatrixMO;
+}
+
 void Grid::reset()
 {
     if (_domain.get_Nval() < 1 || _domain.get_N1() < 1 || _domain.get_N2() < 1 || _domain.get_N3() < 1)
@@ -412,7 +507,7 @@ Grid Grid::add(const Grid& g)
     {
         std::cerr << Error << std::endl;
 
-        exit(1);
+        std::exit(1);
     }
 }
 
@@ -615,7 +710,7 @@ void Grid::coefs_Laplacian(int nBound, std::vector<double>& fcx, std::vector<dou
     }
     else
     {
-        exit(1);
+        std::exit(1);
     }
 
     cc = 1 / (_domain.get_dx() *_domain.get_dx())
@@ -682,7 +777,7 @@ Grid Grid::laplacian(int nBound) const
     catch(std::string error)
     {
         std::cout<<error<<std::endl;
-        exit(1);
+        std::exit(1);
     }                
 }
 
@@ -747,7 +842,7 @@ void Grid::coefs_Gradient(int nBound, std::vector<double>& fcx, std::vector<doub
         }
         else
         {
-            exit(1);
+            std::exit(1);
         }
 
         for(int i=0;i<nBound;i++)
@@ -815,7 +910,7 @@ Grid Grid::gradient(int nBound) const
     catch(std::string error)
     {
         std::cout<<error<<std::endl;
-        exit(1);
+        std::exit(1);
     }                
 }
 
@@ -1059,12 +1154,12 @@ Grid Grid::coarser_Grid()
     int iZBegin = 1;
     int iZEnd = g._domain.get_N3();
 
-#ifdef ENABLE_OMP
-#pragma omp parallel for
-#endif
-#ifdef ENABLE_ACC
-#pragma acc kernels loop
-#endif
+    #ifdef ENABLE_OMP
+    #pragma omp parallel for
+    #endif
+    #ifdef ENABLE_ACC
+    #pragma acc kernels loop
+    #endif
     for(int i = iXBegin ; i <= iXEnd-1 ; i++)
     {
         int x0, xp, xm;
@@ -1101,109 +1196,175 @@ Grid Grid::coarser_Grid()
     return g;
 }
 
-void Grid::save(ofstream& nameFile)
+void Grid::save(std::ofstream& fileName, bool showProgress, int precision) const
 {
-    nameFile.precision(14);
-    if(_domain.get_Nval()==1)
+    fileName << std::scientific;
+    fileName << std::setprecision(precision);
+
+    // Get domain information
+    int numberOfValuesPerGridPoint = _domain.get_Nval();
+    int N1 = _domain.get_N1();
+    int N2 = _domain.get_N2();
+    int N3 = _domain.get_N3();
+
+    const int nbStepsTotal = N1 * N2 * N3;
+    int progress = 0;
+    int lastProgress = -1;
+
+    // Show progress bar at 0% at the beginning
+    if (showProgress)
     {
-        nameFile<<"Grid generated by CdftT "<<std::endl;
-        nameFile<<"Density"<<std::endl;
+        print_progressBar(0, nbStepsTotal, lastProgress);
     }
-    else if(_domain.get_Nval()==4)
+
+    GridSaveType saveType = GridSaveType::UNKNOWN;
+    if (numberOfValuesPerGridPoint == 1)
     {
-        nameFile<<"Grid generated by CdftT "<<std::endl;
-        nameFile<<"Gradient"<<std::endl;
+        saveType = GridSaveType::DENSITY;
     }
-    else
+    else if(numberOfValuesPerGridPoint == 4)
     {
-        nameFile<<"Grid generated by CdftT "<<std::endl;
-        nameFile<<"Orbitals"<<std::endl;
-    }
-    nameFile<<scientific;
-    nameFile<<_structure.number_of_atoms()<<" ";
-    for(int i=0;i<3;i++)
-    {
-        nameFile<<_domain.get_origin()[i]<<" ";
-    }
-    nameFile<<_domain.get_Nval()<<" ";
-    nameFile<<std::endl<<_domain.get_N1()<<" ";
-    if(_domain.get_N1()>0)
-    {
-        for(int i=0;i<3;i++)
-        {
-            nameFile<<_domain.get_Tij(0,i)<<" ";
-        }
-        nameFile<<std::endl;
-        nameFile<<_domain.get_N2()<<" ";
-        for(int i=0;i<3;i++)
-        {
-            nameFile<<_domain.get_Tij(1,i)<<" ";
-        }
-        nameFile<<std::endl<<_domain.get_N3()<<" ";
-        for(int i=0;i<3;i++)
-        {
-            nameFile<<_domain.get_Tij(2,i)<<" ";
-        }
+        saveType = GridSaveType::GRADIENT;
     }
     else
     {
-        for(int i=0;i<3;i++)
-        {
-            nameFile << _domain.get_Tij(0, i) * Constants::BOHR_RADIUS_TO_ANGSTROM << " ";
-        }
-        nameFile<<std::endl;
-        nameFile<<_domain.get_N2()<<" ";
-        for(int i=0;i<3;i++)
-        {
-            nameFile << _domain.get_Tij(1, i) * Constants::BOHR_RADIUS_TO_ANGSTROM << " ";
-        }
-        nameFile<<std::endl<<_domain.get_N3()<<" ";
-        for(int i=0;i<3;i++)
-        {
-            nameFile << _domain.get_Tij(2, i) * Constants::BOHR_RADIUS_TO_ANGSTROM << " ";
-        }
+        saveType = GridSaveType::ORBITALS;
     }
-    nameFile<<std::endl;
-    for(int i=0;i<_structure.number_of_atoms();i++)
+
+    // Header
+    fileName << "Grid generated by CdftT" << std::endl;
+    fileName << to_string(saveType) << std::endl;
+    
+    // Number of atoms (negative if the grid type is ORBITALS), grid's origin, and number of values per grid point
+    if (saveType == GridSaveType::ORBITALS)
     {
-        nameFile<<_structure.atom(i).get_atomicNumber()<<" ";
-        if(_structure.atom(i).get_charge()<1)
+        fileName << '-';
+    }
+    fileName << _structure.getNumberOfAtoms() << ' ';
+
+    for(int i = 0; i < 3; ++i)
+    {
+        fileName << _domain.get_origin()[i] << ' ';
+    }
+
+    fileName << _domain.get_Nval() << std::endl;
+
+
+    // Grid information
+    bool isBohr = (N1 > 0);
+
+    fileName << N1 << ' ';
+    for(int i = 0; i < 3; ++i)
+    {
+        fileName << (isBohr ? _domain.get_Tij(0, i) : _domain.get_Tij(0, i) * Constants::BOHR_RADIUS_TO_ANGSTROM) << ' ';
+    }
+    fileName << std::endl;
+
+    fileName << N2 << ' ';
+    for(int i = 0; i < 3; ++i)
+    {
+        fileName << (isBohr ? _domain.get_Tij(1, i) : _domain.get_Tij(1, i) * Constants::BOHR_RADIUS_TO_ANGSTROM) << ' ';
+    }
+    fileName << std::endl;
+    
+    fileName << N3 << ' ';
+    for(int i = 0; i < 3; ++i)
+    {
+        fileName << (isBohr ? _domain.get_Tij(2, i) : _domain.get_Tij(2, i) * Constants::BOHR_RADIUS_TO_ANGSTROM) << ' ';
+    }
+    fileName<<std::endl;
+
+    // Atom information
+    for(int i = 0; i < _structure.getNumberOfAtoms(); ++i)
+    {
+        fileName << _structure.atom(i).get_atomicNumber() << ' ';
+
+        if(_structure.atom(i).get_charge() < 1)
         {
-            nameFile<<double(_structure.atom(i).get_atomicNumber())<<" ";
+            fileName << static_cast<double>(_structure.atom(i).get_atomicNumber()) << ' ';
         }
         else
         {
-            nameFile<<_structure.atom(i).get_charge()<<" ";
+            fileName << _structure.atom(i).get_charge() << ' ';
         }
-        for(int j=0; j<3;j++)
+
+        for(int j = 0; j < 3; ++j)
         {
-            nameFile<<_structure.atom(i).get_coordinates()[j]<<" ";
+            fileName << _structure.atom(i).get_coordinates()[j] << ' ';
         }
-        nameFile<<std::endl;
+        fileName << std::endl;
     }
-    for(int i=0; i<_domain.get_N1();i++)
-    {    
+
+    // If the grid type is ORBITALS: total number of orbitals and orbital numbers (1-based).
+    // Warning: maximum 10 numbers per line (Gaussian format standard).
+    if (saveType == GridSaveType::ORBITALS)
+    {
+        int numberOfPrintedValues = 0;
+
+        // Number of orbitals
+        fileName << numberOfValuesPerGridPoint << ' ';
+        ++numberOfPrintedValues;
         
-        for(int j=0; j<_domain.get_N2();j++)
-        {    
-            int R=0;
-            for(int k=0; k<_domain.get_N3();k++)
+        // Orbital numbers
+        for(int i = 1; i <= numberOfValuesPerGridPoint; ++i)
+        {
+            fileName << i; // (lgardre) TODO: Possibilité de ne sauvegarder que certaines orbitales
+
+            if (++numberOfPrintedValues % 10 == 0)
             {
-                for(int l=0; l<_domain.get_Nval();l++)
+                fileName << std::endl;
+            }
+            else
+            {
+                fileName << ' ';
+            }
+        }
+        
+        fileName << std::endl;
+    }
+
+    // Grid values
+    for(int i = 0; i < N1; ++i)
+    {
+        for(int j = 0; j < N2; ++j)
+        {
+            int numberOfPrintedValues = 0;
+
+            for(int k = 0; k < N3; ++k)
+            {
+                for(int l = 0; l < numberOfValuesPerGridPoint; ++l)
                 {
-                    nameFile<<_values[i][j][k][l]<<" ";
-                    R++;
-                    if(R%6==0)
+                    fileName << _values[i][j][k][l];
+
+                    if(++numberOfPrintedValues % 6 == 0)
                     {
-                        nameFile<<std::endl;
+                        fileName << std::endl;
+                    }
+                    else
+                    {
+                        fileName << ' ';
                     }
                 }
             }
-            if(R%6!=0)
+
+            // Add a new line if the last line is not complete
+            if(numberOfPrintedValues % 6 != 0)
             {
-                nameFile<<std::endl;
+                fileName << std::endl;
+            }
+
+            if (showProgress)
+            {
+                // Update at each N2 iteration for a smoother display
+                int currentStep = (progress += N3);
+                
+                print_progressBar(currentStep, nbStepsTotal, lastProgress);
             }
         }
+    }
+    if (showProgress)
+    {
+        std::cout << std::endl;
     }
 }
 
@@ -1276,14 +1437,14 @@ void Grid::next(int i, int j, int k, double& current, std::vector<std::vector<in
 
 std::vector<double> Grid::atom_attract_diff(const std::vector<std::vector<int>>& attract)
 {
-    std::vector<double> v(_structure.number_of_atoms());
+    std::vector<double> v(_structure.getNumberOfAtoms());
     double distance=0;
     double d1=100;
     std::vector<double> ds(3);
     ds[0]=_domain.get_dx();
     ds[1]=_domain.get_dy();
     ds[2]=_domain.get_dz();
-    for(int j=0; j<_structure.number_of_atoms();j++)
+    for(int j=0; j<_structure.getNumberOfAtoms();j++)
     {
         for(int n=0;n<int(attract.size()); n++)
         {
@@ -1576,7 +1737,7 @@ Grid Grid::aim_On_Grid(int nBound)
                     std::cout << (attractors[m][a] * ds[a] + _domain.get_origin()[a]) * Constants::BOHR_RADIUS_TO_ANGSTROM << std::endl;
                 }
             }
-            for(int m=0; m<_structure.number_of_atoms();m++)
+            for(int m=0; m<_structure.getNumberOfAtoms();m++)
             {
                 std::cout<<atom_attract_diff(attractors)[m]<<std::endl;
                 std::cout<<atom_attract_diff(attractors).size()<<std::endl;
@@ -1596,7 +1757,7 @@ Grid Grid::aim_On_Grid(int nBound)
     catch(std::string error)
     {
         std::cout<<error<<std::endl;
-        exit(1);
+        std::exit(1);
     }
 }
 
@@ -1854,7 +2015,7 @@ Grid Grid::aim_On_Grid_Density()
                     std::cout<<attractors[m][a]<<std::endl;
                 }
             }
-            for(int m=0; m<_structure.number_of_atoms();m++)
+            for(int m=0; m<_structure.getNumberOfAtoms();m++)
             {
                 std::cout<<atom_attract_diff(attractors)[m]<<std::endl;
                 std::cout<<atom_attract_diff(attractors).size()<<std::endl;
@@ -1875,7 +2036,7 @@ Grid Grid::aim_On_Grid_Density()
                     }
                 }
             }
-            std::cout<<"number of of idices "<<int(value)<<std::endl;
+            std::cout<<"number of of indices "<<int(value)<<std::endl;
             return g;
         
         
@@ -1889,7 +2050,7 @@ Grid Grid::aim_On_Grid_Density()
     catch(std::string error)
     {
         std::cout<<error<<std::endl;
-        exit(1);
+        std::exit(1);
     }
 }
 
@@ -1927,7 +2088,7 @@ double Grid::value(double x, double y, double z) const
     return S;
 }
 
-double Grid::phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, const std::array<double, 3>& chargePosition, const double charge)
+double Grid::phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, SpinType spinType, const std::array<double, 3>& chargePosition, const double charge) const
 {
     double phiStarVionicStarPhi = 0.0;
 
@@ -1944,9 +2105,27 @@ double Grid::phiStarVionicStarPhi(int leftOrbitalIndex, int rightOrbitalIndex, c
                                             + (chargePosition[1] - _domain.y(i, j, k)) * (chargePosition[1] - _domain.y(i, j, k))
                                             + (chargePosition[2] - _domain.z(i, j, k)) * (chargePosition[2] - _domain.z(i, j, k)));
 
-                if (distance > 1e-6)
+                if (distance > 1e-10)
                 {
-                    phiStarVionicStarPhi += _values[i][j][k][leftOrbitalIndex] * _values[i][j][k][rightOrbitalIndex] / distance;
+                    if (spinType == SpinType::ALPHA)
+                    {
+                        phiStarVionicStarPhi += _values[i][j][k][leftOrbitalIndex] * _values[i][j][k][rightOrbitalIndex] / distance;
+                    }
+                    else if (spinType == SpinType::BETA)
+                    {
+                        // Beta spins are stored in the second half of the values.
+                        int betaSpinsOffset = _domain.get_Nval() / 2;
+                        
+                        phiStarVionicStarPhi += _values[i][j][k][leftOrbitalIndex + betaSpinsOffset] * _values[i][j][k][rightOrbitalIndex + betaSpinsOffset] / distance;
+                    }
+                    else
+                    {
+                        // Beta spins are stored in the second half of the values.
+                        int betaSpinsOffset = _domain.get_Nval() / 2;
+
+                        phiStarVionicStarPhi += ((_values[i][j][k][leftOrbitalIndex] * _values[i][j][k][rightOrbitalIndex]
+                                                  + _values[i][j][k][leftOrbitalIndex + betaSpinsOffset] * _values[i][j][k][rightOrbitalIndex + betaSpinsOffset]) / distance);
+                    }
                 }
             }
         }
@@ -2021,7 +2200,7 @@ Grid operator*(const Grid& lhsGrid, const Grid& rhsGrid)
     {
         std::cerr << Error << std::endl;
 
-        exit(1);
+        std::exit(1);
     }
 
     return product;
@@ -2082,7 +2261,7 @@ Grid operator-(const Grid& lhsGrid, const Grid& rhsGrid)
     {
         std::cerr << Error << std::endl;
 
-        exit(1);
+        std::exit(1);
     }
 
     return diff;

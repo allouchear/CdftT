@@ -1,0 +1,5 @@
+RunType=LambdaDiagnostic
+AnalyticFiles=tests/Guegan2020/acrolein_HF.log
+Size=Custom
+CustomSizeData=512,512,512,5,5,5,1.955034213098728e-02,0,0,0,1.955034213098728e-02,0,0,0,1.955034213098728e-02
+TransitionsFile=tests/Guegan2020/acrolein_orca.out

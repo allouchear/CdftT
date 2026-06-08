@@ -1,21 +1,13 @@
-# ignore ALL .log files
-*.log
-# ignore ALL files in ANY directory named temp
+# Directories
 bin/
 Documentation/
-# ignore ALL .o files
-*/*/*/*.wfx
-*/*/*/*.molden
-*/*/*/*.gab
-*/*/*/*.log
-*/*/*/*.fchk
-*/*/*.cube
-*/*/*.gcube
-*/*/*.chk
-*/*/*/*.cube
-*.cube
+
+# Files
+
+*.cdftt
+*.chk
 *.com
-*.o
+*.cube
 *.exe
 # p
 p
@@ -26,6 +18,18 @@ p
 # ignore all executable files and library files
 **/*.so
 src/applications/cdftt/cdftt
+
+*.fchk
+*.gab
+*.gcube
+*.log
+*.molden
+*.o
+*.out
+*.sh
+*.serr
+*.sout
+*.wfx
 
 # custom file to switch includes from angle brackets to relative paths (with quotes) to help with IDEs that don't support the angle bracket syntax
 src/lib/switch_includes.sh

@@ -1,4 +1,4 @@
-OBJECTS = Job.o
+OBJECTS = Job.o JobManager.o Jobs/ComputeCondensedLinearResponse.o Jobs/ComputeElectronDensity.o Jobs/ComputeDescriptors.o Jobs/ComputeEnergyWithPointCharges.o Jobs/ComputeGridDifference.o Jobs/ComputeIntegrals.o Jobs/ComputePartialCharges.o Jobs/ConvertOrbitals.o Jobs/Help.o Jobs/LambdaDiagnostic.o Jobs/MakeDensityCube.o Jobs/MakeELFCube.o Jobs/MakeOrbitalsCube.o
 
 
 include $(LIBCDFTTDIR)/CONFIG
@@ -10,6 +10,9 @@ all: compiling
 %.o : %.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
+Jobs/%.o : Jobs/%.cpp
+	$(CC) -c $(CFLAGS) $< -o $@
+
 compiling: $(OBJECTS)
 
 profile: CFLAGS = $(COMMONCFLAGS) $(PROFILEFLAGS)
@@ -17,6 +20,7 @@ profile: compiling
 
 clean:
 	@$(RM) *o *.out *.log *.inp *~ *.mk
+	@$(RM) Jobs/*.o
 
 #make dependance
 SRCS = $(OBJECTS:%.o=%.cpp)

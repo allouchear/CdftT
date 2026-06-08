@@ -4,11 +4,21 @@
 #include <fstream>
 #include <vector>
 
+<<<<<<< HEAD
 #include "../Common/Atom.h"
 #include "../Utils/WFX.h"
 #include "../Utils/FCHK.h"
 #include "../Utils/MOLDENGAB.h"
 #include "../Utils/LOG.h"
+=======
+#include <Common/Atom.h>
+
+// Forward declarations to avoid circular dependencies
+class FCHK;
+class LOG;
+class MOLDENGAB;
+class WFX;
+>>>>>>> origin/dev
 
 
 /** @brief Structure class.
@@ -64,10 +74,7 @@ class Structure
 
             //! A normal member taking no arguments and returning an integer value.
             /*! \return The number of atoms in our structure. */
-        int number_of_atoms() const
-        {
-            return _atoms.size();
-        }
+        int getNumberOfAtoms() const;
 
             //! A normal member taking one arguments and returning an atom value.
             /*! \return The atom i of our structure. */

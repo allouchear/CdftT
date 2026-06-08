@@ -17,6 +17,7 @@
 #include <omp.h>
 #endif
 
+<<<<<<< HEAD
 #include "../Becke/Becke.h"
 #include "../Common/Descriptors.h"
 #include "../Common/Element.h"
@@ -28,15 +29,52 @@
 #include "../Orbitals/ExcitedState.hpp"
 #include "../Orbitals/SlaterDeterminant.hpp"
 #include "../Utils/Utils.h"
+=======
+#include <Becke/Becke.h>
+#include <Common/Descriptors.h>
+#include <Common/Element.h>
+#include <Common/Constants.h>
+#include <Cube/Grid.h>
+#include <Cube/GridCP.h>
+#include <JobControl/Job.h>
+#include <JobControl/Jobs/ComputeDescriptors.hpp>
+#include <Orbitals/Orbitals.h>
+#include <Orbitals/ExcitedState.hpp>
+#include <Orbitals/SlaterDeterminant.hpp>
+#include <Utils/Utils.h>
+>>>>>>> origin/dev
+
+
+//----------------------------------------------------------------------------------------------------//
+// CONSTRUCTORS AND DESTRUCTOR
+//----------------------------------------------------------------------------------------------------//
+
+Job::Job():
+    _inputFileName(""),
+    _inputFile()
+{ }
+
+Job::Job(const std::string& inputFileName):
+    _inputFileName(inputFileName)
+{
+    openInputFile();
+}
+
+Job::~Job()
+{
+    _inputFile.close();
+}
 
 
 //----------------------------------------------------------------------------------------------------//
 // SPECIFIC PARAMETERS READING FROM INPUT FILE
 //----------------------------------------------------------------------------------------------------//
 
-void Job::readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames)
+bool Job::readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames)
 {
-    if (!readListType<std::string>(_inputFile, "AnalyticFiles", analyticFilesNames))
+    bool read = readListType<std::string>(_inputFile, "AnalyticFiles", analyticFilesNames);
+
+    if (!read)
     {
         std::stringstream errorMessage;
         errorMessage << "Error: could not find analytic files names." << std::endl;
@@ -64,37 +102,116 @@ void Job::readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames)
             std::exit(1);
         }
     }
+
+    return read;
 }
 
-void Job::readCharges(std::vector<double>& charges)
+bool Job::readBecke(std::vector<int>& beckeParameters)
 {
-    if (!readListType<double>(_inputFile, "Charges", charges))
+    bool read = readListType<int>(_inputFile, "Becke", beckeParameters);
+
+    if (read && !beckeParameters.empty() && beckeParameters.size() != 3)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect number of values for the \"Becke\" parameter (three values expected)." << std::endl;
+        errorMessage << "Please check documentation and the \"Becke\" parameter values in " << _inputFileName << '.';
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+    else if (!read)
+    {
+        std::string defaultBeckeStr;
+        read = readOneString(_inputFile, "Becke", defaultBeckeStr);
+
+        if (to_lower(defaultBeckeStr) == "default")
+        {
+            beckeParameters = { 3, 41, 5 };
+        }
+        else
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error: incorrect value for the \"Becke\" parameter (either three integers or \"Default\" string expected)." << std::endl;
+            errorMessage << "Please check documentation and the \"Becke\" parameter values in " << _inputFileName << '.';
+
+            print_error(errorMessage.str());
+
+            std::exit(1);
+        }
+    }
+
+    return read;
+}
+
+bool Job::readCharges(std::vector<double>& charges)
+{
+    bool read = readListType<double>(_inputFile, "Charges", charges);
+
+    if (!read)
     {
         std::cout << "Note: the \"Charges\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (Charges=1)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (Charges = -1)." << std::endl << std::endl;
 
-        charges = { 1.0 };
+        charges = { - 1.0 };
     }
+
+    return read;
 }
 
-void Job::readCutoff(double& cutoff)
+bool Job::readChargesPositionsBijections(bool& chargesPositionsBijections)
 {
-    if (!readOneType<double>(_inputFile, "Cutoff", cutoff))
+    std::string strChargesPositionsBijections;
+    bool read = readOneString(_inputFile, "ChargesPositionsBijections", strChargesPositionsBijections);
+
+    chargesPositionsBijections = false;
+    if (!read)
+    {
+        std::cout << "Note: the \"ChargesPositionsBijections\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (ChargesPositionsBijections = False)." << std::endl << std::endl;
+    }
+    else if (to_lower(strChargesPositionsBijections) == "true")
+    {
+        chargesPositionsBijections = true;
+    }
+    else if (to_lower(strChargesPositionsBijections) != "false")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"ChargesPositionsBijections\" parameter (" << strChargesPositionsBijections << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"ChargesPositionsBijections\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readCutoff(double& cutoff)
+{
+    bool read = readOneType<double>(_inputFile, "Cutoff", cutoff);
+
+    if (!read)
     {
         std::cout << "Note: the \"Cutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (Cutoff=0)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (Cutoff = 0.0)." << std::endl << std::endl;
 
         cutoff = 0.0;
     }
+
+    return read;
 }
 
-void Job::readELFMethod(ELFMethod& elfMethod)
+bool Job::readELFMethod(ELFMethod& elfMethod)
 {
     std::string strELFMethod;
-    if (!readOneString(_inputFile, "ELFMethod", strELFMethod))
+    bool read = readOneString(_inputFile, "ELFMethod", strELFMethod);
+
+    if (!read)
     {
         std::cout << "Note: the \"ELFMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (ELFMethod=Savin)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (ELFMethod = Savin)." << std::endl << std::endl;
         elfMethod = ELFMethod::SAVIN;
     }
     else
@@ -102,7 +219,7 @@ void Job::readELFMethod(ELFMethod& elfMethod)
         elfMethod = elfMethod_from_string(strELFMethod);
     }
 
-    // Handle unknown ELF method: exit program with error message.
+    // Handle unknown ELF method
     if (elfMethod == ELFMethod::UNKNOWN)
     {
         std::stringstream errorMessage;
@@ -113,11 +230,15 @@ void Job::readELFMethod(ELFMethod& elfMethod)
 
         std::exit(1);
     }
+
+    return read;
 }
 
-void Job::readEnergies(std::vector<double>& energies)
+bool Job::readEnergies(std::vector<double>& energies)
 {
-    if (!readListType<double>(_inputFile, "Energies", energies))
+    bool read = readListType<double>(_inputFile, "Energies", energies);
+
+    if (!read)
     {
         std::stringstream errorMessage;
         errorMessage << "Error: could not find energies." << std::endl;
@@ -127,15 +248,82 @@ void Job::readEnergies(std::vector<double>& energies)
 
         std::exit(1);
     }
+
+    return read;
 }
 
-void Job::readGridFilesNames(std::vector<std::string>& gridFilesNames)
+bool Job::readEnergyPointChargeMethods(std::vector<EnergyPointChargeMethod>& energyPointChargeMethods)
 {
-    if (!readListType<std::string>(_inputFile, "Grids", gridFilesNames))
+    std::vector<std::string> strEnergyPointChargeMethods;
+    bool read = readListType<std::string>(_inputFile, "EnergyPointChargeMethods", strEnergyPointChargeMethods);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"EnergyPointChargeMethods\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (EnergyPointChargeMethods = Variational)." << std::endl << std::endl;
+
+        energyPointChargeMethods = { EnergyPointChargeMethod::VARIATIONAL };
+    }
+
+    for (const std::string& strMethod : strEnergyPointChargeMethods)
+    {
+        EnergyPointChargeMethod method = energyPointChargeMethod_from_string(strMethod);
+
+        // Handle unknown method: exit program with error message.
+        if (method == EnergyPointChargeMethod::UNKNOWN)
+        {
+            std::stringstream errorMessage;
+            errorMessage << "Error: Energy point charge method \"" << strMethod << "\" unknown." << std::endl;
+            errorMessage << "Please check the documentation and the \"EnergyPointChargeMethods\" parameter values in the provided input file (" << _inputFileName << ").";
+
+            print_error(errorMessage.str());
+
+            std::exit(1);
+        }
+
+        energyPointChargeMethods.push_back(method);
+    }
+
+    return read;
+}
+
+bool Job::readExcitedStatesNumbers(std::vector<int>& excitedStatesNumbers)
+{
+    bool read = readListType<int>(_inputFile, "ExcitedStatesNumbers", excitedStatesNumbers);
+
+    if (!read)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Note: the \"ExcitedStatesNumbers\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        errorMessage << "The program will keep all excited states." << std::endl << std::endl;
+    }
+
+    return read;
+}
+
+bool Job::readExcludedOrbitals(std::vector<int>& excludedOrbitals)
+{
+    bool read = readListType<int>(_inputFile, "ExcludedOrbitals", excludedOrbitals);
+
+    if (!read)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Note: the \"ExcludedOrbitalsNumbers\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        errorMessage << "The program will keep all orbitals for the computation." << std::endl << std::endl;
+    }
+
+    return read;
+}
+
+bool Job::readGridFilesNames(std::vector<std::string>& gridFilesNames)
+{
+    bool read = readListType<std::string>(_inputFile, "GridFilesNames", gridFilesNames);
+
+    if (!read)
     {
         std::stringstream errorMessage;
         errorMessage << "Error: could not find grid files names." << std::endl;
-        errorMessage << "Please check if the \"Grids\" parameter is defined and set in the provided input file (" << _inputFileName << ").";
+        errorMessage << "Please check if the \"GridFilesNames\" parameter is defined and set in the provided input file (" << _inputFileName << ").";
 
         print_error(errorMessage.str());
 
@@ -152,29 +340,61 @@ void Job::readGridFilesNames(std::vector<std::string>& gridFilesNames)
         {
             std::stringstream errorMessage;
             errorMessage << "Error: cannot determine file format from file name \"" << fileName << "\" (no file extension)." << std::endl;
-            errorMessage << "Please check the documentation and the \"Grids\" parameter value in the provided input file (" << _inputFileName << ").";
+            errorMessage << "Please check the documentation and the \"GridFilesNames\" parameter value in the provided input file (" << _inputFileName << ").";
 
             print_error(errorMessage.str());
 
             std::exit(1);
         }
     }
+
+    return read;
 }
 
-void Job::readNuclearCutoff(double& nuclearCutoff)
+bool Job::readGroundStateEnergy(double& energy)
 {
-    if (!readOneType<double>(_inputFile, "NuclearCutoff", nuclearCutoff))
+    return readOneType<double>(_inputFile, "GroundStateEnergy", energy);
+}
+
+bool Job::readMaxNumberOfExcitedStates(int& maxNumberOfExcitedStates)
+{
+    bool read = readOneType<int>(_inputFile, "MaxNumberOfExcitedStates", maxNumberOfExcitedStates);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"MaxNumberOfExcitedStates\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will consider all excited states available in the excited states file (MaxNumberOfExcitedStates = -1)." << std::endl << std::endl;
+
+        maxNumberOfExcitedStates = -1;
+    }
+
+    return read;
+}
+
+bool Job::readNuclearCutoff(double& nuclearCutoff)
+{
+    bool read = readOneType<double>(_inputFile, "NuclearCutoff", nuclearCutoff);
+
+    if (!read)
     {
         std::cout << "Note: the \"NuclearCutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (NuclearCutoff=0.1)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (NuclearCutoff = 0.1 Å)." << std::endl << std::endl;
 
-        nuclearCutoff = 0.1;
+        nuclearCutoff = 0.1 * Constants::ANGSTROM_TO_BOHR_RADIUS;
     }
+    else
+    {
+        nuclearCutoff *= Constants::ANGSTROM_TO_BOHR_RADIUS;
+    }
+
+    return read;
 }
 
-void Job::readOrbitalsNumbers(std::vector<int>& orbitalsNumbers)
+bool Job::readOrbitalsNumbers(std::vector<int>& orbitalsNumbers)
 {
-    if (!readListType<int>(_inputFile, "OrbitalsNumbers", orbitalsNumbers))
+    bool read = readListType<int>(_inputFile, "OrbitalsNumbers", orbitalsNumbers);
+
+    if (!read)
     {
         std::stringstream errorMessage;
         errorMessage << "Error: could not find orbitals numbers." << std::endl;
@@ -184,12 +404,16 @@ void Job::readOrbitalsNumbers(std::vector<int>& orbitalsNumbers)
 
         std::exit(1);
     }
+
+    return read;
 }
 
-void Job::readOrbitalsSpins(std::vector<SpinType>& orbitalsSpins)
+bool Job::readOrbitalsSpins(std::vector<SpinType>& orbitalsSpins)
 {
     std::vector<std::string> strOrbitalsSpins;
-    if (!readListType<std::string>(_inputFile, "OrbitalsSpins", strOrbitalsSpins))
+    bool read = readListType<std::string>(_inputFile, "OrbitalsSpins", strOrbitalsSpins);
+
+    if (!read)
     {
         std::stringstream errorMessage;
         errorMessage << "Error: could not find orbitals spins." << std::endl;
@@ -230,15 +454,39 @@ void Job::readOrbitalsSpins(std::vector<SpinType>& orbitalsSpins)
 
         orbitalsSpins.push_back(spin);
     }
+
+    return read;
 }
 
-void Job::readOrbitalType(OrbitalType& orbitalType)
+bool Job::readOutputPrefix(std::string& outputPrefix)
+{
+    bool read = readOneString(_inputFile, "OutputPrefix", outputPrefix);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"OutputPrefix\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (OutputPrefix = \"\")." << std::endl << std::endl;
+
+        outputPrefix = "";
+    }
+
+    if (!outputPrefix.empty() && outputPrefix.back() != '_')
+    {
+        outputPrefix += '_';
+    }
+
+    return read;
+}
+
+bool Job::readOrbitalType(OrbitalType& orbitalType)
 {
     std::string strOrbitalType;
-    if (!readOneString(_inputFile, "OrbitalType", strOrbitalType))
+    bool read = readOneString(_inputFile, "OrbitalType", strOrbitalType);
+
+    if (!read)
     {
         std::cout << "Note: the \"OrbitalType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (OrbitalType=All)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (OrbitalType = All)." << std::endl << std::endl;
         orbitalType = OrbitalType::ALL;
     }
     else
@@ -257,15 +505,19 @@ void Job::readOrbitalType(OrbitalType& orbitalType)
 
         std::exit(1);
     }
+
+    return read;
 }
 
-void Job::readPartitionMethod(PartitionMethod& partitionMethod)
+bool Job::readPartitionMethod(PartitionMethod& partitionMethod)
 {
     std::string strMethod;
-    if (!readOneString(_inputFile, "PartitionMethod", strMethod))
+    bool read = readOneString(_inputFile, "PartitionMethod", strMethod);
+
+    if (!read)
     {
         std::cout << "Note: the \"PartitionMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (PartitionMethod=On-Grid)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (PartitionMethod = On-Grid)." << std::endl << std::endl;
         partitionMethod = PartitionMethod::AIM_ON_GRID;
     }
     else
@@ -284,40 +536,80 @@ void Job::readPartitionMethod(PartitionMethod& partitionMethod)
 
         std::exit(1);
     }
+
+    return read;
 }
 
-void Job::readPositions(std::vector<std::array<double, 3>>& positions)
+bool Job::readPositions(std::vector<std::array<double, 3>>& positions)
 {
-    std::vector<double> positionValues;
-    readListType<double>(_inputFile, "Positions", positionValues);
+    bool ok = readListTypeArray<double, 3>(_inputFile, "Positions", positions);
 
-    if (!positionValues.empty())
+    for (size_t i = 0; i < positions.size(); ++i)
     {
-        if (positionValues.size() % 3 != 0)
+        for (size_t j = 0; j < 3; ++j)
         {
-            std::stringstream errorMessage;
-            errorMessage << "Error: incorrect number of values for the \"Positions\" parameter (multiple of three values expected)." << std::endl;
-            errorMessage << "Please check documentation and the \"Positions\" parameter values in " << _inputFileName << '.';
-
-            print_error(errorMessage.str());
-
-            std::exit(1);
-        }
-
-        for (size_t i = 0; i < positionValues.size(); i += 3)
-        {
-            positions.push_back({positionValues[i] * Constants::ANGSTROM_TO_BOHR_RADIUS, positionValues[i + 1] * Constants::ANGSTROM_TO_BOHR_RADIUS, positionValues[i + 2] * Constants::ANGSTROM_TO_BOHR_RADIUS});
+            positions[i][j] *= Constants::ANGSTROM_TO_BOHR_RADIUS;
         }
     }
+
+    return ok;
 }
 
-void Job::readRunType(RunType& runType)
+bool Job::readPrecision(int& precision)
+{
+    bool read = readOneType<int>(_inputFile, "Precision", precision);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"Precision\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (Precision = 10)." << std::endl << std::endl;
+
+        precision = 10;
+    }
+
+    return read;
+}
+
+bool Job::readRDMMethod(RDMMethod& rdmMethod)
+{
+    std::string strRDMMethod;
+    bool read = readOneString(_inputFile, "RDMMethod", strRDMMethod);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"RDMMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (RDMMethod = Gamma)." << std::endl << std::endl;
+        rdmMethod = RDMMethod::GAMMA;
+    }
+    else
+    {
+        rdmMethod = rdmMethod_from_string(strRDMMethod);
+    }
+
+    // Handle unknown RDM method: exit program with error message.
+    if (rdmMethod == RDMMethod::UNKNOWN)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: RDM method \"" << strRDMMethod << "\" unknown." << std::endl;
+        errorMessage << "Please check the documentation and the \"RDMMethod\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readRunType(RunType& runType)
 {
     std::string strRunType;
-    if (!readOneString(_inputFile, "RunType", strRunType))
+    bool read = readOneString(_inputFile, "RunType", strRunType);
+
+    if (!read)
     {
         std::cout << "Note: the \"RunType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (RunType=Help)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (RunType = Help)." << std::endl << std::endl;
         runType = RunType::HELP;
     }
     else
@@ -336,15 +628,135 @@ void Job::readRunType(RunType& runType)
 
         std::exit(1);
     }
+
+    return read;
 }
 
-void Job::readSize(GridSize& gridSize, CustomSizeData& customSizeData)
+bool Job::readSavePseudoOrbitals(bool& savePseudoOrbitals)
+{
+    std::string strSavePseudoOrbitals;
+    bool read = readOneString(_inputFile, "SavePseudoOrbitals", strSavePseudoOrbitals);
+    
+    savePseudoOrbitals = false;
+    if (!read)
+    {
+        std::cout << "Note: the \"SavePseudoOrbitals\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (SavePseudoOrbitals = False)." << std::endl << std::endl;
+    }
+    else if (to_lower(strSavePseudoOrbitals) == "true")
+    {
+        savePseudoOrbitals = true;
+    }
+    else if (to_lower(strSavePseudoOrbitals) != "false")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"SavePseudoOrbitals\" parameter (" << strSavePseudoOrbitals << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"SavePseudoOrbitals\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readSaveReducedDensityMatrix(bool& saveReducedDensityMatrix)
+{
+    std::string strSaveReducedDensityMatrix;
+    bool read = readOneString(_inputFile, "SaveReducedDensityMatrix", strSaveReducedDensityMatrix);
+    
+    saveReducedDensityMatrix = false;
+    if (!read)
+    {
+        std::cout << "Note: the \"SaveReducedDensityMatrix\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (SaveReducedDensityMatrix = False)." << std::endl << std::endl;
+    }
+    else if (to_lower(strSaveReducedDensityMatrix) == "true")
+    {
+        saveReducedDensityMatrix = true;
+    }
+    else if (to_lower(strSaveReducedDensityMatrix) != "false")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"SaveReducedDensityMatrix\" parameter (" << strSaveReducedDensityMatrix << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"SaveReducedDensityMatrix\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readShowProgress(bool& showProgress)
+{
+    std::string strShowProgress;
+    bool read = readOneString(_inputFile, "ShowProgress", strShowProgress);
+
+    showProgress = false;
+    if (!read)
+    {
+        std::cout << "Note: the \"ShowProgress\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (ShowProgress = False)." << std::endl << std::endl;
+    }
+    else if (to_lower(strShowProgress) == "true")
+    {
+        showProgress = true;
+    }
+    else if (to_lower(strShowProgress) != "false")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"ShowProgress\" parameter (" << strShowProgress << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"ShowProgress\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readSingleCharge(bool& singleCharge)
+{
+    std::string strSingleCharge;
+    bool read = readOneString(_inputFile, "SingleCharge", strSingleCharge);
+
+    singleCharge = true;
+    if (!read)
+    {
+        std::cout << "Note: the \"SingleCharge\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (SingleCharge = True)." << std::endl << std::endl;
+    }
+    else if (to_lower(strSingleCharge) == "false")
+    {
+        singleCharge = false;
+    }
+    else if (to_lower(strSingleCharge) != "true")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"SingleCharge\" parameter (" << strSingleCharge << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"SingleCharge\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readSize(GridSize& gridSize, CustomSizeData& customSizeData)
 {
     std::string strGridSize;
-    if (!readOneString(_inputFile, "Size", strGridSize))
+    bool read = readOneString(_inputFile, "Size", strGridSize);
+
+    if (!read)
     {
         std::cout << "Note: the \"Size\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (Size=Medium)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (Size = Medium)." << std::endl << std::endl;
 
         gridSize = GridSize::MEDIUM;
     }
@@ -392,12 +804,16 @@ void Job::readSize(GridSize& gridSize, CustomSizeData& customSizeData)
 
         customSizeData = CustomSizeData(customSizeDataValues);
     }
+
+    return read;
 }
 
-void Job::readSpinList(std::vector<SpinType>& spinList)
+bool Job::readSpinList(std::vector<SpinType>& spinList)
 {
     std::vector<std::string> strSpinList;
-    if (!readListType<std::string>(_inputFile, "SpinList", strSpinList))
+    bool read = readListType<std::string>(_inputFile, "SpinList", strSpinList);
+
+    if (!read)
     {
         std::stringstream errorMessage;
         errorMessage << "Error: could not find spin list." << std::endl;
@@ -438,15 +854,19 @@ void Job::readSpinList(std::vector<SpinType>& spinList)
 
         spinList.push_back(spin);
     }
+
+    return read;
 }
 
-void Job::readSpinType(SpinType& spinType)
+bool Job::readSpinType(SpinType& spinType)
 {
     std::string strSpinType;
-    if (!readOneString(_inputFile, "SpinType", strSpinType))
+    bool read = readOneString(_inputFile, "SpinType", strSpinType);
+
+    if (!read)
     {
         std::cout << "Note: the \"SpinType\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will use the default value (SpinType=Alpha-Beta)." << std::endl << std::endl;
+        std::cout << "The program will use the default value (SpinType = Alpha-Beta)." << std::endl << std::endl;
 
         spinType = SpinType::ALPHA_BETA;
     }
@@ -466,32 +886,56 @@ void Job::readSpinType(SpinType& spinType)
 
         std::exit(1);
     }
+
+    return read;
 }
 
-void Job::readTransitionsFileName(std::string& transitionsFileName)
+bool Job::readTransitionDensities(std::vector<std::array<int, 2>>& transitionDensities)
 {
-    if (!readOneString(_inputFile, "TransitionsFile", transitionsFileName))
+    bool read = readListTypeArray<int, 2>(_inputFile, "TransitionDensities", transitionDensities);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"TransitionDensities\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will consider all transition densities." << std::endl << std::endl;
+    }
+
+    return read;
+}
+
+bool Job::readTransitionsFileName(std::string& transitionsFileName)
+{
+    bool read = readOneString(_inputFile, "TransitionsFile", transitionsFileName);
+
+    if (!read)
     {
         std::cout << "Note: the \"TransitionsFile\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
         std::cout << "The program will try to read the transitions from the analytic file." << std::endl << std::endl;
 
         transitionsFileName = "";
     }
+
+    return read;
 }
 
-void Job::readVerbose(int& verbose)
+bool Job::readVerbose(int& verbose)
 {
-    if (!readOneType<int>(_inputFile, "Verbose", verbose))
+    bool read = readOneType<int>(_inputFile, "Verbose", verbose);
+
+    if (!read)
     {
         verbose = 0;
     }
+
+    return read;
 }
 
 
 //----------------------------------------------------------------------------------------------------//
-// JOBS
+// OTHER PRIVATE METHODS
 //----------------------------------------------------------------------------------------------------//
 
+<<<<<<< HEAD
 void Job::setJobList()
 {
     _jobsList = { "Help",
@@ -788,6 +1232,8 @@ void Job::createCube(Orbitals& orbitals, const Domain& domain, const std::string
     out.close();
 }
 
+=======
+>>>>>>> origin/dev
 Domain Job::buildDomainForCube(Orbitals& orb, const GridSize gridSize, const CustomSizeData& customSizeData, const int& Nval)
 {
     Domain d;
@@ -839,21 +1285,395 @@ Domain Job::buildDomainForCube(Orbitals& orb, const GridSize gridSize, const Cus
         d.set_all(Nval, int(customSizeData[0]), int(customSizeData[1]), int(customSizeData[2]), customSizeData[3], customSizeData[4], customSizeData[5], t);
     }
     return d;
-}    
-/******************************************************************************************/
+}
 
-void Job::setOrbitals(Orbitals& o, const int numberOfOrbitals, vector<int>& orbitalsNumbers, vector<int>& orbitalsSpins, const OrbitalType orbitalType, SpinType spinType, const std::vector<SpinType>& spinList)
+Orbitals Job::computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<double>>>& lrfMatrix, std::vector<std::vector<double>>& eigenvalues, std::vector<std::vector<std::vector<double>>>& eigenvectors, const std::string& outputPrefix, bool savePseudoOrbitals, std::ostream& outputStream, int verbose, bool showProgress)
+{
+    std::stringstream logStream;
+
+
+    // Diagonalize LRF matrixes for both spin
+    eigenvalues.resize(2);
+    eigenvectors.resize(2);
+
+
+    // Compute and save results for alpha spin
+    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix[0], eigenvalues[0], eigenvectors[0]);
+
+    std::ofstream outputFile(outputPrefix + "_eigenvalues_alpha.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "_eigenvalues_alpha.cdftt for writing." << std::endl;
+
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    logStream << "Sorted Eigenvalues (alpha spin):" << std::endl;
+    log(logStream, outputStream);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t k = 0; k < eigenvalues[0].size(); ++k)
+    {
+        logStream << eigenvalues[0][k] << ' ';
+        outputFile << eigenvalues[0][k] << std::endl;
+    }
+    logStream << std::endl << std::endl;
+    log(logStream, outputStream);
+    outputFile.close();
+
+    outputFile.open(outputPrefix + "_eigenvectors_alpha.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "_eigenvectors_alpha.cdftt for writing." << std::endl;
+
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    logStream << "Sorted Eigenvectors (columns, alpha spin): " << std::endl;
+    log(logStream, outputStream);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t i = 0; i < eigenvectors[0].size(); ++i)
+    {
+        for (size_t j = 0; j < eigenvectors[0][i].size(); ++j)
+        {
+            logStream << std::right << std::setw(17) << eigenvectors[0][i][j] << '\t';
+            outputFile << std::right << std::setw(17) << eigenvectors[0][i][j] << ' ';
+        }
+
+        logStream << std::endl;
+        outputFile << std::endl;
+    }
+    logStream << std::defaultfloat << std::endl;
+    log(logStream, outputStream);
+    outputFile.close();
+
+
+    // Compute and save results for beta spin
+    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix[1], eigenvalues[1], eigenvectors[1]);
+
+    outputFile.open(outputPrefix + "_eigenvalues_beta.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "_eigenvalues_beta.cdftt for writing." << std::endl;
+
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    logStream << "Sorted Eigenvalues (beta spin):" << std::endl;
+    log(logStream, outputStream);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t k = 0; k < eigenvalues[1].size(); ++k)
+    {
+        logStream << eigenvalues[1][k] << ' ';
+        outputFile << eigenvalues[1][k] << std::endl;
+    }
+    logStream << std::endl << std::endl;
+    log(logStream, outputStream);
+    outputFile.close();
+
+    outputFile.open(outputPrefix + "_eigenvectors_beta.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "_eigenvectors_beta.cdftt for writing." << std::endl;
+
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    logStream << "Sorted Eigenvectors (columns, beta spin): " << std::endl;
+    log(logStream, outputStream);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t i = 0; i < eigenvectors[1].size(); ++i)
+    {
+        for (size_t j = 0; j < eigenvectors[1][i].size(); ++j)
+        {
+            logStream << std::right << std::setw(17) << eigenvectors[1][i][j] << '\t';
+            outputFile << std::right << std::setw(17) << eigenvectors[1][i][j] << ' ';
+        }
+
+        logStream << std::endl;
+        outputFile << std::endl;
+    }
+    logStream << std::defaultfloat << std::endl;
+    log(logStream, outputStream);
+    outputFile.close();
+
+
+    // Expand LRF eigenvector in AO basis (eigenvectors are in vertical format, i.e. columns are eigenvectors)
+    std::vector<std::vector<std::vector<double>>> lrfEigenvectorsInAoBasis(2); // First index for alpha spin, second index for beta spin
+    const std::vector<std::vector<std::vector<double>>>& coefficients = orbitals.get_coefficients();
+
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        lrfEigenvectorsInAoBasis[spin] = std::vector<std::vector<double>>(orbitals.get_numberOfMo(), std::vector<double>(orbitals.get_numberOfAo(), 0.0));
+
+        for (size_t i = 0; i < eigenvectors[spin].size(); ++i) // phi
+        {
+            for (size_t j = 0; j < eigenvectors[spin][i].size(); ++j) // sigma
+            {
+                for (size_t k = 0; k < coefficients[spin].size(); ++k) // xi
+                {
+                    lrfEigenvectorsInAoBasis[spin][j][k] += eigenvectors[spin][i][j] * coefficients[spin][i][k];
+                }
+            }
+        }
+    }
+
+
+    // Copy orbitals to pseudoOrbitals to keep the same structure and only change energies and coefficients
+    Orbitals pseudoOrbitals(orbitals);
+
+    // Replace MO energies by LRF eigenvalues
+    pseudoOrbitals.set_orbitalEnergy(eigenvalues);
+
+    // Replace coefficients by LRF eigenvectors in AO basis
+    pseudoOrbitals.set_coefficients(lrfEigenvectorsInAoBasis);
+
+    // Save pseudoOrbitals in cube format if desired by the user
+    if (savePseudoOrbitals)
+    {
+        // Read cube grid parameters and build domain
+        GridSize gridSize;
+        CustomSizeData customSizeData;
+        readSize(gridSize, customSizeData);
+        Domain domain = buildDomainForCube(pseudoOrbitals, gridSize, customSizeData, pseudoOrbitals.get_numberOfMo());
+
+        std::vector<int> pseudoOrbitalsIndexes;
+        std::vector<SpinType> pseudoOrbitalsSpinTypes_alpha;
+        std::vector<SpinType> pseudoOrbitalsSpinTypes_beta;
+        for (int i = 0; i < pseudoOrbitals.get_numberOfMo(); ++i)
+        {
+            pseudoOrbitalsIndexes.push_back(i);
+            pseudoOrbitalsSpinTypes_alpha.push_back(SpinType::ALPHA);
+            pseudoOrbitalsSpinTypes_beta.push_back(SpinType::BETA);
+        }
+
+        // Save pseudo orbitals
+        std::cout << "Building pseudo orbitals grid for alpha spin..." << std::endl;
+        createCube(pseudoOrbitals, domain, outputPrefix + "_lrf_pseudoOrbitals_alpha.cube", CubeType::ORBITALS, showProgress, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_alpha);
+        logStream << "Pseudo orbitals with alpha spin saved to " << outputPrefix << "_lrf_pseudoOrbitals_alpha.cube." << std::endl;
+        log(logStream, outputStream);
+        if (showProgress)
+        {
+            std::cout << std::endl;
+        }
+
+        std::cout << "Saving pseudo orbitals in cube format for beta spin..." << std::endl;
+        createCube(pseudoOrbitals, domain, outputPrefix + "_lrf_pseudoOrbitals_beta.cube", CubeType::ORBITALS, showProgress, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_beta);
+        logStream << "Pseudo orbitals with beta spin saved to " << outputPrefix << "_lrf_pseudoOrbitals_beta.cube." << std::endl;
+        log(logStream, outputStream);
+        if (showProgress)
+        {
+            std::cout << std::endl;
+        }
+    }
+
+    return pseudoOrbitals;
+}
+
+void Job::createCube(Orbitals& orbitals, const Domain& domain, const std::string& outputCubeFileName, CubeType cubeType, bool showProgress, const ELFMethod elfMethod, std::vector<int> nums, std::vector<SpinType> typesSpin)
+{
+    Grid g;
+    if (cubeType == CubeType::DENSITY)
+    {
+        std::cout << "Creating density grid, please wait..." << std::endl;
+        g = orbitals.makeGrid(domain, showProgress);
+    }
+    else if (cubeType == CubeType::ORBITALS)
+    {
+        g = orbitals.makeOrbGrid(domain, nums, typesSpin, showProgress);
+    }
+    else if (cubeType == CubeType::ELF)
+    {
+        g = orbitals.makeELFgrid(domain, elfMethod);
+    }
+    else
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Job::createCube(): invalid cube type." << std::endl;
+        errorMessage << "Please check the documentation and the \"CubeType\" parameter value in the provided input file.";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    std::cout << "Writing cube file, please wait..." << std::endl;
+    std::ofstream outputFile(outputCubeFileName);
+    g.save(outputFile, showProgress);
+    outputFile.close();
+
+    std::cout << "Density cube saved to " << outputCubeFileName << '.' << std::endl;
+}
+
+void Job::openInputFile()
+{
+    _inputFile.open(_inputFileName);
+    if (_inputFile.fail())
+    {
+        std::cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+        std::cerr << "Sorry, I cannot open the input file : " << _inputFileName << std::endl;
+        std::cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+
+        std::exit(1);
+    }
+}
+
+void Job::printCriticalPoints()
+{
+    std::cerr << "Function Job::printCriticalPoints() not implemented yet." << std::endl;
+}
+
+void Job::setAllOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, int N)
+{
+    orbnums.resize(N);
+    for(int i = 0; i < N; ++i)
+    {
+        orbnums[i] = i;
+    }
+
+    if (spinType == SpinType::ALPHA)
+    {
+        orbspin.resize(N, SpinType::ALPHA);
+    }
+    else if (!o.get_alphaAndBeta() || spinType == SpinType::ALPHA_BETA)
+    {
+        //orbspin.resize(N, 0);
+        orbspin.resize(2 * N, SpinType::ALPHA);
+        orbnums.resize(2 * N, 1);
+        for(int i = N; i < 2 * N; ++i)
+        {
+            orbnums[i] = i - N;
+            orbspin[i] = SpinType::BETA;
+        }
+    }
+    else
+    {
+        orbspin.resize(N, SpinType::BETA);
+    }
+}
+
+void Job::setCustomOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, const std::vector<SpinType>& spinList)
+{
+    for (size_t i = 0; i < spinList.size(); ++i)
+    {
+        if (spinList[i] == SpinType::ALPHA)
+        {
+            orbspin.push_back(SpinType::ALPHA);
+        }
+        else if (spinList[i] == SpinType::BETA)
+        {
+            orbspin.push_back(SpinType::BETA);
+        }
+    }
+
+    for (size_t i = 0; i < orbnums.size(); ++i)
+    {
+        orbnums[i] -= 1;
+    }
+
+    if (orbspin.size() < orbnums.size())
+    {
+        SpinType last = orbspin.back();
+        for (size_t i = orbspin.size(); i < orbnums.size(); ++i)
+        {
+            orbspin.push_back(last);
+        }
+    }
+}
+
+void Job::setOccupiedOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, int N)
+{
+    std::vector<std::vector<double>> occ=o.get_occupationNumber();
+    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA) 
+    {
+        int k = 0;
+        for(int i = 0; i < N; ++i)
+        {
+            if (occ[0][i] > 1e-10)
+            {
+                orbnums[k] = i;
+                k++;
+            }
+        }
+        orbnums.resize(k);
+        orbspin.resize(k, SpinType::ALPHA);
+    }
+    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
+    {
+        int k = 0;
+        orbnums.resize(2 * N, 0);
+        for(int i = 0; i < N; ++i)
+        {
+            if (occ[0][i] > 1e-10)
+            {
+                orbnums[k] = i;
+                k++;
+            }
+        }
+        orbspin.resize(k, SpinType::ALPHA);
+        int j = k;
+        for(int i = 0; i < N; ++i)
+        {
+            if (occ[1][i] > 1e-10)
+            {
+                orbnums[j] = i;
+                j++;
+            }
+        }
+        orbnums.resize(j);
+        orbspin.resize(j, SpinType::BETA);    
+    }
+    else
+    {
+        int j = 0;
+        for(int i = 0; i < N; ++i)
+        {
+            if (occ[1][i] > 1e-10)
+            {
+                orbnums[j] = i;
+                j++;
+            }
+        }
+        orbnums.resize(j);
+        orbspin.resize(j, SpinType::BETA);
+    }
+}
+
+void Job::setOrbitals(Orbitals& o, const int numberOfOrbitals, std::vector<int>& orbitalsNumbers, std::vector<SpinType>& orbitalsSpins, const OrbitalType orbitalType, SpinType spinType, const std::vector<SpinType>& spinList)
 {
     switch (orbitalType)
     {
         case OrbitalType::ALL:
         {
-            setAllOrb(orbitalsNumbers, orbitalsSpins, o, spinType, numberOfOrbitals);
+            setAllOrbitals(orbitalsNumbers, orbitalsSpins, o, spinType, numberOfOrbitals);
             break;
         }
         case OrbitalType::CUSTOM:
         {
-            setCustom(orbitalsNumbers, orbitalsSpins, spinList);
+            setCustomOrbitals(orbitalsNumbers, orbitalsSpins, spinList);
             break;
         }
         case OrbitalType::HOMO:
@@ -873,12 +1693,12 @@ void Job::setOrbitals(Orbitals& o, const int numberOfOrbitals, vector<int>& orbi
         }
         case OrbitalType::OCCUPIED:
         {
-            setOccOrb(orbitalsNumbers, orbitalsSpins, o, spinType, numberOfOrbitals);
+            setOccupiedOrbitals(orbitalsNumbers, orbitalsSpins, o, spinType, numberOfOrbitals);
             break;
         }
         case OrbitalType::VIRTUAL:
         {
-            setVirtOrb(orbitalsNumbers, orbitalsSpins, o, spinType, numberOfOrbitals);
+            setVirtualOrbitals(orbitalsNumbers, orbitalsSpins, o, spinType, numberOfOrbitals);
             break;
         }
         default:
@@ -889,1681 +1709,177 @@ void Job::setOrbitals(Orbitals& o, const int numberOfOrbitals, vector<int>& orbi
     }
 }
 
-void Job::setAllOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType, const int& N)
-{
-    orbnums.resize(N);
-    for(int i = 0; i < N; ++i)
-    {
-        orbnums[i] = i;
-    }
-
-    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
-    {
-        orbspin.resize(N, 0);
-    }
-    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
-    {
-        orbspin.resize(N, 0);
-        orbnums.resize(2 * N, 1);
-        for(int i = N; i < 2 * N; ++i)
-        {
-            orbnums[i] = i - N;
-        }
-    }
-    else
-    {
-        orbspin.resize(N, 1);
-    }
-}
-void Job::setOccOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType, const int& N)
-{
-    std::vector<std::vector<double>> occ=o.get_occupationNumber();
-    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA) 
-    {
-        int k = 0;
-        for(int i = 0; i < N; ++i)
-        {
-            if (occ[0][i] > 1e-10)
-            {
-                orbnums[k] = i;
-                k++;
-            }
-        }
-        orbnums.resize(k);
-        orbspin.resize(k, 0);
-    }
-    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
-    {
-        int k = 0;
-        orbnums.resize(2 * N, 0);
-        for(int i = 0; i < N; ++i)
-        {
-            if (occ[0][i] > 1e-10)
-            {
-                orbnums[k] = i;
-                k++;
-            }
-        }
-        orbspin.resize(k, 0);
-        int j = k;
-        for(int i = 0; i < N; ++i)
-        {
-            if (occ[1][i] > 1e-10)
-            {
-                orbnums[j] = i;
-                j++;
-            }
-        }
-        orbnums.resize(j);
-        orbspin.resize(j, 1);    
-    }
-    else
-    {
-        int j = 0;
-        for(int i = 0; i < N; ++i)
-        {
-            if (occ[1][i] > 1e-10)
-            {
-                orbnums[j] = i;
-                j++;
-            }
-        }
-        orbnums.resize(j);
-        orbspin.resize(j, 1);
-    }
-
-}
-void Job::setVirtOrb(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType, const int& N)
-{
-    std::vector<std::vector<double>> occ=o.get_occupationNumber();
-    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
-    {
-        int k = 0;
-        for(int i = 0; i < N; ++i)
-        {
-            if (occ[0][i] < 1e-10)
-            {
-                orbnums[k] = i;
-                k++;
-            }
-        }
-        orbnums.resize(k);
-        orbspin.resize(k, 0);
-    }
-    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
-    {
-        int k = 0;
-        orbnums.resize(2 * N, 0);
-        for(int i = 0; i < N; ++i)
-        {
-            if (occ[0][i] < 1e-10)
-            {
-                orbnums[k] = i;
-                k++;
-            }
-        }
-        orbspin.resize(k, 0);
-        int j = k;
-        for(int i = 0; i < N; ++i)
-        {
-            if (occ[1][i] < 1e-10)
-            {
-                orbnums[j] = i;
-                j++;
-            }
-        }
-        orbnums.resize(j);
-        orbspin.resize(j, 1);    
-    }
-    else
-    {
-        int j = 0;
-        for(int i = 0; i < N; ++i)
-        {
-            if (occ[1][i] < 1e-10)
-            {
-                orbnums[j] = i;
-                j++;
-            }
-        }
-        orbnums.resize(j);
-        orbspin.resize(j, 1);
-    }
-}
-void Job::setHomo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType)
+void Job::setHomo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType)
 {
     int i = 0;
     std::vector<std::vector<double>> occ = o.get_occupationNumber();
     if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
     {
-        while(occ[0][i] > 1e-10)
+        while (occ[0][i] > 1e-10)
         {
             i++;
         }
         orbnums = {i - 1};
-        orbspin = {0};
+        orbspin = {SpinType::ALPHA};
     }
     else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
         int j = 0;
-        while(occ[0][i] > 1e-10)
+        while (occ[0][i] > 1e-10)
         {
             i++;
         }
-        while(occ[1][j] > 1e-10)
+        while (occ[1][j] > 1e-10)
         {
             j++;
         }
         orbnums = {i - 1, j - 1};
-        orbspin = {0, 1};
+        orbspin = {SpinType::ALPHA, SpinType::BETA};
     }
     else
     {
         int j = 0;
-        while(occ[1][j] > 1e-10)
+        while (occ[1][j] > 1e-10)
         {
             j++;
         }
         orbnums = {j - 1};
-        orbspin = {1};
+        orbspin = {SpinType::BETA};
     }
 }
-void Job::setLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType)
-{
-    int i = 0;
-    std::vector<std::vector<double>> occ = o.get_occupationNumber();
-    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
-    {
-        while(occ[0][i] > 1e-10)
-        {
-            i++;
-        }
-        orbnums = {i};
-        orbspin = {0};
-    }
-    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
-    {
-        int j = 0;
-        while(occ[0][i] > 1e-10)
-        {
-            i++;
-        }
-        while(occ[1][j] > 1e-10)
-        {
-            j++;
-        }
-        orbnums = {i, j};
-        orbspin = {0, 1};
-    }
-    else
-    {
-        int j = 0;
-        while(occ[1][j] > 1e-10)
-        {
-            j++;
-        }
-        orbnums = {j};
-        orbspin = {1};
-    }
-}
-void Job::setHomoLumo(std::vector<int>& orbnums, std::vector<int>& orbspin, Orbitals& o, SpinType spinType) 
+
+void Job::setHomoLumo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType)
 {
     int i = 0;
     std::vector<std::vector<double>> occ = o.get_occupationNumber();
     if (!o.get_alphaAndBeta() and spinType == SpinType::BETA)
     {
-        while(occ[0][i] > 1e-10)
+        while (occ[0][i] > 1e-10)
         {
             i++;
-        }        
+        }
         orbnums = {i - 1, i};
-        orbspin = {0, 0};
+        orbspin = {SpinType::ALPHA, SpinType::ALPHA};
     }
     else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
         int j = 0;
-        while(occ[0][i] > 1e-10)
+        while (occ[0][i] > 1e-10)
         {
             i++;
         }
-        while(occ[1][j] > 1e-10)
+        while (occ[1][j] > 1e-10)
         {
             j++;
         }
         orbnums = {i - 1, j - 1, i, j};
-        orbspin = {0, 1, 0, 1};
+        orbspin = {SpinType::ALPHA, SpinType::BETA, SpinType::ALPHA, SpinType::BETA};
     }
     else
     {
         int j = 0;
-        while(occ[1][j] > 1e-10)
+        while (occ[1][j] > 1e-10)
         {
             j++;
         }
         orbnums = {j - 1, j};
-        orbspin = {1, 1};
-    }
-}
-void Job::setCustom(std::vector<int>& orbnums, std::vector<int>& orbspin, const std::vector<SpinType>& spinList) 
-{
-    for(size_t i=0; i < spinList.size();i++)
-    {
-        if (spinList[i] == SpinType::ALPHA)
-        {
-            orbspin.push_back(0);
-        }
-        else if (spinList[i] == SpinType::BETA)
-        {
-            orbspin.push_back(1);
-        }
-    }
-    for(size_t i=0; i<orbnums.size(); i++)
-    {
-        orbnums[i] -= 1;
-    }
-    if (orbspin.size()<orbnums.size())
-    {    
-        int last=orbspin.back();
-        for(size_t i=orbspin.size(); i<orbnums.size(); i++)
-        {
-            orbspin.push_back(last);
-        }
+        orbspin = {SpinType::BETA, SpinType::BETA};
     }
 }
 
-
-//----------------------------------------------------------------------------------------------------//
-// RUN METHOD
-//----------------------------------------------------------------------------------------------------//
-
-void Job::run() 
+void Job::setLumo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType)
 {
-    // Determine run type
-    RunType runType;
-    readRunType(runType);
-
-
-    // Print current job;
-    print_title("Current job: " + to_string(runType));
-
-
-    // Execute job
-    switch (runType)
+    int i = 0;
+    std::vector<std::vector<double>> occ = o.get_occupationNumber();
+    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
     {
-        case RunType::COMPUTE_DESCRIPTORS:
+        while (occ[0][i] > 1e-10)
         {
-            run_computeDescriptors();
-            break;
+            i++;
         }
-        case RunType::COMPUTE_ENERGY_WITH_POINT_CHARGES:
-        {
-            run_computeEnergyWithPointCharges();
-            break;
-        }
-        case RunType::COMPUTE_GRID_DIFFERENCE:
-        {
-            run_computeGridDifference();
-            break;
-        }
-        case RunType::COMPUTE_INTEGRALS:
-        {
-            run_computeIntegrals();
-            break;
-        }
-        case RunType::CONVERT_ORBITALS:
-        {
-            run_convertOrbitals();
-            break;
-        }
-        case RunType::COMPUTE_PARTIAL_CHARGES:
-        {
-            run_computePartialCharges();
-            break;
-        }
-        case RunType::HELP:
-        {
-            run_help();
-            break;
-        }
-        case RunType::LAMBDA_DIAGNOSTIC:
-        {
-            run_lambdaDiagnostic();
-            break;
-        }
-        case RunType::MAKE_DENSITY_CUBE:
-        {
-            run_makeDensityCube();
-            break;
-        }
-        case RunType::MAKE_ORBITALS_CUBE:
-        {
-            run_makeOrbitalsCube();
-            break;
-        }
-        case RunType::MAKE_ELF_CUBE:
-        {
-            run_makeELFCube();
-            break;
-        }
-        default:
-        {
-            // should not happen: verified before switch
-            std::cerr << "Error: Unknown run type encountered in Job::run(). This should not happen as the run type is verified before." << std::endl;
-        }
+        orbnums = {i};
+        orbspin = {SpinType::ALPHA};
     }
-}
-
-
-//----------------------------------------------------------------------------------------------------//
-// JOBS
-//----------------------------------------------------------------------------------------------------//
-
-void Job::run_computeDescriptors()
-{
-    // Read partition method
-    PartitionMethod partitionMethod;
-    readPartitionMethod(partitionMethod);
-
-
-    // Check partition method validity
-    if (partitionMethod == PartitionMethod::BBS || partitionMethod == PartitionMethod::B2S)
+    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
-        std::stringstream errorMessage;
-        errorMessage << "Error: partitionMethod \"" << to_string(partitionMethod) << "\" invalid for this job." << std::endl;
-        errorMessage << "Please check documentation and \"PartitionMethod\" parameter value in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-        
-        std::exit(1);
-    }
-
-    // Print partition method
-    std::cout << "Volume partition method: " << to_string(partitionMethod) << std::endl << std::endl;
-
-    if (partitionMethod == PartitionMethod::FD || partitionMethod == PartitionMethod::FMO)
-    {
-        // Read analytic files names
-        std::vector<std::string> analyticFilesNames;
-        readAnalyticFilesNames(analyticFilesNames);
-
-        if (partitionMethod == PartitionMethod::FD)
+        int j = 0;
+        while (occ[0][i] > 1e-10)
         {
-            // Check number of analytic files names
-            if (analyticFilesNames.size() != 3)
-            {
-                std::stringstream errorMessage;
-                errorMessage << "Error: incorrect number of analytic files names (three files expected)." << std::endl;
-                errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
-
-                print_error(errorMessage.str());
-
-                std::exit(1);
-            }
-            
-            // Compute descriptors
-            computeDescriptorsFD(analyticFilesNames[0], analyticFilesNames[1], analyticFilesNames[2]);
+            i++;
         }
-        else
+        while (occ[1][j] > 1e-10)
         {
-            // Check number of analytic files names
-            if (analyticFilesNames.size() > 1)
-            {
-                std::stringstream errorMessage;
-                errorMessage << "Error: too many analytic files names (one file expected)." << std::endl;
-                errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
-
-                print_error(errorMessage.str());
-
-                std::exit(1);
-            }
-
-
-            // Compute descriptors
-            Orbitals o;
-            computeOrbitalsOrBecke<Orbitals>(o, analyticFilesNames[0]);
-            o.PrintDescriptors();
+            j++;
         }
+        orbnums = {i, j};
+        orbspin = {SpinType::ALPHA, SpinType::BETA};
     }
     else
     {
-        // Read grid files names
-        std::vector<std::string> gridFilesNames;
-        readGridFilesNames(gridFilesNames);
-
-        // Check number of grid files names
-        if (gridFilesNames.size() != 3)
+        int j = 0;
+        while (occ[1][j] > 1e-10)
         {
-            std::stringstream errorMessage;
-            errorMessage << "Error: incorrect number of grid files names (three files expected)." << std::endl;
-            errorMessage << "Please check the documentation and the number of files specified in the \"GridFiles\" parameter in " << _inputFileName << '.';
-
-            print_error(errorMessage.str());
-
-            std::exit(1);
+            j++;
         }
-
-
-        // Read energies
-        std::vector<double> energies;
-        readEnergies(energies);
-
-        if (energies.size() == 2)
-        {
-            std::cout << "Reading Ionization potential I = " << energies[0] << " and electron Affinity A = " << energies[1] << std::endl;
-            
-            // Compute descriptors
-            Descriptors D = computeDescriptors(gridFilesNames[0], gridFilesNames[1], gridFilesNames[2], energies[0], energies[1], partitionMethod);
-            std::cout << D;
-        }
-        else if (energies.size() == 3)
-        {
-            std::cout << " Reading Total Energies: E1 = " << energies[0] << ", E2 = " << energies[1] << " and E3 = " << energies[2] << std::endl;
-            Descriptors D = computeDescriptors(gridFilesNames[0], gridFilesNames[1], gridFilesNames[2], energies, partitionMethod);
-            std::cout << D;
-        }
-        else
-        {
-            std::stringstream errorMessage;
-            errorMessage << "Error: incorrect number of energies (two or three expected)." << std::endl;
-            errorMessage << "Please check the documentation and the number of energies specified in the \"Energies\" parameter in " << _inputFileName << '.';
-
-            print_error(errorMessage.str());
-
-            std::exit(1);
-        }
+        orbnums = {j};
+        orbspin = {SpinType::BETA};
     }
 }
 
-void Job::run_computeEnergyWithPointCharges()
+void Job::setVirtualOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, int N)
 {
-    // Read verbose level
-    int verbose;
-    readVerbose(verbose);
-
-
-    // Read analytic file name
-    std::vector<std::string> analyticFilesNames;
-    readAnalyticFilesNames(analyticFilesNames);
-
-
-    // Check number of analytic files names
-    if (analyticFilesNames.size() != 1)
+    std::vector<std::vector<double>> occ=o.get_occupationNumber();
+    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
     {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of analytic files names (one file expected)." << std::endl;
-        errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-
-    // Loading orbitals
-    Orbitals orbitals;
-    computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
-    std::cout << std::endl;
-
-
-    // Keep a const reference on orbitals' atoms
-    const std::vector<Atom>& atoms = orbitals.get_struct().get_atoms();
-
-
-    // Read point charges
-    std::vector<double> charges;
-    readCharges(charges);
-    int nbCharges = static_cast<int>(charges.size());
-
-
-    // Read point charges positions
-    bool loopOnAtoms = false;
-    std::vector<std::array<double, 3>> chargesPositions;
-    readPositions(chargesPositions);
-
-    if (chargesPositions.empty())
-    {
-        if (nbCharges > 1)
+        int k = 0;
+        for(int i = 0; i < N; ++i)
         {
-            std::stringstream errorMessage;
-            errorMessage << "Error: could not find point charges positions." << std::endl;
-            errorMessage << "Please check if the \"Positions\" parameter is defined and set in the provided input file (" << _inputFileName << ").";
-
-            print_error(errorMessage.str());
-
-            std::exit(1);
-        }
-        else
-        {
-            std::cout << "Note: the \"Positions\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-            std::cout << "The program will place the point charge on each atom successively." << std::endl << std::endl;
-
-            loopOnAtoms = true;
-            for (const Atom& atom : atoms)
+            if (occ[0][i] < 1e-10)
             {
-                chargesPositions.push_back(atom.get_coordinates());
+                orbnums[k] = i;
+                k++;
             }
         }
+        orbnums.resize(k);
+        orbspin.resize(k, SpinType::ALPHA);
     }
-
-
-    // Check number of charges positions
-    if (!loopOnAtoms && chargesPositions.size() != charges.size())
+    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
     {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of point charges positions." << std::endl;
-        errorMessage << "Please check the documentation and the positions specified in the \"ChargesPositions\" parameter in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-
-    // Print charges information
-    std::cout << "Number of point charges: " << nbCharges << std::endl;
-    if (!loopOnAtoms)
-    {
-        for (int i = 0; i < nbCharges; ++i)
+        int k = 0;
+        orbnums.resize(2 * N, 0);
+        for(int i = 0; i < N; ++i)
         {
-            std::cout << "Point charge #" << i + 1 << ": " << charges[i] << " e at position (" << chargesPositions[i][0] << ", " << chargesPositions[i][1] << ", " << chargesPositions[i][2] << ")." << std::endl;
+            if (occ[0][i] < 1e-10)
+            {
+                orbnums[k] = i;
+                k++;
+            }
         }
+        orbspin.resize(k, SpinType::ALPHA);
+        int j = k;
+        for(int i = 0; i < N; ++i)
+        {
+            if (occ[1][i] < 1e-10)
+            {
+                orbnums[j] = i;
+                j++;
+            }
+        }
+        orbnums.resize(j);
+        orbspin.resize(j, SpinType::BETA);    
     }
     else
     {
-        for (size_t i = 0; i < chargesPositions.size(); ++i)
+        int j = 0;
+        for(int i = 0; i < N; ++i)
         {
-            std::cout << "Loop #" << i + 1 << ": point charge of " << charges[0] << " e on " << atoms[i].get_name() << " at position (" << chargesPositions[i][0] << ", " << chargesPositions[i][1] << ", " << chargesPositions[i][2] << ")." << std::endl;
-        }
-    }
-    std::cout << std::endl;
-
-
-    // Read cutoff distance for nuclear contribution
-    double nuclearCutoff;
-    readNuclearCutoff(nuclearCutoff);
-    
-    
-    // Read transitions file
-    std::string transitionsFileName;
-    readTransitionsFileName(transitionsFileName);
-
-
-    if (verbose >= 3)
-    {
-        std::cout << "Molecular orbitals:" << std::endl;
-        std::cout << orbitals << std::endl;
-    }
-    
-
-    // Get Ground Slater Determinant
-    SlaterDeterminant groundStateSlaterDeterminant(orbitals);
-    ExcitedState groundState(orbitals.get_energy(), groundStateSlaterDeterminant);
-
-
-    // Building states vector
-    std::vector<ExcitedState> states;
-    states.push_back(groundState);
-
-
-    // Reading transitions file
-    if (!transitionsFileName.empty())
-    {
-        std::cout << "Reading transitions from file: " << transitionsFileName << ". Please wait..." << std::endl;
-        ExcitedState::readTransitions(transitionsFileName, states, groundState.get_energy());
-    }
-    else
-    {
-        std::cout << "Reading transitions from analytic file: " << analyticFilesNames[0] << ". Please wait..." << std::endl;
-        ExcitedState::readTransitionsFromLogFile(analyticFilesNames[0], states, groundState.get_energy());
-    }
-    std::cout << "Total number of states: " << states.size() << std::endl << std::endl;
-
-
-    // Compute Slater Determinants from electronic transitions for each state
-    for (ExcitedState& state : states)
-    {
-        state.computeSlaterDeterminants(groundStateSlaterDeterminant);
-
-        if (verbose >= 1)
-        {
-            std::cout << state;
-
-            if (verbose >= 2)
+            if (occ[1][i] < 1e-10)
             {
-                std::cout << "  Slater Determinants: " << std::endl;
-                for (const auto& slaterCoeff : state.getSlaterDeterminantsAndCoefficients())
-                {
-                    std::cout << "    " << slaterCoeff.first << "; Coefficient: " << slaterCoeff.second << std::endl;
-                }
-            }
-
-            std::cout << std::endl;
-        }
-    }
-
-
-    // Compute ionic matrixes only once.
-    // We build a 5D vector of size [nbLoops][nbCharges][spin][nbStates][0..nbStates] to store the ionic matrixes.
-    // The first dimension corresponds to the number of loops (in case the program has to loop on atoms positions).
-    // The second dimension corresponds to the number of point charges.
-    // The third dimension corresponds to the spin (0 for alpha, 1 for beta).
-    // the fourth and fifth dimensions correspond to the indices of the matrix elements (i and j) with j <= i (lower triangular matrix).
-    std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>> ionicMatrixes;
-    
-    if (loopOnAtoms)
-    {
-        ionicMatrixes.resize(orbitals.get_struct().get_atoms().size(), std::vector<std::vector<std::vector<std::vector<double>>>>(1));
-
-        int i = 0;
-        for (const Atom& atom : atoms)
-        {
-            ionicMatrixes[i][0] = orbitals.getIonicPotentialMatrix(atom.get_coordinates(), charges[0]);
-            ++i;
-        }
-    }
-    else
-    {
-        ionicMatrixes.resize(1, std::vector<std::vector<std::vector<std::vector<double>>>>(nbCharges));
-
-        for (int i = 0; i < nbCharges; ++i)
-        {
-            ionicMatrixes[0][i] = orbitals.getIonicPotentialMatrix(chargesPositions[i], charges[i]);
-        }
-    }
-
-
-    // Compute ions-nuclei interactions only once
-    std::vector<double> chargeNucleiContributions = std::vector<double>(nbCharges, 0.0);
-    double nuclearContribution = 0.0;
-    for (int i = 0; i < nbCharges; ++i)
-    {
-        for (const Atom& atom : atoms)
-        {
-            double distance = std::sqrt((atom.get_coordinates()[0] - chargesPositions[i][0]) * (atom.get_coordinates()[0] - chargesPositions[i][0])
-                                        + (atom.get_coordinates()[1] - chargesPositions[i][1]) * (atom.get_coordinates()[1] - chargesPositions[i][1])
-                                        + (atom.get_coordinates()[2] - chargesPositions[i][2]) * (atom.get_coordinates()[2] - chargesPositions[i][2]));
-
-            if (distance > nuclearCutoff)
-            {
-                chargeNucleiContributions[i] += charges[i] * atom.get_atomicNumber() / distance;
+                orbnums[j] = i;
+                j++;
             }
         }
-
-        nuclearContribution += chargeNucleiContributions[i];
-    }
-
-
-    // Loop on atoms if needed
-    for (size_t loopIndex = 0; loopIndex < ionicMatrixes.size(); ++loopIndex)
-    {
-        if (loopOnAtoms)
-        {
-            std::cout << "====================== LOOP #" << loopIndex + 1
-                      << ": charge on " << atoms[loopIndex].get_name()
-                      << " at position (" << chargesPositions[loopIndex][0] << ", " << chargesPositions[loopIndex][1] << ", " << chargesPositions[loopIndex][2]
-                      << ") ======================"
-                      << std::endl << std::endl;
-        }
-
-
-        // Build and initialise two lower triangular matrixes:
-        //     (*) < psi_i | H | psi_j > for the variational approach,
-        //     (*) < psi_i | H - H_0 | psi_j > for the perturbative approach.
-        int nbStates = static_cast<int>(states.size());
-
-        std::vector<std::vector<double>> psi_i_H_psi_j(nbStates, std::vector<double>());
-        std::vector<std::vector<double>> psi_i_HminusH0_psi_j(nbStates, std::vector<double>());
-        
-        for (int i = 0; i < nbStates; ++i)
-        {
-            psi_i_H_psi_j[i].resize(i + 1, 0.0);
-            psi_i_HminusH0_psi_j[i].resize(i + 1, 0.0);
-        }
-
-        // Compute matrix elements < psi_i | H | psi_j > and < psi_i | H - H_0 | psi_j >
-        int i, j;
-        if (verbose >= 1)
-        {
-            std::cout << "Matrix elements < psi_i | H | psi_j > and < psi_i | H - H_0 | psi_j >:" << std::endl;
-        }
-        else
-        {
-            #ifdef ENABLE_OPENMP
-            #pragma omp parallel for private(i, j)
-            #endif
-        }
-        for (i = 0; i < nbStates; ++i)
-        {
-            // Get Slater Determinants for state i
-            std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_i(states[i].getSlaterDeterminantsAndCoefficients());
-
-            for (j = 0; j <= i; ++j)
-            {
-                // Initialize < psi_i | H | psi_j > matrix element
-                double matrixElement = 0.0;
-
-                // Get Slater Determinants for state j
-                std::vector<std::pair<SlaterDeterminant, double>> slaterDeterminants_j(states[j].getSlaterDeterminantsAndCoefficients());
-
-                // Compute < psi_i | H_0 | psi_j >
-                double h0Contribution = (i == j ? states[i].get_energy() : 0.0);
-                matrixElement += h0Contribution;
-                if (verbose >= 2)
-                {
-                    std::cout << "< " << i << " | H_0 | " << j << " > = " << std::setprecision(12) << h0Contribution << std::endl;
-                }
-
-                // Compute < psi_i | V_ions/nuclei | psi_j >
-                matrixElement += (i == j ? nuclearContribution : 0.0);
-                if (verbose >= 3)
-                {
-                    for (int chargeIndex = 0; chargeIndex < nbCharges; ++chargeIndex)
-                    {
-                        std::cout << "< " << i << " | V" << chargeIndex + 1 << "_nuclei | " << j << " > = " << std::setprecision(12) << chargeNucleiContributions[chargeIndex] << std::endl;
-                    }
-                }
-                if (verbose >= 2)
-                {
-                    std::cout << "< " << i << " | V_ions/nuclei | " << j << " > = " << std::setprecision(12) << nuclearContribution << std::endl;
-                }
-
-                // Compute < psi_i | V_ion/electrons | psi_j >
-                double chargeContribution = 0.0;
-                for (int chargeIndex = 0; chargeIndex < nbCharges; ++chargeIndex)
-                {
-                    double currentChargeContribution = 0.0;
-
-                    for (const std::pair<SlaterDeterminant, double>& slaterCoeff_i : slaterDeterminants_i)
-                    {
-                        for (const std::pair<SlaterDeterminant, double>& slaterCoeff_j : slaterDeterminants_j)
-                        {
-                            // Compute < D_i | V_ion/electrons | D_j > contribution in < psi_i | V_ion/electrons | psi_j >
-                            currentChargeContribution += SlaterDeterminant::ionicPotential(slaterCoeff_i.first, slaterCoeff_j.first, ionicMatrixes[loopIndex][chargeIndex]) * (slaterCoeff_i.second * slaterCoeff_j.second);
-                        }
-                    }
-
-                    chargeContribution += currentChargeContribution;
-                    if (verbose >= 3)
-                    {
-                        std::cout << "< " << i << " | V" << chargeIndex + 1 << "_electrons | " << j << " > = " << std::setprecision(12) << currentChargeContribution << std::endl;
-                    }
-                }
-                matrixElement += chargeContribution;
-                if (verbose >= 2)
-                {
-                    std::cout << "< " << i << " | V_ions/electrons | " << j << " > = " << chargeContribution << std::endl;
-                }
-
-                // Store < psi_i | H | psi_j > matrix element
-                psi_i_H_psi_j[i][j] = matrixElement;
-                psi_i_HminusH0_psi_j[i][j] = psi_i_H_psi_j[i][j] - h0Contribution;
-
-                if (verbose >= 1)
-                {
-                    std::cout << "< " << i << " | H | " << j << " > = " << std::setprecision(12) << psi_i_H_psi_j[i][j] << std::endl;
-                    std::cout << "< " << i << " | H - H0| " << j << " > = " << std::setprecision(12) << psi_i_HminusH0_psi_j[i][j] << std::endl;
-                }
-                if (verbose >= 2 && j != i)
-                {
-                    std::cout << std::endl;
-                }
-            }
-
-            if (verbose >= 1)
-            {
-                std::cout << std::endl;
-            }
-        }
-
-
-        // Diagonalize < psi_i | H | psi_j > matrix
-        std::vector<double> eigenvalues;
-        std::vector<std::vector<double>> eigenvectors;
-        findEigenValuesAndEigenVectorsOfSymmetricalMatrix(psi_i_H_psi_j, eigenvalues, eigenvectors);
-
-        if (verbose >= 3)
-        {
-            std::cout << std::scientific;
-            std::cout << std::setprecision(10);
-            std::cout << "Eigenvalues:" << std::endl;
-            for (size_t k = 0; k < eigenvalues.size(); ++k)
-            {
-                std::cout << eigenvalues[k] << ' ';
-            }
-            std::cout << std::endl << std::endl;
-
-            std::cout << "Eigenvectors (columns): " << std::endl;
-            for (size_t i = 0; i < eigenvectors.size(); ++i)
-            {
-                for (size_t j = 0; j < eigenvectors[i].size(); ++j)
-                {
-                    std::cout << std::right << std::setw(17) << eigenvectors[i][j] << '\t';
-                }
-
-                std::cout << std::endl;
-            }
-            std::cout << std::defaultfloat << std::endl;
-        }
-        
-
-        // Sort eigenvalues and eigenvectors
-        sortEigenValuesAndEigenVectors(eigenvalues, eigenvectors);
-
-        std::cout << std::scientific;
-        std::cout << std::setprecision(10);
-        std::cout << "Sorted Eigenvalues:" << std::endl;
-        for (size_t k = 0; k < eigenvalues.size(); ++k)
-        {
-            std::cout << eigenvalues[k] << ' ';
-        }
-        std::cout << std::endl << std::endl;
-
-        std::cout << "Sorted Eigenvectors (columns): " << std::endl;
-        for (size_t i = 0; i < eigenvectors.size(); ++i)
-        {
-            for (size_t j = 0; j < eigenvectors[i].size(); ++j)
-            {
-                std::cout << std::right << std::setw(17) << eigenvectors[i][j] << '\t';
-            }
-
-            std::cout << std::endl;
-        }
-        std::cout << std::defaultfloat << std::endl;
-
-
-        if (verbose >= 3)
-        {
-            // Compute projections of perturbed states onto unperturbed basis
-            std::cout << "Projection onto unperturbed basis:" << std::endl;
-
-            for (int i = 0; i < nbStates; ++i)
-            {
-                std::vector<std::pair<double, int>> contributions;
-
-                std::cout << "Perturbed state " << i << " (E = " << std::setprecision(10) << eigenvalues[i] << " H):" << std::endl;
-                std::cout << "  | " << i << "' > = ";
-                
-                bool firstTerm = true;
-                for (int k = 0; k < nbStates; ++k)
-                {
-                    double c_k = eigenvectors[k][i];
-                    double c_k_squared = c_k * c_k;
-
-                    contributions.push_back({c_k_squared, k});
-
-                    if (!firstTerm && c_k > 0)
-                    {
-                        std::cout << " + ";
-                    }
-                    else if (c_k < 0)
-                    {
-                        std::cout << " - ";
-                    }
-
-                    std::cout << std::setprecision(6) << std::abs(c_k) << " | " << k << " >";
-                    firstTerm = false;
-                }
-                std::cout << std::endl;
-                
-                // Show dominant contributions
-                std::sort(contributions.begin(), contributions.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
-                std::cout << "  Main contributions:" << std::endl;
-                for (size_t ii = 0; ii < std::min(size_t(5), contributions.size()); ++ii)
-                {
-                    if (contributions[ii].first > 1e-6)
-                    {
-                        size_t k = contributions[ii].second;
-                        std::cout << "    State " << k << ": "
-                                << std::setprecision(6) << std::setw(10) << contributions[ii].first * 100 << " %"
-                                << "  (c_" << k << " = " << std::setprecision(8) << eigenvectors[k][i] << ")" << std::endl;
-                    }
-                }
-                std::cout << std::endl;
-            }
-        }
-
-
-        std::cout << std::endl << std::endl << "------ Perturbative approach (cf. Guégan et al., PCCP 2020) ------" << std::endl << std::endl;
-
-        bool warningPrinted = false;
-
-        // Compute dp_k for each state using Eq. (27) in Guégan et al., PCCP 2020
-        std::vector<double> dpk_perturb_state0_withoutRenormalisation(nbStates, 0.0);
-        std::vector<double> normalisationFactors(nbStates, 0.0);
-        std::vector<std::vector<double>> dpk_perturb(nbStates, std::vector<double>(nbStates, 0.0));
-
-        // Compute extra-diagonal dp_k coefficients
-        for (int i = 0; i < nbStates; ++i)
-        {
-            for (int j = 0; j < nbStates; ++j)
-            {
-                if (i != j)
-                {
-                    double Ei_minus_Ej = states[i].get_energy() - states[j].get_energy();
-
-                    // Check for degeneracy to avoid division by zero
-                    if (std::abs(Ei_minus_Ej) >= 1e-10)
-                    {
-                        // psi_i_HminusH0_psi_j is a lower triangular matrix
-                        dpk_perturb[i][j] = (j <= i ? psi_i_HminusH0_psi_j[i][j] : psi_i_HminusH0_psi_j[j][i]) / Ei_minus_Ej;
-                        dpk_perturb[i][j] *= dpk_perturb[i][j];
-
-                        normalisationFactors[i] += dpk_perturb[i][j];
-
-                        // For the first state, we keep the unrenormalised dp_k coefficients so we can compare them with the paper and the variational approach later.
-                        if (i == 0)
-                        {
-                            dpk_perturb_state0_withoutRenormalisation[j] = dpk_perturb[i][j];
-                        }
-
-                        if (dpk_perturb[i][j] > 1.0)
-                        {
-                            dpk_perturb[i][j] = 0.0;
-                            if (i < j) // to avoid printing twice the same warning for the pair (i, j) and (j, i)
-                            {
-                                warningPrinted = true;
-
-                                std::cout << "Warning: the dp_" << j << " coefficient for the state " << i << " and the dp_" << i << " coefficient for the state " << j << " are greater than 1 (dp_" << j << " = " << dpk_perturb[i][j] << ")." << std::endl;
-                                std::cout << "They will be set to 0 to maintain the normalisation condition on dp_k (limitation of the perturbative approach)." << std::endl;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        dpk_perturb[i][j] = 0.0;
-
-                        if (i < j) // to avoid printing twice the same warning for the pair (i, j) and (j, i)
-                        {
-                            warningPrinted = true;
-
-                            std::cout << "Warning: degeneracy detected between states " << i << " and " << j << " (|E_i - E_j| < 1e-10)." << std::endl;
-                            std::cout << "The dp_" << j << "coefficient for the state " << i << "and the dp_" << i << " coefficient for the state " << j << " will be set to zero to avoid division by zero." << std::endl;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Renormalization of dp_k coefficients to ensure that their sum is equal to 1 for each state (normalisation condition)
-        for (int i = 0; i < nbStates; ++i)
-        {
-            if (normalisationFactors[i] > 1.0)
-            {
-                for (int j = 0; j < nbStates; ++j)
-                {
-                    if (i != j)
-                    {
-                        dpk_perturb[i][j] = dpk_perturb[i][j] / (1.0 + normalisationFactors[i]);
-                    }
-                }
-            }
-        }
-
-        // Compute diagonal dp_k coefficients using the normalisation condition
-        for (int i = 0; i < nbStates; ++i)
-        {
-            double sumExtraDiagonal = 0.0;
-            for (int j = 0; j < nbStates; ++j)
-            {
-                sumExtraDiagonal += (i != j ? dpk_perturb[i][j] : 0.0);
-            }
-
-            dpk_perturb[i][i] = 1.0 / (1.0 + sumExtraDiagonal);
-        }
-
-        if (warningPrinted)
-        {
-            std::cout << std::endl;
-        }
-
-        std::cout << "dp_k values using Eq. (27). Excited states are on the columns:" << std::endl;
-        std::cout << std::scientific;
-        std::cout << std::setprecision(10);
-        for (int i = 0; i < nbStates; ++i)
-        {
-            for (int j = 0; j < nbStates; ++j)
-            {
-                std::cout << std::right << std::setw(17) << dpk_perturb[i][j] << '\t';
-            }
-
-            std::cout << std::endl;
-        }
-        std::cout << std::defaultfloat << std::endl << std::endl;
-
-        // Compute E_polarisation and dS for each state using respectively Eq. (26) and Eq. (32) in Guégan et al., PCCP 2020
-        std::vector<double> dS_perturb(nbStates, 0.0);
-        std::vector<double> E_pola_perturb(nbStates, 0.0);
-
-        std::cout << "E_polarisation and dS using respectively Eq. (26) and Eq. (32) in Guégan et al., PCCP 2020:" << std::endl;
-
-        for (int i = 0; i < nbStates; ++i)
-        {
-            double sum_dS = 0.0;
-            double sum_Epola = 0.0;
-            for (int j = 0; j < nbStates; ++j)
-            {
-                if (dpk_perturb[i][j] != 0)
-                {
-                    sum_dS -= dpk_perturb[i][j] * std::log(dpk_perturb[i][j]);
-
-                    if (i != j)
-                    {
-                        // Note : degeneracy is already handled in the computation of dp_k coefficients
-                        // So we can safely compute the energy difference here without checking for division by zero again.
-                        sum_Epola -= dpk_perturb[i][j] * (states[j].get_energy() - states[i].get_energy());
-                    }
-                }
-            }
-
-            dS_perturb[i] = sum_dS * Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
-            E_pola_perturb[i] = sum_Epola * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
-        }
-
-        std::cout << "dS (J/mol/K) and |E_polarisation| (J/mol) for each state:" << std::endl;
-        std::cout << std::scientific;
-        std::cout << std::setprecision(10);
-        for (int i = 0; i < nbStates; ++i)
-        {
-            std::cout << std::right << std::setw(17) << dS_perturb[i] << '\t';
-        }
-        std::cout << std::endl;
-        for (int i = 0; i < nbStates; ++i)
-        {
-            std::cout << std::right << std::setw(17) << E_pola_perturb[i] << '\t';
-        }
-        std::cout << std::defaultfloat << std::endl;
-
-
-        /*
-        std::cout << std::endl << std::endl << "------ Variational approach ------" << std::endl << std::endl;
-
-        // Compute dpk
-        std::cout << "dp_k values using eigenvectors:" << std::endl;
-        std::cout << std::scientific;
-        std::cout << std::setprecision(10);
-        std::vector<double> dpk(nbStates, 0.0);
-        for (int i = 1; i < nbStates; ++i)
-        {
-            dpk[i] = eigenvectors[i][0];
-            dpk[i] *= dpk[i];
-            std::cout << dpk[i] << ' ';
-        }
-        std::cout << std::defaultfloat << std::endl << std::endl;
-        */
-    }
-
-    
-
-
-
-
-
-
-
-
-    
-
-
-
-    
-    
-
-
-
-    // Compute dS and E_polarisation for each state
-    
-    //std::vector<double> E_polarisation_abs(nbStates, 0.0);
-    
-
-
-    /*
-    // Print dS and E_polarisation results
-    
-    */
-    
-
-    /*
-    // COMPARAISON AVEC CALCUL SUR GRILLE
-    std::cout << std::endl << std::endl << "====================== CALCUL SUR GRILLE ======================" << std::endl << std::endl;
-
-    // Read grid size
-    GridSize gridSize;
-    CustomSizeData customSizeData;
-    readSize(gridSize, customSizeData);
-
-    // Setting orbitals
-    std::vector<int> orbitalsSpins;
-    std::vector<int> orbitalsNumbers;
-    setOrbitals(orbitals, orbitals.get_numberOfMo(), orbitalsNumbers, orbitalsSpins, OrbitalType::ALL, SpinType::ALPHA);
-
-    // Building domain and grid
-    std::cout << "Building domain and grid, please wait..." << std::endl;
-    Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, orbitalsNumbers.size());
-    Grid orbitalsGrid = orbitals.makeOrbGrid(domain, orbitalsNumbers, orbitalsSpins);
-
-    double sum_phi0_Vnuclear_phi0 = 0.0;
-    double V_ij = 0.0;
-    for (i = 0; i < orbitals.get_numberOfMo(); ++i)
-    {
-        for (j = 0; j <= i; ++j)
-        {
-            for (const Atom& atom : orbitals.get_struct().get_atoms())
-            {
-                V_ij = orbitalsGrid.phiStarVionicStarPhi(i, j, atom.get_coordinates(), atom.get_atomicNumber());
-                sum_phi0_Vnuclear_phi0 += (i == j ? V_ij : 2.0 * V_ij);
-            }
-        }
-    }
-
-    std::cout << "< psi_0 | V_nuclear | psi_0 > = " << sum_phi0_Vnuclear_phi0 << std::endl;
-    
-
-    // COMPARAISON AVEC BECKE
-    std::cout << std::endl << std::endl << "====================== CALCUL AVEC BECKE ======================" << std::endl << std::endl;
-
-    Becke becke;
-    computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
-
-    sum_phi0_Vnuclear_phi0 = 0.0;
-    //double V_ij = 0.0;
-    for (i = 0; i < orbitals.get_numberOfMo(); ++i)
-    {
-        std::cout << "i = " << i << std::endl;
-        for (j = 0; j <= i; ++j)
-        {
-            std::cout << "    j = " << j << std::endl;
-            for (const Atom& atom : orbitals.get_struct().get_atoms())
-            {
-                V_ij = becke.ionic_potential(i, j, SpinType::ALPHA_BETA, atom.get_coordinates(), atom.get_atomicNumber(), 1, 9, 1);
-                sum_phi0_Vnuclear_phi0 += (i == j ? V_ij : 2.0 * V_ij);
-            }
-        }
-    }
-
-    std::cout << "< psi_0 | V_nuclear | psi_0 > = " << sum_phi0_Vnuclear_phi0 << std::endl;
-    */
-
-    
-    /*
-    ////////////////////////////////////
-    // Debug - V_nuclear calculations //
-    ////////////////////////////////////
-    std::cout << std::endl << std::endl << std::endl;
-    std::cout << "==================================================================================================" << std::endl;
-    std::cout << "====================== DEBUG - Computation of < phi_0 | V_nuclear | phi_0 > ======================" << std::endl;
-    std::cout << "==================================================================================================" << std::endl << std::endl;
-
-    // Compute Nuclear Matrices for each atom
-    std::vector<std::vector<std::vector<std::vector<double>>>> nuclearMatrices(orbitals.get_numberOfAtoms());
-    int atomIndex = 0;
-    for (const Atom& atom : orbitals.get_struct().get_atoms())
-    {
-        std::cout << "Computing nuclear matrix for atom " << atom.get_name() << ": Z = " << atom.get_atomicNumber() << " ; position = (" << atom.get_coordinates()[0] << ", " << atom.get_coordinates()[1] << ", " << atom.get_coordinates()[2] << ")..." << std::endl;
-        
-        nuclearMatrices[atomIndex] = orbitals.getIonicPotentialMatrix(atom.get_coordinates(), atom.get_atomicNumber(), true);
-        ++atomIndex;
-    }
-    std::cout << std::endl;
-    */
-}
-
-void Job::run_computeGridDifference()
-{
-    // Read grid files names
-    std::vector<std::string> gridFilesNames;
-    readGridFilesNames(gridFilesNames);
-
-
-    // Check number of grid files names
-    if (gridFilesNames.size() != 3)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of grid files names (three files expected)." << std::endl;
-        errorMessage << "Please check the documentation and the number of files specified in the \"GridFiles\" parameter in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-    
-    // Compute grid difference
-    std::cout << "Computing difference between " << gridFilesNames[0] << " and " << gridFilesNames[1] << '.' << std::endl;
-    
-    ComputeGridDifference(gridFilesNames[0], gridFilesNames[1], gridFilesNames[2]);
-    
-    std::cout << "Difference grid saved to file " << gridFilesNames[2] << '.' << std::endl;
-}
-
-void Job::run_computeIntegrals()
-{
-    // Read grid files names
-    std::vector<std::string> gridFilesNames;
-    readGridFilesNames(gridFilesNames);
-
-
-    // Read partition method
-    PartitionMethod partitionMethod;
-    readPartitionMethod(partitionMethod);
-
-    // Check partition method validity
-    if (partitionMethod == PartitionMethod::BECKE || partitionMethod == PartitionMethod::FD
-                                                  || partitionMethod == PartitionMethod::FMO)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: partitionMethod \"" << to_string(partitionMethod) << "\" invalid for this job." << std::endl;
-        errorMessage << "Please check documentation and \"PartitionMethod\" parameter value in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-    // Print partition method
-    std::cout << "Volume partition method: " << to_string(partitionMethod) << std::endl << std::endl;
-
-    
-    // Read cutoff
-    double cutoff = 0.0;
-    readCutoff(cutoff);
-
-
-    // Build basins
-    std::cout << "Reading file " << gridFilesNames[0] << " to build basins." << std::endl << std::endl;
-
-    GridCP gcp;
-    if (partitionMethod == PartitionMethod::BBS)
-    {
-        buildBasinsBySign(gcp, gridFilesNames[0], cutoff, false);
-    }
-    else if (partitionMethod == PartitionMethod::B2S)
-    {
-        buildBasinsBySign(gcp, gridFilesNames[0], cutoff, true);
-    }
-    else
-    {
-        buildBasins(gcp, gridFilesNames[0], partitionMethod);
-    }
-
-    
-    // Compute local integrals
-    computeLocalIntegrals(gcp, gridFilesNames);
-}
-
-void Job::run_computePartialCharges()
-{
-    // Read grid files names
-    std::vector<std::string> gridFilesNames;
-    readGridFilesNames(gridFilesNames);
-
-
-    // Read partition method
-    PartitionMethod partitionMethod;
-    readPartitionMethod(partitionMethod);
-
-
-    // Check partition method validity
-    if (partitionMethod == PartitionMethod::BBS || partitionMethod == PartitionMethod::B2S)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: partitionMethod \""  << to_string(partitionMethod) << "\" invalid for this job." << std::endl;
-        errorMessage << "Please check documentation and the \"PartitionMethod\" parameter value in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-
-    // Print partition method
-    std::cout << "Volume partition method: " << to_string(partitionMethod) << std::endl <<std::endl;
-
-    
-    // Compute partial charges
-    std::vector<double> charges = computePartialCharges(gridFilesNames[0], partitionMethod);
-}
-
-void Job::run_convertOrbitals()
-{
-    // Read analytic files names
-    std::vector<std::string> analyticFilesNames;
-    readAnalyticFilesNames(analyticFilesNames);
-
-
-    // Check number of analytic files names
-    if (analyticFilesNames.size() != 2)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of analytic files names (two files expected)." << std::endl;
-        errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-
-    // Checking if the files have a different format
-    std::regex fileExtensionRegex("\\.([a-zA-Z0-9]+)$");
-    std::smatch matchInputFileExtension;
-    std::smatch matchOutputFileExtension;
-    std::string inputFileExtension;
-    std::string outputFileExtension;
-    std::regex_search(analyticFilesNames[0], matchInputFileExtension, fileExtensionRegex);
-    std::regex_search(analyticFilesNames[1], matchOutputFileExtension, fileExtensionRegex);
-
-    if (matchInputFileExtension[0] != matchOutputFileExtension[0])
-    {
-        // Loading orbitals and saving in the new format
-        Orbitals o;
-        computeOrbitalsOrBecke<Orbitals>(o, analyticFilesNames[0]);
-        o.Save(analyticFilesNames[1]);
-    }
-    else
-    {
-        std::cout << "Input and output files have the same format (" << inputFileExtension << "). Nothing to be done." << std::endl;
+        orbnums.resize(j);
+        orbspin.resize(j, SpinType::BETA);
     }
 }
-
-void Job::run_help()
-{
-    printListOfRunTypes();
-}
-
-void Job::run_lambdaDiagnostic()
-{
-    //Read analytic file name
-    std::vector<std::string> analyticFilesNames;
-    readAnalyticFilesNames(analyticFilesNames);
-
-
-    // Check number of analytic files names
-    if (analyticFilesNames.size() != 1)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of analytic files names (one file expected)." << std::endl;
-        errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-
-    // Read grid size
-    GridSize gridSize;
-    CustomSizeData customSizeData;
-    readSize(gridSize, customSizeData);
-
-
-    // Read transitions file
-    std::string transitionsFileName;
-    readTransitionsFileName(transitionsFileName);
-
-
-    // Loading orbitals
-    Orbitals orbitals;
-    computeOrbitalsOrBecke<Orbitals>(orbitals, analyticFilesNames[0]);
-
-
-    // Setting orbitals
-    std::vector<int> orbitalsSpins;
-    std::vector<int> orbitalsNumbers;
-    setOrbitals(orbitals, orbitals.get_numberOfMo(), orbitalsNumbers, orbitalsSpins, OrbitalType::ALL, SpinType::ALPHA_BETA);
-
-
-    // Building domain and grid
-    std::cout << "Building domain and grid, please wait..." << std::endl;
-
-    Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, orbitalsNumbers.size());
-    Grid orbitalsGrid = orbitals.makeOrbGrid(domain, orbitalsNumbers, orbitalsSpins);
-
-
-    // Reading transitions file
-    std::vector<ExcitedState> excitedStates;
-    ExcitedState::readTransitionsFile(transitionsFileName, excitedStates, orbitals.get_energy());
-    std::cout << "Number of excited states read: " << excitedStates.size() << std::endl << std::endl;
-
-
-    // Printing lambda diagnostic for each excited state
-    for (const ExcitedState& excitedState : excitedStates)
-    {
-        std::cout << excitedState << std::endl;
-        excitedState.printLambdaDiagnostic(orbitalsGrid);
-        std::cout << "-----------------" << std::endl << std::endl;
-    }
-}
-
-void Job::run_makeDensityCube()
-{
-    // Read analytic file
-    std::vector<std::string> analyticFilesNames;
-    readAnalyticFilesNames(analyticFilesNames);
-
-
-    // Check number of analytic files names
-    if (analyticFilesNames.size() != 1)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of analytic files names (one file expected)." << std::endl;
-        errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-    
-    // Loading orbitals
-    Orbitals o;
-    computeOrbitalsOrBecke<Orbitals>(o, analyticFilesNames[0]);
-    
-
-    // Read size
-    GridSize gridSize;
-    CustomSizeData customSizeData;
-    readSize(gridSize, customSizeData);
-
-
-    // Read grid file name
-    std::vector<std::string> gridFilesName;
-    readGridFilesNames(gridFilesName);
-
-
-    // Check number of grid files names
-    if (gridFilesName.size() != 1)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of grid files names (one file expected)." << std::endl;
-        errorMessage << "Please check the documentation and the number of files specified in the \"GridFiles\" parameter in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-
-    // Building domain
-    std::cout << "Building domain, please wait..." << std::endl;
-
-    Domain d = buildDomainForCube(o, gridSize, customSizeData, 1);
-
-
-    // Creating density cube
-    std::cout << "Creating density cube, please wait..." << std::endl;
-
-    createCube(o, d, gridFilesName[0], 0);
-
-    std::cout << "Density cube saved to file " << gridFilesName[0] << '.' << std::endl;
-}
-
-void Job::run_makeOrbitalsCube()
-{
-    // Read analytic file names
-    std::vector<std::string> analyticFilesNames;
-    readAnalyticFilesNames(analyticFilesNames);
-
-
-    // Check number of analytic files names
-    if (analyticFilesNames.size() != 1)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of analytic files names (one file expected)." << std::endl;
-        errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-
-    // Read grid files name
-    std::vector<std::string> gridFileName;
-    readGridFilesNames(gridFileName);
-
-
-    // Check number of grid files names
-    if (gridFileName.size() != 1)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of grid files names (one file expected)." << std::endl;
-        errorMessage << "Please check the documentation and the number of files specified in the \"GridFiles\" parameter in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-
-    // Read size
-    GridSize gridSize;
-    CustomSizeData customSizeData;
-    readSize(gridSize, customSizeData);
-
-    
-    // Read spin type
-    SpinType spinType;
-    readSpinType(spinType);
-
-
-    // Read orbitals type
-    OrbitalType orbitalType;
-    readOrbitalType(orbitalType);
-
-
-    // Loading orbitals
-    Orbitals o;
-    computeOrbitalsOrBecke<Orbitals>(o, analyticFilesNames[0]);
-
-
-    // Setting orbitals
-    int numberOfOrbitals = o.get_numberOfMo();
-    std::vector<int> orbitalsSpins;
-    std::vector<int> orbitalsNumbers;
-    std::vector<SpinType> spinList;
-    
-    if (orbitalType == OrbitalType::CUSTOM)
-    {
-        // Read custom orbitals list
-        readOrbitalsNumbers(orbitalsNumbers);
-        readSpinList(spinList);
-        
-
-        // Check if the sizes of both lists match
-        if (spinList.size() != orbitalsNumbers.size())
-        {
-            std::stringstream errorMessage;
-            errorMessage << "Error: sizes of orbitals numbers list and spins list do not match." << std::endl;
-            errorMessage << "Please check the documentation and the number of items specified in the \"OrbitalsList\" and \"SpinList\" parameters in " << _inputFileName << '.';
-
-            print_error(errorMessage.str());
-
-            std::exit(1);
-        }
-    }
-
-    setOrbitals(o, numberOfOrbitals, orbitalsNumbers, orbitalsSpins, orbitalType, spinType, spinList);
-
-
-    // Building domain
-    std::cout << "Building domain, please wait..." << std::endl;
-
-    Domain d = buildDomainForCube(o, gridSize, customSizeData, orbitalsNumbers.size());
-
-
-    // Creating orbitals cube
-    std::cout << "Creating orbitals cube, please wait..." << std::endl;
-
-    createCube(o, d, gridFileName[0], 1, ELFMethod::UNKNOWN, orbitalsNumbers, orbitalsSpins);
-
-    std::cout << "Data saved to file: " << gridFileName[0] << std::endl;
-}
-
-void Job::run_makeELFCube()
-{
-    // Read analytic file
-    std::vector<std::string> analyticFilesNames;
-    readAnalyticFilesNames(analyticFilesNames);
-
-
-    // Check number of analytic files names
-    if (analyticFilesNames.size() != 1)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of analytic files names (one file expected)." << std::endl;
-        errorMessage << "Please check the documentation and the number of files specified in the \"AnalyticFiles\" parameter in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-
-    // Loading orbitals
-    Orbitals o;
-    computeOrbitalsOrBecke<Orbitals>(o, analyticFilesNames[0]);
-
-
-    // Read size
-    GridSize gridSize;
-    CustomSizeData customSizeData;
-    readSize(gridSize, customSizeData);
-
-
-    // Read grid file name
-    std::vector<std::string> gridFilesName;
-    readGridFilesNames(gridFilesName);
-
-
-    // Check number of grid files names
-    if (gridFilesName.size() != 1)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of grid files names (one file expected)." << std::endl;
-        errorMessage << "Please check the documentation and the number of files specified in the \"GridFiles\" parameter in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
-    }
-
-
-    // Read ELF method
-    ELFMethod elfMethod;
-    readELFMethod(elfMethod);
-
-
-    // Building domain
-    std::cout << "Building domain, please wait..." << std::endl;
-
-    Domain d = buildDomainForCube(o, gridSize, customSizeData, 1);
-
-    // Creating ELF cube
-    std::cout << "Creating ELF cube, please wait..." << std::endl;
-
-    createCube(o, d, gridFilesName[0], 2, elfMethod);
-
-    std::cout << "ELF cube saved to file " << gridFilesName[0] << '.' << std::endl;
-}
-
-

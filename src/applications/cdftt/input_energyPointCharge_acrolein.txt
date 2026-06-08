@@ -1,0 +1,19 @@
+Charges = -0.1, -0.3
+SingleCharge = True
+
+RunType = ComputeEnergyWithPointCharges
+OutputPrefix = testRuns
+
+EnergyPointChargeMethods = Perturbative, Variational, LinearResponse
+
+AnalyticFiles = tests/Guegan2020/acrolein_200States.fchk
+TransitionsFile = tests/Guegan2020/acrolein_200States.log
+#MaxNumberOfExcitedStates = 49
+
+#Size = Custom
+#CustomSizeData = 128, 128, 128, 8, 8, 8, 1.2598425196850394e-01, 0, 0, 0, 1.2598425196850394e-01, 0, 0, 0, 1.2598425196850394e-01
+
+#Becke = 3, 41, 5
+
+ShowProgress = True
+Verbose = 0
