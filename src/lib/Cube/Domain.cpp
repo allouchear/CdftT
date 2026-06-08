@@ -4,16 +4,10 @@
 #include <string>
 #include <sstream>
 
-<<<<<<< HEAD
-#include "../Common/Atom.h"
-#include "../Common/Constants.h"
-#include "../Cube/Domain.h"
-=======
 #include <Common/Atom.h>
 #include <Common/Constants.h>
 #include <Common/Structure.h>
 #include <Cube/Domain.h>
->>>>>>> origin/dev
 
 
 //----------------------------------------------------------------------------------------------------//

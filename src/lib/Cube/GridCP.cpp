@@ -4,20 +4,12 @@
 #include <string>
 #include <vector>
 
-<<<<<<< HEAD
-#include "../Common/Constants.h"
-#include "../Common/PeriodicTable.h"
-#include "../Common/Structure.h"
-#include "../Cube/GridCP.h"
-#include "../Utils/Enums.hpp"
-=======
 #include <Common/Constants.h>
 #include <Common/PeriodicTable.h>
 #include <Common/Structure.h>
 #include <Cube/Grid.h>
 #include <Cube/GridCP.h>
 #include <Utils/Enums.hpp>
->>>>>>> origin/dev
 
 #ifdef ENABLE_OMP
 #include <omp.h>

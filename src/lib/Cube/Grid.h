@@ -3,10 +3,6 @@
 
 #include <fstream>
 #include <vector>
-<<<<<<< HEAD
-#include "../Common/Structure.h"
-#include "../Cube/Domain.h"
-=======
 
 #include <Common/Structure.h>
 #include <Cube/Domain.h>
@@ -15,7 +11,6 @@
 
 // Forward declarations to avoid circular dependencies
 class Orbitals;
->>>>>>> origin/dev
 
 
 /**

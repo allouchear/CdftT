@@ -4,13 +4,6 @@
 #include <fstream>
 #include <vector>
 
-<<<<<<< HEAD
-#include "../Common/Atom.h"
-#include "../Utils/WFX.h"
-#include "../Utils/FCHK.h"
-#include "../Utils/MOLDENGAB.h"
-#include "../Utils/LOG.h"
-=======
 #include <Common/Atom.h>
 
 // Forward declarations to avoid circular dependencies
@@ -18,8 +11,6 @@ class FCHK;
 class LOG;
 class MOLDENGAB;
 class WFX;
->>>>>>> origin/dev
-
 
 /** @brief Structure class.
  * 

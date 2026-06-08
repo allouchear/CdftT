@@ -10,16 +10,10 @@
 #include <omp.h>
 #endif
 
-<<<<<<< HEAD
-#include "../Cube/Grid.h"
-#include "../Cube/GridCP.h"
-#include "../Common/Constants.h"
-=======
 #include <Cube/Grid.h>
 #include <Common/Constants.h>
 #include <Orbitals/Orbitals.h>
 #include <Utils/Enums.hpp>
->>>>>>> origin/dev
 
 
 //----------------------------------------------------------------------------------------------------//

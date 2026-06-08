@@ -3,16 +3,9 @@
 
 #include <vector>
 
-<<<<<<< HEAD
-#include "../Common/Structure.h"
-#include "../Cube/Domain.h"
-#include "../Cube/Grid.h"
-#include "../Utils/Enums.hpp"
-=======
 #include <Common/Structure.h>
 #include <Cube/Domain.h>
 #include <Utils/Enums.hpp>
->>>>>>> origin/dev
 
 // Forward declarations to avoid circular dependencies
 class Grid;
