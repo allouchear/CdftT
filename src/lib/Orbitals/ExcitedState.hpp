@@ -36,6 +36,10 @@ class ExcitedState
 
         /** @brief argsort of the coefficients of the Slater determinants */
         std::vector<size_t> _argsortCoefs;
+
+        /** @brief Slater Determinants indices associated to each degree of excitation */
+        std::vector<std::vector<size_t>> _excitationDegree;
+
         //----------------------------------------------------------------------------------------------------//
         // PRIVATE STATIC METHODS
         //----------------------------------------------------------------------------------------------------//
@@ -96,18 +100,40 @@ class ExcitedState
          */
         std::vector<size_t> get_argsortCoefs() const;
 
+        /**
+         * @brief Returns the list of indices of the Slater determinants corresponding to each degree of excitation
+         *        get_excitationDegree()[i] -> indices for every SD having i excitations
+         */
+        const std::vector<std::vector<size_t>>& get_excitationDegree() const;
         //----------------------------------------------------------------------------------------------------//
         // SETTERS
         //----------------------------------------------------------------------------------------------------//
 
         /**
          * @brief sets _argsortCoefs, as a vector of indices giving the _slaterDeterminants of coefficients above a given treshold in descending order
+         * 
+         * @param[in] treshold limit on the coefficient of the Slater determinant, keep only Slater determinants above it
          */        
         void set_argsortCoefs(double treshold);
+
+        /**
+         * @brief set _excitationDegree, _excitationDegree[i] contains the list of all SD (their index in _slaterDeterminants) having i excitations (with respect to ground state SD)
+         */
+        void set_excitationDegree();
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
         //----------------------------------------------------------------------------------------------------//
+
+
+        /**
+         * @brief giv
+         * 
+         * @param[in] SD reference to the Slater determinant of which we want to get the degree of excitation
+         * 
+         * @return the degree of excitation of SD
+         */
+        size_t getExcitation(const SlaterDeterminant& SD) const;
 
         /**
          * @brief Adds an electronic transition to the excited state.
