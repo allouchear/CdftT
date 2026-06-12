@@ -64,7 +64,6 @@ void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double
             {
                 for(int q : keptMoIndexes)
                 {
-                    //for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_i : slaterDeterminants_i)
                     for(size_t i : argsortCoefs_i)
                     {
                         const std::pair<SlaterDeterminant, double>& slaterDeterminant_i = slaterDeterminants_i[i];
@@ -73,8 +72,10 @@ void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double
 
                         if(tmpSD.updateFromTransition(p + 1, spinType, q + 1, spinType)) // Because updateFromTransition() expects MO numbers (1-based)
                         {
-                            //for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_j : slaterDeterminants_j)
-                            for(size_t j : argsortCoefs_j)
+                            size_t exDeg = psi_i.getExcitation(tmpSD);
+                            vector<size_t> exIndices = psi_j.get_excitationDegree()[exDeg];
+                            for(size_t j : exIndices)  //compare tmpSD only to SD having the same degree of excitation (otherwise always not equivalent)
+                            //for(size_t j : argsortCoefs_j)
                             {
                                 const std::pair<SlaterDeterminant, double>& slaterDeterminant_j = slaterDeterminants_j[j];
                                 if(SlaterDeterminant::equivalent(tmpSD, slaterDeterminant_j.first))
@@ -211,7 +212,6 @@ void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>&
                     }
                 }
                 norm = std::sqrt(norm);
-                std::cout<<" norm : "<<norm<<std::endl;
                 for (auto& row : xMatrix[spin])
                 {
                     for (auto& element : row)
@@ -288,7 +288,8 @@ ExcitedState::ExcitedState(const int number, const double energy) :
     _energy(energy),
     _number(number),
     _slaterDeterminants(),
-    _argsortCoefs()
+    _argsortCoefs(),
+    _excitationDegree()
 { }
 
 ExcitedState::ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant) :
@@ -296,7 +297,8 @@ ExcitedState::ExcitedState(const double energy, const SlaterDeterminant& slaterD
     _energy(energy),
     _number(0),
     _slaterDeterminants({ { slaterDeterminant, 1.0 } }),
-    _argsortCoefs()
+    _argsortCoefs(),
+    _excitationDegree()
 { }
 
 
@@ -323,14 +325,19 @@ std::vector<size_t> ExcitedState::get_argsortCoefs() const
 {
     return _argsortCoefs;
 }
+
+const std::vector<std::vector<size_t>>& ExcitedState::get_excitationDegree() const
+{
+    return _excitationDegree;
+}
 //----------------------------------------------------------------------------------------------------//
-// GETTERS
+// SETTERS
 //----------------------------------------------------------------------------------------------------//
 
 void ExcitedState::set_argsortCoefs(double limit)
 {
     //argsort transitions coefs; coefs[argsortSD[i]] gives the i+1 highest coef 
-    int nSD = _slaterDeterminants.size();
+    size_t nSD = _slaterDeterminants.size();
     std::vector<double> coefs(nSD);
     for(size_t i=0;i<nSD;++i)
     {
@@ -351,9 +358,38 @@ void ExcitedState::set_argsortCoefs(double limit)
     _argsortCoefs = std::vector<size_t> (argsortSD.begin(),argsortSD.begin()+SD_max+1);
 }
 
+void ExcitedState::set_excitationDegree()
+{
+    size_t nMax = 0;
+    for (size_t i=0;i<_slaterDeterminants.size();++i)
+    {
+        nMax += _slaterDeterminants[i].first.get_occupiedOrbitals()[0].size();
+    }
+    _excitationDegree.resize(nMax,std::vector<size_t>());
+    
+    size_t nSD = _slaterDeterminants.size();
+    for (size_t i=0;i<nSD;++i)   //for each SD, 
+    {
+        size_t exDeg = getExcitation(_slaterDeterminants[i].first);
+        _excitationDegree[exDeg].push_back(i);
+    }
+}
+
 //----------------------------------------------------------------------------------------------------//
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
+
+size_t ExcitedState::getExcitation(const SlaterDeterminant& SD) const
+{
+    size_t nbDiff = 0;
+    const auto& differences = SlaterDeterminant::getDifferences(_slaterDeterminants[0].first,SD);
+    for (const auto& spin : differences)  //sum along all spins the number of differences with respect to the ground state; gives the number of excitations
+    {
+        nbDiff += spin.size();
+    }
+
+    return nbDiff;
+}
 
 void ExcitedState::addTransition(const SpinOrbital& initialOrbital, const SpinOrbital& finalOrbital, const double coefficient)
 {
