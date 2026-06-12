@@ -258,7 +258,7 @@ void ComputeElectronDensity::computeTransitionDensities(const std::vector<Excite
         {
             std::cout << std::endl;
         }
-        std::cout<<"compute time of writting grid : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count()/1000.0<<"s"<<std::endl;
+        std::cout<<"compute time of grid : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count()/1000.0<<"s"<<std::endl;
         start = std::chrono::high_resolution_clock::now();
         // Save grid
         std::cout << "Writing density cube file for transition between state #" << states[i].get_number() << " and state #" << states[j].get_number() << " (" << currentTransitionDensity << " out of " << nbTransitionDensities << "), please wait..." << std::endl;
@@ -490,7 +490,7 @@ void ComputeElectronDensity::run()
     end = std::chrono::high_resolution_clock::now();
     double t_computeTransitions = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count()/1000.0;
 
-    
+
     std::cout<<"time to read files : "<<t_readFiles<<"s"<<std::endl;
     std::cout<<"time to load orbitals : "<<t_loadOrbitals<<"s"<<std::endl;
     std::cout<<"time to get transitions : "<<t_getTransitions<<"s"<<std::endl;
