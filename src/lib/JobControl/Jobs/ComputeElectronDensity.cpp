@@ -416,15 +416,15 @@ void ComputeElectronDensity::run()
     }
     log(logStream, outputStream);
 
-    double SDLimit;
-    readSDLimit(SDLimit);
+    double Cutoff;
+    readSDCutoff(Cutoff);
 
     // Compute Slater Determinants from electronic transitions for each state, then set the argsort array and compute the excitation degree of each SD
     start = std::chrono::high_resolution_clock::now();
     for (ExcitedState& state : states)
     {
         state.computeSlaterDeterminants(groundStateSlaterDeterminant);
-        state.set_argsortCoefs(SDLimit);
+        state.set_argsortCoefs(Cutoff);
         state.set_excitationDegree();
 
         if (verbose >= 1)

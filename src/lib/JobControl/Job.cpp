@@ -556,16 +556,16 @@ bool Job::readPrecision(int& precision)
     return read;
 }
 
-bool Job::readSDLimit(double& SDLimit)
+bool Job::readSDCutoff(double& SDCutoff)
 {
-    bool read = readOneType<double>(_inputFile, "SDLimit", SDLimit);
+    bool read = readOneType<double>(_inputFile, "SDCutoff", SDCutoff);
 
     if (!read)
     {
-        std::cout << "Note: the \"SDLimit\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "Note: the \"SDCutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
         std::cout << "The program will use the default value 0." << std::endl << std::endl;
 
-        SDLimit = 0;
+        SDCutoff = 0;
     }
 
     return read;
