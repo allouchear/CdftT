@@ -44,7 +44,7 @@ void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedStat
     {
         iter += 1;
         std::vector<std::vector<std::vector<double>>> reducedDensityMatrix;
-        ExcitedState::reducedDensityMatrix(reducedDensityMatrix, rdmMethod, states[i], states[i], orbitals, excludedOrbitalsNumbers);
+        ExcitedState::reducedDensityMatrix(reducedDensityMatrix, rdmMethod, states[i], states[i], orbitals, excludedOrbitalsNumbers,showProgress);
 
         if (saveRDM || verbose >= 1)
         {
@@ -164,7 +164,7 @@ void ComputeElectronDensity::computeTransitionDensities(const std::vector<Excite
         int j = transitionDensity[1];
 
         std::vector<std::vector<std::vector<double>>> reducedDensityMatrix;
-        ExcitedState::reducedDensityMatrix(reducedDensityMatrix, rdmMethod, states[i], states[j], orbitals, excludedOrbitalsNumbers);
+        ExcitedState::reducedDensityMatrix(reducedDensityMatrix, rdmMethod, states[i], states[j], orbitals, excludedOrbitalsNumbers,showProgress);
 
         if (saveRDM || verbose >= 1)
         {
@@ -387,7 +387,7 @@ void ComputeElectronDensity::run()
 
     // Get Ground Slater Determinant
     SlaterDeterminant groundStateSlaterDeterminant(orbitals);
-    ExcitedState groundState(orbitals.get_energy(), groundStateSlaterDeterminant);
+    ExcitedState groundState(orbitals.get_energy(), groundStateSlaterDeterminant,true);
 
     // Build states vector
     std::vector<ExcitedState> states;

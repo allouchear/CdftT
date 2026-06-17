@@ -41,18 +41,26 @@ class ExcitedState
         std::vector<std::vector<size_t>> _excitationDegree;
 
         //----------------------------------------------------------------------------------------------------//
+        // STATIC FIELDS
+        //----------------------------------------------------------------------------------------------------//
+
+        /** @brief Static ground state Slater determinant instance shared among all SlaterDeterminant objects. */
+        static SlaterDeterminant _s_GS_SD;
+
+    
+        //----------------------------------------------------------------------------------------------------//
         // PRIVATE STATIC METHODS
         //----------------------------------------------------------------------------------------------------//
         
         /**
          * TODO
          */
-        static void computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
+        static void computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress);
 
         /**
          * TODO
          */
-        static void computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi1, const ExcitedState& psi2, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
+        static void computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi1, const ExcitedState& psi2, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress);
     
 
     public:
@@ -75,6 +83,15 @@ class ExcitedState
          * @param[in] slaterDeterminant Slater determinant associated with the ground state.
          */
         ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant);
+
+        /**
+         * @brief Constructor for the ground state.
+         *
+         * @param[in] energy Energy of the ground state, in Hartree.
+         * @param[in] slaterDeterminant Slater determinant associated with the ground state.
+         * @param[in] GS if true sets the static _s_GS_SD attribute to slaterDeterminant
+         */
+        ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant, bool GS);
 
         //----------------------------------------------------------------------------------------------------//
         // GETTERS
@@ -275,7 +292,7 @@ class ExcitedState
          */
         static double ionicPotential(const ExcitedState& psi_i, const ExcitedState& psi_j, const std::vector<std::vector<std::vector<double>>>& ionicMatrixes);
 
-        static void reducedDensityMatrix(std::vector<std::vector<std::vector<double>>>& rdmMatrix, RDMMethod rdmMethod, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
+        static void reducedDensityMatrix(std::vector<std::vector<std::vector<double>>>& rdmMatrix, RDMMethod rdmMethod, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress);
 
 
         //----------------------------------------------------------------------------------------------------//
