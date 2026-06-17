@@ -1,0 +1,25 @@
+RunType=ComputeElectronDensity
+
+#input data
+AnalyticFiles=/home/atourneur/Documents/CdftT/test_ambroise/test_acrolein/input/acrolein_100.fchk
+TransitionsFile=/home/atourneur/Documents/CdftT/test_ambroise/test_acrolein/input/acrolein_100.log
+
+# Grid configuration
+Size=custom
+CustomSizeData=140,100,60,7.558904,5.669178,2.834589,0.094486,0,0,0,0.094486,0,0,0,0.094486
+
+#computation parameters
+RDMMethod=Gamma
+ExcitedStatesNumbers=10
+ExcludedOrbitals=1,2,3,4
+TransitionDensities=(0,10)
+#SDCutoff=0.01
+
+#output parameters
+OutputPrefix=/home/atourneur/Documents/CdftT/test_ambroise/test_acrolein/last_version/cpp_Gamma
+Precision=6
+
+#verbosity
+ShowProgress=True
+verbose=0
+SaveReducedDensityMatrix=True
