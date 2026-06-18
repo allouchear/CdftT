@@ -20,17 +20,6 @@ class SlaterDeterminant
         std::vector<std::vector<std::pair<int, double>>> _occupiedOrbitals;
 
 
-        //----------------------------------------------------------------------------------------------------//
-        // STATIC FIELDS
-        //----------------------------------------------------------------------------------------------------//
-
-        /** @brief Static Orbitals instance shared among all SlaterDeterminant objects. */
-        static Orbitals _s_orbitals_;
-
-        /** @brief Flag indicating whether the static Orbitals instance has been set. */
-        static bool _s_isOrbitalsSet_;
-
-
     public:
         //----------------------------------------------------------------------------------------------------//
         // CONSTRUCTORS

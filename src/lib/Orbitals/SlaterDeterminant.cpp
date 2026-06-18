@@ -8,13 +8,6 @@
 #include <Orbitals/SlaterDeterminant.hpp>
 #include <Utils/Enums.hpp>
 
-//----------------------------------------------------------------------------------------------------//
-// STATIC FIELDS
-//----------------------------------------------------------------------------------------------------//
-
-bool SlaterDeterminant::_s_isOrbitalsSet_ = false;
-Orbitals SlaterDeterminant::_s_orbitals_ = Orbitals();
-
 
 //----------------------------------------------------------------------------------------------------//
 // CONSTRUCTORS
@@ -28,12 +21,6 @@ SlaterDeterminant::SlaterDeterminant():
 SlaterDeterminant::SlaterDeterminant(const Orbitals& orbitals):
     _occupiedOrbitals(2, std::vector<std::pair<int, double>>())
 {
-    if (!_s_isOrbitalsSet_)
-    {
-        _s_orbitals_ = orbitals;
-        _s_isOrbitalsSet_ = true;
-    }
-
     // Get occupation numbers
     const std::vector<std::vector<double>>& occupationNumbers = orbitals.get_occupationNumber();
 
