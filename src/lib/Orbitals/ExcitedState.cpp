@@ -1,6 +1,7 @@
 #include <atomic>
 #include <cmath>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <regex>
@@ -288,9 +289,14 @@ const std::vector<std::pair<SlaterDeterminant, double>>& ExcitedState::get_slate
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
+void ExcitedState::addSlaterDeterminant(const SlaterDeterminant& slaterDeterminant, const double coefficient)
+{
+    _slaterDeterminants.emplace_back(slaterDeterminant, coefficient);
+}
+
 void ExcitedState::addTransition(const SpinOrbital& initialOrbital, const SpinOrbital& finalOrbital, const double coefficient)
 {
-    _electronicTransitions.push_back(std::make_tuple(initialOrbital, finalOrbital, coefficient));
+    _electronicTransitions.emplace_back(initialOrbital, finalOrbital, coefficient);
 }
 
 void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant)
@@ -496,7 +502,7 @@ bool ExcitedState::readGroundStateEnergyFromTransitionsFile(const std::string& t
         }
 
         // Look for the ground state energy in the file
-        std::regex groundStateEnergyRegex("Ground State Energy\\s+:\\s+(-?\\d*\\.?\\d+)\\s+(eV|H)");
+        std::regex groundStateEnergyRegex("Ground State Energy\\s+(-?\\d*\\.?\\d+)\\s+(eV|H)");
         std::smatch groundStateEnergyRegexMatch;
         if (std::regex_search(line, groundStateEnergyRegexMatch, groundStateEnergyRegex))
         {
@@ -573,147 +579,155 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
         }
         else
         {
-            // New excited state: read energy
-            std::regex energyRegex("(?:energy)\\s+(-?\\d*\\.?\\d+)\\s+(eV|H)", std::regex_constants::icase);
-            std::smatch energyRegexMatch;
-            if (std::regex_search(line, energyRegexMatch, energyRegex))
+            // Ground State Energy: ignored
+            std::regex groundStateEnergyRegex("Ground State Energy\\s+(-?\\d*\\.?\\d+)\\s+(eV|H)", std::regex_constants::icase);
+            std::smatch groundStateEnergyRegexMatch;
+            if (!std::regex_search(line, groundStateEnergyRegexMatch, groundStateEnergyRegex))
             {
-                double energy = std::stod(energyRegexMatch[1]);
-                std::string energyUnit = energyRegexMatch[2];
+                std::cout << line;
 
-                // For the unit, we only analyze the first letter (eV or H)
-                if (std::toupper(energyUnit[0]) == 'E')
+                // New excited state: read energy
+                std::regex energyRegex("(?:Energy)\\s+(-?\\d*\\.?\\d+)\\s+(eV|H)", std::regex_constants::icase);
+                std::smatch energyRegexMatch;
+                if (std::regex_search(line, energyRegexMatch, energyRegex))
                 {
-                    energy *= Constants::EV_TO_HARTREE;
-                }
-                else if (std::toupper(energyUnit[0]) != 'H')
-                {
-                    ok = false;
+                    double energy = std::stod(energyRegexMatch[1]);
+                    std::string energyUnit = energyRegexMatch[2];
 
-                    std::stringstream errorMessage;
-                    errorMessage << "Error in ExcitedState::readTransitionsFromFile(): unknown energy unit \"" << energyUnit << "\" in transitions file " << transitionsFileName << '.' << std::endl;
-                    errorMessage << "Please use eV or H as energy unit.";
-
-                    print_error(errorMessage.str());
-
-                    std::exit(1);
-                }
-
-                ExcitedState excitedState(currentExcitedStatesRead, energy + groundStateEnergy);
-
-                // Read transitions
-                do
-                {
-                    std::getline(transitionsFile, line);
-                    line = trim_whitespaces(line, true, true);
-
-                    if (line[0] == '#')
+                    // For the unit, we only analyze the first letter (eV or H)
+                    if (std::toupper(energyUnit[0]) == 'E')
                     {
-                        // Skip comment lines
-                        continue;
+                        energy *= Constants::EV_TO_HARTREE;
                     }
-                    else if (!line.empty())
+                    else if (std::toupper(energyUnit[0]) != 'H')
                     {
-                        // First, consider the case where the spins are specified
-                        std::regex transitionRegexAlphaBeta("(\\d+)\\s+([aAbB])\\s+(\\d+)\\s+([aAbB])\\s+(-?\\d*\\.?\\d+)");
-                        std::smatch transitionRegexAlphaBetaMatch;
-                        if (std::regex_search(line, transitionRegexAlphaBetaMatch, transitionRegexAlphaBeta))
+                        ok = false;
+
+                        std::stringstream errorMessage;
+                        errorMessage << "Error in ExcitedState::readTransitionsFromFile(): unknown energy unit \"" << energyUnit << "\" in transitions file " << transitionsFileName << '.' << std::endl;
+                        errorMessage << "Please use eV or H as energy unit.";
+
+                        print_error(errorMessage.str());
+
+                        std::exit(1);
+                    }
+
+                    ExcitedState excitedState(currentExcitedStatesRead, energy + groundStateEnergy);
+
+                    // Read transitions
+                    do
+                    {
+                        std::getline(transitionsFile, line);
+                        line = trim_whitespaces(line, true, true);
+
+                        if (line[0] == '#')
                         {
-                            std::pair<int, SpinType> initialOrbital;
-                            std::pair<int, SpinType> finalOrbital;
-
-                            initialOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[1]);
-                            initialOrbital.second = (transitionRegexAlphaBetaMatch[2] == "a" || transitionRegexAlphaBetaMatch[2] == "A") ? SpinType::ALPHA : SpinType::BETA;
-
-                            finalOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[3]);
-                            finalOrbital.second = (transitionRegexAlphaBetaMatch[4] == "a" || transitionRegexAlphaBetaMatch[4] == "A") ? SpinType::ALPHA : SpinType::BETA;
-                            double coefficient = std::stod(transitionRegexAlphaBetaMatch[5]);
-
-                            excitedState.addTransition(initialOrbital, finalOrbital, coefficient);
+                            // Skip comment lines
+                            continue;
                         }
-                        else
+                        else if (!line.empty())
                         {
-                            // Then, consider the case where spins are not specified: both alpha and beta transitions are assumed
-                            std::regex transitionRegex("(\\d+)\\s+(\\d+)\\s+(-?\\d*\\.?\\d+)");
-                            std::smatch transitionRegexMatch;
-                            if (std::regex_search(line, transitionRegexMatch, transitionRegex))
+                            // First, consider the case where the spins are specified
+                            std::regex transitionRegexAlphaBeta("(\\d+)\\s+([aAbB])\\s+(\\d+)\\s+([aAbB])\\s+(-?\\d*\\.?\\d+)");
+                            std::smatch transitionRegexAlphaBetaMatch;
+                            if (std::regex_search(line, transitionRegexAlphaBetaMatch, transitionRegexAlphaBeta))
                             {
-                                std::pair<int, SpinType> initialOrbital_alpha;
-                                std::pair<int, SpinType> finalOrbital_alpha;
-                                std::pair<int, SpinType> initialOrbital_beta;
-                                std::pair<int, SpinType> finalOrbital_beta;
+                                std::pair<int, SpinType> initialOrbital;
+                                std::pair<int, SpinType> finalOrbital;
 
-                                // Add alpha transition
-                                initialOrbital_alpha.first = std::stoi(transitionRegexMatch[1]);
-                                initialOrbital_alpha.second = SpinType::ALPHA;
+                                initialOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[1]);
+                                initialOrbital.second = (transitionRegexAlphaBetaMatch[2] == "a" || transitionRegexAlphaBetaMatch[2] == "A") ? SpinType::ALPHA : SpinType::BETA;
 
-                                finalOrbital_alpha.first = std::stoi(transitionRegexMatch[2]);
-                                finalOrbital_alpha.second = SpinType::ALPHA;
+                                finalOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[3]);
+                                finalOrbital.second = (transitionRegexAlphaBetaMatch[4] == "a" || transitionRegexAlphaBetaMatch[4] == "A") ? SpinType::ALPHA : SpinType::BETA;
+                                double coefficient = std::stod(transitionRegexAlphaBetaMatch[5]);
 
-                                double coefficient = std::stod(transitionRegexMatch[3]);
-
-                                excitedState.addTransition(initialOrbital_alpha, finalOrbital_alpha, coefficient);
-
-                                // Add beta transition
-                                initialOrbital_beta.first = initialOrbital_alpha.first;
-                                initialOrbital_beta.second = SpinType::BETA;
-
-                                finalOrbital_beta.first = finalOrbital_alpha.first;
-                                finalOrbital_beta.second = SpinType::BETA;
-
-                                excitedState.addTransition(initialOrbital_beta, finalOrbital_beta, coefficient);
+                                excitedState.addTransition(initialOrbital, finalOrbital, coefficient);
                             }
                             else
                             {
-                                ok = false;
+                                // Then, consider the case where spins are not specified: both alpha and beta transitions are assumed
+                                std::regex transitionRegex("(\\d+)\\s+(\\d+)\\s+(-?\\d*\\.?\\d+)");
+                                std::smatch transitionRegexMatch;
+                                if (std::regex_search(line, transitionRegexMatch, transitionRegex))
+                                {
+                                    std::pair<int, SpinType> initialOrbital_alpha;
+                                    std::pair<int, SpinType> finalOrbital_alpha;
+                                    std::pair<int, SpinType> initialOrbital_beta;
+                                    std::pair<int, SpinType> finalOrbital_beta;
 
-                                std::stringstream errorMessage;
-                                errorMessage << "Error in ExcitedState::readTransitionsFromFile(): could not read transition in transitions file " << transitionsFileName << '.' << std::endl;
-                                errorMessage << "Please check the documentation for the format of the file.";
+                                    // Add alpha transition
+                                    initialOrbital_alpha.first = std::stoi(transitionRegexMatch[1]);
+                                    initialOrbital_alpha.second = SpinType::ALPHA;
 
-                                print_error(errorMessage.str());
+                                    finalOrbital_alpha.first = std::stoi(transitionRegexMatch[2]);
+                                    finalOrbital_alpha.second = SpinType::ALPHA;
 
-                                std::exit(1);
+                                    double coefficient = std::stod(transitionRegexMatch[3]);
+
+                                    excitedState.addTransition(initialOrbital_alpha, finalOrbital_alpha, coefficient);
+
+                                    // Add beta transition
+                                    initialOrbital_beta.first = initialOrbital_alpha.first;
+                                    initialOrbital_beta.second = SpinType::BETA;
+
+                                    finalOrbital_beta.first = finalOrbital_alpha.first;
+                                    finalOrbital_beta.second = SpinType::BETA;
+
+                                    excitedState.addTransition(initialOrbital_beta, finalOrbital_beta, coefficient);
+                                }
+                                else
+                                {
+                                    ok = false;
+
+                                    std::stringstream errorMessage;
+                                    errorMessage << "Error in ExcitedState::readTransitionsFromFile(): could not read transition in transitions file " << transitionsFileName << '.' << std::endl;
+                                    errorMessage << "Please check the documentation for the format of the file.";
+
+                                    print_error(errorMessage.str());
+
+                                    std::exit(1);
+                                }
                             }
                         }
-                    }
-                } while (!transitionsFile.eof() && !line.empty());
+                    } while (!transitionsFile.eof() && !line.empty());
 
-                // Check that at least one transition was read
-                if (excitedState.getNumberOfTransitions() > 0)
-                {
-                    if (excitedStatesNumbersToKeep.empty() || std::find(excitedStatesNumbersToKeep.begin(), excitedStatesNumbersToKeep.end(), currentExcitedStatesRead) != excitedStatesNumbersToKeep.end())
+                    // Check that at least one transition was read
+                    if (excitedState.getNumberOfTransitions() > 0)
                     {
-                        // Add excited state to the list
-                        excitedStates.push_back(excitedState);
-                    }
+                        if (excitedStatesNumbersToKeep.empty() || std::find(excitedStatesNumbersToKeep.begin(), excitedStatesNumbersToKeep.end(), currentExcitedStatesRead) != excitedStatesNumbersToKeep.end())
+                        {
+                            // Add excited state to the list
+                            excitedStates.push_back(excitedState);
+                        }
 
-                    ++currentExcitedStatesRead;
+                        ++currentExcitedStatesRead;
+                    }
+                    else
+                    {
+                        ok = false;
+
+                        std::stringstream errorMessage;
+                        errorMessage << "Error in ExcitedState::readTransitionsFromFile(): no transition found for excited state with energy " << excitedState.get_energy() << " in transitions file " << transitionsFileName << '.' << std::endl;
+                        errorMessage << "Please check the documentation for the format of the file.";
+
+                        print_error(errorMessage.str());
+
+                        std::exit(1);
+                    }
                 }
                 else
                 {
                     ok = false;
 
                     std::stringstream errorMessage;
-                    errorMessage << "Error in ExcitedState::readTransitionsFromFile(): no transition found for excited state with energy " << excitedState.get_energy() << " in transitions file " << transitionsFileName << '.' << std::endl;
+                    errorMessage << "Error in ExcitedState::readTransitionsFromFile(): could not read excited state energy in transitions file " << transitionsFileName << '.' << std::endl;
                     errorMessage << "Please check the documentation for the format of the file.";
 
                     print_error(errorMessage.str());
 
                     std::exit(1);
                 }
-            }
-            else
-            {
-                ok = false;
-
-                std::stringstream errorMessage;
-                errorMessage << "Error in ExcitedState::readTransitionsFromFile(): could not read excited state energy in transitions file " << transitionsFileName << '.' << std::endl;
-                errorMessage << "Please check the documentation for the format of the file.";
-
-                print_error(errorMessage.str());
-
-                std::exit(1);
             }
         }
     }
@@ -852,6 +866,283 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
     return ok;
 }
 
+///////////////////////////////
+// LOADING AND SAVING METHODS
+
+bool ExcitedState::loadExcitedStatesFromFile(const std::string& excitedStatesFileName, std::vector<ExcitedState>& excitedStates, std::vector<SlaterDeterminant>& slaterDeterminants, int maxNumberOfExcitedStates)
+{
+    bool ok = true;
+
+    std::ifstream excitedStatesFile(excitedStatesFileName);
+    if (!excitedStatesFile)
+    {
+        ok = false;
+
+        std::stringstream errorMessage;
+        errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): could not open excited states file " << excitedStatesFileName << '.' << std::endl;
+        errorMessage << "Please check that the file exists and is readable.";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    int currentExcitedStatesRead = 0;
+
+    std::string line;
+    while (!excitedStatesFile.eof() && (maxNumberOfExcitedStates == -1 || currentExcitedStatesRead <= maxNumberOfExcitedStates))
+    {
+        // Read line
+        std::getline(excitedStatesFile, line);
+        line = trim_whitespaces(line, true, true);
+
+        if (line.empty())
+        {
+            // Skip empty lines in the beginning of the file
+            continue;
+        }
+        else if (line[0] == '#')
+        {
+            // Comment line: skip
+            continue;
+        }
+        else
+        {
+            // Slater Determinants
+            if (line == "Slater Determinants")
+            {
+                do
+                {
+                    std::getline(excitedStatesFile, line);
+                    line = trim_whitespaces(line, true, true);
+
+                    if (line[0] == '#')
+                    {
+                        // Skip comment lines
+                        continue;
+                    }
+                    else if (!line.empty())
+                    {
+                        std::regex slaterDeterminantRegex("(?:(\\d+)(A|B)\\((\\d+(?:\\.\\d+)?(?:[eE][+-]\\d+)?)\\))+", std::regex_constants::icase);
+                        std::smatch slaterDeterminantRegexMatch;
+
+                        if (std::regex_search(line, slaterDeterminantRegexMatch, slaterDeterminantRegex))
+                        {
+                            SlaterDeterminant slaterDeterminant;
+                            SlaterDeterminant::parseFromString(slaterDeterminant, line);
+                            slaterDeterminants.push_back(slaterDeterminant);
+                        }
+                        else
+                        {
+                            ok = false;
+
+                            std::stringstream errorMessage;
+                            errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): could not read Slater Determinant in excited states file " << excitedStatesFileName << '.' << std::endl;
+                            errorMessage << "Please check the documentation for the format of the file.";
+
+                            print_error(errorMessage.str());
+
+                            std::exit(1);
+                        }
+                    }
+                } while (!line.empty());
+            }
+            else
+            {
+                if (slaterDeterminants.empty())
+                {
+                    ok = false;
+
+                    std::stringstream errorMessage;
+                    errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): Slater Determinants must be specified before the excited states in excited states file " << excitedStatesFileName << '.' << std::endl;
+                    errorMessage << "Please check the documentation for the format of the file.";
+
+                    print_error(errorMessage.str());
+
+                    std::exit(1);
+                }
+
+                // New excited state: read energy
+                std::regex energyRegex("(?:Energy)\\s+(-?\\d+(?:\\.\\d+)?(?:[eE][+-]\\d+)?)\\s+(eV|H)", std::regex_constants::icase);
+                std::smatch energyRegexMatch;
+                if (std::regex_search(line, energyRegexMatch, energyRegex))
+                {
+                    double energy = std::stod(energyRegexMatch[1]);
+                    std::string energyUnit = energyRegexMatch[2];
+
+                    // For the unit, we only analyze the first letter (eV or H)
+                    if (std::toupper(energyUnit[0]) == 'E')
+                    {
+                        energy *= Constants::EV_TO_HARTREE;
+                    }
+                    else if (std::toupper(energyUnit[0]) != 'H')
+                    {
+                        ok = false;
+
+                        std::stringstream errorMessage;
+                        errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): unknown energy unit \"" << energyUnit << "\" in excited states file " << excitedStatesFileName << '.' << std::endl;
+                        errorMessage << "Please use eV or H as energy unit.";
+
+                        print_error(errorMessage.str());
+
+                        std::exit(1);
+                    }
+
+                    ExcitedState excitedState(currentExcitedStatesRead, energy);
+
+                    int currentCoefficientRead = 0;
+
+                    // Read slater determinants coefficients
+                    do
+                    {
+                        std::getline(excitedStatesFile, line);
+                        line = trim_whitespaces(line, true, true);
+
+                        if (line[0] == '#')
+                        {
+                            // Skip comment lines
+                            continue;
+                        }
+                        else if (!line.empty())
+                        {
+                            double coefficient;
+                            std::stringstream buffer(line);
+
+                            buffer >> coefficient;
+                            if (buffer.fail() and !buffer.eof())
+                            {
+                                ok = false;
+
+                                std::stringstream errorMessage;
+                                errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): could not read Slater Determinant coefficient in excited states file " << excitedStatesFileName << '.' << std::endl;
+                                errorMessage << "Please check the documentation for the format of the file.";
+                                print_error(errorMessage.str());
+
+                                std::exit(1);
+                            }
+                            
+                            excitedState.addSlaterDeterminant(slaterDeterminants[currentCoefficientRead], coefficient);
+
+                            ++currentCoefficientRead;
+                        }
+                    } while (!excitedStatesFile.eof() && !line.empty());
+
+                    // Check that the number of coefficients read matches the number of Slater determinants
+                    if (excitedState.get_slaterDeterminants().size() == slaterDeterminants.size())
+                    {
+                        excitedStates.push_back(excitedState);
+                        ++currentExcitedStatesRead;
+                    }
+                    else
+                    {
+                        ok = false;
+
+                        std::stringstream errorMessage;
+                        errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): number of Slater Determinant coefficients does not match the number of Slater determinants in excited states file " << excitedStatesFileName << '.' << std::endl;
+                        errorMessage << "Please check the documentation for the format of the file.";
+
+                        print_error(errorMessage.str());
+
+                        std::exit(1);
+                    }
+                }
+                else
+                {
+                    ok = false;
+
+                    std::stringstream errorMessage;
+                    errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): could not read excited state energy in excited states file " << excitedStatesFileName << '.' << std::endl;
+                    errorMessage << "Please check the documentation for the format of the file.";
+
+                    print_error(errorMessage.str());
+
+                    std::exit(1);
+                }
+            }
+        }
+    }
+
+    excitedStatesFile.close();
+
+    return ok;
+}
+
+bool ExcitedState::saveExcitedStatesToFile(const std::string& excitedStatesFileName, const std::vector<ExcitedState>& excitedStates)
+{
+    bool ok = true;
+
+    std::ofstream excitedStatesFile(excitedStatesFileName);
+    if (!excitedStatesFile)
+    {
+        ok = false;
+
+        std::stringstream errorMessage;
+        errorMessage << "Error in ExcitedState::saveExcitedStatesToFile(): could not open excited states file " << excitedStatesFileName << " for writing." << std::endl;
+        errorMessage << "Please check that the file is writable.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    excitedStatesFile << std::scientific << std::setprecision(10);
+
+    // Get all Slater determinants from all excited states
+    std::vector<SlaterDeterminant> slaterDeterminants;
+    for (const ExcitedState& excitedState : excitedStates)
+    {
+        for (const std::pair<SlaterDeterminant, double>& slaterCoef : excitedState.get_slaterDeterminants())
+        {
+            // Search for the Slater determinant in the whole list
+            // If it is not found, add it to the list.
+            if (std::find(slaterDeterminants.begin(), slaterDeterminants.end(), slaterCoef.first) == slaterDeterminants.end())
+            {
+                slaterDeterminants.emplace_back(slaterCoef.first);
+            }
+        }
+    }
+
+    // Write Slater determinants to file
+    excitedStatesFile << "Slater Determinants" << std::endl;
+    for (const SlaterDeterminant& slaterDeterminant : slaterDeterminants)
+    {
+        excitedStatesFile << slaterDeterminant << std::endl;
+    }
+    excitedStatesFile << std::endl;
+
+    // Write excited states to file
+    for (const ExcitedState& excitedState : excitedStates)
+    {
+        excitedStatesFile << "Energy " << excitedState.get_energy() << " H" << std::endl;
+
+        for (const SlaterDeterminant& slaterDeterminant : slaterDeterminants)
+        {
+            const auto& excitedStateSD = excitedState.get_slaterDeterminants();
+
+            // Search for the Slater determinant in the excited state
+            auto it = std::find_if(excitedStateSD.begin(),
+                                   excitedStateSD.end(),
+                                   [&slaterDeterminant](const std::pair<SlaterDeterminant, double>& element)
+                                   { return element.first == slaterDeterminant; });
+
+            // If it is found, write its coefficient to the file. Otherwise, write 0.
+            if (it != excitedState.get_slaterDeterminants().end())
+            {
+                excitedStatesFile << it->second << std::endl;
+            }
+            else
+            {
+                excitedStatesFile << 0.0 << std::endl;
+            }
+        }
+
+        excitedStatesFile << std::endl;
+    }
+
+    excitedStatesFile.close();
+
+    return ok;
+}
+
 /////////////////////////
 // OTHER STATIC METHODS
 
@@ -864,8 +1155,7 @@ std::vector<ExcitedState> ExcitedState::buildPerturbedStates(const std::vector<E
 
     for (size_t i = 0; i < unperturbedStates.size(); ++i)
     {
-        perturbedStates.emplace_back(i, energies[i]);
-        ExcitedState& currentPerturbedState = perturbedStates.back();
+        ExcitedState currentPerturbedState = ExcitedState(static_cast<int>(i), energies[i]);
 
         for (size_t k = 0; k < unperturbedStates.size(); ++k)
         {
@@ -906,6 +1196,8 @@ std::vector<ExcitedState> ExcitedState::buildPerturbedStates(const std::vector<E
 
         // Compute the Slater determinants associated with the perturbed state based on its electronic transitions
         currentPerturbedState.computeSlaterDeterminants(groundStateSlaterDeterminant);
+
+        perturbedStates.push_back(currentPerturbedState);
     }
 
     return perturbedStates;

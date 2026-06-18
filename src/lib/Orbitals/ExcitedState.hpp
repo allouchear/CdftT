@@ -95,6 +95,14 @@ class ExcitedState
         //----------------------------------------------------------------------------------------------------//
 
         /**
+         * @brief Adds a Slater determinant to the excited state along with its coefficient.
+         * 
+         * @param[in] slaterDeterminant Slater determinant to add.
+         * @param[in] coefficient Coefficient associated with the Slater determinant.
+         */
+        void addSlaterDeterminant(const SlaterDeterminant& slaterDeterminant, const double coefficient);
+
+        /**
          * @brief Adds an electronic transition to the excited state.
          *
          * @param[in] initialOrbital Initial orbital state (number and spin).
@@ -151,6 +159,7 @@ class ExcitedState
          * 
          * @param[in] fileName Name of the file to read.
          * @param[out] groundStateEnergy Energy of the ground state, in Hartree.
+         * 
          * @return True if reading was successful, false otherwise.
          */
         static bool readGroundStateEnergy(const std::string& fileName, double& groundStateEnergy);
@@ -160,6 +169,7 @@ class ExcitedState
          * 
          * @param[in] orcaOutFileName Name of the Orca output file to read.
          * @param[out] energy Energy of the ground state, in Hartree.
+         * 
          * @return True if reading was successful, false otherwise.
          */
         static bool readGroundStateEnergyFromOutFile(const std::string& orcaOutFileName, double& energy);
@@ -169,6 +179,7 @@ class ExcitedState
          * 
          * @param[in] transitionsFileName Name of the transitions file to read.
          * @param[out] groundStateEnergy Energy of the ground state, in Hartree.
+         * 
          * @return True if reading was successful, false otherwise.
          */
         static bool readGroundStateEnergyFromTransitionsFile(const std::string& transitionsFileName, double& groundStateEnergy);
@@ -195,6 +206,7 @@ class ExcitedState
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
          * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
          * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
+         * 
          * @return True if reading was successful, false otherwise.
          */
         static bool readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
@@ -205,9 +217,33 @@ class ExcitedState
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
          * @param[in] groundStateEnergy Energy of the ground state, in Hartree. 
          * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
+         * 
          * @return True if reading was successful, false otherwise.
          */
         static bool readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
+
+        ///////////////////////////////
+        // LOADING AND SAVING METHODS
+
+        /**
+         * @brief Loads excited states from a file.
+         * 
+         * @param[in] excitedStatesFileName Name of the transitions file to read.
+         * @param[out] states Vector of ExcitedState objects populated from the file.
+         * @param[out] slaterDeterminants Vector of SlaterDeterminant objects populated from the file.
+         * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
+         * 
+         * @return True if reading was successful, false otherwise.
+         */
+        static bool loadExcitedStatesFromFile(const std::string& statesFileName, std::vector<ExcitedState>& states, std::vector<SlaterDeterminant>& slaterDeterminants, int maxNumberOfExcitedStates = -1);
+
+        /**
+         * @brief Saves excited states to a file.
+         * 
+         * @param[in] statesFileName Name of the file to save the excited states to.
+         * @param[in] states Vector of ExcitedState objects to save.
+         */
+        static bool saveExcitedStatesToFile(const std::string& statesFileName, const std::vector<ExcitedState>& states);
 
         /////////////////////////
         // OTHER STATIC METHODS
@@ -220,6 +256,7 @@ class ExcitedState
          * @param[in] unperturbedStates Vector of unperturbed excited states.
          * @param[in] energies Vector of energy values (eigenvalues).
          * @param[in] eigenvectors Matrix of eigenvectors.
+         * 
          * @return Vector of perturbed excited states.
          */
         static std::vector<ExcitedState> buildPerturbedStates(const std::vector<ExcitedState>& unperturbedStates, const std::vector<double>& energies, const std::vector<std::vector<double>>& eigenvectors);
@@ -230,10 +267,14 @@ class ExcitedState
          * @param[in] psi_i First excited state.
          * @param[in] psi_j Second excited state.
          * @param[in] ionicMatrixes Ionic matrix < phi_i | V_ion/electrons | phi_j > (the first index corresponds to alpha spin, the second to beta spin).
+         * 
          * @return The ionic potential matrix element < psi_i | V_ion/electrons | psi_j >.
          */
         static double ionicPotential(const ExcitedState& psi_i, const ExcitedState& psi_j, const std::vector<std::vector<std::vector<double>>>& ionicMatrixes);
 
+        /**
+         * TODO
+         */
         static void reducedDensityMatrix(std::vector<std::vector<std::vector<double>>>& rdmMatrix, RDMMethod rdmMethod, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
 
 
@@ -248,6 +289,7 @@ class ExcitedState
          *
          * @param[in,out] stream Output stream.
          * @param[in] excitedState ExcitedState to print.
+         * 
          * @return Reference to the output stream.
          */
         friend std::ostream& operator<<(std::ostream& stream, const ExcitedState& excitedState);
