@@ -55,14 +55,14 @@ The format of this parameter value is: ``Nx, Ny, Nz, Ox, Oy, Oz, T11,T12, T13, T
 
 
 ``GroundStateEnergy(*)``
-^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""
 
 Used to specify the Ground State (GS) energy of the system, **in Hartree**.
 
 This parameter is either mandatory or optional depending on the file format used in the ``AnalyticFiles`` parameter. GS energy can also be read from an analytic file (if provided) or from a file describing the electronic transitions in the unperturbed system (if provided). If none of these files are provided, then this parameter must be specified in the input file.
 
 ``TransitionsFileName(*)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""
 
 Used to specify the name of the input file describing the electronic transitions in the unperturbed system. Supported formats are:
 
