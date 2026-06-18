@@ -588,13 +588,6 @@ void ComputeEnergyWithPointCharges::computeResults_variational(const std::vector
     std::vector<ExcitedState> perturbedStates = ExcitedState::buildPerturbedStates(states, eigenvalues, eigenvectors);
     ExcitedState::saveExcitedStatesToFile(outputFilePrefix + "perturbedStates.cdftt", perturbedStates);
 
-    std::vector<ExcitedState> perturbedStates2;
-    std::vector<SlaterDeterminant> slaterDet;
-    ExcitedState::loadExcitedStatesFromFile(outputFilePrefix + "perturbedStates.cdftt", perturbedStates2, slaterDet);
-    ExcitedState::saveExcitedStatesToFile(outputFilePrefix + "perturbedStates2.cdftt", perturbedStates2);
-
-
-
     logStream << std::endl << "------ Comparison with Guégan et al., PCCP 2020 ------" << std::endl << std::endl;
 
     // Compute dp_k

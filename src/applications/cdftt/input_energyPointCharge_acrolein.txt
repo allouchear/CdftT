@@ -10,8 +10,7 @@ EnergyPointChargeMethods = Variational
 
 AnalyticFiles = tests/Guegan2020/acrolein_200States.fchk
 TransitionsFile = tests/Guegan2020/acrolein_200States.log
-
-MaxNumberOfExcitedStates = 49
+# MaxNumberOfExcitedStates = 49
 
 ComputeOnRegularGrid = False
 Size = Custom
