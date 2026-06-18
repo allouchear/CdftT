@@ -174,6 +174,64 @@ bool Job::readChargesPositionsBijections(bool& chargesPositionsBijections)
     return read;
 }
 
+bool Job::readComputeOnBeckeGrid(bool& computeOnBeckeGrid)
+{
+    std::string strComputeOnBeckeGrid;
+    bool read = readOneString(_inputFile, "ComputeOnBeckeGrid", strComputeOnBeckeGrid);
+
+    computeOnBeckeGrid = false;
+    if (!read)
+    {
+        std::cout << "Note: the \"ComputeOnBeckeGrid\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (ComputeOnBeckeGrid = False)." << std::endl << std::endl;
+    }
+    else if (to_lower(strComputeOnBeckeGrid) == "true")
+    {
+        computeOnBeckeGrid = true;
+    }
+    else if (to_lower(strComputeOnBeckeGrid) != "false")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"ComputeOnBeckeGrid\" parameter (" << strComputeOnBeckeGrid << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"ComputeOnBeckeGrid\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readComputeOnRegularGrid(bool& computeOnRegularGrid)
+{
+    std::string strComputeOnRegularGrid;
+    bool read = readOneString(_inputFile, "ComputeOnRegularGrid", strComputeOnRegularGrid);
+
+    computeOnRegularGrid = false;
+    if (!read)
+    {
+        std::cout << "Note: the \"ComputeOnRegularGrid\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (ComputeOnRegularGrid = False)." << std::endl << std::endl;
+    }
+    else if (to_lower(strComputeOnRegularGrid) == "true")
+    {
+        computeOnRegularGrid = true;
+    }
+    else if (to_lower(strComputeOnRegularGrid) != "false")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"ComputeOnRegularGrid\" parameter (" << strComputeOnRegularGrid << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"ComputeOnRegularGrid\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
 bool Job::readCutoff(double& cutoff)
 {
     bool read = readOneType<double>(_inputFile, "Cutoff", cutoff);
@@ -987,11 +1045,11 @@ Orbitals Job::computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const
     // Compute and save results for alpha spin
     findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix[0], eigenvalues[0], eigenvectors[0]);
 
-    std::ofstream outputFile(outputPrefix + "_eigenvalues_alpha.cdftt");
+    std::ofstream outputFile(outputPrefix + "lrf_eigenvalues_alpha.cdftt");
     if (!outputFile)
     {
         std::stringstream errorMessage;
-        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "_eigenvalues_alpha.cdftt for writing." << std::endl;
+        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "lrf_eigenvalues_alpha.cdftt for writing." << std::endl;
 
         print_error(errorMessage.str());
         
@@ -1013,11 +1071,11 @@ Orbitals Job::computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const
     log(logStream, outputStream);
     outputFile.close();
 
-    outputFile.open(outputPrefix + "_eigenvectors_alpha.cdftt");
+    outputFile.open(outputPrefix + "lrf_eigenvectors_alpha.cdftt");
     if (!outputFile)
     {
         std::stringstream errorMessage;
-        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "_eigenvectors_alpha.cdftt for writing." << std::endl;
+        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "lrf_eigenvectors_alpha.cdftt for writing." << std::endl;
 
         print_error(errorMessage.str());
         
@@ -1049,11 +1107,11 @@ Orbitals Job::computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const
     // Compute and save results for beta spin
     findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix[1], eigenvalues[1], eigenvectors[1]);
 
-    outputFile.open(outputPrefix + "_eigenvalues_beta.cdftt");
+    outputFile.open(outputPrefix + "lrf_eigenvalues_beta.cdftt");
     if (!outputFile)
     {
         std::stringstream errorMessage;
-        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "_eigenvalues_beta.cdftt for writing." << std::endl;
+        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "lrf_eigenvalues_beta.cdftt for writing." << std::endl;
 
         print_error(errorMessage.str());
         
@@ -1075,11 +1133,11 @@ Orbitals Job::computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const
     log(logStream, outputStream);
     outputFile.close();
 
-    outputFile.open(outputPrefix + "_eigenvectors_beta.cdftt");
+    outputFile.open(outputPrefix + "lrf_eigenvectors_beta.cdftt");
     if (!outputFile)
     {
         std::stringstream errorMessage;
-        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "_eigenvectors_beta.cdftt for writing." << std::endl;
+        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "lrf_eigenvectors_beta.cdftt for writing." << std::endl;
 
         print_error(errorMessage.str());
         
@@ -1159,8 +1217,8 @@ Orbitals Job::computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const
 
         // Save pseudo orbitals
         std::cout << "Building pseudo orbitals grid for alpha spin..." << std::endl;
-        createCube(pseudoOrbitals, domain, outputPrefix + "_lrf_pseudoOrbitals_alpha.cube", CubeType::ORBITALS, showProgress, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_alpha);
-        logStream << "Pseudo orbitals with alpha spin saved to " << outputPrefix << "_lrf_pseudoOrbitals_alpha.cube." << std::endl;
+        createCube(pseudoOrbitals, domain, outputPrefix + "lrf_pseudoOrbitals_alpha.cube", CubeType::ORBITALS, showProgress, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_alpha);
+        logStream << "Pseudo orbitals with alpha spin saved to " << outputPrefix << "lrf_pseudoOrbitals_alpha.cube." << std::endl;
         log(logStream, outputStream);
         if (showProgress)
         {
@@ -1168,8 +1226,8 @@ Orbitals Job::computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const
         }
 
         std::cout << "Saving pseudo orbitals in cube format for beta spin..." << std::endl;
-        createCube(pseudoOrbitals, domain, outputPrefix + "_lrf_pseudoOrbitals_beta.cube", CubeType::ORBITALS, showProgress, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_beta);
-        logStream << "Pseudo orbitals with beta spin saved to " << outputPrefix << "_lrf_pseudoOrbitals_beta.cube." << std::endl;
+        createCube(pseudoOrbitals, domain, outputPrefix + "lrf_pseudoOrbitals_beta.cube", CubeType::ORBITALS, showProgress, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_beta);
+        logStream << "Pseudo orbitals with beta spin saved to " << outputPrefix << "lrf_pseudoOrbitals_beta.cube." << std::endl;
         log(logStream, outputStream);
         if (showProgress)
         {

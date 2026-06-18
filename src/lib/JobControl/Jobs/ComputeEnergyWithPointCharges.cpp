@@ -18,7 +18,7 @@
 // PRIVATE METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void ComputeEnergyWithPointCharges::computeHamiltonianMatrix(const std::vector<ExcitedState>& states, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_psi_j, std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, std::ostream& outputStream, int verbose)
+void ComputeEnergyWithPointCharges::computeHamiltonianMatrixes(const std::vector<ExcitedState>& states, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_0_psi_j, std::vector<std::vector<double>>& psi_i_H_1_psi_j, std::vector<std::vector<double>>& psi_i_H_psi_j, std::ostream& outputStream, int verbose)
 {
     std::stringstream logStream;
 
@@ -28,31 +28,33 @@ void ComputeEnergyWithPointCharges::computeHamiltonianMatrix(const std::vector<E
     //     (*) < psi_i | H - H_0 | psi_j > for the perturbative approach.
     size_t nbStates = states.size();
 
+    psi_i_H_0_psi_j.resize(nbStates, std::vector<double>());
+    psi_i_H_1_psi_j.resize(nbStates, std::vector<double>());
     psi_i_H_psi_j.resize(nbStates, std::vector<double>());
-    psi_i_HminusH0_psi_j.resize(nbStates, std::vector<double>());
     
     for (size_t i = 0; i < nbStates; ++i)
     {
+        psi_i_H_0_psi_j[i].resize(i + 1, 0.0);
+        psi_i_H_1_psi_j[i].resize(i + 1, 0.0);
         psi_i_H_psi_j[i].resize(i + 1, 0.0);
-        psi_i_HminusH0_psi_j[i].resize(i + 1, 0.0);
     }
 
     // Determine the number of charges
     size_t nbCharges = chargesNucleiContributions.size();
     if (ionicMatrixes.size() != nbCharges)
     {
-        std::string errorMessage = "Error in ComputeEnergyWithPointCharges::computeHamiltonianMatrix(): the first dimension of ionicMatrixes does not match the dimension of chargesNucleiContributions.";
+        std::string errorMessage = "Error in ComputeEnergyWithPointCharges::computeHamiltonianMatrixes(): the first dimension of ionicMatrixes does not match the dimension of chargesNucleiContributions.";
         print_error(errorMessage);
 
         std::exit(1);
     }
 
     
-    // Compute matrix elements < psi_i | H | psi_j > and < psi_i | H - H_0 | psi_j >
+    // Compute matrix elements < psi_i | H_0 | psi_j >, < psi_i | H_1 | psi_j > and < psi_i | H | psi_j >
     size_t i, j;
     if (verbose >= 1)
     {
-        logStream << "Matrix elements < psi_i | H | psi_j > and < psi_i | H - H_0 | psi_j >:" << std::endl;
+        logStream << "Matrix elements < psi_i | H_0 | psi_j >, < psi_i | H_1 | psi_j > and < psi_i | H | psi_j > (with H = H_0 + H_1):" << std::endl;
         log(logStream, outputStream);
     }
     else
@@ -121,12 +123,12 @@ void ComputeEnergyWithPointCharges::computeHamiltonianMatrix(const std::vector<E
 
             // Store < psi_i | H | psi_j > matrix element
             psi_i_H_psi_j[i][j] = matrixElement;
-            psi_i_HminusH0_psi_j[i][j] = psi_i_H_psi_j[i][j] - h0Contribution;
+            psi_i_H_1_psi_j[i][j] = psi_i_H_psi_j[i][j] - h0Contribution;
 
             if (verbose >= 1)
             {
+                logStream << "< " << i << " | H_1 | " << j << " > = " << std::setprecision(12) << psi_i_H_1_psi_j[i][j] << std::endl;
                 logStream << "< " << i << " | H | " << j << " > = " << std::setprecision(12) << psi_i_H_psi_j[i][j] << std::endl;
-                logStream << "< " << i << " | H - H0 | " << j << " > = " << std::setprecision(12) << psi_i_HminusH0_psi_j[i][j] << std::endl;
                 log(logStream, outputStream);
             }
             if (verbose >= 2 && j != i)
@@ -144,227 +146,21 @@ void ComputeEnergyWithPointCharges::computeHamiltonianMatrix(const std::vector<E
     }
 }
 
-void ComputeEnergyWithPointCharges::computeResults(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::vector<std::vector<double>>& psi_i_HminusH0_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose)
+void ComputeEnergyWithPointCharges::computeResults_perturbative(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_0_psi_j, const std::vector<std::vector<double>>& psi_i_H_1_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose)
 {
     std::stringstream logStream;
     size_t nbStates = states.size();
 
-
-    // Diagonalize < psi_i | H | psi_j > matrix
-    std::vector<double> eigenvalues;
-    std::vector<std::vector<double>> eigenvectors;
-    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(psi_i_H_psi_j, eigenvalues, eigenvectors);
-
-    if (verbose >= 3)
+    if (verbose >= 1)
     {
-        logStream << "Eigenvalues:" << std::endl;
-        log(logStream, outputStream);
-        logStream << std::scientific;
-        logStream << std::setprecision(10);
-        for (size_t k = 0; k < eigenvalues.size(); ++k)
-        {
-            logStream << eigenvalues[k] << ' ';
-        }
-        logStream << std::endl << std::endl;
-        log(logStream, outputStream);
-
-        logStream << "Eigenvectors (columns): " << std::endl;
-        log(logStream, outputStream);
-        logStream << std::scientific;
-        logStream << std::setprecision(10);
-        for (size_t i = 0; i < eigenvectors.size(); ++i)
-        {
-            for (size_t j = 0; j < eigenvectors[i].size(); ++j)
-            {
-                logStream << std::right << std::setw(17) << eigenvectors[i][j] << '\t';
-            }
-
-            logStream << std::endl;
-        }
-        logStream << std::defaultfloat << std::endl;
-        log(logStream, outputStream);
-    }
-    
-
-    // Sort eigenvalues and eigenvectors
-    sortEigenValuesAndEigenVectors(eigenvalues, eigenvectors);
-
-    std::ofstream outputFile(outputFilePrefix + "_energies.cdftt");
-    if (!outputFile)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "_energies.cdftt for writing." << std::endl;
-        
-        print_error(errorMessage.str());
-        
-        std::exit(1);
-    }
-
-    logStream << "Sorted Eigenvalues:" << std::endl;
-    log(logStream, outputStream);
-    logStream << std::scientific;
-    logStream << std::setprecision(10);
-    outputFile << std::scientific;
-    outputFile << std::setprecision(10);
-    for (size_t k = 0; k < eigenvalues.size(); ++k)
-    {
-        logStream << eigenvalues[k] << ' ';
-        outputFile << eigenvalues[k] << std::endl;
-    }
-    logStream << std::endl << std::endl;
-    log(logStream, outputStream);
-
-    outputFile.close();
-    outputFile.open(outputFilePrefix + "_eigenvectors.cdftt");
-    if (!outputFile)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "_eigenvectors.cdftt for writing." << std::endl;
-        
-        print_error(errorMessage.str());
-        
-        std::exit(1);
-    }
-
-    logStream << "Sorted Eigenvectors (columns): " << std::endl;
-    log(logStream, outputStream);
-    logStream << std::scientific;
-    logStream << std::setprecision(10);
-    outputFile << std::scientific;
-    outputFile << std::setprecision(10);
-    for (size_t i = 0; i < eigenvectors.size(); ++i)
-    {
-        for (size_t j = 0; j < eigenvectors[i].size(); ++j)
-        {
-            logStream << std::right << std::setw(17) << eigenvectors[i][j] << '\t';
-            outputFile << std::right << std::setw(17) << eigenvectors[i][j] << ' ';
-        }
-
         logStream << std::endl;
-        outputFile << std::endl;
-    }
-    logStream << std::defaultfloat << std::endl;
-    log(logStream, outputStream);
-
-    outputFile.close();
-
-
-    if (verbose >= 3)
-    {
-        // Compute projections of perturbed states onto unperturbed basis and in terms of Slater determinants
-        logStream << "Projection onto unperturbed basis:" << std::endl;
+        logStream << "==============================================================================================" << std::endl;
+        logStream << "=================================== PERTURBATIVE APPROACH ====================================" << std::endl;
+        logStream << "==============================================================================================" << std::endl << std::endl;
         log(logStream, outputStream);
-
-        for (size_t i = 0; i < nbStates; ++i)
-        {
-            std::vector<std::pair<double, int>> contributions;
-            contributions.reserve(nbStates);
-
-            std::vector<std::pair<double, SlaterDeterminant>> contributions_SD;
-
-            logStream << "Perturbed state " << i << " (E = " << std::setprecision(10) << eigenvalues[i] << " H):" << std::endl;
-            logStream << "  | " << i << "' > = ";
-            log(logStream, outputStream);
-            
-            bool firstTerm = true;
-            for (size_t k = 0; k < nbStates; ++k)
-            {
-                double c_k = eigenvectors[k][i];
-                double c_k_squared = c_k * c_k;
-
-                if (c_k != 0.0)
-                {
-                    contributions.emplace_back(c_k_squared, k);
-
-                    if (!firstTerm && c_k > 0)
-                    {
-                        logStream << " + ";
-                    }
-                    else if (c_k < 0)
-                    {
-                        logStream << " - ";
-                    }
-
-                    logStream << std::setprecision(6) << std::abs(c_k) << " | " << k << " >";
-                    firstTerm = false;
-
-                    for (const std::pair<SlaterDeterminant, double>& slaterCoef : states[k].get_slaterDeterminants())
-                    {
-                        // Search for the Slater determinant in the contributions_SD vector
-                        auto it = std::find_if(contributions_SD.begin(),
-                                               contributions_SD.end(),
-                                               [&slaterCoef](const std::pair<double, SlaterDeterminant>& element)
-                                               { return element.second == slaterCoef.first; });
-
-                        // If it is not found, add it to the contributions with its contribution.
-                        if (it == contributions_SD.end())
-                        {
-                            contributions_SD.emplace_back(c_k * slaterCoef.second, slaterCoef.first);
-                        }
-                        else
-                        {
-                            it->first += c_k * slaterCoef.second;
-                        }
-                    }
-                }
-            }
-            logStream << std::endl;
-            log(logStream, outputStream);
-            
-            // Show dominant contributions
-            std::sort(contributions.begin(), contributions.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
-            logStream << "  Main contributions:" << std::endl;
-            log(logStream, outputStream);
-            for (size_t ii = 0; ii < std::min(size_t(5), contributions.size()); ++ii)
-            {
-                if (contributions[ii].first > 1e-6)
-                {
-                    size_t k = contributions[ii].second;
-                    logStream << "    State " << k << ": "
-                              << std::setprecision(6) << std::setw(10) << contributions[ii].first * 100 << " %"
-                              << "  (c_" << k << " = " << std::setprecision(8) << eigenvectors[k][i] << ")" << std::endl;
-                }
-            }
-            logStream << std::endl;
-            log(logStream, outputStream);
-
-            logStream << "Expansion in terms of Slater determinants:" << std::endl;
-            logStream << "  | " << i << "' > = ";
-            log(logStream, outputStream);
-
-            firstTerm = true;
-            for (size_t l = 0; l < contributions_SD.size(); ++l)
-            {
-                double c_l = contributions_SD[l].first;
-                //double c_l_squared = c_l * c_l;
-
-                if (!firstTerm && c_l >= 0)
-                {
-                    logStream << " + ";
-                }
-                else if (c_l < 0)
-                {
-                    logStream << " - ";
-                }
-
-                logStream << std::setprecision(6) << std::abs(c_l) << " | D_" << l << " >";
-                firstTerm = false;
-            }
-            logStream << std::endl << "  where:" << std::endl;
-            for (size_t l = 0; l < contributions_SD.size(); ++l)
-            {
-                logStream << "    | D_" << l << " > = " << contributions_SD[l].second << std::endl;
-            }
-            
-            logStream << std::endl;
-            log(logStream, outputStream);
-        }
     }
 
-
-
-    logStream << "------ Perturbative approach (cf. Guégan et al., PCCP 2020) ------" << std::endl << std::endl;
-    log(logStream, outputStream);
+    logStream << std::endl << "------ Comparison with Guégan et al., PCCP 2020 ------" << std::endl << std::endl;
 
     bool warningPrinted = false;
 
@@ -385,8 +181,8 @@ void ComputeEnergyWithPointCharges::computeResults(const std::vector<ExcitedStat
                 // Check for degeneracy to avoid division by zero
                 if (std::abs(Ei_minus_Ej) >= 1e-10)
                 {
-                    // psi_i_HminusH0_psi_j is a lower triangular matrix
-                    dpk_perturb[i][j] = (j <= i ? psi_i_HminusH0_psi_j[i][j] : psi_i_HminusH0_psi_j[j][i]) / Ei_minus_Ej;
+                    // psi_i_H_1_psi_j is a lower triangular matrix
+                    dpk_perturb[i][j] = (j <= i ? psi_i_H_1_psi_j[i][j] : psi_i_H_1_psi_j[j][i]) / Ei_minus_Ej;
                     dpk_perturb[i][j] *= dpk_perturb[i][j];
 
                     normalisationFactors[i] += dpk_perturb[i][j];
@@ -562,9 +358,244 @@ void ComputeEnergyWithPointCharges::computeResults(const std::vector<ExcitedStat
     }
     logStream << std::defaultfloat << std::endl;
     log(logStream, outputStream);
+}
 
+void ComputeEnergyWithPointCharges::computeResults_variational(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose)
+{
+    std::stringstream logStream;
+    size_t nbStates = states.size();
+
+    if (verbose >= 1)
+    {
+        logStream << std::endl;
+        logStream << "==============================================================================================" << std::endl;
+        logStream << "==================================== VARIATIONAL APPROACH ====================================" << std::endl;
+        logStream << "==============================================================================================" << std::endl << std::endl;
+        log(logStream, outputStream);
+    }
+
+    // Diagonalize < psi_i | H | psi_j > matrix
+    std::vector<double> eigenvalues;
+    std::vector<std::vector<double>> eigenvectors;
+    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(psi_i_H_psi_j, eigenvalues, eigenvectors);
+
+    if (verbose >= 3)
+    {
+        logStream << "Eigenvalues:" << std::endl;
+        log(logStream, outputStream);
+        logStream << std::scientific;
+        logStream << std::setprecision(10);
+        for (size_t k = 0; k < eigenvalues.size(); ++k)
+        {
+            logStream << eigenvalues[k] << ' ';
+        }
+        logStream << std::endl << std::endl;
+        log(logStream, outputStream);
+
+        logStream << "Eigenvectors (columns): " << std::endl;
+        log(logStream, outputStream);
+        logStream << std::scientific;
+        logStream << std::setprecision(10);
+        for (size_t i = 0; i < eigenvectors.size(); ++i)
+        {
+            for (size_t j = 0; j < eigenvectors[i].size(); ++j)
+            {
+                logStream << std::right << std::setw(17) << eigenvectors[i][j] << '\t';
+            }
+
+            logStream << std::endl;
+        }
+        logStream << std::defaultfloat << std::endl;
+        log(logStream, outputStream);
+    }
     
-    logStream << std::endl << "------ Variational approach ------" << std::endl << std::endl;
+
+    // Sort eigenvalues and eigenvectors
+    sortEigenValuesAndEigenVectors(eigenvalues, eigenvectors);
+
+    std::ofstream outputFile(outputFilePrefix + "energies.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "energies.cdftt for writing." << std::endl;
+        
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    logStream << "Sorted Eigenvalues:" << std::endl;
+    log(logStream, outputStream);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t k = 0; k < eigenvalues.size(); ++k)
+    {
+        logStream << eigenvalues[k] << ' ';
+        outputFile << eigenvalues[k] << std::endl;
+    }
+    logStream << std::endl << std::endl;
+    log(logStream, outputStream);
+
+    outputFile.close();
+    outputFile.open(outputFilePrefix + "eigenvectors.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "eigenvectors.cdftt for writing." << std::endl;
+        
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    logStream << "Sorted Eigenvectors (columns): " << std::endl;
+    log(logStream, outputStream);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t i = 0; i < eigenvectors.size(); ++i)
+    {
+        for (size_t j = 0; j < eigenvectors[i].size(); ++j)
+        {
+            logStream << std::right << std::setw(17) << eigenvectors[i][j] << '\t';
+            outputFile << std::right << std::setw(17) << eigenvectors[i][j] << ' ';
+        }
+
+        logStream << std::endl;
+        outputFile << std::endl;
+    }
+    logStream << std::defaultfloat << std::endl;
+    log(logStream, outputStream);
+
+    outputFile.close();
+
+
+    if (verbose >= 3)
+    {
+        // Compute projections of perturbed states onto unperturbed basis and in terms of Slater determinants
+        logStream << "Projection onto unperturbed basis:" << std::endl;
+        log(logStream, outputStream);
+
+        for (size_t i = 0; i < nbStates; ++i)
+        {
+            std::vector<std::pair<double, int>> contributions;
+            contributions.reserve(nbStates);
+
+            std::vector<std::pair<double, SlaterDeterminant>> contributions_SD;
+
+            logStream << "Perturbed state " << i << " (E = " << std::setprecision(10) << eigenvalues[i] << " H):" << std::endl;
+            logStream << "  | " << i << "' > = ";
+            log(logStream, outputStream);
+            
+            bool firstTerm = true;
+            for (size_t k = 0; k < nbStates; ++k)
+            {
+                double c_k = eigenvectors[k][i];
+                double c_k_squared = c_k * c_k;
+
+                if (c_k != 0.0)
+                {
+                    contributions.emplace_back(c_k_squared, k);
+
+                    if (!firstTerm && c_k > 0)
+                    {
+                        logStream << " + ";
+                    }
+                    else if (c_k < 0)
+                    {
+                        logStream << " - ";
+                    }
+
+                    logStream << std::setprecision(6) << std::abs(c_k) << " | " << k << " >";
+                    firstTerm = false;
+
+                    for (const std::pair<SlaterDeterminant, double>& slaterCoef : states[k].get_slaterDeterminants())
+                    {
+                        // Search for the Slater determinant in the contributions_SD vector
+                        auto it = std::find_if(contributions_SD.begin(),
+                                               contributions_SD.end(),
+                                               [&slaterCoef](const std::pair<double, SlaterDeterminant>& element)
+                                               { return element.second == slaterCoef.first; });
+
+                        // If it is not found, add it to the contributions with its contribution.
+                        if (it == contributions_SD.end())
+                        {
+                            contributions_SD.emplace_back(c_k * slaterCoef.second, slaterCoef.first);
+                        }
+                        else
+                        {
+                            it->first += c_k * slaterCoef.second;
+                        }
+                    }
+                }
+            }
+            logStream << std::endl;
+            log(logStream, outputStream);
+            
+            // Show dominant contributions
+            std::sort(contributions.begin(), contributions.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
+            logStream << "  Main contributions:" << std::endl;
+            log(logStream, outputStream);
+            for (size_t ii = 0; ii < std::min(size_t(5), contributions.size()); ++ii)
+            {
+                if (contributions[ii].first > 1e-6)
+                {
+                    size_t k = contributions[ii].second;
+                    logStream << "    State " << k << ": "
+                              << std::setprecision(6) << std::setw(10) << contributions[ii].first * 100 << " %"
+                              << "  (c_" << k << " = " << std::setprecision(8) << eigenvectors[k][i] << ")" << std::endl;
+                }
+            }
+            logStream << std::endl;
+            log(logStream, outputStream);
+
+            logStream << "Expansion in terms of Slater determinants:" << std::endl;
+            logStream << "  | " << i << "' > = ";
+            log(logStream, outputStream);
+
+            firstTerm = true;
+            for (size_t l = 0; l < contributions_SD.size(); ++l)
+            {
+                double c_l = contributions_SD[l].first;
+                //double c_l_squared = c_l * c_l;
+
+                if (!firstTerm && c_l >= 0)
+                {
+                    logStream << " + ";
+                }
+                else if (c_l < 0)
+                {
+                    logStream << " - ";
+                }
+
+                logStream << std::setprecision(6) << std::abs(c_l) << " | D_" << l << " >";
+                firstTerm = false;
+            }
+            logStream << std::endl << "  where:" << std::endl;
+            for (size_t l = 0; l < contributions_SD.size(); ++l)
+            {
+                logStream << "    | D_" << l << " > = " << contributions_SD[l].second << std::endl;
+            }
+            
+            logStream << std::endl;
+            log(logStream, outputStream);
+        }
+    }
+
+    std::vector<ExcitedState> perturbedStates = ExcitedState::buildPerturbedStates(states, eigenvalues, eigenvectors);
+    ExcitedState::saveExcitedStatesToFile(outputFilePrefix + "perturbedStates.cdftt", perturbedStates);
+
+    std::vector<ExcitedState> perturbedStates2;
+    std::vector<SlaterDeterminant> slaterDet;
+    ExcitedState::loadExcitedStatesFromFile(outputFilePrefix + "perturbedStates.cdftt", perturbedStates2, slaterDet);
+    ExcitedState::saveExcitedStatesToFile(outputFilePrefix + "perturbedStates2.cdftt", perturbedStates2);
+
+
+
+    logStream << std::endl << "------ Comparison with Guégan et al., PCCP 2020 ------" << std::endl << std::endl;
 
     // Compute dp_k
     std::vector<std::vector<double>> dpk_varia(nbStates, std::vector<double>(nbStates, 0.0));
@@ -646,18 +677,27 @@ void ComputeEnergyWithPointCharges::computeResults(const std::vector<ExcitedStat
     log(logStream, outputStream);
 }
 
-void ComputeEnergyWithPointCharges::computeResultsLinearResponse(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, std::ostream& outputStream, int verbose)
+void ComputeEnergyWithPointCharges::computeResults_linearResponse(const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, std::ostream& outputStream, int verbose)
 {
     std::stringstream logStream;
+
+    if (verbose >= 1)
+    {
+        logStream << std::endl;
+        logStream << "==============================================================================================" << std::endl;
+        logStream << "================================== LINEAR RESPONSE APPROACH ==================================" << std::endl;
+        logStream << "==============================================================================================" << std::endl << std::endl;
+        log(logStream, outputStream);
+    }
 
     double energy_pseudoOrbitals = 0.0;
     for (size_t i = 0; i < ionicPotentialVectors.size(); ++i)
     {
         for (int spin = 0; spin < 2; ++spin)
         {
-            for (size_t j = 0; j < eigenvalues[spin].size(); ++j)
+            for (size_t j = 0; j < lrfMatrixEigenvalues[spin].size(); ++j)
             {
-                energy_pseudoOrbitals += eigenvalues[spin][j] * ionicPotentialVectors[i][spin][j] * ionicPotentialVectors[i][spin][j];
+                energy_pseudoOrbitals += lrfMatrixEigenvalues[spin][j] * ionicPotentialVectors[i][spin][j] * ionicPotentialVectors[i][spin][j];
             }
         }
     }
@@ -669,53 +709,28 @@ void ComputeEnergyWithPointCharges::computeResultsLinearResponse(const std::vect
     log(logStream, outputStream);
 }
 
-void ComputeEnergyWithPointCharges::printResults(const std::vector<ExcitedState>& states, const std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<Run>& runs, const std::string& outputPrefix, std::ostream& outputStream, int verbose)
+void ComputeEnergyWithPointCharges::printResults(const std::vector<EnergyPointChargeMethod>& methods, const std::vector<ExcitedState>& states, const std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<Run>& runs, const std::string& outputPrefix, std::ostream& outputStream, int verbose)
 {
-    std::stringstream logStream;
+    bool perturbativeApproach = false;
+    bool variationalApproach = false;
+    bool linearResponseApproach = false;
 
-    size_t nbRuns = runs.size();
-
-    for (size_t i = 0; i < nbRuns; ++i)
+    for (size_t i = 0; i < methods.size(); ++i)
     {
-        std::string runNumberStr = int_to_string_withLeadingZeros(i + 1, nbRuns);
-
-        size_t nbPointCharges = runs[i].size();
-
-        if (nbRuns > 1)
+        if (methods[i] == EnergyPointChargeMethod::PERTURBATIVE)
         {
-            std::stringstream runTitleStream;
-            runTitleStream << "====================== RUN #" << runNumberStr;
-            if (verbose >= 1)
-            {
-                runTitleStream << " (" << nbPointCharges << " point charge" << (nbPointCharges > 1 ? "s" : "") << ')';
-            }
-            runTitleStream << " ======================" << std::endl;
-
-            for (size_t j = 0; j < nbPointCharges; ++j)
-            {
-                runTitleStream << "    " << runs[i][j].description << std::endl;
-            }
-
-            logStream << runTitleStream.str() << std::endl;
-            log(logStream, outputStream);
+            perturbativeApproach = true;
         }
-        
-        const std::vector<std::vector<std::vector<std::vector<double>>>>& currentIonicMatrix = ionicPotentialMatrixes[i];
-        const std::vector<double>& currentChargeNucleiContribution = chargeNucleiContributions[i];
-
-        std::vector<std::vector<double>> psi_i_H_psi_j;
-        std::vector<std::vector<double>> psi_i_HminusH0_psi_j;
-
-        computeHamiltonianMatrix(states, currentChargeNucleiContribution, currentIonicMatrix, psi_i_H_psi_j, psi_i_HminusH0_psi_j, outputStream, verbose);
-        computeResults(states, psi_i_H_psi_j, psi_i_HminusH0_psi_j, outputPrefix + (nbRuns > 1 ? "_run" + runNumberStr : ""), outputStream, verbose);
-
-        logStream << std::endl;
-        log(logStream, outputStream);
+        else if (methods[i] == EnergyPointChargeMethod::VARIATIONAL)
+        {
+            variationalApproach = true;
+        }
+        else if (methods[i] == EnergyPointChargeMethod::LINEAR_RESPONSE)
+        {
+            linearResponseApproach = true;
+        }
     }
-}
 
-void ComputeEnergyWithPointCharges::printResultsLinearResponse(const std::vector<std::vector<double>>& eigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<Run>& runs, std::ostream& outputStream, int verbose)
-{
     std::stringstream logStream;
 
     size_t nbRuns = runs.size();
@@ -745,9 +760,28 @@ void ComputeEnergyWithPointCharges::printResultsLinearResponse(const std::vector
             log(logStream, outputStream);
         }
 
-        const std::vector<std::vector<std::vector<double>>>& currentIonicPotentialVectors = ionicPotentialVectors[i];
+        if (perturbativeApproach || variationalApproach)
+        {
+            std::vector<std::vector<double>> psi_i_H_0_psi_j;
+            std::vector<std::vector<double>> psi_i_H_1_psi_j;
+            std::vector<std::vector<double>> psi_i_H_psi_j;
 
-        computeResultsLinearResponse(eigenvalues, currentIonicPotentialVectors, outputStream, verbose);
+            computeHamiltonianMatrixes(states, chargeNucleiContributions[i], ionicPotentialMatrixes[i], psi_i_H_0_psi_j, psi_i_H_1_psi_j, psi_i_H_psi_j, outputStream, verbose);
+
+            if (perturbativeApproach)
+            {
+                computeResults_perturbative(states, psi_i_H_0_psi_j, psi_i_H_1_psi_j, outputPrefix + (nbRuns > 1 ? "run" + runNumberStr : ""), outputStream, verbose);
+            }
+
+            if (variationalApproach)
+            {
+                computeResults_variational(states, psi_i_H_psi_j, outputPrefix + (nbRuns > 1 ? "run" + runNumberStr : ""), outputStream, verbose);
+            }
+        }
+        else if (linearResponseApproach)
+        {
+            computeResults_linearResponse(lrfMatrixEigenvalues, ionicPotentialVectors[i], outputStream, verbose);
+        }
 
         logStream << std::defaultfloat << std::endl;
         log(logStream, outputStream);
@@ -1199,161 +1233,6 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
     log(logStream, outputStream);
 }
 
-void ComputeEnergyWithPointCharges::useLinearResponseApproach(Orbitals& orbitals, const std::vector<Run>& runs, const std::string& analyticFileName, const std::string& outputPrefix, const std::vector<int>& beckeParams, bool savePseudoOrbitals, bool showProgress, int verbose, std::ostream& outputStream)
-{
-    std::stringstream logStream;
-
-    /************/
-    /* ANALYTIC */
-    /************/
-
-    logStream << std::endl << std::endl
-              << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
-              << "|||||||||||||||||||||||||||||||||||||||||||||||                          |||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
-              << "|||||||||||||||||||||||||||||||||||||||||||||||   ANALYTIC COMPUTATION   |||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
-              << "|||||||||||||||||||||||||||||||||||||||||||||||                          |||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
-              << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl << std::endl;
-    log(logStream, outputStream);
-
-    
-    // Compute triple-orbital-integral matrix only once.
-    // We build a 4D vector of dimensions [spin][MO_i][MO_j][MO_k] to store the triple-orbital-integral matrix.
-    // The first dimension corresponds to the spin (0 for alpha, 1 for beta).
-    // The second, third and fourth dimensions correspond to the indices of the matrix elements (i, j and k) with k <= j <= i (lower triangular matrixes).
-    std::vector<std::vector<std::vector<std::vector<double>>>> tripleOrbitalIntegralMatrix = orbitals.getTripleOrbitalIntegralMatrix(showProgress);
-
-
-    // Compute linear response function (LRF) matrix
-    std::vector<std::vector<std::vector<double>>> lrfMatrix;
-    computeLinearResponseFunctionMatrix(orbitals, tripleOrbitalIntegralMatrix, lrfMatrix);
-
-
-    // Diagonalize LRF matrix to get pseudo orbitals from eigenvectors
-    std::vector<std::vector<double>> eigenvalues;
-    std::vector<std::vector<std::vector<double>>> eigenvectors;
-    Orbitals pseudoOrbitals = computePseudoOrbitalsFromLrfMatrix(orbitals, lrfMatrix, eigenvalues, eigenvectors, outputPrefix, savePseudoOrbitals, outputStream, verbose, showProgress);
-
-
-    // Compute ionic vectors obtained with a pseudo CGTF made from a unit pseudo GTF (exponent = 0, coefficient = 1) only once.
-    // We build a 4D of dimensions [charge][position][spin][MO] to store the ionic potential vectors for each charge and position.
-    // The first dimension corresponds to the charge index.
-    // The second dimension corresponds to the charge position index (in case the program has to loop over atom positions).
-    // The third dimension corresponds to the spin (0 for alpha, 1 for beta).
-    // The fourth dimension corresponds to the MO index.
-    std::vector<std::vector<std::vector<std::vector<double>>>> ionicPotentialVectors;
-    computeIonicPotentialVectorsFromOrbitals(pseudoOrbitals, ionicPotentialVectors, runs);
-
-
-    // Print results
-    printResultsLinearResponse(eigenvalues, ionicPotentialVectors, runs, outputStream, verbose);
-    
-
-    /**************/
-    /* BECKE GRID */
-    /**************/
-
-    if (beckeParams.size() != 0)
-    {
-        logStream << std::endl << std::endl
-                  << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
-                  << "||||||||||||||||||||||||||||||||||||||||||||||                            ||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
-                  << "||||||||||||||||||||||||||||||||||||||||||||||   BECKE GRID COMPUTATION   ||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
-                  << "||||||||||||||||||||||||||||||||||||||||||||||                            ||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
-                  << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl << std::endl;
-        log(logStream, outputStream);
-
-
-        // Build Becke grid
-        std::cout << "Building Becke object... ";
-        Becke becke;
-        computeOrbitalsOrBecke<Becke>(becke, analyticFileName);
-
-
-        // Get triple-orbital-integral matrix for Becke grid
-        std::vector<std::vector<std::vector<std::vector<double>>>> tripleOrbitalIntegralMatrix_becke = becke.getTripleOrbitalIntegralMatrix(beckeParams[0], beckeParams[1], beckeParams[2], showProgress);
-
-
-        // Compute LRF Matrix for Becke grid
-        std::vector<std::vector<std::vector<double>>> lrfMatrix_becke;
-        computeLinearResponseFunctionMatrix(becke.get_orbitals(), tripleOrbitalIntegralMatrix_becke, lrfMatrix_becke);
-
-
-        // Diagonalize LRF matrix to get pseudo orbitals from eigenvectors
-        std::vector<std::vector<double>> eigenvalues_becke(2);
-        std::vector<std::vector<std::vector<double>>> eigenvectors_becke(2);
-        Orbitals pseudoOrbitals_becke = computePseudoOrbitalsFromLrfMatrix(becke.get_orbitals(), lrfMatrix_becke, eigenvalues_becke, eigenvectors_becke, outputPrefix + "_becke", savePseudoOrbitals, outputStream, verbose, showProgress);
-        
-        
-        // Compute ionic vectors obtained with a pseudo CGTF made from a unit pseudo GTF (exponent = 0, coefficient = 1) only once.
-        std::vector<std::vector<std::vector<std::vector<double>>>> ionicPotentialVectors_becke;
-        computeIonicPotentialVectorsFromOrbitals(pseudoOrbitals_becke, ionicPotentialVectors_becke, runs);
-
-
-        // Print results
-        printResultsLinearResponse(eigenvalues_becke, ionicPotentialVectors_becke, runs, outputStream, verbose);
-
-
-
-        // DEBUG - Manually compute sigma vectors (i.e. obtaining the same values than the pseudo Orbitals coefficients.)
-        /*
-        // Compute ionic vectors obtained with a pseudo CGTF made from a unit pseudo GTF (exponent = 0, coefficient = 1) only once.
-        std::vector<std::vector<std::vector<std::vector<double>>>> ionicPotentialVectors_becke_debug;
-        computeIonicPotentialVectorsFromBecke(becke, ionicPotentialVectors_becke_debug, charges, chargesPositions, loopOnAtoms, beckeParams[0], beckeParams[1], beckeParams[2]);
-
-
-        // Multiply by eigenvectors values to get sigma vectors (i.e. the pseudo orbitals coefficients in the basis of the original orbitals).
-        std::vector<std::vector<std::vector<std::vector<double>>>> sigmaVectors_becke_debug(nbCharges);
-        if (loopOnAtoms)
-        {
-            for (size_t i = 0; i < nbCharges; ++i)
-            {
-                // In the looping case, each charge has multiple positions (one for each atom).
-                // So we need to compute the ionic matrixes for each position of the charge.
-                sigmaVectors_becke_debug[i].resize(nbChargePositions, std::vector<std::vector<double>>(2, std::vector<double>(eigenvalues_becke[0].size(), 0.0)));
-
-                for (size_t j = 0; j < nbChargePositions; ++j)
-                {
-                    for (int spin = 0; spin < 2; ++spin)
-                    {
-                        for (size_t k = 0; k < eigenvalues_becke[spin].size(); ++k)
-                        {
-                            for (size_t l = 0; l < eigenvectors_becke[spin].size(); ++l)
-                            {
-                                sigmaVectors_becke_debug[i][j][spin][k] += eigenvectors_becke[spin][l][k] * ionicPotentialVectors_becke_debug[i][j][spin][l];
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            for (size_t i = 0; i < nbCharges; ++i)
-            {
-                // In the non-looping case, each charge has only one position.
-                // So we compute the ionic matrixes only once for each charge and store it in the first position of the second dimension of the vector.
-                sigmaVectors_becke_debug[i].resize(1, std::vector<std::vector<double>>(2, std::vector<double>(eigenvalues_becke[0].size(), 0.0)));
-
-                for (int spin = 0; spin < 2; ++spin)
-                {
-                    for (size_t k = 0; k < eigenvalues_becke[spin].size(); ++k)
-                    {
-                        for (size_t l = 0; l < eigenvectors_becke[spin].size(); ++l)
-                        {
-                            sigmaVectors_becke_debug[i][0][spin][k] += eigenvectors_becke[spin][l][k] * ionicPotentialVectors_becke_debug[i][0][spin][l];
-                        }
-                    }
-                }
-            }
-        }
-
-
-        // Print results
-        printResultsLinearResponseWithPointCharges(eigenvalues_becke, sigmaVectors_becke_debug, charges, chargesPositions, loopOnAtoms, atoms, outputStream, verbose);
-        */
-    }
-}
-
 
 //----------------------------------------------------------------------------------------------------//
 // CONSTRUCTOR
@@ -1541,7 +1420,7 @@ void ComputeEnergyWithPointCharges::computeLinearResponseFunctionMatrix(const Or
                 }
 
                 lrfMatrix[spin][i][j] *= 2.0;
-                std::cout << "< phi_" << i + 1 << " | Xi | phi_" << j + 1<< " > = " << lrfMatrix[spin][i][j] << std::endl;
+                std::cout << "< phi_" << i + 1 << " | Xi | phi_" << j + 1 << " > = " << lrfMatrix[spin][i][j] << std::endl;
             }
 
             std::cout << std::endl;
@@ -1577,10 +1456,10 @@ void ComputeEnergyWithPointCharges::run()
     std::ofstream logFile;
     if (verbose != 0)
     {
-        logFile.open(outputPrefix + "_log.cdftt");
+        logFile.open(outputPrefix + "log.cdftt");
         if (!logFile)
         {
-            std::cout << "Warning: could not open log file " << outputPrefix << "_log.cdftt for writing." << std::endl;
+            std::cout << "Warning: could not open log file " << outputPrefix << "log.cdftt for writing." << std::endl;
             std::cout << "The program will still display logging information on standard output." << std::endl << std::endl;
         }
     }
@@ -1619,9 +1498,38 @@ void ComputeEnergyWithPointCharges::run()
     }
 
 
-    // Read compute method
+    // Read compute methods
     std::vector<EnergyPointChargeMethod> methods;
     readEnergyPointChargeMethods(methods);
+
+    // We use boolean flags to avoid searching in the vector multiple times below
+    bool perturbativeApproach = false;
+    bool variationalApproach = false;
+    bool linearResponseApproach = false;
+
+    for (size_t i = 0; i < methods.size(); ++i)
+    {
+        if (methods[i] == EnergyPointChargeMethod::PERTURBATIVE)
+        {
+            perturbativeApproach = true;
+        }
+        else if (methods[i] == EnergyPointChargeMethod::VARIATIONAL)
+        {
+            variationalApproach = true;
+        }
+        else if (methods[i] == EnergyPointChargeMethod::LINEAR_RESPONSE)
+        {
+            linearResponseApproach = true;
+        }
+    }
+
+
+    // Read save pseudo orbitals option
+    bool savePseudoOrbitals = false;
+    if (linearResponseApproach)
+    {
+        readSavePseudoOrbitals(savePseudoOrbitals);
+    }
 
 
     // Read cutoff distance for nuclear contribution -> variational only
@@ -1743,9 +1651,13 @@ void ComputeEnergyWithPointCharges::run()
     }
 
 
-    // Compute ions-nuclei interactions only once
+    // For perturbative and variational approaches: compute ions-nuclei interactions and ionix matrixes only once
     std::vector<std::vector<double>> chargeNucleiContributions;
-    computeChargeNucleiContributions(atoms, chargeNucleiContributions, runs, nuclearCutoff);
+
+    if (perturbativeApproach || variationalApproach)
+    {
+        computeChargeNucleiContributions(atoms, chargeNucleiContributions, runs, nuclearCutoff);
+    }
     
 
     /************/
@@ -1761,74 +1673,145 @@ void ComputeEnergyWithPointCharges::run()
     log(logStream, outputStream);
 
 
-    // Compute ionic matrixes for each charge and position
+    // For perturbative and variational approaches: compute ionic matrixes for each charge and position.
     // We build a 5D vector of dimensions [run][pointCharge][spin][MO][MO] to store the ionic matrixes for each charge and position.
     // The first dimension corresponds to the run index.
     // The second dimension corresponds to the point charge index.
     // The third dimension corresponds to the spin (0 for alpha, 1 for beta).
     // The fourth and fifth dimensions correspond to the MO indexes (matrix elements i and j, with j <= i: lower triangular matrix).
-    std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>> ionicMatrixes;
-    computeIonicPotentialMatrixesFromOrbitals(orbitals, ionicMatrixes, runs);
+    std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>> ionicPotentialMatrixes;
+
+    if (perturbativeApproach || variationalApproach)
+    {
+        computeIonicPotentialMatrixesFromOrbitals(orbitals, ionicPotentialMatrixes, runs);
+    }
+
+    // For linear response approach: compute ionic vectors for each charge and position.
+    std::vector<std::vector<double>> lrfMatrixEigenvalues;
+    std::vector<std::vector<std::vector<std::vector<double>>>> ionicPotentialVectors;
+
+    if (linearResponseApproach)
+    {
+        // Compute triple-orbital-integral matrix only once.
+        // We build a 4D vector of dimensions [spin][MO_i][MO_j][MO_k] to store the triple-orbital-integral matrix.
+        // The first dimension corresponds to the spin (0 for alpha, 1 for beta).
+        // The second, third and fourth dimensions correspond to the indices of the matrix elements (i, j and k) with k <= j <= i (lower triangular matrixes).
+        std::vector<std::vector<std::vector<std::vector<double>>>> tripleOrbitalIntegralMatrix = orbitals.getTripleOrbitalIntegralMatrix(showProgress);
+
+        // Compute linear response function (LRF) matrix
+        std::vector<std::vector<std::vector<double>>> lrfMatrix;
+        computeLinearResponseFunctionMatrix(orbitals, tripleOrbitalIntegralMatrix, lrfMatrix);
+
+        // Diagonalize LRF matrix to get pseudo orbitals from eigenvectors
+        std::vector<std::vector<std::vector<double>>> lrfMatrixEigenvectors;
+        Orbitals pseudoOrbitals = computePseudoOrbitalsFromLrfMatrix(orbitals, lrfMatrix, lrfMatrixEigenvalues, lrfMatrixEigenvectors, outputPrefix, savePseudoOrbitals, outputStream, verbose, showProgress);
+
+        // Compute ionic vectors obtained with a pseudo CGTF made from a unit pseudo GTF (exponent = 0, coefficient = 1) only once (linear response approach only).
+        // We build a 4D of dimensions [run][charge][spin][MO] to store the ionic potential vectors for each charge and position.
+        // The first dimension corresponds to the run index.
+        // The second dimension corresponds to the charge index.
+        // The third dimension corresponds to the spin (0 for alpha, 1 for beta).
+        // The fourth dimension corresponds to the MO index.
+        computeIonicPotentialVectorsFromOrbitals(pseudoOrbitals, ionicPotentialVectors, runs);
+    }
 
 
     // Print results
-    printResults(states, ionicMatrixes, chargeNucleiContributions, runs, outputPrefix, outputStream, verbose);
+    printResults(methods, states, ionicPotentialMatrixes, chargeNucleiContributions, lrfMatrixEigenvalues, ionicPotentialVectors, runs, outputPrefix, outputStream, verbose);
     
 
     /****************/
     /* REGULAR GRID */
     /****************/
     
-    // Read grid size
-    GridSize gridSize;
-    CustomSizeData customSizeData;
-    if (readSize(gridSize, customSizeData))
+    bool computeOnRegularGrid;
+    readComputeOnRegularGrid(computeOnRegularGrid);
+
+    if (computeOnRegularGrid)
     {
-        logStream << std::endl << std::endl
-                  << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
-                  << "|||||||||||||||||||||||||||||||||||||||||||||                              |||||||||||||||||||||||||||||||||||||||||||||" << std::endl
-                  << "|||||||||||||||||||||||||||||||||||||||||||||   REGULAR GRID COMPUTATION   |||||||||||||||||||||||||||||||||||||||||||||" << std::endl
-                  << "|||||||||||||||||||||||||||||||||||||||||||||                              |||||||||||||||||||||||||||||||||||||||||||||" << std::endl
-                  << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl << std::endl;
-        log(logStream, outputStream);
+        if (perturbativeApproach || variationalApproach)
+        {
+            logStream << std::endl << std::endl
+                      << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl
+                      << "|||||||||||||||||||||||||||||||||||||||||||||                              |||||||||||||||||||||||||||||||||||||||||||||" << std::endl
+                      << "|||||||||||||||||||||||||||||||||||||||||||||   REGULAR GRID COMPUTATION   |||||||||||||||||||||||||||||||||||||||||||||" << std::endl
+                      << "|||||||||||||||||||||||||||||||||||||||||||||                              |||||||||||||||||||||||||||||||||||||||||||||" << std::endl
+                      << "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" << std::endl << std::endl;
+            log(logStream, outputStream);
 
 
-        // Setting orbitals
-        std::vector<SpinType> orbitalsSpins;
-        std::vector<int> orbitalsNumbers;
-        setOrbitals(orbitals, orbitals.get_numberOfMo(), orbitalsNumbers, orbitalsSpins, OrbitalType::ALL, SpinType::ALPHA_BETA);
+            // Read grid size
+            GridSize gridSize;
+            CustomSizeData customSizeData;
+            readSize(gridSize, customSizeData);
 
 
-        // Building domain and grid
-        std::cout << "Building domain and grid, please wait..." << std::endl;
-        Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, orbitalsNumbers.size());
-        Grid orbitalsGrid = orbitals.makeOrbGrid(domain, orbitalsNumbers, orbitalsSpins, showProgress);
-        std::cout << std::endl;
+            // Setting orbitals
+            std::vector<SpinType> orbitalsSpins;
+            std::vector<int> orbitalsNumbers;
+            setOrbitals(orbitals, orbitals.get_numberOfMo(), orbitalsNumbers, orbitalsSpins, OrbitalType::ALL, SpinType::ALPHA_BETA);
 
 
-        // Compute ionic matrixes for each charge and position
-        std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>> ionicMatrixes_regularGrid;
-        computeIonicPotentialMatrixesFromGrid(orbitals, orbitalsGrid, ionicMatrixes_regularGrid, runs);
+            // Building domain and grid
+            std::cout << "Building domain and grid, please wait..." << std::endl;
+            Domain domain = buildDomainForCube(orbitals, gridSize, customSizeData, orbitalsNumbers.size());
+            Grid orbitalsGrid = orbitals.makeOrbGrid(domain, orbitalsNumbers, orbitalsSpins, showProgress);
+            std::cout << std::endl;
 
 
-        // Print results
-        printResults(states, ionicMatrixes_regularGrid, chargeNucleiContributions, runs, outputPrefix + "_regularGrid", outputStream, verbose);
+            // Compute ionic matrixes for each charge and position
+            std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>> ionicPotentialMatrixes_regularGrid;
+            computeIonicPotentialMatrixesFromGrid(orbitals, orbitalsGrid, ionicPotentialMatrixes_regularGrid, runs);
+
+
+            // Copy the methods and remove the linear response approach if it is present, since it is not implemented for the regular grid approach.
+            std::vector<EnergyPointChargeMethod> methods_regularGrid;
+            for (size_t i = 0; i < methods.size(); ++i)
+            {
+                if (methods[i] != EnergyPointChargeMethod::LINEAR_RESPONSE)
+                {
+                    methods_regularGrid.push_back(methods[i]);
+                }
+            }
+
+            // Create decoy variables for the linear response approach, since it is not implemented for the regular grid approach.
+            std::vector<std::vector<double>> lrfMatrixEigenvalues_regularGrid_decoy;
+            std::vector<std::vector<std::vector<std::vector<double>>>> ionicPotentialVectors_regularGrid_decoy;
+
+
+            // Print results
+            printResults(methods_regularGrid, states, ionicPotentialMatrixes_regularGrid, chargeNucleiContributions, lrfMatrixEigenvalues_regularGrid_decoy, ionicPotentialVectors_regularGrid_decoy, runs, outputPrefix + "regularGrid", outputStream, verbose);
+        }
+
+        if (linearResponseApproach)
+        {
+            logStream << "Warning: the linear response approach is not implemented for the regular grid approach." << std::endl;
+            logStream << "The linear response approach will be skipped for the regular grid computation." << std::endl << std::endl;
+
+            log(logStream, outputStream);
+        }
     }
     
 
     /****************/
     /* BECKE GRID */
     /****************/
-    
-    // Read Becke grid parameters
-    std::vector<int> beckeParams;
-    if (readBecke(beckeParams))
+
+    bool computeOnBeckeGrid;
+    readComputeOnBeckeGrid(computeOnBeckeGrid);
+
+    if (computeOnBeckeGrid)
     {
+        // Read Becke grid parameters
+        std::vector<int> beckeParams;
+        readBecke(beckeParams);
+
         if (beckeParams.size() == 0)
         {
             beckeParams = { 3, 41, 5 };
         }
 
+        std::cout << "Building Becke object... ";
         Becke becke;
         computeOrbitalsOrBecke<Becke>(becke, analyticFilesNames[0]);
 
@@ -1842,13 +1825,101 @@ void ComputeEnergyWithPointCharges::run()
         log(logStream, outputStream);
 
 
-        // Compute ionic matrixes for each charge and position
+        // For perturbative and variational approaches, compute ionic matrixes for each charge and position
         std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>> ionicMatrixes_becke;
-        computeIonicPotentialMatrixesFromBecke(becke, ionicMatrixes_becke, runs);
+        
+        if (perturbativeApproach || variationalApproach)
+        {
+            computeIonicPotentialMatrixesFromBecke(becke, ionicMatrixes_becke, runs);
+        }
+
+
+        // For linear response approach, compute ionic vectors for each charge and position
+        std::vector<std::vector<double>> lrfMatrixEigenvalues_becke;
+        std::vector<std::vector<std::vector<std::vector<double>>>> ionicPotentialVectors_becke;
+
+        if (linearResponseApproach)
+        {
+            // Get triple-orbital-integral matrix for Becke grid
+            std::vector<std::vector<std::vector<std::vector<double>>>> tripleOrbitalIntegralMatrix_becke = becke.getTripleOrbitalIntegralMatrix(beckeParams[0], beckeParams[1], beckeParams[2], showProgress);
+
+            // Compute LRF Matrix for Becke grid
+            std::vector<std::vector<std::vector<double>>> lrfMatrix_becke;
+            computeLinearResponseFunctionMatrix(becke.get_orbitals(), tripleOrbitalIntegralMatrix_becke, lrfMatrix_becke);
+
+            // Diagonalize LRF matrix to get pseudo orbitals from eigenvectors
+            std::vector<std::vector<double>> lrfMatrixEigenvalues_becke(2);
+            std::vector<std::vector<std::vector<double>>> lrfMatrixEigenvectors_becke(2);
+            Orbitals pseudoOrbitals_becke = computePseudoOrbitalsFromLrfMatrix(becke.get_orbitals(), lrfMatrix_becke, lrfMatrixEigenvalues_becke, lrfMatrixEigenvectors_becke, outputPrefix + "becke", savePseudoOrbitals, outputStream, verbose, showProgress);
+            
+            // Compute ionic vectors obtained with a pseudo CGTF made from a unit pseudo GTF (exponent = 0, coefficient = 1) only once.
+            computeIonicPotentialVectorsFromOrbitals(pseudoOrbitals_becke, ionicPotentialVectors_becke, runs);
+        }
 
 
         // Print results
-        printResults(states, ionicMatrixes_becke, chargeNucleiContributions, runs, outputPrefix + "_becke", outputStream, verbose);
+        printResults(methods, states, ionicMatrixes_becke, chargeNucleiContributions, lrfMatrixEigenvalues_becke, ionicPotentialVectors_becke, runs, outputPrefix + "becke", outputStream, verbose);
+
+
+        // DEBUG - Manually compute sigma vectors (i.e. obtaining the same values than the pseudo Orbitals coefficients.)
+        // NOTE - Not modified after refactor to use a vector of runs instead of a vector of charges and a vector of positions, so the code below has to be modified accordingly to test again.
+
+        /*
+        // Compute ionic vectors obtained with a pseudo CGTF made from a unit pseudo GTF (exponent = 0, coefficient = 1) only once.
+        std::vector<std::vector<std::vector<std::vector<double>>>> ionicPotentialVectors_becke_debug;
+        computeIonicPotentialVectorsFromBecke(becke, ionicPotentialVectors_becke_debug, charges, chargesPositions, loopOnAtoms, beckeParams[0], beckeParams[1], beckeParams[2]);
+
+
+        // Multiply by eigenvectors values to get sigma vectors (i.e. the pseudo orbitals coefficients in the basis of the original orbitals).
+        std::vector<std::vector<std::vector<std::vector<double>>>> sigmaVectors_becke_debug(nbCharges);
+        if (loopOnAtoms)
+        {
+            for (size_t i = 0; i < nbCharges; ++i)
+            {
+                // In the looping case, each charge has multiple positions (one for each atom).
+                // So we need to compute the ionic matrixes for each position of the charge.
+                sigmaVectors_becke_debug[i].resize(nbChargePositions, std::vector<std::vector<double>>(2, std::vector<double>(eigenvalues_becke[0].size(), 0.0)));
+
+                for (size_t j = 0; j < nbChargePositions; ++j)
+                {
+                    for (int spin = 0; spin < 2; ++spin)
+                    {
+                        for (size_t k = 0; k < eigenvalues_becke[spin].size(); ++k)
+                        {
+                            for (size_t l = 0; l < eigenvectors_becke[spin].size(); ++l)
+                            {
+                                sigmaVectors_becke_debug[i][j][spin][k] += eigenvectors_becke[spin][l][k] * ionicPotentialVectors_becke_debug[i][j][spin][l];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (size_t i = 0; i < nbCharges; ++i)
+            {
+                // In the non-looping case, each charge has only one position.
+                // So we compute the ionic matrixes only once for each charge and store it in the first position of the second dimension of the vector.
+                sigmaVectors_becke_debug[i].resize(1, std::vector<std::vector<double>>(2, std::vector<double>(eigenvalues_becke[0].size(), 0.0)));
+
+                for (int spin = 0; spin < 2; ++spin)
+                {
+                    for (size_t k = 0; k < eigenvalues_becke[spin].size(); ++k)
+                    {
+                        for (size_t l = 0; l < eigenvectors_becke[spin].size(); ++l)
+                        {
+                            sigmaVectors_becke_debug[i][0][spin][k] += eigenvectors_becke[spin][l][k] * ionicPotentialVectors_becke_debug[i][0][spin][l];
+                        }
+                    }
+                }
+            }
+        }
+
+
+        // Print results
+        printResults(methods, states, ionicMatrixes_becke, chargeNucleiContributions, lrfMatrixEigenvalues_becke, sigmaVectors_becke_debug, runs, outputPrefix + "becke", outputStream, verbose);
+        */
     }
     
 

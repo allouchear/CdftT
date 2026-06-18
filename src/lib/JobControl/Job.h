@@ -71,6 +71,24 @@ class Job
          */
         bool readChargesPositionsBijections(bool& chargesPositionsBijections);
 
+        /**
+         * @brief Reads the option that indicates if the computation should be performed on a Becke grid from the "ComputeOnBeckeGrid" parameter in the input file.
+         * 
+         * @param[out] computeOnBeckeGrid Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readComputeOnBeckeGrid(bool& computeOnBeckeGrid);
+
+        /**
+         * @brief Reads the option that indicates if the computation should be performed on a regular grid from the "ComputeOnRegularGrid" parameter in the input file.
+         * 
+         * @param[out] computeOnRegularGrid Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readComputeOnRegularGrid(bool& computeOnRegularGrid);
+
         /** @brief Reads the numeric cutoff used by some partitioning methods from the "Cutoff" parameter in the input file.
          * 
          * @param[out] cutoff Reference to a double where the read cutoff value will be stored.

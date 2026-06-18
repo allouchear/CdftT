@@ -32,7 +32,7 @@ ComputeElectronDensity::ComputeElectronDensity(const std::string& inputFileName)
 
 void ComputeElectronDensity::computeStateDensities(const std::vector<ExcitedState>& states,std::vector<int>& excitedStatesNumbers, const Orbitals& orbitals, Grid& grid, const RDMMethod rdmMethod, const std::vector<int>& excludedOrbitalsNumbers, const std::string& outputPrefix, bool saveRDM, int outputPrecision, int verbose, std::ostream& logOutputStream, bool showProgress)
 {
-    size_t nbStates = states.size();
+    //size_t nbStates = states.size();
 
     std::stringstream logStream;
     std::ofstream outputFile;
@@ -430,13 +430,17 @@ void ComputeElectronDensity::run()
     // Read orbitals numbers to exclude from the density computation
     std::vector<int> excludedOrbitals;
     readExcludedOrbitals(excludedOrbitals);
-    std::cout<<"excluded orbitals : ";
-    for (int i=0;i<excludedOrbitals.size();++i)
+    
+    std::cout << "Excluded orbitals: ";
+    for (size_t i = 0; i < excludedOrbitals.size(); ++i)
     {
-        std::cout<<excludedOrbitals[i];
-        if (i!=excludedOrbitals.size()-1) {std::cout<<",";}
+        std::cout << excludedOrbitals[i];
+        if (i != excludedOrbitals.size() - 1)
+        {
+            std::cout << ", ";
+        }
     }
-    std::cout<<std::endl<<std::endl<<std::endl;
+    std::cout << std::endl << std::endl << std::endl;
 
     // Read method to use for Reduced Density Matrix computation
     RDMMethod rdmMethod;

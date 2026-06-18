@@ -62,7 +62,7 @@ JobManager.o: JobManager.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Jobs/ComputePartialCharges.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Jobs/ConvertOrbitals.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Jobs/Help.hpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Jobs/LambdaDiagnostic.hpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Jobs/RunLambdaDiagnostic.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Jobs/MakeDensityCube.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Jobs/MakeELFCube.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Jobs/MakeOrbitalsCube.hpp
@@ -311,33 +311,6 @@ Help.o: Jobs/Help.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/ExcitedState.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/SlaterDeterminant.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Job.tpp
-LambdaDiagnostic.o: Jobs/LambdaDiagnostic.cpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Domain.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Structure.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Atom.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Common/PeriodicTable.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Element.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Grid.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Enums.hpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Job.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Becke/Becke.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Becke/GridPoints.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/Orbitals.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/CGTF.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/GTF.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Descriptors.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/FCHK.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/WFX.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/ExcitedState.hpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/SlaterDeterminant.hpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Job.tpp \
- /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Jobs/LambdaDiagnostic.hpp
 MakeDensityCube.o: Jobs/MakeDensityCube.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Domain.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Structure.h \
@@ -419,3 +392,30 @@ MakeOrbitalsCube.o: Jobs/MakeOrbitalsCube.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/SlaterDeterminant.hpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Job.tpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Jobs/MakeOrbitalsCube.hpp
+RunLambdaDiagnostic.o: Jobs/RunLambdaDiagnostic.cpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Domain.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Structure.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Atom.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/PeriodicTable.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Element.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/Grid.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Enums.hpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_enumConversion.tpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/Utils_fileParsing.tpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Job.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Becke/Becke.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Becke/GridPoints.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/Orbitals.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/CGTF.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Basis/GTF.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Descriptors.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Cube/GridCP.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/FCHK.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/MOLDENGAB.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/WFX.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/LOG.h \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/ExcitedState.hpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/SlaterDeterminant.hpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Job.tpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/JobControl/Jobs/RunLambdaDiagnostic.hpp
