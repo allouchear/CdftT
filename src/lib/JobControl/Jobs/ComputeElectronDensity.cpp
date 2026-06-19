@@ -395,7 +395,15 @@ void ComputeElectronDensity::run()
 
     // Read transitions file
     start = std::chrono::high_resolution_clock::now();
-    if (!transitionsFileName.empty())
+
+    //bricolage pour tester sur molécules parturbées, a partir du fichier .cdftt fourni par CDFTT
+    if (!transitionsFileName.empty() && transitionsFileName.substr(transitionsFileName.size()-6)==".cdftt")
+    {
+        states = std::vector<ExcitedState> ();
+        std::vector<SlaterDeterminant> slaterDet;
+        ExcitedState::loadExcitedStatesFromFile(transitionsFileName, states, slaterDet);
+    }
+    else if (!transitionsFileName.empty())
     {
         std::cout << "Reading transitions from file: " << transitionsFileName << ". Please wait..." << std::endl;
         ExcitedState::readTransitions(transitionsFileName, states, groundState.get_energy(), maxNbExcitedStates, statesToCompute);

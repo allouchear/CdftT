@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <regex>
 #include <sstream>
@@ -405,23 +406,22 @@ void ExcitedState::set_excitationDegree()
     _excitationDegree.resize(nMax,std::vector<size_t>());
     
     size_t nSD = _slaterDeterminants.size();
-    for (size_t i=0;i<nSD;++i)   //for each SD
-    //for (size_t i : _argsortCoefs)   //for each SD from the sorted coefs above treshold
+    //for (size_t i=0;i<nSD;++i)   //for each SD
+    for (size_t i : _argsortCoefs)   //for each SD from the sorted coefs above treshold
     {
         size_t exDeg = getExcitation(_slaterDeterminants[i].first);
         _excitationDegree[exDeg].push_back(i);
     }
-
-    for (int i=0;i<_excitationDegree.size();++i)
-    {
-        std::cout<<_excitationDegree[i].size()<<", ";
-    }
-    std::cout<<std::endl;
 }
 
 //----------------------------------------------------------------------------------------------------//
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
+
+void ExcitedState::addSlaterDeterminant(const SlaterDeterminant& slaterDeterminant, const double coefficient)
+{
+    _slaterDeterminants.emplace_back(slaterDeterminant, coefficient);
+}
 
 size_t ExcitedState::getExcitation(const SlaterDeterminant& SD) const
 {
@@ -454,29 +454,6 @@ size_t ExcitedState::getExcitation(const SlaterDeterminant& SD) const
             }
         }
     }
-
-    /*
-    std::cout<<differences<<" differences : ";
-    for (auto orbital : SD.get_occupiedOrbitals()[0])
-    {
-        std::cout<<orbital.first<<", ";
-    }
-    std::cout<<"      ";
-    for (auto orbital : SD.get_occupiedOrbitals()[1])
-    {
-        std::cout<<orbital.first<<", ";
-    }    
-    std::cout<<std::endl;
-    */
-
-    /*
-    size_t nbDiff = 0;
-    const auto& differences = SlaterDeterminant::getDifferences(_s_GS_SD,SD);
-    for (const auto& spin : differences)  //sum along all spins the number of differences with respect to the ground state; gives the number of excitations
-    {
-        nbDiff += spin.size();
-    }
-    */
 
     return differences;
 }
@@ -1044,6 +1021,284 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
 
     return ok;
 }
+
+///////////////////////////////
+// LOADING AND SAVING METHODS
+
+bool ExcitedState::loadExcitedStatesFromFile(const std::string& excitedStatesFileName, std::vector<ExcitedState>& excitedStates, std::vector<SlaterDeterminant>& slaterDeterminants, int maxNumberOfExcitedStates)
+{
+    bool ok = true;
+
+    std::ifstream excitedStatesFile(excitedStatesFileName);
+    if (!excitedStatesFile)
+    {
+        ok = false;
+
+        std::stringstream errorMessage;
+        errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): could not open excited states file " << excitedStatesFileName << '.' << std::endl;
+        errorMessage << "Please check that the file exists and is readable.";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    int currentExcitedStatesRead = 0;
+
+    std::string line;
+    while (!excitedStatesFile.eof() && (maxNumberOfExcitedStates == -1 || currentExcitedStatesRead <= maxNumberOfExcitedStates))
+    {
+        // Read line
+        std::getline(excitedStatesFile, line);
+        line = trim_whitespaces(line, true, true);
+
+        if (line.empty())
+        {
+            // Skip empty lines in the beginning of the file
+            continue;
+        }
+        else if (line[0] == '#')
+        {
+            // Comment line: skip
+            continue;
+        }
+        else
+        {
+            // Slater Determinants
+            if (line == "Slater Determinants")
+            {
+                do
+                {
+                    std::getline(excitedStatesFile, line);
+                    line = trim_whitespaces(line, true, true);
+
+                    if (line[0] == '#')
+                    {
+                        // Skip comment lines
+                        continue;
+                    }
+                    else if (!line.empty())
+                    {
+                        std::regex slaterDeterminantRegex("(?:(\\d+)(A|B)\\((\\d+(?:\\.\\d+)?(?:[eE][+-]\\d+)?)\\))+", std::regex_constants::icase);
+                        std::smatch slaterDeterminantRegexMatch;
+
+                        if (std::regex_search(line, slaterDeterminantRegexMatch, slaterDeterminantRegex))
+                        {
+                            SlaterDeterminant slaterDeterminant;
+                            SlaterDeterminant::parseFromString(slaterDeterminant, line);
+                            slaterDeterminants.push_back(slaterDeterminant);
+                        }
+                        else
+                        {
+                            ok = false;
+
+                            std::stringstream errorMessage;
+                            errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): could not read Slater Determinant in excited states file " << excitedStatesFileName << '.' << std::endl;
+                            errorMessage << "Please check the documentation for the format of the file.";
+
+                            print_error(errorMessage.str());
+
+                            std::exit(1);
+                        }
+                    }
+                } while (!line.empty());
+            }
+            else
+            {
+                if (slaterDeterminants.empty())
+                {
+                    ok = false;
+
+                    std::stringstream errorMessage;
+                    errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): Slater Determinants must be specified before the excited states in excited states file " << excitedStatesFileName << '.' << std::endl;
+                    errorMessage << "Please check the documentation for the format of the file.";
+
+                    print_error(errorMessage.str());
+
+                    std::exit(1);
+                }
+
+                // New excited state: read energy
+                std::regex energyRegex("(?:Energy)\\s+(-?\\d+(?:\\.\\d+)?(?:[eE][+-]\\d+)?)\\s+(eV|H)", std::regex_constants::icase);
+                std::smatch energyRegexMatch;
+                if (std::regex_search(line, energyRegexMatch, energyRegex))
+                {
+                    double energy = std::stod(energyRegexMatch[1]);
+                    std::string energyUnit = energyRegexMatch[2];
+
+                    // For the unit, we only analyze the first letter (eV or H)
+                    if (std::toupper(energyUnit[0]) == 'E')
+                    {
+                        energy *= Constants::EV_TO_HARTREE;
+                    }
+                    else if (std::toupper(energyUnit[0]) != 'H')
+                    {
+                        ok = false;
+
+                        std::stringstream errorMessage;
+                        errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): unknown energy unit \"" << energyUnit << "\" in excited states file " << excitedStatesFileName << '.' << std::endl;
+                        errorMessage << "Please use eV or H as energy unit.";
+
+                        print_error(errorMessage.str());
+
+                        std::exit(1);
+                    }
+
+                    ExcitedState excitedState(currentExcitedStatesRead, energy);
+
+                    int currentCoefficientRead = 0;
+
+                    // Read slater determinants coefficients
+                    do
+                    {
+                        std::getline(excitedStatesFile, line);
+                        line = trim_whitespaces(line, true, true);
+
+                        if (line[0] == '#')
+                        {
+                            // Skip comment lines
+                            continue;
+                        }
+                        else if (!line.empty())
+                        {
+                            double coefficient;
+                            std::stringstream buffer(line);
+
+                            buffer >> coefficient;
+                            if (buffer.fail() and !buffer.eof())
+                            {
+                                ok = false;
+
+                                std::stringstream errorMessage;
+                                errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): could not read Slater Determinant coefficient in excited states file " << excitedStatesFileName << '.' << std::endl;
+                                errorMessage << "Please check the documentation for the format of the file.";
+                                print_error(errorMessage.str());
+
+                                std::exit(1);
+                            }
+                            
+                            excitedState.addSlaterDeterminant(slaterDeterminants[currentCoefficientRead], coefficient);
+
+                            ++currentCoefficientRead;
+                        }
+                    } while (!excitedStatesFile.eof() && !line.empty());
+
+                    // Check that the number of coefficients read matches the number of Slater determinants
+                    if (excitedState.get_slaterDeterminants().size() == slaterDeterminants.size())
+                    {
+                        excitedStates.push_back(excitedState);
+                        ++currentExcitedStatesRead;
+                    }
+                    else
+                    {
+                        ok = false;
+
+                        std::stringstream errorMessage;
+                        errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): number of Slater Determinant coefficients does not match the number of Slater determinants in excited states file " << excitedStatesFileName << '.' << std::endl;
+                        errorMessage << "Please check the documentation for the format of the file.";
+
+                        print_error(errorMessage.str());
+
+                        std::exit(1);
+                    }
+                }
+                else
+                {
+                    ok = false;
+
+                    std::stringstream errorMessage;
+                    errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): could not read excited state energy in excited states file " << excitedStatesFileName << '.' << std::endl;
+                    errorMessage << "Please check the documentation for the format of the file.";
+
+                    print_error(errorMessage.str());
+
+                    std::exit(1);
+                }
+            }
+        }
+    }
+
+    excitedStatesFile.close();
+
+    return ok;
+}
+
+bool ExcitedState::saveExcitedStatesToFile(const std::string& excitedStatesFileName, const std::vector<ExcitedState>& excitedStates)
+{
+    bool ok = true;
+
+    std::ofstream excitedStatesFile(excitedStatesFileName);
+    if (!excitedStatesFile)
+    {
+        ok = false;
+
+        std::stringstream errorMessage;
+        errorMessage << "Error in ExcitedState::saveExcitedStatesToFile(): could not open excited states file " << excitedStatesFileName << " for writing." << std::endl;
+        errorMessage << "Please check that the file is writable.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    excitedStatesFile << std::scientific << std::setprecision(10);
+
+    // Get all Slater determinants from all excited states
+    std::vector<SlaterDeterminant> slaterDeterminants;
+    for (const ExcitedState& excitedState : excitedStates)
+    {
+        for (const std::pair<SlaterDeterminant, double>& slaterCoef : excitedState.get_slaterDeterminants())
+        {
+            // Search for the Slater determinant in the whole list
+            // If it is not found, add it to the list.
+            if (std::find(slaterDeterminants.begin(), slaterDeterminants.end(), slaterCoef.first) == slaterDeterminants.end())
+            {
+                slaterDeterminants.emplace_back(slaterCoef.first);
+            }
+        }
+    }
+
+    // Write Slater determinants to file
+    excitedStatesFile << "Slater Determinants" << std::endl;
+    for (const SlaterDeterminant& slaterDeterminant : slaterDeterminants)
+    {
+        excitedStatesFile << slaterDeterminant << std::endl;
+    }
+    excitedStatesFile << std::endl;
+
+    // Write excited states to file
+    for (const ExcitedState& excitedState : excitedStates)
+    {
+        excitedStatesFile << "Energy " << excitedState.get_energy() << " H" << std::endl;
+
+        for (const SlaterDeterminant& slaterDeterminant : slaterDeterminants)
+        {
+            const auto& excitedStateSD = excitedState.get_slaterDeterminants();
+
+            // Search for the Slater determinant in the excited state
+            auto it = std::find_if(excitedStateSD.begin(),
+                                   excitedStateSD.end(),
+                                   [&slaterDeterminant](const std::pair<SlaterDeterminant, double>& element)
+                                   { return element.first == slaterDeterminant; });
+
+            // If it is found, write its coefficient to the file. Otherwise, write 0.
+            if (it != excitedState.get_slaterDeterminants().end())
+            {
+                excitedStatesFile << it->second << std::endl;
+            }
+            else
+            {
+                excitedStatesFile << 0.0 << std::endl;
+            }
+        }
+
+        excitedStatesFile << std::endl;
+    }
+
+    excitedStatesFile.close();
+
+    return ok;
+}
+
 
 /////////////////////////
 // OTHER STATIC METHODS

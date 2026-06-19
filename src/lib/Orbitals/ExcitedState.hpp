@@ -142,9 +142,16 @@ class ExcitedState
         // OTHER PUBLIC METHODS
         //----------------------------------------------------------------------------------------------------//
 
+        /**
+         * @brief Adds a Slater determinant to the excited state along with its coefficient.
+         * 
+         * @param[in] slaterDeterminant Slater determinant to add.
+         * @param[in] coefficient Coefficient associated with the Slater determinant.
+         */
+        void addSlaterDeterminant(const SlaterDeterminant& slaterDeterminant, const double coefficient);
 
         /**
-         * @brief giv
+         * @brief gives the degree of excitation of the SD, with respect to the static Ground State Determinant
          * 
          * @param[in] SD reference to the Slater determinant of which we want to get the degree of excitation
          * 
@@ -267,6 +274,30 @@ class ExcitedState
          */
         static bool readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
 
+        ///////////////////////////////
+        // LOADING AND SAVING METHODS
+
+        /**
+         * @brief Loads excited states from a file.
+         * 
+         * @param[in] excitedStatesFileName Name of the transitions file to read.
+         * @param[out] states Vector of ExcitedState objects populated from the file.
+         * @param[out] slaterDeterminants Vector of SlaterDeterminant objects populated from the file.
+         * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
+         * 
+         * @return True if reading was successful, false otherwise.
+         */
+        static bool loadExcitedStatesFromFile(const std::string& statesFileName, std::vector<ExcitedState>& states, std::vector<SlaterDeterminant>& slaterDeterminants, int maxNumberOfExcitedStates = -1);
+
+        /**
+         * @brief Saves excited states to a file.
+         * 
+         * @param[in] statesFileName Name of the file to save the excited states to.
+         * @param[in] states Vector of ExcitedState objects to save.
+         */
+        static bool saveExcitedStatesToFile(const std::string& statesFileName, const std::vector<ExcitedState>& states);
+
+        
         /////////////////////////
         // OTHER STATIC METHODS
 

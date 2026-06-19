@@ -16,19 +16,11 @@
 class SlaterDeterminant
 {
     private:
+        /** @brief Type alias for the occupation of an orbital (orbital number, occupation number). */
+        typedef std::pair<int, double> Occupation;
+
         /** @brief Occupied orbitals (1-based) and their occupation numbers. First index corresponds to alpha spin, second to beta spin. */
-        std::vector<std::vector<std::pair<int, double>>> _occupiedOrbitals;
-
-
-        //----------------------------------------------------------------------------------------------------//
-        // STATIC FIELDS
-        //----------------------------------------------------------------------------------------------------//
-
-        /** @brief Static Orbitals instance shared among all SlaterDeterminant objects. */
-        static Orbitals _s_orbitals_;
-
-        /** @brief Flag indicating whether the static Orbitals instance has been set. */
-        static bool _s_isOrbitalsSet_;
+        std::vector<std::vector<Occupation>> _occupiedOrbitals;
 
 
     public:
@@ -121,6 +113,16 @@ class SlaterDeterminant
          * @return The ionic potential matrix element < D_i | V_ion/electrons | D_j >.
          */
         static double ionicPotential(const SlaterDeterminant& d_i, const SlaterDeterminant& d_j, const std::vector<std::vector<std::vector<double>>>& ionicMatrix);
+
+        /**
+         * @brief Parses a Slater determinant from a string representation.
+         * 
+         * @param[out] slaterDeterminant SlaterDeterminant object to populate from the string.
+         * @param[in] str String representation of the Slater determinant.
+         * 
+         * @return True if parsing was successful, false otherwise.
+         */
+        static bool parseFromString(SlaterDeterminant& slaterDeterminant, const std::string& str);
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS

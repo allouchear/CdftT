@@ -8,13 +8,6 @@
 #include <Orbitals/SlaterDeterminant.hpp>
 #include <Utils/Enums.hpp>
 
-//----------------------------------------------------------------------------------------------------//
-// STATIC FIELDS
-//----------------------------------------------------------------------------------------------------//
-
-bool SlaterDeterminant::_s_isOrbitalsSet_ = false;
-Orbitals SlaterDeterminant::_s_orbitals_ = Orbitals();
-
 
 //----------------------------------------------------------------------------------------------------//
 // CONSTRUCTORS
@@ -28,12 +21,6 @@ SlaterDeterminant::SlaterDeterminant():
 SlaterDeterminant::SlaterDeterminant(const Orbitals& orbitals):
     _occupiedOrbitals(2, std::vector<std::pair<int, double>>())
 {
-    if (!_s_isOrbitalsSet_)
-    {
-        _s_orbitals_ = orbitals;
-        _s_isOrbitalsSet_ = true;
-    }
-
     // Get occupation numbers
     const std::vector<std::vector<double>>& occupationNumbers = orbitals.get_occupationNumber();
 
@@ -253,6 +240,43 @@ double SlaterDeterminant::ionicPotential(const SlaterDeterminant& d_i, const Sla
     }
 
     return sum;
+}
+
+bool SlaterDeterminant::parseFromString(SlaterDeterminant& slaterDeterminant, const std::string& str)
+{
+    bool ok = true;
+
+    std::regex slaterDeterminantRegex("(?:(\\d+)(A|B)\\((\\d+(?:\\.\\d+)?(?:[eE][+-]\\d+)?)\\))+", std::regex_constants::icase);
+    
+    std::sregex_iterator slaterDeterminantRegexBegin(str.begin(), str.end(), slaterDeterminantRegex);
+    std::sregex_iterator slaterDeterminantRegexEnd = std::sregex_iterator();
+
+    if (slaterDeterminantRegexBegin == slaterDeterminantRegexEnd)
+    {
+        ok = false;
+
+        std::stringstream errorMessage;
+        errorMessage << "Error in SlaterDeterminant::parseFromString(): could not parse Slater determinant from string '" << str << "'." << std::endl;
+        errorMessage << "Please check the documentation for the format of the string.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    for (std::sregex_iterator it = slaterDeterminantRegexBegin; ok && it != slaterDeterminantRegexEnd; ++it)
+    {
+        std::smatch slaterDeterminantRegexMatch = *it;
+
+        Occupation occupation;
+        occupation.first = std::stoi(slaterDeterminantRegexMatch[1]);
+        occupation.second = std::stod(slaterDeterminantRegexMatch[3]);
+
+        int spin = static_cast<int>(spinType_from_char(slaterDeterminantRegexMatch[2].str()[0]));
+
+        slaterDeterminant._occupiedOrbitals[spin].push_back(occupation);
+    }
+
+    return ok;
 }
 
 
