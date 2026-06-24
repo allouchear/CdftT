@@ -53,12 +53,26 @@ class ExcitedState
         //----------------------------------------------------------------------------------------------------//
         
         /**
-         * TODO
+         * @brief computes the RDM-1 matrix using the Gamma method, between to states i,j (i=j for eletronc density, i!=j for transtition density)
+         * 
+         * @param[in] matrix to compute
+         * @param[in] psi_i state i
+         * @param[in] psi_j state_j
+         * @param[in] orbitals Orbitals object containing the molecular orbitals information
+         * @param[in] ignoredMos list of molecular orbitals to not take into account in calculation
+         * @param[in] showProgress Whether to display a progress bar during matrix creation.
          */
         static void computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress);
 
         /**
-         * TODO
+         * @brief computes the RDM-1 matrix using the X method, between to states i,j (i=j for eletronc density, i!=j for transtition density, for transition must have i=0)
+         * 
+         * @param[in] matrix to compute
+         * @param[in] psi_i state i
+         * @param[in] psi_j state_j
+         * @param[in] orbitals Orbitals object containing the molecular orbitals information
+         * @param[in] ignoredMos list of molecular orbitals to not take into account in calculation
+         * @param[in] showProgress Whether to display a progress bar during matrix creation.
          */
         static void computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi1, const ExcitedState& psi2, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress);
     
@@ -323,6 +337,18 @@ class ExcitedState
          */
         static double ionicPotential(const ExcitedState& psi_i, const ExcitedState& psi_j, const std::vector<std::vector<std::vector<double>>>& ionicMatrixes);
 
+
+        /** 
+         * @brief calls the right matrix construction function based on the RDMethod chosen
+         * 
+         * @param[in] matrix to compute
+         * @param[in] rdmMethod method to use to compute the matrix
+         * @param[in] psi_i state i
+         * @param[in] psi_j state_j
+         * @param[in] orbitals Orbitals object containing the molecular orbitals information
+         * @param[in] ignoredMos list of molecular orbitals to not take into account in calculation
+         * @param[in] showProgress Whether to display a progress bar during matrix creation.
+        */
         static void reducedDensityMatrix(std::vector<std::vector<std::vector<double>>>& rdmMatrix, RDMMethod rdmMethod, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress);
 
 
