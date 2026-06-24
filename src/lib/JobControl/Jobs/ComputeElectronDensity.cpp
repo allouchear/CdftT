@@ -399,7 +399,7 @@ void ComputeElectronDensity::run()
     //bricolage pour tester sur molécules parturbées, a partir du fichier .cdftt fourni par CDFTT
     if (!transitionsFileName.empty() && transitionsFileName.substr(transitionsFileName.size()-6)==".cdftt")
     {
-        states = std::vector<ExcitedState> ();
+        states.clear(); // = std::vector<ExcitedState> ();
         std::vector<SlaterDeterminant> slaterDet;
         ExcitedState::loadExcitedStatesFromFile(transitionsFileName, states, slaterDet);
     }

@@ -1,0 +1,25 @@
+RunType=ComputeElectronDensity
+
+#input data
+AnalyticFiles=acrolein_charge1.fchk
+TransitionsFile=acrolein_charge1_perturbedStates.cdftt
+
+# Grid configuration
+Size=custom
+CustomSizeData=140,100,60,7.558904,5.669178,2.834589,0.094486,0,0,0,0.094486,0,0,0,0.094486
+
+#compute parameters
+RDMMethod=Gamma
+ExcitedStatesNumbers=0,1,2
+ExcludedOrbitals=1,2,3,4
+TransitionDensities=(0,1)
+SDCutoff=0
+
+#output parameters
+OutputPrefix=output/cpp_Gamma
+Precision=6
+
+#verbosity
+verbose=0
+ShowProgress=True
+SaveReducedDensityMatrix=True
