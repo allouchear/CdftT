@@ -121,8 +121,9 @@ void ComputeEnergyWithPointCharges::computeHamiltonianMatrixes(const std::vector
                 log(logStream, outputStream);
             }
 
-            // Store < psi_i | H | psi_j > matrix element
+            // Store matrix elements
             psi_i_H_psi_j[i][j] = matrixElement;
+            psi_i_H_0_psi_j[i][j] = h0Contribution;
             psi_i_H_1_psi_j[i][j] = psi_i_H_psi_j[i][j] - h0Contribution;
 
             if (verbose >= 1)
@@ -319,8 +320,8 @@ void ComputeEnergyWithPointCharges::computeResults_perturbative(const std::vecto
             }
         }
 
-        dS_perturb[i] = sum_dS * Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
-        E_pola_perturb[i] = sum_Epola * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
+        dS_perturb[i] = sum_dS;
+        E_pola_perturb[i] = sum_Epola;
 
         // Treating the ground state without renormalisation separately
         if (dpk_perturb_state0_withoutRenormalisation[i] != 0)
@@ -334,30 +335,61 @@ void ComputeEnergyWithPointCharges::computeResults_perturbative(const std::vecto
         }
     }
 
-    dS_perturb_state0_withoutRenormalisation *= Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT;
-    E_pola_perturb_state0_withoutRenormalisation *= Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT;
-
     logStream << "dS (J/mol/K) and |E_polarisation| (J/mol) for ground state without renormalisation:" << std::endl;
     log(logStream, outputStream);
     logStream << std::scientific;
     logStream << std::setprecision(10);
-    logStream << std::right << std::setw(17) << dS_perturb_state0_withoutRenormalisation << '\t';
-    logStream << std::right << std::setw(17) << std::abs(E_pola_perturb_state0_withoutRenormalisation) << std::endl << std::endl;
+    logStream << std::right << std::setw(17) << dS_perturb_state0_withoutRenormalisation * Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT << '\t';
+    logStream << std::right << std::setw(17) << std::abs(E_pola_perturb_state0_withoutRenormalisation * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT) << std::endl << std::endl;
 
     logStream << "dS (J/mol/K) for each state:" << std::endl;
     for (size_t i = 0; i < nbStates; ++i)
     {
-        logStream << std::right << std::setw(17) << dS_perturb[i] << '\t';
+        logStream << std::right << std::setw(17) << dS_perturb[i] * Constants::BOLTZMANN_CONSTANT * Constants::AVOGADRO_CONSTANT << '\t';
     }
     logStream << std::endl << std::endl;
 
     logStream << "|E_polarisation| (J/mol) for each state:" << std::endl;
     for (size_t i = 0; i < nbStates; ++i)
     {
-        logStream << std::right << std::setw(17) << std::abs(E_pola_perturb[i]) << '\t';
+        logStream << std::right << std::setw(17) << std::abs(E_pola_perturb[i] * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT) << '\t';
     }
     logStream << std::defaultfloat << std::endl;
     log(logStream, outputStream);
+
+
+    // Saving energies in a file
+    std::ofstream outputFile(outputFilePrefix + "energies_perturbative.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in ComputeEnergyWithPointCharges::computeResults_perturbative(): could not open output file " << outputFilePrefix << "energies_perturbative.cdftt for writing." << std::endl;
+        
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    std::vector<double> energies_perturbative(nbStates, 0.0);
+
+    logStream << "Energies:" << std::endl;
+    log(logStream, outputStream);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t k = 0; k < energies_perturbative.size(); ++k)
+    {
+        // energy is the sum of order 0 (<Ψ_i|H_0|Ψ_i>), 1 (<Ψ_i|H_1|Ψ_i>) and 2 (\sum_{i \neq n} )
+        energies_perturbative[k] = psi_i_H_0_psi_j[k][k] + psi_i_H_1_psi_j[k][k] + E_pola_perturb[k];
+
+        logStream << energies_perturbative[k] << ' ';
+        outputFile << energies_perturbative[k] << std::endl;
+    }
+    logStream << std::endl << std::endl;
+    log(logStream, outputStream);
+
+    outputFile.close();
 }
 
 void ComputeEnergyWithPointCharges::computeResults_variational(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose)
@@ -413,11 +445,11 @@ void ComputeEnergyWithPointCharges::computeResults_variational(const std::vector
     // Sort eigenvalues and eigenvectors
     sortEigenValuesAndEigenVectors(eigenvalues, eigenvectors);
 
-    std::ofstream outputFile(outputFilePrefix + "energies.cdftt");
+    std::ofstream outputFile(outputFilePrefix + "energies_variational.cdftt");
     if (!outputFile)
     {
         std::stringstream errorMessage;
-        errorMessage << "Error in Job::computeResultsEnergyWithPointCharges(): could not open output file " << outputFilePrefix << "energies.cdftt for writing." << std::endl;
+        errorMessage << "Error in ComputeEnergyWithPointCharges::computeResults_variational(): could not open output file " << outputFilePrefix << "energies_variational.cdftt for writing." << std::endl;
         
         print_error(errorMessage.str());
         
@@ -670,7 +702,7 @@ void ComputeEnergyWithPointCharges::computeResults_variational(const std::vector
     log(logStream, outputStream);
 }
 
-void ComputeEnergyWithPointCharges::computeResults_linearResponse(const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, std::ostream& outputStream, int verbose)
+void ComputeEnergyWithPointCharges::computeResults_linearResponse(const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, const std::vector<std::vector<double>>& psi_i_H_0_psi_j, const std::vector<std::vector<double>>& psi_i_H_1_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose)
 {
     std::stringstream logStream;
 
@@ -698,7 +730,49 @@ void ComputeEnergyWithPointCharges::computeResults_linearResponse(const std::vec
 
     logStream << std::scientific;
     logStream << std::setprecision(10);
-    logStream << "|E_polarisation| = " << std::abs(energy_pseudoOrbitals) * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT << " J/mol." << std::endl;
+    logStream << "|E_polarisation| = " << std::abs(energy_pseudoOrbitals) * Constants::HARTREE_TO_JOULE * Constants::AVOGADRO_CONSTANT << " J/mol." << std::endl << std::endl;
+
+    
+    // For now we only compute the energy for the Ground State
+    // Saving energies in a file
+    std::ofstream outputFile(outputFilePrefix + "energies_linearResponse.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in ComputeEnergyWithPointCharges::computeResults_linearResponse(): could not open output file " << outputFilePrefix << "energies_linearResponse.cdftt for writing." << std::endl;
+        
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    std::vector<double> energies_linearResponse(1, 0.0);
+
+    logStream << "Energies:" << std::endl;
+    log(logStream, outputStream);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+
+    // for (size_t k = 0; k < energies_linearResponse.size(); ++k)
+    // {
+    //     // energy is the sum of order 0 (<Ψ_i|H_0|Ψ_i>), 1 (<Ψ_i|H_1|Ψ_i>) and 2 (\sum_{i \neq n} )
+    //     energies_linearResponse[k] = psi_i_H_0_psi_j[k][k] + psi_i_H_1_psi_j[k][k] + E_pola_linearResponse[k];
+
+    //     logStream << energies_perturbative[k] << ' ';
+    //     outputFile << energies_perturbative[k] << std::endl;
+    // }
+
+    energies_linearResponse[0] = psi_i_H_0_psi_j[0][0] + psi_i_H_1_psi_j[0][0] + energy_pseudoOrbitals;
+    logStream << energies_linearResponse[0] << std::endl;
+    outputFile << energies_linearResponse[0] << std::endl;
+
+    logStream << std::defaultfloat << std::endl;
+    log(logStream, outputStream);
+
+    outputFile.close();
+
     log(logStream, outputStream);
 }
 
@@ -731,6 +805,7 @@ void ComputeEnergyWithPointCharges::printResults(const std::vector<EnergyPointCh
     for (size_t i = 0; i < nbRuns; ++i)
     {
         std::string runNumberStr = int_to_string_withLeadingZeros(i + 1, nbRuns);
+        std::string outputPrefixRun = outputPrefix + (nbRuns > 1 ? "run" + runNumberStr : "");
 
         size_t nbPointCharges = runs[i].size();
 
@@ -753,27 +828,25 @@ void ComputeEnergyWithPointCharges::printResults(const std::vector<EnergyPointCh
             log(logStream, outputStream);
         }
 
-        if (perturbativeApproach || variationalApproach)
+        std::vector<std::vector<double>> psi_i_H_0_psi_j;
+        std::vector<std::vector<double>> psi_i_H_1_psi_j;
+        std::vector<std::vector<double>> psi_i_H_psi_j;
+
+        computeHamiltonianMatrixes(states, chargeNucleiContributions[i], ionicPotentialMatrixes[i], psi_i_H_0_psi_j, psi_i_H_1_psi_j, psi_i_H_psi_j, outputStream, verbose);
+
+        if (perturbativeApproach)
         {
-            std::vector<std::vector<double>> psi_i_H_0_psi_j;
-            std::vector<std::vector<double>> psi_i_H_1_psi_j;
-            std::vector<std::vector<double>> psi_i_H_psi_j;
-
-            computeHamiltonianMatrixes(states, chargeNucleiContributions[i], ionicPotentialMatrixes[i], psi_i_H_0_psi_j, psi_i_H_1_psi_j, psi_i_H_psi_j, outputStream, verbose);
-
-            if (perturbativeApproach)
-            {
-                computeResults_perturbative(states, psi_i_H_0_psi_j, psi_i_H_1_psi_j, outputPrefix + (nbRuns > 1 ? "run" + runNumberStr : ""), outputStream, verbose);
-            }
-
-            if (variationalApproach)
-            {
-                computeResults_variational(states, psi_i_H_psi_j, outputPrefix + (nbRuns > 1 ? "run" + runNumberStr : ""), outputStream, verbose);
-            }
+            computeResults_perturbative(states, psi_i_H_0_psi_j, psi_i_H_1_psi_j, outputPrefixRun, outputStream, verbose);
         }
-        else if (linearResponseApproach)
+
+        if (variationalApproach)
         {
-            computeResults_linearResponse(lrfMatrixEigenvalues, ionicPotentialVectors[i], outputStream, verbose);
+            computeResults_variational(states, psi_i_H_psi_j, outputPrefixRun, outputStream, verbose);
+        }
+        
+        if (linearResponseApproach)
+        {
+            computeResults_linearResponse(lrfMatrixEigenvalues, ionicPotentialVectors[i],  psi_i_H_0_psi_j, psi_i_H_1_psi_j, outputPrefixRun, outputStream, verbose);
         }
 
         logStream << std::defaultfloat << std::endl;
@@ -1711,6 +1784,15 @@ void ComputeEnergyWithPointCharges::run()
 
     // Print results
     printResults(methods, states, ionicPotentialMatrixes, chargeNucleiContributions, lrfMatrixEigenvalues, ionicPotentialVectors, runs, outputPrefix, outputStream, verbose);
+
+    // // DEBUG
+    // ExcitedState::saveExcitedStatesToFile(outputPrefix + "unperturbedStates.cdftt", states);
+    // std::vector<ExcitedState> states2;
+    // std::vector<SlaterDeterminant> slaters;
+    // ExcitedState::loadExcitedStatesFromFile(outputPrefix + "unperturbedStates.cdftt", states2, slaters);
+
+    // // Print results
+    // printResults(methods, states2, ionicPotentialMatrixes, chargeNucleiContributions, lrfMatrixEigenvalues, ionicPotentialVectors, runs, outputPrefix + "fromLoadedStates_", outputStream, verbose);
     
 
     /****************/
@@ -1974,7 +2056,7 @@ void ComputeEnergyWithPointCharges::run()
 
     for (size_t i = 0; i < nbStates; ++i)
     {
-        logStream << "ψ_" << i << ": energy = " << std::setprecision(10) << states[i].get_energy() << " Hartree" << std::endl;
+        logStream << "Ψ_" << i << ": energy = " << std::setprecision(10) << states[i].get_energy() << " Hartree" << std::endl;
         for (const auto& slaterCoeff : states[i].get_slaterDeterminants())
         {
             logStream << "    " << slaterCoeff.first << "; Coefficient: " << slaterCoeff.second << std::endl;
@@ -1990,7 +2072,7 @@ void ComputeEnergyWithPointCharges::run()
 
         for (size_t j = 0; j <= i; ++j)
         {
-            logStream << "Computing < ψ_" << i << " | V_nuclear | ψ_" << j << " > matrix element..." << std::endl;
+            logStream << "Computing < Ψ_" << i << " | V_nuclear | Ψ_" << j << " > matrix element..." << std::endl;
 
             // Initialize < D_k | V_nuclear | D_l > matrix element
             V_ij = 0.0;

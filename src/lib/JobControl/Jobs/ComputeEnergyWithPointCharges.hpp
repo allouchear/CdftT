@@ -83,9 +83,9 @@ class ComputeEnergyWithPointCharges : public Job
         void computeResults_variational(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose = 0);
 
         /**
-         * @brief Computes and prints the results with point charges.
+         * @brief TODO
          */
-        void computeResults_linearResponse(const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, std::ostream& outputStream, int verbose = 0);
+        void computeResults_linearResponse(const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, const std::vector<std::vector<double>>& psi_i_H_0_psi_j, const std::vector<std::vector<double>>& psi_i_H_1_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose = 0);
 
         /**
          * @brief Prints the results.
