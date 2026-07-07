@@ -153,7 +153,7 @@ void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>&
             {
                 for(size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
                 {
-                    if (psi2._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first != i+1)   // looks if the orbital in i^th position (0-based) is the MO number i+1 (1-based)
+                    if (static_cast<size_t>(psi2._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first) != i + 1)   // looks if the orbital in i^th position (0-based) is the MO number i+1 (1-based)
                     {
                         size_t j = psi2._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first-numberOfOccupiedOrbitals;
                         X[spin][i][j-1] += psi2._slaterDeterminants[k].second;   //if we got the j^th orbital in position i, it means we got a i+1 -> j transition
@@ -406,7 +406,7 @@ void ExcitedState::set_excitationDegree()
     size_t nMax = _slaterDeterminants[0].first.get_occupiedOrbitals()[0].size()+_slaterDeterminants[0].first.get_occupiedOrbitals()[1].size(); //considering same size slater determinants
     _excitationDegree.resize(nMax,std::vector<size_t>());
     
-    size_t nSD = _slaterDeterminants.size();
+    //size_t nSD = _slaterDeterminants.size();
     //for (size_t i=0;i<nSD;++i)   //for each SD
     for (size_t i : _argsortCoefs)   //for each SD from the sorted coefs above treshold
     {
@@ -447,7 +447,7 @@ size_t ExcitedState::getExcitation(const SlaterDeterminant& SD) const
         }
         
         // look if occupied orbitals numbers > n_electrons[spin] (equivalent to looking if the orbital is also in the GS SD)
-        for (int k = 0; k<occupiedOrbitalsNumbers_j[spin].size(); ++k)
+        for (size_t k = 0; k < occupiedOrbitalsNumbers_j[spin].size(); ++k)
         {
             if(occupiedOrbitalsNumbers_j[spin][k] > nOccMO)
             {

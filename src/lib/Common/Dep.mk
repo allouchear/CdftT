@@ -29,6 +29,7 @@ Structure.o: Structure.cpp \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Utils/WFX.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Orbitals/SlaterDeterminant.hpp
 Descriptors.o: Descriptors.cpp \
+ /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Constants.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Descriptors.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Common/PeriodicTable.h \
  /usr/home/lgardre-local/Work/CdftT/src/lib/Common/Element.h \
