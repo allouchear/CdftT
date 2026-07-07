@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 
+#include <Common/Constants.h>
 #include <Common/Descriptors.h>
 #include <Common/PeriodicTable.h>
 #include <Becke/Becke.h>
@@ -374,102 +375,147 @@ void Descriptors::reset()
 
 std::ostream& operator<<(std::ostream& flux, const Descriptors& desc)
 {
-    double HeV=27.21138469;
+    flux << std::scientific;
+    flux << std::setprecision(6);
+    flux << std::setw(15);
     
-    flux<<std::scientific;
-    flux<<std::setprecision(6);
-    flux<<std::setw(15);
     if(desc._okCharge)
-    {
-        
-        flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
-        flux<<std::left<<std::setw(7)<<"Symbol"<<std::setw(4)<<"k"<<std::setw(15)<<std::right<<"Qk-"<<std::setw(15)<<std::right<<"Qk+"<<std::setw(15)<<std::right<<"Qk0"<<std::endl;
-        for(int i=0; i<desc._str.getNumberOfAtoms(); i++)
-            flux<<std::left<<std::setw(7)<<desc._str.atom(i).get_symbol()<<std::setw(4)<<i+1<<std::setw(15)<<std::right<<desc._Qm[i]<<std::setw(15)<<std::right<<desc._Qp[i]<<std::setw(15)<<std::right<<desc._Q0[i]<<std::endl;
-        flux<<std::endl;
+    {    
+        flux << "------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+        flux << std::left << std::setw(7) << "Symbol"
+             << std::right << std::setw(4) << 'k'
+             << std::right << std::setw(15) << "Qk-"
+             << std::right << std::setw(15) << "Qk+"
+             << std::right << std::setw(15) << "Qk0" <<std::endl;
+
+        for (int i = 0; i < desc._str.getNumberOfAtoms(); ++i)
+        {
+            flux << std::left << std::setw(7) << desc._str.atom(i).get_symbol()
+                 << std::right << std::setw(4) << i+1
+                 << std::right << std::setw(15) << desc._Qm[i]
+                 << std::right << std::setw(15) << desc._Qp[i]
+                 << std::right << std::setw(15) << desc._Q0[i] << std::endl;
+        }
+        flux << std::endl;
     }
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
-    flux<<std::left<<std::setw(7)<<"Symbol"<<std::setw(4)<<"k"<<std::setw(15)<<std::right<<"f-"<<std::setw(15)<< std::right<< "f+"<<std::setw(15)<<std::right<<"f0"<<std::setw(15)<<std::right<<"Delta f"<<std::endl;
-    for(int i=0; i<desc._str.getNumberOfAtoms(); i++)
-        flux<<std::left<<std::setw(7)<<desc._str.atom(i).get_symbol()<<std::setw(4)<<i+1<<std::setw(15)<<std::right<<desc._fkm[i]<<std::setw(15)<<std::right<<desc._fkp[i]<<std::setw(15)<<std::right<<desc._fk0[i]<<std::setw(15)<<std::right<<desc._deltafk[i]<<std::endl;
-    flux<<std::endl;    
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
-    flux<<std::left<<std::setw(15)<<std::right<<"w-"<<std::setw(15)<<std::right<<"w+"<<std::setw(15)<<std::right<<"s-"<<std::setw(15)<<std::right<<"s+"<<std::setw(15)<<std::right<<"s-/s+"<<std::setw(15)<<std::right<<"hardness-"<<std::setw(15)<<std::right<<"hardness+"<<std::setw(15)<<std::right<<"hardness"<<std::endl;
-    for(int i=0; i<desc._str.getNumberOfAtoms(); i++)
-        flux<<std::setw(15)<<std::right<<desc._wkm[i]*HeV<<std::setw(15)<<std::right<<desc._wkp[i]*HeV<<std::setw(15)<<std::right<<desc._Skm[i]/HeV<<std::setw(15)<<std::right<<desc._Skp[i]/HeV<<std::setw(15)<<std::right<<desc._Skfrac[i]<<std::setw(15)<<std::right<<desc._hardnesskm[i]*HeV<<std::setw(15)<<std::right<<desc._hardnesskp[i]*HeV<<std::setw(15)<<std::right<<desc._hardnessk[i]*HeV<<std::endl;
-    flux<<std::endl;
+
+    flux << "------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+    flux << std::left << std::setw(7) << "Symbol"
+         << std::right << std::setw(4) << 'k'
+         << std::right << std::setw(15) << "f-"
+         << std::right << std::setw(15) << "f+"
+         << std::right << std::setw(15) << "f0"
+         << std::right << std::setw(15) << "Delta f" << std::endl;
+
+    for(int i = 0; i < desc._str.getNumberOfAtoms(); ++i)
+    {
+        flux << std::left << std::setw(7) << desc._str.atom(i).get_symbol()
+             << std::right << std::setw(4) << i+1
+             << std::right << std::setw(15) << desc._fkm[i]
+             << std::right << std::setw(15) << desc._fkp[i]
+             << std::right << std::setw(15) << desc._fk0[i]
+             << std::right << std::setw(15) << desc._deltafk[i] << std::endl;
+    }
+    flux << std::endl;    
+
+    flux << "------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+    flux << std::right << std::setw(15) << "w-"
+         << std::right << std::setw(15) << "w+"
+         << std::right << std::setw(15) << "s-"
+         << std::right << std::setw(15) << "s+"
+         << std::right << std::setw(15) << "s-/s+"
+         << std::right << std::setw(15) << "hardness-"
+         << std::right << std::setw(15) << "hardness+"
+         << std::right << std::setw(15) << "hardness" << std::endl;
     
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
-    flux<<std::left<<std::setw(10)<<"mu+ "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._mup*HeV<<std::endl;
-    flux<<std::left<<std::setw(10)<<"mu- "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._mum*HeV<<std::endl;
-    flux<<std::left<<std::setw(10)<<"mu "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._mu*HeV<<std::endl;
-    flux<<std::left<<std::setw(10)<<"Xi "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._xi*HeV<<std::endl;
-    flux<<std::left<<std::setw(10)<<"hardness "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._hardness*HeV<<std::endl;
-    flux<<std::left<<std::setw(10)<<"w "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._w*HeV<<std::endl;
-    flux<<std::left<<std::setw(10)<<"S "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._S/HeV<<std::endl;
-    flux<<std::left<<std::setw(10)<<"Qmax "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._Qmax<<std::endl;
-    flux<<std::left<<std::setw(10)<<"DEmin "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._DEmin*HeV<<std::endl;
-    flux<<std::left<<std::setw(10)<<"w+ "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._wp*HeV<<std::endl;
-    flux<<std::left<<std::setw(10)<<"w- "<<std::setw(2)<<"="<<std::setw(16)<<std::right<<desc._wm*HeV<<std::endl;
-    flux<<std::endl;
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
-    flux<<"Energies (hardness, mu, w, Xi, DEmin, wk-, wk+, hardnessk-, hardnessk+, hardnessk) are given in eV"<<std::endl;
-    flux<<"Softnesses (S, sk-, sk+) are given in eV^-1"<<std::endl;
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"mu-"<<"= -I"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"mu+"<<"= A"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"mu"<<"= Chemical potential = (mu+ + mu-)/2"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"hardness"<<"= Chemical hardness = (mu+  -  mu-)"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"Xi"<<"= Electronegativity = -mu"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"w"<<"= Electrophilicity index = mu^2/(2 hardness)"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"w-"<<"= propensity to donate electron = mu-^2/(2 hardness)"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"w+"<<"= propensity to accept electron = mu+^2/(2 hardness)"<<std::endl; 
-    flux<<std::left<<std::setw(12)<<"S"<<"= Global softness = 1/hardness"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"Qmax"<<"= Maximal electronic charge accepted by an electrophile = -mu/hardness"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"DEmin"<<"= Energy decrease if the electrophile take Qmax = -mu^2/(2 hardness)"<<std::endl; 
-    flux<<std::left<<std::setw(12)<<"fk-"<<"= Local Fukui electrophilic attack"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"fk+"<<"= Local Fukui nucleophilic attack"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"sk-"<<"= Local softness electrophilic attack = S fk-"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"sk+"<<"= Local softness nucleophilic attack = S fk+"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"wk-"<<"= Local philicity index of electrophilic attack = w fk-"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"wk+"<<"= Local philicity index of nucleophilic attack = w fk+"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"hardnessk-"<<"= Local hardness = mu+ fk+ - mu- fk- - (mu+- mu-)*(fk+-fk-)"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"hardnessk+"<<"= Local hardness = mu+ fk+ - mu- fk- + (mu+- mu-)*(fk+-fk-)"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"hardnessk"<<"= Local hardness = mu+ fk+ - mu- fk-"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"Deltafk"<<"= Dual descripor = (fk+ - fk-) : "<<std::endl;
-    flux<<std::left<<std::setw(9)<<" "<<">0 => site favored for a nucleophilic attack"<<std::endl;
-    flux<<std::left<<std::setw(9)<<" "<<"<0 => site favored for an electrophilic attack"<<std::endl;
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
-    flux<<std::left<<std::setw(12)<<"References:"<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"- Revisiting the definition of local hardness and hardness kernel"<<std::endl; 
-    flux<<std::left<<std::setw(12)<<" "<<"C. A. Polanco-Ramrez et al"<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"Phys. Chem. Chem. Phys., 2017, 19, 12355-12364"<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"DOI: 10.1039/c7cp00691h"<<std::endl;
-    flux<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"- Applications of the Conceptual Density Functional Theory"<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"Indices to Organic Chemistry Reactivity"<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"Luis R. Domingo, Mar Ríos-Gutiérrez and Patricia Pérez"<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"Molecules 2016, 21, 748; doi:10.3390/molecules21060748"<<std::endl;
-    flux<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"- Electrodonating and Electroaccepting Powers"<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"José L. Gazquez, André Cedillo, and Alberto Vela"<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"J. Phys. Chem. A 2007, 111, 1966-1970, DOI: 10.1021/jp065459f"<<std::endl;
-    flux<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"- Introducing “UCA-FUKUI” software: reactivity-index calculations"<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"Jesús Sánchez-Márquez et al."<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"J Mol Model (2014) 20:2492, DOI 10.1007/s00894-014-2492-1"<<std::endl;
-    flux<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"- Dual descriptor and molecular electrostatic potential:"<<std::endl; 
-    flux<<std::left<<std::setw(12)<<" "<<"complementary tools for the study of the coordination"<<std::endl; 
-    flux<<std::left<<std::setw(12)<<" "<<"chemistry of ambiphilic ligands"<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"F.  Guégan et al."<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"Phys.Chem.Chem.Phys., 2014, 16 , 15558-15569,"<<std::endl; 
-    flux<<std::left<<std::setw(12)<<" "<<"DOI: 10.1039/c4cp01613k"<<std::endl;
-    flux<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"- New Dual Descriptor for Chemical Reactivity"<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"Ch. Morell et al."<<std::endl;
-    flux<<std::left<<std::setw(12)<<" "<<"J. Phys. Chem. A 2005, 109, 205-212, DOI: 10.1021/jp046577a"<<std::endl;
-    flux<<"------------------------------------------------------------------------------------------------------------------------------"<<std::endl;
+    for(int i = 0; i < desc._str.getNumberOfAtoms(); ++i)
+    {
+        flux << std::right << std::setw(15) << desc._wkm[i] * Constants::HARTREE_TO_EV
+             << std::right << std::setw(15) << desc._wkp[i] * Constants::HARTREE_TO_EV
+             << std::right << std::setw(15) << desc._Skm[i] / Constants::HARTREE_TO_EV
+             << std::right << std::setw(15) << desc._Skp[i] / Constants::HARTREE_TO_EV
+             << std::right << std::setw(15) << desc._Skfrac[i]
+             << std::right << std::setw(15) << desc._hardnesskm[i] * Constants::HARTREE_TO_EV
+             << std::right << std::setw(15) << desc._hardnesskp[i] * Constants::HARTREE_TO_EV
+             << std::right << std::setw(15) << desc._hardnessk[i] * Constants::HARTREE_TO_EV
+             << std::endl;
+    }
+    flux << std::endl;
+    
+    flux << "------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+    flux << std::left << std::setw(10) << "mu+" << " =" << std::setw(16) << std::right << desc._mup * Constants::HARTREE_TO_EV << std::endl;
+    flux << std::left << std::setw(10) << "mu-" << " =" << std::setw(16) << std::right << desc._mum * Constants::HARTREE_TO_EV << std::endl;
+    flux << std::left << std::setw(10) << "mu" << " =" << std::setw(16) << std::right << desc._mu * Constants::HARTREE_TO_EV << std::endl;
+    flux << std::left << std::setw(10) << "Xi" << " =" << std::setw(16) << std::right << desc._xi * Constants::HARTREE_TO_EV << std::endl;
+    flux << std::left << std::setw(10) << "hardness" << " =" << std::setw(16) << std::right << desc._hardness * Constants::HARTREE_TO_EV << std::endl;
+    flux << std::left << std::setw(10) << 'w' << " =" << std::setw(16) << std::right << desc._w * Constants::HARTREE_TO_EV << std::endl;
+    flux << std::left << std::setw(10) << 'S' << " =" << std::setw(16) << std::right << desc._S / Constants::HARTREE_TO_EV << std::endl;
+    flux << std::left << std::setw(10) << "Qmax" << " =" << std::setw(16) << std::right << desc._Qmax << std::endl;
+    flux << std::left << std::setw(10) << "DEmin" << " =" << std::setw(16) << std::right << desc._DEmin * Constants::HARTREE_TO_EV << std::endl;
+    flux << std::left << std::setw(10) << "w+" << " =" << std::setw(16) << std::right << desc._wp * Constants::HARTREE_TO_EV << std::endl;
+    flux << std::left << std::setw(10) << "w-" << " =" << std::setw(16) << std::right << desc._wm * Constants::HARTREE_TO_EV<<std::endl;
+    flux << std::endl;
+
+    flux << "------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+    flux << "Energies (hardness, mu, w, Xi, DEmin, wk-, wk+, hardnessk-, hardnessk+, hardnessk) are given in eV" << std::endl;
+    flux << "Softnesses (S, sk-, sk+) are given in eV^-1" << std::endl;
+
+    flux << "------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+    flux << std::left << std::setw(12) << "mu-" << "= -I" << std::endl;
+    flux << std::left << std::setw(12) << "mu+" << "= A" << std::endl;
+    flux << std::left << std::setw(12) << "mu" << "= Chemical potential = (mu+ + mu-)/2" << std::endl;
+    flux << std::left << std::setw(12) << "hardness" << "= Chemical hardness = (mu+  -  mu-)" << std::endl;
+    flux << std::left << std::setw(12) << "Xi" << "= Electronegativity = -mu" << std::endl;
+    flux << std::left << std::setw(12) << "w" << "= Electrophilicity index = mu^2/(2 hardness)" << std::endl;
+    flux << std::left << std::setw(12) << "w-" << "= propensity to donate electron = mu-^2/(2 hardness)" << std::endl;
+    flux << std::left << std::setw(12) << "w+" << "= propensity to accept electron = mu+^2/(2 hardness)" << std::endl;
+    flux << std::left << std::setw(12) << "S" << "= Global softness = 1/hardness" << std::endl;
+    flux << std::left << std::setw(12) << "Qmax" << "= Maximal electronic charge accepted by an electrophile = -mu/hardness" << std::endl;
+    flux << std::left << std::setw(12) << "DEmin" << "= Energy decrease if the electrophile take Qmax = -mu^2/(2 hardness)" << std::endl;
+    flux << std::left << std::setw(12) << "fk-" << "= Local Fukui electrophilic attack" << std::endl;
+    flux << std::left << std::setw(12) << "fk+" << "= Local Fukui nucleophilic attack" << std::endl;
+    flux << std::left << std::setw(12) << "sk-" << "= Local softness electrophilic attack = S fk-" << std::endl;
+    flux << std::left << std::setw(12) << "sk+" << "= Local softness nucleophilic attack = S fk+" << std::endl;
+    flux << std::left << std::setw(12) << "wk-" << "= Local philicity index of electrophilic attack = w fk-" << std::endl;
+    flux << std::left << std::setw(12) << "wk+" << "= Local philicity index of nucleophilic attack = w fk+" << std::endl;
+    flux << std::left << std::setw(12) << "hardnessk-" << "= Local hardness = mu+ fk+ - mu- fk- - (mu+- mu-)*(fk+-fk-)" << std::endl;
+    flux << std::left << std::setw(12) << "hardnessk+" << "= Local hardness = mu+ fk+ - mu- fk- + (mu+- mu-)*(fk+-fk-)" << std::endl;
+    flux << std::left << std::setw(12) << "hardnessk" << "= Local hardness = mu+ fk+ - mu- fk-" << std::endl;
+    flux << std::left << std::setw(12) << "Deltafk" << "= Dual descripor = (fk+ - fk-) : " << std::endl;
+    flux << std::left << std::setw(9) << ' ' << ">0 => site favored for a nucleophilic attack" << std::endl;
+    flux << std::left << std::setw(9) << ' ' << "<0 => site favored for an electrophilic attack"<<std::endl;
+
+    flux << "------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+    flux << std::left << std::setw(12) << "References:" << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "- Revisiting the definition of local hardness and hardness kernel" << std::endl; 
+    flux << std::left << std::setw(12) << ' ' << "C. A. Polanco-Ramrez et al" << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "Phys. Chem. Chem. Phys., 2017, 19, 12355-12364" << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "DOI: 10.1039/c7cp00691h" << std::endl;
+    flux << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "- Applications of the Conceptual Density Functional Theory" << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "Indices to Organic Chemistry Reactivity" << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "Luis R. Domingo, Mar Ríos-Gutiérrez and Patricia Pérez" << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "Molecules 2016, 21, 748; doi:10.3390/molecules21060748" << std::endl;
+    flux << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "- Electrodonating and Electroaccepting Powers" << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "José L. Gazquez, André Cedillo, and Alberto Vela" << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "J. Phys. Chem. A 2007, 111, 1966-1970, DOI: 10.1021/jp065459f" << std::endl;
+    flux << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "- Introducing “UCA-FUKUI” software: reactivity-index calculations" << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "Jesús Sánchez-Márquez et al." << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "J Mol Model (2014) 20:2492, DOI 10.1007/s00894-014-2492-1" << std::endl;
+    flux << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "- Dual descriptor and molecular electrostatic potential:" << std::endl; 
+    flux << std::left << std::setw(12) << ' ' << "complementary tools for the study of the coordination" << std::endl; 
+    flux << std::left << std::setw(12) << ' ' << "chemistry of ambiphilic ligands" << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "F.  Guégan et al." << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "Phys.Chem.Chem.Phys., 2014, 16 , 15558-15569," << std::endl; 
+    flux << std::left << std::setw(12) << ' ' << "DOI: 10.1039/c4cp01613k" << std::endl;
+    flux << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "- New Dual Descriptor for Chemical Reactivity" << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "Ch. Morell et al." << std::endl;
+    flux << std::left << std::setw(12) << ' ' << "J. Phys. Chem. A 2005, 109, 205-212, DOI: 10.1021/jp046577a"<<std::endl;
+    
     return flux;
 }
 
@@ -485,7 +531,7 @@ void Descriptors::compute_All_From_Cube(std::ifstream &file1, std::ifstream &fil
     compute_All_From_Charge(I,A);
 }
 
-void Descriptors::sortCharges(const std::vector<double>& Q1, const std::vector<double>& Q2, const std::vector<double>& Q3, std::vector<double>& E, double I, double A)
+void Descriptors::sortCharges(const std::vector<double>& Q1, const std::vector<double>& Q2, const std::vector<double>& Q3, std::vector<double>& E, double& I, double& A)
 {
     std::vector<std::vector<double>> Q(3);
     Q[0] = Q1;
