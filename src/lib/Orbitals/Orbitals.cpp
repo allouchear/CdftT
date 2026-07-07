@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <string>
 #include <vector>
+#include <tuple>
 
 #include <Basis/GTF.h>
 #include <Basis/CGTF.h>
@@ -2124,6 +2125,7 @@ void Orbitals::makeDensityGrid(Grid& grid, const std::vector<std::vector<std::ve
     std::atomic<int> progress(0);
     int lastProgress = -1;
 
+    
     // Show progress bar at 0% at the beginning
     if (showProgress)
     {
@@ -2132,6 +2134,35 @@ void Orbitals::makeDensityGrid(Grid& grid, const std::vector<std::vector<std::ve
 
     // Get spinType for computation
     SpinType spinType = _alphaAndBeta ? SpinType::ALPHA : SpinType::ALPHA_BETA;
+    std::vector<SpinType> spins;
+    if (spinType == SpinType::ALPHA || spinType == SpinType::ALPHA_BETA)
+    {
+        spins.push_back(SpinType::ALPHA);
+    }
+    if (spinType == SpinType::BETA || spinType == SpinType::ALPHA_BETA)
+    {
+        spins.push_back(SpinType::BETA);
+    }
+
+    /*
+    //create sparse version of reducedDensityMatrix
+    std::vector<std::vector<std::tuple<double,int,int>>> sparse_reducedDensityMatrix;
+    for (SpinType spinType : spins)
+    {
+        int spin = static_cast<int>(spinType);
+        for(int p = 0; p < _numberOfMo; ++p)
+        {
+            for(int q = 0; q < _numberOfMo; ++q)
+            {
+                if (reducedDensityMatrix[spin][p][q]!=0)
+                {
+                    sparse_reducedDensityMatrix[spin].push_back(std::make_tuple(reducedDensityMatrix[spin][p][q],p,q));
+                }
+            }
+        }
+    }
+    */
+
 
     #ifdef ENABLE_OMP
     #pragma omp parallel

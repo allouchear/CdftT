@@ -34,20 +34,47 @@ class ExcitedState
         /** @brief Slater determinants associated with the excited state (one for each transition). */
         std::vector<std::pair<SlaterDeterminant, double>> _slaterDeterminants;
 
+        /** @brief argsort of the coefficients of the Slater determinants */
+        std::vector<size_t> _argsortCoefs;
 
+        /** @brief Slater Determinants indices associated to each degree of excitation */
+        std::vector<std::vector<size_t>> _excitationDegree;
+
+        //----------------------------------------------------------------------------------------------------//
+        // STATIC FIELDS
+        //----------------------------------------------------------------------------------------------------//
+
+        /** @brief Static ground state Slater determinant instance shared among all SlaterDeterminant objects. */
+        static SlaterDeterminant _s_GS_SD;
+
+    
         //----------------------------------------------------------------------------------------------------//
         // PRIVATE STATIC METHODS
         //----------------------------------------------------------------------------------------------------//
         
         /**
-         * TODO
+         * @brief computes the RDM-1 matrix using the Gamma method, between to states i,j (i=j for eletronc density, i!=j for transtition density)
+         * 
+         * @param[in] matrix to compute
+         * @param[in] psi_i state i
+         * @param[in] psi_j state_j
+         * @param[in] orbitals Orbitals object containing the molecular orbitals information
+         * @param[in] ignoredMos list of molecular orbitals to not take into account in calculation
+         * @param[in] showProgress Whether to display a progress bar during matrix creation.
          */
-        static void computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
+        static void computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress);
 
         /**
-         * TODO
+         * @brief computes the RDM-1 matrix using the X method, between to states i,j (i=j for eletronc density, i!=j for transtition density, for transition must have i=0)
+         * 
+         * @param[in] matrix to compute
+         * @param[in] psi_i state i
+         * @param[in] psi_j state_j
+         * @param[in] orbitals Orbitals object containing the molecular orbitals information
+         * @param[in] ignoredMos list of molecular orbitals to not take into account in calculation
+         * @param[in] showProgress Whether to display a progress bar during matrix creation.
          */
-        static void computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi1, const ExcitedState& psi2, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
+        static void computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi1, const ExcitedState& psi2, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress);
     
 
     public:
@@ -71,6 +98,15 @@ class ExcitedState
          */
         ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant);
 
+        /**
+         * @brief Constructor for the ground state.
+         *
+         * @param[in] energy Energy of the ground state, in Hartree.
+         * @param[in] slaterDeterminant Slater determinant associated with the ground state.
+         * @param[in] GS if true sets the static _s_GS_SD attribute to slaterDeterminant
+         */
+        ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant, bool GS);
+
         //----------------------------------------------------------------------------------------------------//
         // GETTERS
         //----------------------------------------------------------------------------------------------------//
@@ -90,6 +126,32 @@ class ExcitedState
          */
         const std::vector<std::pair<SlaterDeterminant, double>>& get_slaterDeterminants() const;
 
+        /**
+         * @brief Returns the argsort of the coefficients of the Slater determinants
+         */
+        std::vector<size_t> get_argsortCoefs() const;
+
+        /**
+         * @brief Returns the list of indices of the Slater determinants corresponding to each degree of excitation
+         *        get_excitationDegree()[i] -> indices for every SD having i excitations
+         */
+        const std::vector<std::vector<size_t>>& get_excitationDegree() const;
+        //----------------------------------------------------------------------------------------------------//
+        // SETTERS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief sets _argsortCoefs, as a vector of indices giving the _slaterDeterminants of coefficients above a given treshold in descending order
+         * 
+         * @param[in] treshold limit on the coefficient of the Slater determinant, keep only Slater determinants above it
+         */        
+        void set_argsortCoefs(double treshold);
+
+        /**
+         * @brief set _excitationDegree, _excitationDegree[i] contains the list of all SD (their index in _slaterDeterminants) having i excitations (with respect to ground state SD)
+         */
+        void set_excitationDegree();
+
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
         //----------------------------------------------------------------------------------------------------//
@@ -101,6 +163,15 @@ class ExcitedState
          * @param[in] coefficient Coefficient associated with the Slater determinant.
          */
         void addSlaterDeterminant(const SlaterDeterminant& slaterDeterminant, const double coefficient);
+
+        /**
+         * @brief gives the degree of excitation of the SD, with respect to the static Ground State Determinant
+         * 
+         * @param[in] SD reference to the Slater determinant of which we want to get the degree of excitation
+         * 
+         * @return the degree of excitation of SD
+         */
+        size_t getExcitation(const SlaterDeterminant& SD) const;
 
         /**
          * @brief Adds an electronic transition to the excited state.
@@ -245,6 +316,7 @@ class ExcitedState
          */
         static bool saveExcitedStatesToFile(const std::string& statesFileName, const std::vector<ExcitedState>& states);
 
+        
         /////////////////////////
         // OTHER STATIC METHODS
 
@@ -272,10 +344,19 @@ class ExcitedState
          */
         static double ionicPotential(const ExcitedState& psi_i, const ExcitedState& psi_j, const std::vector<std::vector<std::vector<double>>>& ionicMatrixes);
 
-        /**
-         * TODO
-         */
-        static void reducedDensityMatrix(std::vector<std::vector<std::vector<double>>>& rdmMatrix, RDMMethod rdmMethod, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos);
+
+        /** 
+         * @brief calls the right matrix construction function based on the RDMethod chosen
+         * 
+         * @param[in] matrix to compute
+         * @param[in] rdmMethod method to use to compute the matrix
+         * @param[in] psi_i state i
+         * @param[in] psi_j state_j
+         * @param[in] orbitals Orbitals object containing the molecular orbitals information
+         * @param[in] ignoredMos list of molecular orbitals to not take into account in calculation
+         * @param[in] showProgress Whether to display a progress bar during matrix creation.
+        */
+        static void reducedDensityMatrix(std::vector<std::vector<std::vector<double>>>& rdmMatrix, RDMMethod rdmMethod, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress);
 
 
         //----------------------------------------------------------------------------------------------------//

@@ -1,0 +1,12 @@
+Dossier "input" :
+	Fichiers d'input issus de Gaussiane et de ComputeEnergyWithPointeCharge utilisés par ComputeElectronDensity
+
+Dossier "Gaussian" :
+	Densités de l'acroléine avec charge calculée par Gaussian
+	
+Dossier "nocharge" :
+	calcul Gaussian fait sans charge, utilisé pour le calcul CdftT (ComputeEnergyWithPointeCharge) 	de la molécule avec ajout de charge
+	Output de ComputeEnergyWithPointeCharge utilisé comme TransitionFile
+	
+Dossier "cppFromGaussian" :
+	Calculs de CdftT avec le .log de Gaussian (cas avec charge) utilisé comme TransitionFile

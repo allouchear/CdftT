@@ -614,6 +614,21 @@ bool Job::readPrecision(int& precision)
     return read;
 }
 
+bool Job::readSDCutoff(double& SDCutoff)
+{
+    bool read = readOneType<double>(_inputFile, "SDCutoff", SDCutoff);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"SDCutoff\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value 0." << std::endl << std::endl;
+
+        SDCutoff = 0;
+    }
+
+    return read;
+}
+
 bool Job::readRDMMethod(RDMMethod& rdmMethod)
 {
     std::string strRDMMethod;
@@ -941,7 +956,7 @@ bool Job::readTransitionDensities(std::vector<std::array<int, 2>>& transitionDen
     if (!read)
     {
         std::cout << "Note: the \"TransitionDensities\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        std::cout << "The program will consider all transition densities." << std::endl << std::endl;
+        std::cout << "No transition densities computed." << std::endl << std::endl;
     }
 
     return read;
