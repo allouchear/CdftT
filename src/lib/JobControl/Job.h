@@ -72,6 +72,15 @@ class Job
         bool readChargesPositionsBijections(bool& chargesPositionsBijections);
 
         /**
+         * @brief Reads the option that indicates if the energy should be computed with other methods from the "ComputeEnergyWithOtherMethods" parameter in the input file.
+         * 
+         * @param[out] computeEnergyWithOtherMethods Reference to a boolean where the read option value will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readComputeEnergyWithOtherMethods(bool& computeEnergyWithOtherMethods);
+
+        /**
          * @brief Reads the option that indicates if the computation should be performed on a Becke grid from the "ComputeOnBeckeGrid" parameter in the input file.
          * 
          * @param[out] computeOnBeckeGrid Reference to a boolean where the read option value will be stored.

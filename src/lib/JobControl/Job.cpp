@@ -94,26 +94,26 @@ bool Job::readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames)
 
 bool Job::readBecke(std::vector<int>& beckeParameters)
 {
-    bool read = readListType<int>(_inputFile, "Becke", beckeParameters);
+    std::string defaultBeckeStr;
+    bool read = readOneString(_inputFile, "Becke", defaultBeckeStr);
 
-    if (read && !beckeParameters.empty() && beckeParameters.size() != 3)
+    if (to_lower(defaultBeckeStr) == "default")
     {
-        std::stringstream errorMessage;
-        errorMessage << "Error: incorrect number of values for the \"Becke\" parameter (three values expected)." << std::endl;
-        errorMessage << "Please check documentation and the \"Becke\" parameter values in " << _inputFileName << '.';
-
-        print_error(errorMessage.str());
-
-        std::exit(1);
+        beckeParameters = { 3, 41, 5 };
     }
-    else if (!read)
+    else
     {
-        std::string defaultBeckeStr;
-        read = readOneString(_inputFile, "Becke", defaultBeckeStr);
+        read = readListType<int>(_inputFile, "Becke", beckeParameters);
 
-        if (to_lower(defaultBeckeStr) == "default")
+        if (read && !beckeParameters.empty() && beckeParameters.size() != 3)
         {
-            beckeParameters = { 3, 41, 5 };
+            std::stringstream errorMessage;
+            errorMessage << "Error: incorrect number of values for the \"Becke\" parameter (three values expected)." << std::endl;
+            errorMessage << "Please check documentation and the \"Becke\" parameter values in " << _inputFileName << '.';
+
+            print_error(errorMessage.str());
+
+            std::exit(1);
         }
         else
         {
@@ -165,6 +165,35 @@ bool Job::readChargesPositionsBijections(bool& chargesPositionsBijections)
         std::stringstream errorMessage;
         errorMessage << "Error: incorrect value for the \"ChargesPositionsBijections\" parameter (" << strChargesPositionsBijections << ")." << std::endl;
         errorMessage << "Please check the documentation and the \"ChargesPositionsBijections\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
+bool Job::readComputeEnergyWithOtherMethods(bool& computeEnergyWithOtherMethods)
+{
+    std::string strComputeEnergyWithOtherMethods;
+    bool read = readOneString(_inputFile, "ComputeEnergyWithOtherMethods", strComputeEnergyWithOtherMethods);
+
+    computeEnergyWithOtherMethods = false;
+    if (!read)
+    {
+        std::cout << "Note: the \"ComputeEnergyWithOtherMethods\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (ComputeEnergyWithOtherMethods = False)." << std::endl << std::endl;
+    }
+    else if (to_lower(strComputeEnergyWithOtherMethods) == "true")
+    {
+        computeEnergyWithOtherMethods = true;
+    }
+    else if (to_lower(strComputeEnergyWithOtherMethods) != "false")
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: incorrect value for the \"ComputeEnergyWithOtherMethods\" parameter (" << strComputeEnergyWithOtherMethods << ")." << std::endl;
+        errorMessage << "Please check the documentation and the \"ComputeEnergyWithOtherMethods\" parameter value in the provided input file (" << _inputFileName << ").";
 
         print_error(errorMessage.str());
 
