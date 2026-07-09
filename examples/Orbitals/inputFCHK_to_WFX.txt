@@ -1,2 +1,6 @@
 RunType=ConvertOrbitals
+<<<<<<< HEAD
 AnalyticFiles=h2o.fchk,h2o.wfx
+=======
+AnalyticFiles=h2o.fchk, h2o.wfx
+>>>>>>> b4e02d9887494c85223e5d1155bc6c25c7706b25
