@@ -44,6 +44,12 @@ Used to specify the name of the input file describing the electronic transitions
 This parameter must be specified in the input file.
 
 
+``RunType*``
+""""""""""""
+
+Specifies the CdftT module to run. To run this job, set this parameter to ``RunLambdaDiagnostic``.
+
+
 Mandatory/optional parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -19,6 +19,7 @@ To get started with CdftT, simply run ``cdftt jobInputFile.txt``, where ``jobInp
     :maxdepth: 1
     :caption: Jobs
 
+    jobs/computeCondensedLinearResponse
     jobs/computeDescriptors
     jobs/computeElectronDensity
     jobs/computeEnergyWithPointCharges
@@ -29,4 +30,4 @@ To get started with CdftT, simply run ``cdftt jobInputFile.txt``, where ``jobInp
     jobs/makeDensityCube
     jobs/makeELFCube
     jobs/makeOrbitalsCube
-    jobs/showLambdaDiagnostic
+    jobs/runLambdaDiagnostic

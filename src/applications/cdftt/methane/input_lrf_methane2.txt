@@ -1,0 +1,9 @@
+RunType = ComputeCondensedLinearResponse
+AnalyticFiles = methane_0.fchk,methane_0.fchk,methane_m.fchk,methane_p.fchk
+OutputPrefix = TEST_NEW_JOB
+ShowProgress = True
+Size = Custom
+CustomSizeData = 128,128,128,5,5,5,7.87401574803148e-02,0,0,0,7.87401574803148e-02,0,0,0,7.87401574803148e-02
+Becke = default
+Verbose = 1
+ComputeEnergyWithOtherMethods = True

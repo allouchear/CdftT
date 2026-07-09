@@ -10,15 +10,22 @@ Input file parameters
 Below are the available parameters for this job.
 
 | **Mandatory** parameters are indicated with an **asterisk: "\*"**.
+| An asterisk enclosed in parentheses "(\*)" indicates that the parameter can be mandatory or optional, depending on the conditions mentioned in its description below.
 
 
-Mandatory parameter
-^^^^^^^^^^^^^^^^^^^
+Mandatory parameters
+^^^^^^^^^^^^^^^^^^^^
 
 ``GridFileNames*``
 """"""""""""""""""
 
 Specifies the name of the ``.cube`` file to use for the computation. Only one file should be provided.
+
+
+``RunType*``
+""""""""""""
+
+Specifies the CdftT module to run. To run this job, set this parameter to ``ComputePartialCharges``.
 
 
 Optional parameter
@@ -59,4 +66,4 @@ Here is an example input file for this job:
 References
 ----------
 
-W. Tang, E. Sanville, G. Henkelman. A grid-based bader analysis algorithm without lattice bias. *Journal of Physics: Condensed Matter* 2009, 21(8):084204. DOI: `10.1088/0953-8984/21/8/084204 <https://doi.org/10.1088/0953-8984/21/8/084204>`_.
+\W. Tang, E. Sanville, G. Henkelman. A grid-based bader analysis algorithm without lattice bias. *Journal of Physics: Condensed Matter* 2009, 21(8):084204. DOI: `10.1088/0953-8984/21/8/084204 <https://doi.org/10.1088/0953-8984/21/8/084204>`_.

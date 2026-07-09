@@ -2,7 +2,7 @@ Computing a chemical descriptor: ``ComputeDescriptors``
 =======================================================
 
 This job allows the computation of chemical descriptors from analytic or ``cube`` files using on-grid, near-grid, near-grid-refinement and Becke.
-Frontier Molecular Orbitals (FMO) and finite difference (FD) are methods also provided for the computation. FMO requires one analytic file (``.log``, ``.wfx``, ``.molden``, ...). FD requires three analytic files.
+Frozen Molecular Orbitals (FMO) and Finite Difference (FD) are methods also provided for the computation. FMO requires one analytic file (``.log``, ``.wfx``, ``.molden``, ...). FD requires three analytic files.
 The other methods require ``cube`` files of nucleophilic, electrophilic and radical attacks for the molecule.
 
 Energies must also be given by the user: if two are given, they are assumed to be the ionization energy and the electron affinity. If three are given they are assumed to be the total energies of each file.
@@ -19,8 +19,8 @@ Below are the available parameters for this job.
 Optional parameters that are not specified in the input file will take their default value (this will be announced with a "note" during the run).
 
 
-Mandatory parameter
-^^^^^^^^^^^^^^^^^^^
+Mandatory parameters
+^^^^^^^^^^^^^^^^^^^^
 
 ``PartitionMethod*``
 """"""""""""""""""""
@@ -33,6 +33,12 @@ Specifies the method used to partition the volume. Possible values are:
 - ``Becke``
 - ``FD`` (Finite Difference)
 - ``FMO`` (Frontier Molecular Orbitals).
+
+
+``RunType*``
+""""""""""""
+
+Specifies the CdftT module to run. To run this job, set this parameter to ``ComputeDescriptors``.
 
 
 Mandatory/optional parameters

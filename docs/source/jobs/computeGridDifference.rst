@@ -11,6 +11,11 @@ Input file parameters
 Below are the available parameters for this job.
 
 | **Mandatory** parameters are indicated with an **asterisk: "\*"**.
+| An asterisk enclosed in parentheses "(\*)" indicates that the parameter can be mandatory or optional, depending on the conditions mentioned in its description below.
+
+
+Mandatory parameters
+^^^^^^^^^^^^^^^^^^^^
 
 ``GridFilesNames*``
 """""""""""""""""""
@@ -20,6 +25,12 @@ Specifies the names of the ``.cube`` files to use. Three filenames must be provi
 - The first file is the grid from which the second will be subtracted (the minuend).
 - The second file is the grid to subtract (the subtrahend).
 - The third file is the output grid where the result of the difference will be saved.
+
+
+``RunType*``
+""""""""""""
+
+Specifies the CdftT module to run. To run this job, set this parameter to ``ComputeGridDifference``.
 
 
 Example input file
