@@ -15,12 +15,15 @@
 //----------------------------------------------------------------------------------------------------//
 
 SlaterDeterminant::SlaterDeterminant():
+    _isGroundStateSD(false),
     _occupiedOrbitals(2, std::vector<SlaterDeterminant::Occupation>())
 { }
 
 
 SlaterDeterminant::SlaterDeterminant(const Orbitals& orbitals):
+    _isGroundStateSD(true),
     _occupiedOrbitals(2, std::vector<SlaterDeterminant::Occupation>())
+
 {
     // Get occupation numbers
     const std::vector<std::vector<double>>& occupationNumbers = orbitals.get_occupationNumber();
@@ -59,6 +62,11 @@ SlaterDeterminant::SlaterDeterminant(const Orbitals& orbitals):
 // GETTERS
 //----------------------------------------------------------------------------------------------------//
 
+const bool SlaterDeterminant::get_isGroundStateSD() const
+{
+    return _isGroundStateSD;
+}
+
 const vector<std::vector<SlaterDeterminant::Occupation>>& SlaterDeterminant::get_occupiedOrbitals() const
 {
     return _occupiedOrbitals;
@@ -68,6 +76,44 @@ const vector<std::vector<SlaterDeterminant::Occupation>>& SlaterDeterminant::get
 //----------------------------------------------------------------------------------------------------//
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
+
+int SlaterDeterminant::getExcitationDegree(const SlaterDeterminant& groundStateSlaterDeterminant) const
+{
+    int numberOfDifferences = 0;
+
+    // Get spin type int values
+    const int ALPHA = static_cast<int>(SpinType::ALPHA);
+    const int BETA = static_cast<int>(SpinType::BETA);
+    std::array<int, 2> spins = { ALPHA, BETA };
+
+    // Initialize the numbers of the occupied orbitals
+    std::vector<std::vector<int>> occupiedOrbitalsNumbers(2, std::vector<int>());
+    for (int spin: spins)
+    {
+        occupiedOrbitalsNumbers[spin].resize(_occupiedOrbitals[spin].size());
+
+        for (size_t i = 0; i < _occupiedOrbitals[spin].size(); ++i)
+        {
+            occupiedOrbitalsNumbers[spin][i] = _occupiedOrbitals[spin][i].first;
+        }
+    }
+
+    // Check if the number of the occupied orbital is greater than the number of occupied orbitals in the GS SD (i.e. the highest occupied orbital number since they are considered ordered).
+    for (int spin : spins)
+    {
+        size_t numberOfOccupiedMO_GS = groundStateSlaterDeterminant._occupiedOrbitals[spin].size();
+
+        for (size_t i = 0; i < occupiedOrbitalsNumbers[spin].size(); ++i)
+        {
+            if(static_cast<size_t>(occupiedOrbitalsNumbers[spin][i]) > numberOfOccupiedMO_GS)
+            {
+                ++numberOfDifferences;
+            }
+        }
+    }
+
+    return numberOfDifferences;
+}
 
 bool SlaterDeterminant::updateFromTransition(int initialOrbitalNumber, SpinType initialSpin, int finalOrbitalNumber, SpinType finalSpin)
 {

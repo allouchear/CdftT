@@ -1,18 +1,18 @@
 #include <atomic>
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <iomanip>
-#include <fstream>
+#include <numeric>
 #include <regex>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
-#include <chrono>
-#include <numeric>
 
 #ifdef ENABLE_OMP
 #include <omp.h>
@@ -25,12 +25,6 @@
 #include <Utils/LOG.h>
 #include <Utils/Utils.h>
 
-//----------------------------------------------------------------------------------------------------//
-// STATIC FIELDS
-//----------------------------------------------------------------------------------------------------//
-
-SlaterDeterminant ExcitedState::_s_GS_SD = SlaterDeterminant();
-
 
 //----------------------------------------------------------------------------------------------------//
 // PRIVATE METHODS
@@ -38,10 +32,22 @@ SlaterDeterminant ExcitedState::_s_GS_SD = SlaterDeterminant();
 
 void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress)
 {
+    // Assume the first Slater determinant corresponds to the Ground State
+    const SlaterDeterminant& groundStateSlaterDeterminant = psi_i._slaterDeterminants[0].first;
+    if (!groundStateSlaterDeterminant.get_isGroundStateSD())
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in ExcitedState::computeGammaMatrix(): The Ground State Slater Determinant has not been found." << std::endl;
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
     const std::vector<std::pair<SlaterDeterminant, double>>& slaterDeterminants_i = psi_i.get_slaterDeterminants();
     const std::vector<std::pair<SlaterDeterminant, double>>& slaterDeterminants_j = psi_j.get_slaterDeterminants();
-    std::vector<size_t> argsortCoefs_i = psi_i.get_argsortCoefs();
-    std::vector<size_t> argsortCoefs_j = psi_j.get_argsortCoefs();
+
+    std::vector<size_t> sdIndicesSortedByCoefficientDesc_i = psi_i.get_sdIndicesSortedByCoefficientDesc();
+    std::vector<size_t> sdIndicesSortedByCoefficientDesc_j = psi_j.get_sdIndicesSortedByCoefficientDesc();
 
     int numberOfMo = orbitals.get_numberOfMo();
 
@@ -58,7 +64,7 @@ void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double
         }
     }
 
-    const int nbStepsTotal = keptMoIndexes.size()*keptMoIndexes.size()*argsortCoefs_i.size()*2;
+    const int nbStepsTotal = keptMoIndexes.size() * keptMoIndexes.size() * sdIndicesSortedByCoefficientDesc_i.size() * 2;
     std::atomic<int> progress(0);
     int lastProgress = -1;
 
@@ -82,18 +88,21 @@ void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double
             {
                 for(int q : keptMoIndexes)
                 {
-                    for(size_t i : argsortCoefs_i)
+                    for(size_t i : sdIndicesSortedByCoefficientDesc_i)
                     {
                         const std::pair<SlaterDeterminant, double>& slaterDeterminant_i = slaterDeterminants_i[i];
+
                         // Make temporary SD on wich to apply the transition to check if it is valid (i.e. the orbital p from which to remove an electron was found in the SD)
                         SlaterDeterminant tmpSD = slaterDeterminant_i.first;
 
                         if(tmpSD.updateFromTransition(p + 1, spinType, q + 1, spinType)) // Because updateFromTransition() expects MO numbers (1-based)
                         {
-                            size_t exDeg = psi_i.getExcitation(tmpSD);
-                            vector<size_t> exIndices = psi_j.get_excitationDegree()[exDeg];
-                            for(size_t j : exIndices)  //compare tmpSD only to SD having the same degree of excitation (otherwise always not equivalent)
-                            //for(size_t j : argsortCoefs_j)
+                            // Get Slater Determinants with the same excitation degree as tmpSD
+                            int excitationDegree = tmpSD.getExcitationDegree(groundStateSlaterDeterminant);
+                            const std::vector<size_t>& sdIndicesWithSameExcitationDegree = psi_j.getSlaterDeterminantIndicesWithExcitationDegree(excitationDegree);
+
+                            // Only compare tmpSD to SD having the same degree of excitation (otherwise always not equivalent)
+                            for(size_t j : sdIndicesWithSameExcitationDegree)
                             {
                                 const std::pair<SlaterDeterminant, double>& slaterDeterminant_j = slaterDeterminants_j[j];
                                 if(SlaterDeterminant::equivalent(tmpSD, slaterDeterminant_j.first))
@@ -130,38 +139,41 @@ void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double
     if (showProgress) {std::cout<<std::endl;}
 }
 
-void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi1, const ExcitedState& psi2, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress)
+void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress)
 {
+    int state_i_number = psi_i.get_number();
+    int state_j_number = psi_j.get_number();
+
     int numberOfMos = orbitals.get_numberOfMo();
+   
     // Build xMatrix matrixes
     xMatrix.resize(2, std::vector<std::vector<double>>(numberOfMos, std::vector<double>(numberOfMos, 0.0)));
 
-    int state1Number = psi1.get_number();
-    int state2Number = psi2.get_number();
-
     // if electronic density or transition from ground state
-    if (state1Number == state2Number || state1Number == 0)
+    if (state_i_number == state_j_number || state_i_number == 0)
     {
         for (int spin = 0; spin < 2; ++spin)
         {
             size_t numberOfOccupiedOrbitals = orbitals.getOccupiedOrbitalNumbers()[spin].size();
             size_t numberOfVirtualOrbitals = numberOfMos - numberOfOccupiedOrbitals;
 
+            const std::vector<size_t>& sdIndicesSortedByCoefficientDesc_j = psi_j.get_sdIndicesSortedByCoefficientDesc();
+
             // Build X (using psi2 as it is the excited state for the GS->Ex in the transition case)
             std::vector<std::vector<std::vector<double>>> X(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
-            for(size_t k : psi2.get_argsortCoefs())
+            for(size_t k : sdIndicesSortedByCoefficientDesc_j)
             {
                 for(size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
                 {
-                    if (static_cast<size_t>(psi2._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first) != i + 1)   // looks if the orbital in i^th position (0-based) is the MO number i+1 (1-based)
+                    if (static_cast<size_t>(psi_j._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first) != i + 1)   // looks if the orbital in i^th position (0-based) is the MO number i+1 (1-based)
                     {
-                        size_t j = psi2._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first-numberOfOccupiedOrbitals;
-                        X[spin][i][j-1] += psi2._slaterDeterminants[k].second;   //if we got the j^th orbital in position i, it means we got a i+1 -> j transition
+                        size_t j = psi_j._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first-numberOfOccupiedOrbitals;
+                        X[spin][i][j-1] += psi_j._slaterDeterminants[k].second;   //if we got the j^th orbital in position i, it means we got a i+1 -> j transition
                     }
                 }
             }
 
-            if (state1Number == state2Number) //if electronic density
+            if (state_i_number == state_j_number) //if electronic density
             {
                 std::vector<std::vector<std::vector<double>>> occupiedMOsBlock(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfOccupiedOrbitals, 0.0)));
                 std::vector<std::vector<std::vector<double>>> virtualMOsBlock(2, std::vector<std::vector<double>>(numberOfVirtualOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
@@ -223,7 +235,7 @@ void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>&
                     }
                 }
             }
-            else if (state1Number == 0) // else if transition from ground state density
+            else if (state_i_number == 0) // else if transition from ground state density
             {
                 for(size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
                 {
@@ -301,9 +313,10 @@ void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>&
     */
     else // otherwise call other method
     {
-        std::cout<<"Warning : case \" transition "<<state1Number<<" to "<<state2Number<<" \" not suitable for  X method."<<std::endl;
-        std::cout<<"switching to Gamma method."<<std::endl;
-        ExcitedState::reducedDensityMatrix(xMatrix, RDMMethod::GAMMA, psi1, psi2, orbitals, ignoredMos,showProgress);
+        std::cout << "Warning : case \" transition " << state_i_number << " to " << state_j_number << " \" not suitable for  X method." << std::endl;
+        std::cout << "Switching to Gamma method instead." << std::endl;
+
+        ExcitedState::reducedDensityMatrix(xMatrix, RDMMethod::GAMMA, psi_i, psi_j, orbitals, ignoredMos,showProgress);
     }
 }
 
@@ -317,8 +330,8 @@ ExcitedState::ExcitedState(const int number, const double energy) :
     _energy(energy),
     _number(number),
     _slaterDeterminants(),
-    _argsortCoefs(),
-    _excitationDegree()
+    _sdIndicesByExcitationDegree(),
+    _sdIndicesSortedByCoefficientDesc()
 { }
 
 ExcitedState::ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant) :
@@ -326,23 +339,9 @@ ExcitedState::ExcitedState(const double energy, const SlaterDeterminant& slaterD
     _energy(energy),
     _number(0),
     _slaterDeterminants({ { slaterDeterminant, 1.0 } }),
-    _argsortCoefs(),
-    _excitationDegree()
-{}
-
-ExcitedState::ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant, bool GS) :
-    _electronicTransitions(),
-    _energy(energy),
-    _number(0),
-    _slaterDeterminants({ { slaterDeterminant, 1.0 } }),
-    _argsortCoefs(),
-    _excitationDegree()
-{ 
-    if (GS)
-    {
-        _s_GS_SD = slaterDeterminant;
-    }
-}
+    _sdIndicesByExcitationDegree(),
+    _sdIndicesSortedByCoefficientDesc()
+{ }
 
 
 //----------------------------------------------------------------------------------------------------//
@@ -364,56 +363,11 @@ const std::vector<std::pair<SlaterDeterminant, double>>& ExcitedState::get_slate
     return _slaterDeterminants;
 }
 
-std::vector<size_t> ExcitedState::get_argsortCoefs() const
+std::vector<size_t> ExcitedState::get_sdIndicesSortedByCoefficientDesc() const
 {
-    return _argsortCoefs;
+    return _sdIndicesSortedByCoefficientDesc;
 }
 
-const std::vector<std::vector<size_t>>& ExcitedState::get_excitationDegree() const
-{
-    return _excitationDegree;
-}
-//----------------------------------------------------------------------------------------------------//
-// SETTERS
-//----------------------------------------------------------------------------------------------------//
-
-void ExcitedState::set_argsortCoefs(double limit)
-{
-    //argsort transitions coefs; coefs[argsortSD[i]] gives the i+1 highest coef 
-    size_t nSD = _slaterDeterminants.size();
-    std::vector<double> coefs(nSD);
-    for(size_t i=0;i<nSD;++i)
-    {
-        coefs[i] = _slaterDeterminants[i].second;
-    }
-    std::vector<size_t> argsortSD(nSD);
-    std::iota(argsortSD.begin(), argsortSD.end(), 0);
-    std::sort(argsortSD.begin(), argsortSD.end(),[&](size_t i1, size_t i2) {return fabs(coefs[i1]) > fabs(coefs[i2]);});
-
-    double treshold = coefs[argsortSD[0]]*limit;
-    double SD_max = 0;
-    for (size_t i=0;i<argsortSD.size();++i)
-    {
-        if (fabs(coefs[argsortSD[i]])>treshold) {SD_max = i;}
-        else                            {break;}
-    }
-
-    _argsortCoefs = std::vector<size_t> (argsortSD.begin(),argsortSD.begin()+SD_max+1);
-}
-
-void ExcitedState::set_excitationDegree()
-{
-    size_t nMax = _slaterDeterminants[0].first.get_occupiedOrbitals()[0].size()+_slaterDeterminants[0].first.get_occupiedOrbitals()[1].size(); //considering same size slater determinants
-    _excitationDegree.resize(nMax,std::vector<size_t>());
-    
-    //size_t nSD = _slaterDeterminants.size();
-    //for (size_t i=0;i<nSD;++i)   //for each SD
-    for (size_t i : _argsortCoefs)   //for each SD from the sorted coefs above treshold
-    {
-        size_t exDeg = getExcitation(_slaterDeterminants[i].first);
-        _excitationDegree[exDeg].push_back(i);
-    }
-}
 
 //----------------------------------------------------------------------------------------------------//
 // OTHER PUBLIC METHODS
@@ -424,47 +378,12 @@ void ExcitedState::addSlaterDeterminant(const SlaterDeterminant& slaterDetermina
     _slaterDeterminants.emplace_back(slaterDeterminant, coefficient);
 }
 
-size_t ExcitedState::getExcitation(const SlaterDeterminant& SD) const
-{
-    // !! considers GS is orbitals {1,2,3,...,n_electrons[spin]}
-
-    int differences = 0;
-
-    // Get spin type int values
-    const int ALPHA = static_cast<int>(SpinType::ALPHA);
-    const int BETA = static_cast<int>(SpinType::BETA);
-    std::array<int, 2> spins = { ALPHA, BETA };
-
-    std::vector<std::vector<int>> occupiedOrbitalsNumbers_j(2, std::vector<int>(SD.get_occupiedOrbitals()[0].size()));
-
-    for (int spin : spins)
-    {
-        int nOccMO = _s_GS_SD.get_occupiedOrbitals()[spin].size();
-        // Get occupied orbitals numbers for second Slater determinant
-        for (size_t i = 0; i < SD.get_occupiedOrbitals()[spin].size(); ++i)
-        {
-            occupiedOrbitalsNumbers_j[spin][i] = SD.get_occupiedOrbitals()[spin][i].first;
-        }
-        
-        // look if occupied orbitals numbers > n_electrons[spin] (equivalent to looking if the orbital is also in the GS SD)
-        for (size_t k = 0; k < occupiedOrbitalsNumbers_j[spin].size(); ++k)
-        {
-            if(occupiedOrbitalsNumbers_j[spin][k] > nOccMO)
-            {
-                ++differences;
-            }
-        }
-    }
-
-    return differences;
-}
-
 void ExcitedState::addTransition(const SpinOrbital& initialOrbital, const SpinOrbital& finalOrbital, const double coefficient)
 {
     _electronicTransitions.emplace_back(initialOrbital, finalOrbital, coefficient);
 }
 
-void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant)
+void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant, double limit)
 {
     // Apply the transitions to the Slater determinant
     for (const auto& transition : _electronicTransitions)
@@ -485,11 +404,58 @@ void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStat
         // Store Slater determinant
         _slaterDeterminants.emplace_back(slaterDeterminantTransition, coefficient);
     }
+
+    // Sort the Slater determinants based on the absolute values of their coefficients in descending order
+    size_t numberOfSD = _slaterDeterminants.size();
+
+    // Initialize SD coefficients
+    std::vector<double> coefficients(numberOfSD);
+    for(size_t i = 0; i < numberOfSD; ++i)
+    {
+        coefficients[i] = _slaterDeterminants[i].second;
+    }
+
+    // Sort SD indices based on the absolute values of their coefficients in descending order
+    std::vector<size_t> argsortSD(numberOfSD);
+    std::iota(argsortSD.begin(), argsortSD.end(), 0);
+    std::sort(argsortSD.begin(), argsortSD.end(), [&](size_t i1, size_t i2) { return std::abs(coefficients[i1]) > std::abs(coefficients[i2]); });
+
+    // Determine the threshold for significant coefficients based on the specified limit
+    double treshold = std::abs(coefficients[argsortSD[0]]) * limit;
+    
+    // Find the maximum index of SDs with coefficients above the threshold
+    double maxSdIndex = 0;
+    size_t i = 0;
+    while(i < argsortSD.size() && std::abs(coefficients[argsortSD[i]]) > treshold)
+    {
+        maxSdIndex = i;
+        ++i;
+    }
+
+    // Store the sorted SD indices with coefficients above the threshold
+    _sdIndicesSortedByCoefficientDesc = std::vector<size_t>(argsortSD.begin(), argsortSD.begin() + maxSdIndex + 1);
+
+
+    // Set the excitation degree for each Slater determinant
+    size_t nMax = _slaterDeterminants[0].first.get_occupiedOrbitals()[0].size() + _slaterDeterminants[0].first.get_occupiedOrbitals()[1].size(); //considering same size slater determinants
+    _sdIndicesByExcitationDegree.resize(nMax, std::vector<size_t>());
+    
+    // Only compute the excitation degree for the Slater determinants with coefficients above the threshold (i.e., those whose index is in _sdIndicesSortedByCoefficientDesc)
+    for (size_t i : _sdIndicesSortedByCoefficientDesc)   
+    {
+        size_t excitationDegree = _slaterDeterminants[i].first.getExcitationDegree(groundStateSlaterDeterminant);
+        _sdIndicesByExcitationDegree[excitationDegree].push_back(i);
+    }
 }
 
 int ExcitedState::getNumberOfTransitions() const
 {
     return static_cast<int>(_electronicTransitions.size());
+}
+
+const std::vector<size_t>& ExcitedState::getSlaterDeterminantIndicesWithExcitationDegree(int excitationDegree) const
+{
+    return _sdIndicesByExcitationDegree[excitationDegree];
 }
 
 bool ExcitedState::isGroundState() const
@@ -1387,12 +1353,11 @@ double ExcitedState::ionicPotential(const ExcitedState& psi_i, const ExcitedStat
 
 void ExcitedState::reducedDensityMatrix(std::vector<std::vector<std::vector<double>>>& rdmMatrix, RDMMethod rdmMethod, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos,bool showProgress)
 {
-    std::cout<<"computing matrix with ("<<psi_i._argsortCoefs.size()<<","<<psi_j._argsortCoefs.size();
-    std::cout<<") SD out of ("<<psi_i._slaterDeterminants.size()<<","<<psi_j._slaterDeterminants.size()<<")"<<std::endl;
+    std::cout << "Computing matrix with (" << psi_i._sdIndicesSortedByCoefficientDesc.size() << ", " << psi_j._sdIndicesSortedByCoefficientDesc.size() << ") Slater determinants out of (" << psi_i._slaterDeterminants.size() << ", " << psi_j._slaterDeterminants.size() << ")." << std::endl;
+    
     auto start = std::chrono::high_resolution_clock::now();
     if (rdmMethod == RDMMethod::GAMMA)
     {
-
         computeGammaMatrix(rdmMatrix, psi_i, psi_j, orbitals, ignoredMos, showProgress);
     }
     else if (rdmMethod == RDMMethod::X)
@@ -1400,7 +1365,8 @@ void ExcitedState::reducedDensityMatrix(std::vector<std::vector<std::vector<doub
         computeXMatrix(rdmMatrix, psi_i,psi_j, orbitals, ignoredMos, showProgress);
     }
     auto end = std::chrono::high_resolution_clock::now();
-    std::cout<<"compute time of matrix : "<<std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count()/1000.0<<"s"<<std::endl;
+
+    std::cout << "Time spent to compute RDM-1: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms." << std::endl;
 }
 
 //----------------------------------------------------------------------------------------------------//
