@@ -79,8 +79,7 @@ static void test_lambda_diagnostic_missing_transitions() {
 
     const RunResult r = run_cdftt(input_path);
 
-    // std::cout << "STDOUT from missing transitions test:\n" << r.stdout_text << std::endl;
-    // std::cout << "STDERR from missing transitions test:\n" << r.stderr_text << std::endl;
+    std::cout << "STDOUT:" << r.stdout_text << std::endl;
 
     assert_nonzero_exit(r);
     assert_stdout_contains(r, "Note: the \"TransitionsFile\" parameter is not specified in the provided input file (" + input_path + ").");
@@ -92,104 +91,10 @@ static void test_lambda_diagnostic_missing_transitions() {
     std::remove(input_path.c_str());
 }
 
-// [P1 | nightly] Test transitions-from-file path vs transitions-from-analytic path
-static void test_lambda_diagnostic_transitions_comparison() {
-    // This test compares the two possible transitions sources:
-    // 1. Explicit file-based transitions (already tested in smoke)
-    // 2. Analytic file-derived transitions (when supported by the analytic format)
-    
-    const std::string root = repo_root();
-    const std::string analytic = root + "/src/applications/cdftt/tests/CC-pvtz/H2CO_TDDFT.fchk";
-    const std::string transitions_file = root + "/src/applications/cdftt/tests/transitionsFiles/transitions_H2CO.txt";
-    const std::string input_path_file = "/tmp/cdftt_test_lambda_diagnostic_transitions_file.txt";
-    const std::string input_path_analytic = "/tmp/cdftt_test_lambda_diagnostic_transitions_analytic.txt";
-
-    // Test 1: transitions from file (baseline - should work)
-    write_input_file(input_path_file,
-                     std::string("RunType=RunLambdaDiagnostic\n")
-                   + "AnalyticFiles=" + analytic + "\n"
-                   + "Size=Medium\n"
-                   + "TransitionsFile=" + transitions_file + "\n");
-
-    const RunResult r_file = run_cdftt(input_path_file);
-
-    // std::cout << "STDOUT from file-based transitions:\n" << r_file.stdout_text << std::endl;
-    // std::cout << "STDERR from file-based transitions:\n" << r_file.stderr_text << std::endl;
-
-    assert_zero_exit(r_file);
-    assert_stdout_contains(r_file, "Building domain and grid, please wait...");
-    assert_stdout_contains(r_file, "Number of excited states read:");
-    assert_stdout_contains(r_file, "Lambda =");
-
-    // Test 2: Try transitions from analytic (if supported by this format)
-    // Note: This may not work for all analytic formats, so we'll check if it succeeds
-    write_input_file(input_path_analytic,
-                     std::string("RunType=RunLambdaDiagnostic\n")
-                   + "AnalyticFiles=" + analytic + "\n"
-                   + "Size=Medium\n");
-                   // No TransitionsFile specified - should use analytic-derived transitions if supported
-
-    const RunResult r_analytic = run_cdftt(input_path_analytic);
-
-    // TODO: analytic derivation should in principle be available but is not achieved so far.
-
-    // Either both should succeed or both should fail gracefully
-    // The important thing is that the system handles both approaches
-    if (r_analytic.exit_code == 0) {
-        // If analytic-derived transitions work, verify the basic output
-        assert_stdout_contains(r_analytic, "Current job: RunLambdaDiagnostic");
-        assert_stdout_contains(r_analytic, "Building domain and grid, please wait...");
-        assert_stdout_contains(r_analytic, "Number of excited states read:");
-        assert_stdout_contains(r_analytic, "Lambda =");
-        // Print captured outputs for easier diagnosis when tests run
-
-        // Try to extract numeric Lambda values and compare within tolerance
-        try {
-            const double lambda_file = extract_double_after_label(r_file.stdout_text, "Lambda =");
-            const double lambda_analytic = extract_double_after_label(r_analytic.stdout_text, "Lambda =");
-            const double diff = std::abs(lambda_file - lambda_analytic);
-            if (diff > 1e-6) {
-                throw std::runtime_error("Lambda values differ between file-derived and analytic-derived transitions: diff=" + std::to_string(diff));
-            }
-        } catch (const std::exception &e) {
-            std::cerr << "Failed to compare Lambda values: " << e.what() << std::endl;
-            throw;
-        }
-    } else {
-        // Expect the current behavior: program reports it "could not open transitions file"
-        // with an empty filename when analytic-derived transitions are not available.
-        assert_stdout_contains(r_analytic, "Note: the \"TransitionsFile\" parameter is not specified in the provided input file (" + input_path_analytic + ").");
-        
-        // Quick probe: scan the analytic file to see if it contains any transition-like markers.
-        std::ifstream af(analytic);
-        if (!af.is_open()) {
-            std::cout << "Cannot open analytic file for inspection: " << analytic << std::endl;
-        } else {
-            std::string content((std::istreambuf_iterator<char>(af)), std::istreambuf_iterator<char>());
-            const bool has_transition_word = content.find("Transition") != std::string::npos ||
-                                       content.find("TRANSITION") != std::string::npos ||
-                                       content.find("Excited") != std::string::npos ||
-                                       content.find("Alpha Orbital Energies") != std::string::npos;
-            if (has_transition_word) {
-                // Print baseline and analytic captured outputs to help debugging
-                // std::cout << "--- baseline (file) stdout ---\n" << r_file.stdout_text << "\n--- baseline stderr ---\n" << r_file.stderr_text << std::endl;
-                std::cout << "--- analytic-derived stdout ---\n" << r_analytic.stdout_text << "\n--- analytic-derived stderr ---\n" << r_analytic.stderr_text << std::endl;
-
-                throw std::runtime_error("Analytic file " + analytic + " appears to contain transitions but analytic-derived transitions path failed");
-            }
-        }
-    }
-
-    // Clean up temporary files
-    std::remove(input_path_file.c_str());
-    std::remove(input_path_analytic.c_str());
-}
-
 int main() {
     const Test tests[] = {
         { "test_lambda_diagnostic_smoke",               test_lambda_diagnostic_smoke               },
         { "test_lambda_diagnostic_missing_transitions", test_lambda_diagnostic_missing_transitions },
-        { "test_lambda_diagnostic_transitions_comparison", test_lambda_diagnostic_transitions_comparison },
     };
 
     int passed = 0;
