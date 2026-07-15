@@ -21,7 +21,7 @@ using namespace cdftt_tests;
         - Required companion lines used in this file:
                     Charges=<q1>[,<q2>,...]
                     AnalyticFiles=<inputOrbitalFile>
-                    Positions=<x1>,<y1>,<z1>[,<x2>,<y2>,<z2>,...]
+                    Positions=(<x1>,<y1>,<z1>)[,(<x2>,<y2>,<z2>),...]
         - Optional but exercised in smoke path:
                     TransitionsFile=<path>
 
@@ -42,7 +42,7 @@ static void test_compute_energy_with_point_charges_smoke() {
     // defined in the input content.
     const std::string root = repo_root();
     const std::string analytic = root + "/src/applications/cdftt/tests/Guegan2020/acrolein.fchk";
-    const std::string transitions = root + "/src/applications/cdftt/tests/transitionsFiles/transitions_acroleine.txt";
+    const std::string transitions = root + "/src/applications/cdftt/tests/transitionsFiles/transitions_acrolein.txt";
     const std::string input_path = "/tmp/cdftt_test_energy_point_charges_smoke.txt";
 
     // Keep Charges before RunType to match parser behavior used by existing project inputs.
@@ -51,14 +51,13 @@ static void test_compute_energy_with_point_charges_smoke() {
                    + "RunType=ComputeEnergyWithPointCharges\n"
                    + "AnalyticFiles=" + analytic + "\n"
                    + "TransitionsFile=" + transitions + "\n"
-                   + "Positions=-1.752102,-0.142545,-0.000106\n");
+                   + "Positions=(-1.752102,-0.142545,-0.000106)\n");
 
     // The run should succeed and print the number of point charges, read transitions, and computed eigenvalues.
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Current job: ComputeEnergyWithPointCharges");
-    assert_stdout_contains(r, "Number of point charges: 1");
+    assert_stdout_contains(r, "Number of runs: 1");
     assert_stdout_contains(r, "Reading transitions from file:");
     assert_stdout_contains(r, "Total number of states:");
     assert_stdout_contains(r, "Sorted Eigenvalues:");
@@ -75,19 +74,23 @@ static void test_compute_energy_with_point_charges_positions_mismatch() {
     // deliberately includes one charge but only one position triplet, which should trigger the error.
     const std::string root = repo_root();
     const std::string analytic = root + "/src/applications/cdftt/tests/Guegan2020/acrolein.fchk";
+    const std::string transitions = root + "/src/applications/cdftt/tests/transitionsFiles/transitions_acrolein.txt";
     const std::string input_path = "/tmp/cdftt_test_energy_point_charges_positions_mismatch.txt";
 
     write_input_file(input_path,
                      std::string("Charges=-0.1,-0.2\n")
                    + "RunType=ComputeEnergyWithPointCharges\n"
                    + "AnalyticFiles=" + analytic + "\n"
-                   + "Positions=-1.752102,-0.142545,-0.000106\n");
+                   + "TransitionsFile=" + transitions + "\n"
+                   + "ChargesPositionsBijections=True\n"
+                   + "Positions=(-1.752102,-0.142545,-0.000106),(0.0,0.0,0.0),(1.0,1.0,1.0)\n"
+                   + "Becke=default\n");
 
     // The run should fail and print an explicit error mentioning incorrect number of point-charge positions.
     const RunResult r = run_cdftt(input_path);
 
     assert_nonzero_exit(r);
-    assert_stderr_contains(r, "incorrect number of point charges positions");
+    assert_stderr_contains(r, "the number of positions is not a multiple of the number of charges in the input file");
 
     // Clean up the temporary input file.
     std::remove(input_path.c_str());
@@ -99,7 +102,7 @@ static void test_compute_energy_with_point_charges_loop_on_atoms() {
     // rather than explicitly provided. This requires an analytic file that supports atomic coordinate extraction.
     const std::string root = repo_root();
     const std::string analytic = root + "/src/applications/cdftt/tests/Guegan2020/acrolein.fchk";
-    const std::string transitions = root + "/src/applications/cdftt/tests/transitionsFiles/transitions_acroleine.txt";
+    const std::string transitions = root + "/src/applications/cdftt/tests/transitionsFiles/transitions_acrolein.txt";
     const std::string input_path = "/tmp/cdftt_test_energy_point_charges_loop_on_atoms.txt";
 
     // Test the loop-on-atoms mode by omitting the Positions line
@@ -110,17 +113,16 @@ static void test_compute_energy_with_point_charges_loop_on_atoms() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "TransitionsFile=" + transitions + "\n"
                    // Note: No Positions line - this triggers loop-on-atoms mode
-                   );
+                   + "Becke=default\n");
 
     // The run should succeed in loop-on-atoms mode and show appropriate messaging
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Current job: ComputeEnergyWithPointCharges");
-    assert_stdout_contains(r, "Number of point charges: 1");
+    assert_stdout_contains(r, "Number of runs: 8"); // Assuming 8 atoms in the analytic file for this test
     // In loop-on-atoms mode, we might see different output indicating automatic positioning
     assert_stdout_contains(r, "Note: the \"Positions\" parameter is not specified in the provided input file");
-    assert_stdout_contains(r, "The program will place the point charge on each atom successively.");
+    assert_stdout_contains(r, "The program will use atom positions.");
     assert_stdout_contains(r, "Total number of states:");
     assert_stdout_contains(r, "Sorted Eigenvalues:");
 
@@ -134,7 +136,7 @@ static void test_compute_energy_with_point_charges_multiple_charges_states() {
     // using existing test fixtures that support this configuration
     const std::string root = repo_root();
     const std::string analytic = root + "/src/applications/cdftt/tests/Guegan2020/acrolein.fchk";
-    const std::string transitions = root + "/src/applications/cdftt/tests/transitionsFiles/transitions_acroleine.txt";
+    const std::string transitions = root + "/src/applications/cdftt/tests/transitionsFiles/transitions_acrolein.txt";
     const std::string input_path = "/tmp/cdftt_test_energy_point_charges_multiple_charges.txt";
 
     // Test with multiple charges and multiple positions (should work with same transitions file)
@@ -143,21 +145,21 @@ static void test_compute_energy_with_point_charges_multiple_charges_states() {
                    + "RunType=ComputeEnergyWithPointCharges\n"
                    + "AnalyticFiles=" + analytic + "\n"
                    + "TransitionsFile=" + transitions + "\n"
-                   + "Positions=-1.752102,-0.142545,-0.000106,0.0,0.0,0.0,1.0,1.0,1.0\n");
+                   + "Positions=(-1.752102,-0.142545,-0.000106),(0.0,0.0,0.0),(1.0,1.0,1.0)\n"
+                   + "Becke=default\n");
 
     // The run should succeed with multiple charges and states
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Current job: ComputeEnergyWithPointCharges");
-    assert_stdout_contains(r, "Number of point charges: 3");
+    assert_stdout_contains(r, "Number of runs: 9"); // 3 charges x 3 positions = 9 runs
     assert_stdout_contains(r, "Reading transitions from file:");
     assert_stdout_contains(r, "Total number of states:");
     assert_stdout_contains(r, "Sorted Eigenvalues:");
     // Should also show information about multiple charge positions
-    assert_stdout_contains(r, "Point charge #1: -0.1 e at position");
-    assert_stdout_contains(r, "Point charge #2: -0.2 e at position");
-    assert_stdout_contains(r, "Point charge #3: 0.1 e at position");
+    assert_stdout_contains(r, "Point charge of -0.1 e at position");
+    assert_stdout_contains(r, "Point charge of -0.2 e at position");
+    assert_stdout_contains(r, "Point charge of 0.1 e at position");
     //! Note -> the input file provides distances in Bohr radii, but the produced output
     //!         currently shows them in Angstroms. While confusing for users, this is not
     //!         a parsing failure - we don't assert the exact position here for that reason.
@@ -180,14 +182,15 @@ static void test_compute_energy_with_point_charges_missing_transitions() {
                    + "RunType=ComputeEnergyWithPointCharges\n"
                    + "AnalyticFiles=" + analytic + "\n"
                    + "TransitionsFile=" + non_existent_transitions + "\n"
-                   + "Positions=-1.752102,-0.142545,-0.000106\n");
+                   + "Positions=(-1.752102,-0.142545,-0.000106)\n"
+                   + "Becke=default\n");
 
     // The run should fail because the transitions file doesn't exist
     const RunResult r = run_cdftt(input_path);
 
     assert_nonzero_exit(r);
     // Should report file not found or unable to read transitions
-    assert_stderr_contains(r, "Error: could not open transitions file " + non_existent_transitions);
+    assert_stderr_contains(r, "could not open transitions file " + non_existent_transitions);
 
     // Clean up the temporary input file
     std::remove(input_path.c_str());
@@ -216,6 +219,6 @@ int main() {
         }
     }
 
-    std::cout << "\n" << passed << " passed, " << failed << " failed." << std::endl;
+    std::cout << passed << " passed, " << failed << " failed.\n" << std::endl;
     return failed > 0 ? 1 : 0;
 }

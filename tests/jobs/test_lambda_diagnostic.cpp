@@ -9,7 +9,7 @@
 using namespace cdftt_tests;
 
 /*
-    About this job type (LambdaDiagnostic):
+    About this job type (RunLambdaDiagnostic):
         - It computes the lambda diagnostic from orbital data and excited-state
             transition information.
         - This workflow requires both a valid analytic source and a transitions
@@ -19,7 +19,7 @@ using namespace cdftt_tests;
         
     Detailed header command expectations:
         - Mandatory header line:
-                    RunType=LambdaDiagnostic
+                    RunType=RunLambdaDiagnostic
         - Required companion lines for this smoke scenario:
                     AnalyticFiles=<inputOrbitalFile>
                     Size=<Small|Medium|Large|...>
@@ -47,7 +47,7 @@ static void test_lambda_diagnostic_smoke() {
     const std::string input_path = "/tmp/cdftt_test_lambda_diagnostic_smoke.txt";
 
     write_input_file(input_path,
-                     std::string("RunType=LambdaDiagnostic\n")
+                     std::string("RunType=RunLambdaDiagnostic\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
                    + "TransitionsFile=" + transitions + "\n");
@@ -57,7 +57,6 @@ static void test_lambda_diagnostic_smoke() {
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Current job: LambdaDiagnostic");
     assert_stdout_contains(r, "Building domain and grid, please wait...");
     assert_stdout_contains(r, "Number of excited states read:");
     assert_stdout_contains(r, "Lambda =");
@@ -70,18 +69,24 @@ static void test_lambda_diagnostic_smoke() {
 static void test_lambda_diagnostic_missing_transitions() {
     // The run should fail and print an explicit error mentioning inability to open the transitions file.
     const std::string root = repo_root();
-    const std::string analytic = root + "/src/applications/cdftt/tests/CC-pvtz/CO_TDDFT.fchk";
+    const std::string analytic = root + "/src/applications/cdftt/tests/CC-pvtz/H2CO_TDDFT.fchk";
     const std::string input_path = "/tmp/cdftt_test_lambda_diagnostic_missing_transitions.txt";
 
     write_input_file(input_path,
-                     std::string("RunType=LambdaDiagnostic\n")
+                     std::string("RunType=RunLambdaDiagnostic\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n");
 
     const RunResult r = run_cdftt(input_path);
 
+    // std::cout << "STDOUT from missing transitions test:\n" << r.stdout_text << std::endl;
+    // std::cout << "STDERR from missing transitions test:\n" << r.stderr_text << std::endl;
+
     assert_nonzero_exit(r);
-    assert_stderr_contains(r, "could not open transitions file");
+    assert_stdout_contains(r, "Note: the \"TransitionsFile\" parameter is not specified in the provided input file (" + input_path + ").");
+
+    // TODO -> The current behaviour is odd  it reports the file is not found, tries to read another one as default, segfaults, thus returns nonzero but the stderr is empty.
+    assert_stderr_contains(r, "Error: could not open transitions file");
 
     // Clean up the temporary input file.
     std::remove(input_path.c_str());
@@ -94,22 +99,24 @@ static void test_lambda_diagnostic_transitions_comparison() {
     // 2. Analytic file-derived transitions (when supported by the analytic format)
     
     const std::string root = repo_root();
-    const std::string analytic = root + "/src/applications/cdftt/tests/CC-pvtz/CO_TDDFT.fchk";
-    const std::string transitions_file = root + "/src/applications/cdftt/tests/transitionsFiles/transitions_CO_twoFirstStates.txt";
+    const std::string analytic = root + "/src/applications/cdftt/tests/CC-pvtz/H2CO_TDDFT.fchk";
+    const std::string transitions_file = root + "/src/applications/cdftt/tests/transitionsFiles/transitions_H2CO.txt";
     const std::string input_path_file = "/tmp/cdftt_test_lambda_diagnostic_transitions_file.txt";
     const std::string input_path_analytic = "/tmp/cdftt_test_lambda_diagnostic_transitions_analytic.txt";
 
     // Test 1: transitions from file (baseline - should work)
     write_input_file(input_path_file,
-                     std::string("RunType=LambdaDiagnostic\n")
+                     std::string("RunType=RunLambdaDiagnostic\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
                    + "TransitionsFile=" + transitions_file + "\n");
 
     const RunResult r_file = run_cdftt(input_path_file);
 
+    // std::cout << "STDOUT from file-based transitions:\n" << r_file.stdout_text << std::endl;
+    // std::cout << "STDERR from file-based transitions:\n" << r_file.stderr_text << std::endl;
+
     assert_zero_exit(r_file);
-    assert_stdout_contains(r_file, "Current job: LambdaDiagnostic");
     assert_stdout_contains(r_file, "Building domain and grid, please wait...");
     assert_stdout_contains(r_file, "Number of excited states read:");
     assert_stdout_contains(r_file, "Lambda =");
@@ -117,7 +124,7 @@ static void test_lambda_diagnostic_transitions_comparison() {
     // Test 2: Try transitions from analytic (if supported by this format)
     // Note: This may not work for all analytic formats, so we'll check if it succeeds
     write_input_file(input_path_analytic,
-                     std::string("RunType=LambdaDiagnostic\n")
+                     std::string("RunType=RunLambdaDiagnostic\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n");
                    // No TransitionsFile specified - should use analytic-derived transitions if supported
@@ -130,7 +137,7 @@ static void test_lambda_diagnostic_transitions_comparison() {
     // The important thing is that the system handles both approaches
     if (r_analytic.exit_code == 0) {
         // If analytic-derived transitions work, verify the basic output
-        assert_stdout_contains(r_analytic, "Current job: LambdaDiagnostic");
+        assert_stdout_contains(r_analytic, "Current job: RunLambdaDiagnostic");
         assert_stdout_contains(r_analytic, "Building domain and grid, please wait...");
         assert_stdout_contains(r_analytic, "Number of excited states read:");
         assert_stdout_contains(r_analytic, "Lambda =");
@@ -151,8 +158,8 @@ static void test_lambda_diagnostic_transitions_comparison() {
     } else {
         // Expect the current behavior: program reports it "could not open transitions file"
         // with an empty filename when analytic-derived transitions are not available.
-        assert_stderr_contains(r_analytic, "could not open transitions file");
-
+        assert_stdout_contains(r_analytic, "Note: the \"TransitionsFile\" parameter is not specified in the provided input file (" + input_path_analytic + ").");
+        
         // Quick probe: scan the analytic file to see if it contains any transition-like markers.
         std::ifstream af(analytic);
         if (!af.is_open()) {
@@ -199,6 +206,6 @@ int main() {
         }
     }
 
-    std::cout << "\n" << passed << " passed, " << failed << " failed." << std::endl;
+    std::cout << passed << " passed, " << failed << " failed.\n" << std::endl;
     return failed > 0 ? 1 : 0;
 }

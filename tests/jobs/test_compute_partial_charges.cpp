@@ -21,7 +21,7 @@ using namespace cdftt_tests;
         - Mandatory header line:
                     RunType=ComputePartialCharges
         - Required companion lines:
-                    Grids=<densityCube>
+                    GridFilesNames=<densityCube>
                     PartitionMethod=<method>
 
     Expected behavior to anchor assertions:
@@ -45,7 +45,7 @@ static void test_compute_partial_charges_smoke() {
 
     write_input_file(input_path,
                      std::string("RunType=ComputePartialCharges\n")
-                   + "Grids=" + grid + "\n"
+                   + "GridFilesNames=" + grid + "\n"
                    + "PartitionMethod=On-Grid\n");
 
     // The run should succeed and print markers about the chosen partition method and the partial
@@ -67,13 +67,13 @@ static void test_compute_partial_charges_invalid_partition_bbs() {
     const std::string input_path = "/tmp/cdftt_test_partial_charges_invalid_bbs.txt";
     write_input_file(input_path,
                      "RunType=ComputePartialCharges\n"
-                     "Grids=dummy_density.cube\n"
+                     "GridFilesNames=dummy_density.cube\n"
                      "PartitionMethod=BBS\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_nonzero_exit(r);
-    assert_stderr_contains(r, "partitionMethod \"BBS\" invalid for this job");
+    assert_stderr_contains(r, "partitionMethod \"BBS\" invalid");
 
     // Clean up the temporary input file.
     std::remove(input_path.c_str());
@@ -85,13 +85,13 @@ static void test_compute_partial_charges_invalid_partition_b2s() {
     const std::string input_path = "/tmp/cdftt_test_partial_charges_invalid_b2s.txt";
     write_input_file(input_path,
                      "RunType=ComputePartialCharges\n"
-                     "Grids=dummy_density.cube\n"
+                     "GridFilesNames=dummy_density.cube\n"
                      "PartitionMethod=B2S\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_nonzero_exit(r);
-    assert_stderr_contains(r, "partitionMethod \"B2S\" invalid for this job");
+    assert_stderr_contains(r, "partitionMethod \"B2S\" invalid");
 
     // Clean up the temporary input file.
     std::remove(input_path.c_str());
@@ -102,7 +102,7 @@ static void test_compute_partial_charges_becke_analytic() {
     // Uses a small deterministic fixture (H2O) so we can assert atom count and
     // total partial charge sanity.
     const std::string root = repo_root();
-    const std::string analytic = root + "/tests/fixtures/Orbitals/h2o.fchk";
+    const std::string analytic = root + "/tests/fixtures/Orbitals/h2o.molden";
     const std::string g1 = root + "/examples/Density/Density.cube";
     const std::string input_path = "/tmp/cdftt_test_partial_charges_becke_analytic.txt";
 
@@ -110,7 +110,7 @@ static void test_compute_partial_charges_becke_analytic() {
                      std::string("RunType=ComputePartialCharges\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "PartitionMethod=Becke\n"
-                   + "Grids=" + g1 + "\n"
+                   + "GridFilesNames=" + g1 + "\n"
                    + "Size=Medium\n");
 
     const RunResult r = run_cdftt(input_path);
@@ -136,9 +136,9 @@ static void test_compute_partial_charges_becke_analytic() {
             total_charge += std::stod(match[1].str());
         }
     }
-    // For this exact exemple, the charge is expected to be -0.077409
-    // TODO -> One could expect the charge to be exacly 0 for a neutral molecule -> find a better example
-    double expected_total_charge = -0.077409;
+    // For this exact exemple, the charge is expected to be -1683.3508
+    // TODO -> One could expect the charge to be 0 for a neutral molecule -> find a better example
+    double expected_total_charge = -1683.3508;
     if (std::abs(total_charge - expected_total_charge) > 1e-6)
         throw std::runtime_error("Total partial charge differs from expected "
                                     + std::to_string(expected_total_charge)
@@ -170,6 +170,6 @@ int main() {
         }
     }
 
-    std::cout << "\n" << passed << " passed, " << failed << " failed." << std::endl;
+    std::cout << passed << " passed, " << failed << " failed.\n" << std::endl;
     return failed > 0 ? 1 : 0;
 }

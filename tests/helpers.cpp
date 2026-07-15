@@ -162,25 +162,34 @@ static void assert_contains(const std::string& haystack,
 
 void assert_zero_exit(const RunResult& result) {
     if (result.exit_code != 0)
+        // throw std::runtime_error("Expected exit code 0 but got " + std::to_string(result.exit_code)
+        //                          + "\nstdout:\n" + result.stdout_text
+        //                          + "\nstderr:\n" + result.stderr_text);
         throw std::runtime_error("Expected exit code 0 but got " + std::to_string(result.exit_code)
-                                 + "\nstdout:\n" + result.stdout_text
                                  + "\nstderr:\n" + result.stderr_text);
 }
 
 void assert_nonzero_exit(const RunResult& result) {
     if (result.exit_code == 0)
-        throw std::runtime_error("Expected non-zero exit code but got 0.\nstdout:\n"
-                                 + result.stdout_text + "\nstderr:\n" + result.stderr_text);
+        // throw std::runtime_error("Expected non-zero exit code but got 0.\nstdout:\n"
+        //                          + result.stdout_text + "\nstderr:\n" + result.stderr_text);
+        throw std::runtime_error("Expected non-zero exit code but got 0.\nstderr:\n"
+                                 + result.stderr_text);
 }
 
 void assert_stdout_contains(const RunResult& result, const std::string& fragment) {
     assert_contains(result.stdout_text, fragment, "stdout");
+    if (result.stdout_text.find(fragment) == std::string::npos)
+        throw std::runtime_error("stdout: expected to find \"" + fragment
+                                 + "\" but it was absent.");
 }
 
 void assert_stdout_does_not_contain(const RunResult& result, const std::string& fragment) {
     if (result.stdout_text.find(fragment) != std::string::npos)
+        // throw std::runtime_error("stdout: expected not to find \"" + fragment
+        //                          + "\" but it was present.\nFull text:\n" + result.stdout_text);
         throw std::runtime_error("stdout: expected not to find \"" + fragment
-                                 + "\" but it was present.\nFull text:\n" + result.stdout_text);
+                                 + "\" but it was present.");
 }
 
 void assert_stderr_contains(const RunResult& result, const std::string& fragment) {
@@ -276,6 +285,7 @@ void assert_cube_has_finite_values(const std::string& path) {
                                  + ", got " + std::to_string(numeric_values) + ")");
     }
 }
+
 
 std::string repo_root() {
     const char* from_env = std::getenv("CDFTT_REPO_ROOT");

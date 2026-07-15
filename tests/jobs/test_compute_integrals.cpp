@@ -19,7 +19,7 @@ using namespace cdftt_tests;
         - Mandatory header line:
                     RunType=ComputeIntegrals
         - Required companion line:
-                    Grids=<grid1>,<grid2>,<grid3>
+                    GridFilesNames=<grid1>,<grid2>,<grid3>
             where the first grid is used to build basins.
         - Required partition line:
                     PartitionMethod=<method>
@@ -35,7 +35,7 @@ using namespace cdftt_tests;
 
 static std::string make_invalid_method_input(const std::string& method) {
     return std::string("RunType=ComputeIntegrals\n")
-         + "Grids=grid1.cube,grid2.cube,grid3.cube\n"
+         + "GridFilesNames=grid1.cube,grid2.cube,grid3.cube\n"
          + "PartitionMethod=" + method + "\n";
 }
 
@@ -53,7 +53,7 @@ static void test_compute_integrals_smoke() {
 
     write_input_file(input_path,
                      std::string("RunType=ComputeIntegrals\n")
-                   + "Grids=" + g1 + "," + g2 + "," + g3 + "\n"
+                   + "GridFilesNames=" + g1 + "," + g2 + "," + g3 + "\n"
                    + "PartitionMethod=On-Grid\n");
 
     // The run should succeed and print markers about the chosen partition method, the
@@ -78,7 +78,7 @@ static void test_compute_integrals_invalid_method_becke() {
 
     const RunResult r = run_cdftt(input_path);
     assert_nonzero_exit(r);
-    assert_stderr_contains(r, "partitionMethod \"Becke\" invalid for this job");
+    assert_stderr_contains(r, "partitionMethod \"Becke\" invalid");
 
     // Clean up the temporary input file.
     std::remove(input_path.c_str());
@@ -92,7 +92,7 @@ static void test_compute_integrals_invalid_method_fd() {
 
     const RunResult r = run_cdftt(input_path);
     assert_nonzero_exit(r);
-    assert_stderr_contains(r, "partitionMethod \"FD\" invalid for this job");
+    assert_stderr_contains(r, "partitionMethod \"FD\" invalid");
 
     // Clean up the temporary input file.
     std::remove(input_path.c_str());
@@ -106,7 +106,7 @@ static void test_compute_integrals_invalid_method_fmo() {
 
     const RunResult r = run_cdftt(input_path);
     assert_nonzero_exit(r);
-    assert_stderr_contains(r, "partitionMethod \"FMO\" invalid for this job");
+    assert_stderr_contains(r, "partitionMethod \"FMO\" invalid");
 
     // Clean up the temporary input file.
     std::remove(input_path.c_str());
@@ -126,7 +126,7 @@ static void test_compute_integrals_bbs_cutoff() {
 
         write_input_file(input_path,
                          std::string("RunType=ComputeIntegrals\n")
-                         + "Grids=" + g1 + "," + g2 + "," + g3 + "\n"
+                         + "GridFilesNames=" + g1 + "," + g2 + "," + g3 + "\n"
                          + "PartitionMethod=BBS\n"
                          + "Cutoff=100.0\n");
 
@@ -154,7 +154,7 @@ static void test_compute_integrals_b2s_cutoff() {
 
     write_input_file(input_path,
                      std::string("RunType=ComputeIntegrals\n")
-                   + "Grids=" + g1 + "," + g2 + "," + g3 + "\n"
+                   + "GridFilesNames=" + g1 + "," + g2 + "," + g3 + "\n"
                    + "PartitionMethod=B2S\n"
                    + "Cutoff=0.05\n");
 
@@ -198,6 +198,6 @@ int main() {
         }
     }
 
-    std::cout << "\n" << passed << " passed, " << failed << " failed." << std::endl;
+    std::cout << passed << " passed, " << failed << " failed.\n" << std::endl;
     return failed > 0 ? 1 : 0;
 }

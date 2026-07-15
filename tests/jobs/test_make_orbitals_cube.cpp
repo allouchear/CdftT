@@ -20,7 +20,7 @@ using namespace cdftt_tests;
         - Required companion lines:
                     AnalyticFiles=<inputOrbitalFile>
                     Size=<Small|Medium|Large|...>
-                    Grids=<outputCubePath>
+                    GridFilesNames=<outputCubePath>
         - Optional selector line (validated by negative test):
                     OrbitalType=<selection>
 
@@ -41,11 +41,8 @@ static void test_make_orbitals_cube_smoke() {
     // and checked for existence and content quality after the run.
     const std::string root = repo_root();
 
-    const std::string analytic = root + "/tests/fixtures/Orbitals/h2o.molden";
-    // TODO: add `.wfx` and `.fchk` fixtures once parser/runtime issue is fixed.
-    //! Observed behaviour:
-    //!   currently segfaults with tested .wfx and .fchk fixtures (exit code 139)
-    //!   while .molden fixture path succeeds.
+    const std::string analytic = root + "/tests/fixtures/Orbitals/h2o.fchk";
+    // ? Manually verified working formats: `.molden`, `.fchk`, `.wfx`
 
     const std::string output = "/tmp/cdftt_test_make_orbitals_cube_output.cube";
     const std::string input_path = "/tmp/cdftt_test_make_orbitals_cube_smoke.txt";
@@ -54,15 +51,15 @@ static void test_make_orbitals_cube_smoke() {
                      std::string("RunType=MakeOrbitalsCube\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     // The run should succeed and print markers about building the domain and creating the orbitals
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating orbitals cube, please wait...");
-    assert_stdout_contains(r, "Data saved to file:");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -83,7 +80,7 @@ static void test_make_orbitals_cube_invalid_selection() {
                      std::string("RunType=MakeOrbitalsCube\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
-                   + "Grids=/tmp/cdftt_should_not_exist_orbitals.cube\n"
+                   + "GridFilesNames=/tmp/cdftt_should_not_exist_orbitals.cube\n"
                    + "OrbitalType=BadType\n");
 
     const RunResult r = run_cdftt(input_path);
@@ -107,14 +104,14 @@ static void test_make_orbitals_cube_orbital_type_all() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
                    + "OrbitalType=All\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating orbitals cube, please wait...");
-    assert_stdout_contains(r, "Data saved to file:");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -124,28 +121,29 @@ static void test_make_orbitals_cube_orbital_type_all() {
     std::remove(output.c_str());
 }
 
-// [P1 | nightly] Test OrbitalType=Occ mode
-static void test_make_orbitals_cube_orbital_type_occ() {
+// [P1 | nightly] Test OrbitalType=Occupied mode
+static void test_make_orbitals_cube_orbital_type_occupied() {
     const std::string root = repo_root();
     const std::string analytic = root + "/tests/fixtures/Orbitals/h2o.molden";
-    const std::string output = "/tmp/cdftt_test_make_orbitals_cube_orbital_type_occ.cube";
-    const std::string input_path = "/tmp/cdftt_test_make_orbitals_cube_orbital_type_occ.txt";
+    const std::string output = "/tmp/cdftt_test_make_orbitals_cube_orbital_type_occupied.cube";
+    const std::string input_path = "/tmp/cdftt_test_make_orbitals_cube_orbital_type_occupied.txt";
 
     write_input_file(input_path,
                      std::string("RunType=MakeOrbitalsCube\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
-                   + "OrbitalType=Occ\n"
+                   + "OrbitalType=Occupied\n"
                    + "SpinType=Alpha\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
+    //! Using "Occ" as documentend returns `Error: Orbital type "Occ" unknown.`
     const RunResult r = run_cdftt(input_path);
-    //! Error: Orbital type "Occ" unknown.
+    // TODO : rewrite documentation to clarify that "Occupied" is the correct value, not "Occ".
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating orbitals cube, please wait...");
-    assert_stdout_contains(r, "Data saved to file:");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -168,15 +166,16 @@ static void test_make_orbitals_cube_orbital_type_virtual() {
                    + "Size=Medium\n"
                    + "OrbitalType=Virtual\n"
                    + "SpinType=Alpha\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
-    //! Exit code -1 without any stderr output.
+    // ! Exit code -1 with stderr :
+    // !     free(): invalid next size (fast)
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating orbitals cube, please wait...");
-    assert_stdout_contains(r, "Data saved to file:");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -198,14 +197,14 @@ static void test_make_orbitals_cube_orbital_type_homo() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
                    + "OrbitalType=Homo\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating orbitals cube, please wait...");
-    assert_stdout_contains(r, "Data saved to file:");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -227,14 +226,14 @@ static void test_make_orbitals_cube_orbital_type_lumo() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
                    + "OrbitalType=Lumo\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating orbitals cube, please wait...");
-    assert_stdout_contains(r, "Data saved to file:");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -256,14 +255,14 @@ static void test_make_orbitals_cube_orbital_type_homo_lumo() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
                    + "OrbitalType=Homo-Lumo\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating orbitals cube, please wait...");
-    assert_stdout_contains(r, "Data saved to file:");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -287,14 +286,19 @@ static void test_make_orbitals_cube_orbital_type_custom() {
                    + "OrbitalType=Custom\n"
                    + "OrbitalsNumbers=1,2,3\n"
                    + "SpinList=Alpha,Beta,Alpha\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
+    std::cout << "STDOUT:\n" << r.stdout_text << std::endl;
+    std::cout << "STDERR:\n" << r.stderr_text << std::endl;
+
+    // ! `OrbitalType=Custom` crashes without any stdout or stderr output, returning -1 exit code.
+
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating orbitals cube, please wait...");
-    assert_stdout_contains(r, "Data saved to file:");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -304,7 +308,7 @@ static void test_make_orbitals_cube_orbital_type_custom() {
     std::remove(output.c_str());
 }
 
-// [P1 | nightly] Cover SpinType mode: Alpha
+// [P1 | nightly] Cover SpinType mode: Alpha which only works with OrbitalType=All
 static void test_make_orbitals_cube_spin_type_alpha() {
     const std::string root = repo_root();
     const std::string analytic = root + "/examples/Orbitals/h2o.molden";
@@ -315,21 +319,16 @@ static void test_make_orbitals_cube_spin_type_alpha() {
                      std::string("RunType=MakeOrbitalsCube\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
-                   + "OrbitalType=Custom\n"
-                   + "OrbitalsNumbers=1,2,3\n"
+                   + "OrbitalType=All\n"
                    + "SpinType=Alpha\n"
-                   + "SpinList=Alpha,Alpha,Alpha\n"
-                   + "Grids=" + output + "\n");
-    //! it seems SpinType=Alpha is neither required nor sufficient to get alpha orbitals
-    //! In contrast, specifying SpinList=Alpha,Alpha,Alpha seems to be sufficient and necessary
-    // TODO: clarify the role of SpinType vs SpinList, fix what needs to be and document the expected behavior.
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating orbitals cube, please wait...");
-    assert_stdout_contains(r, "Data saved to file:");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -339,7 +338,7 @@ static void test_make_orbitals_cube_spin_type_alpha() {
     std::remove(output.c_str());
 }
 
-// [P1 | nightly] Cover SpinType mode: Beta
+// [P1 | nightly] Cover SpinType mode: Beta which only works with OrbitalType=All
 static void test_make_orbitals_cube_spin_type_beta() {
     const std::string root = repo_root();
     const std::string analytic = root + "/examples/Orbitals/h2o.molden";
@@ -350,21 +349,16 @@ static void test_make_orbitals_cube_spin_type_beta() {
                      std::string("RunType=MakeOrbitalsCube\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
-                   + "OrbitalType=Custom\n"
-                   + "OrbitalsNumbers=1,2,3\n"
+                   + "OrbitalType=All\n"
                    + "SpinType=Beta\n"
-                   + "SpinList=Beta,Beta,Beta\n"
-                   + "Grids=" + output + "\n");
-    //! it seems SpinType=Beta is neither required nor sufficient to get beta orbitals
-    //! In contrast, specifying SpinList=Beta,Beta,Beta seems to be sufficient and necessary
-    // TODO: clarify the role of SpinType vs SpinList, fix what needs to be and document the expected behavior.
+                   + "GridFilesNames=" + output + "\n");
     
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating orbitals cube, please wait...");
-    assert_stdout_contains(r, "Data saved to file:");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -374,7 +368,7 @@ static void test_make_orbitals_cube_spin_type_beta() {
     std::remove(output.c_str());
 }
 
-// [P1 | nightly] Cover SpinType mode: Alpha-Beta
+// [P1 | nightly] Cover SpinType mode: Alpha-Beta which only works with OrbitalType=All
 static void test_make_orbitals_cube_spin_type_alpha_beta() {
     const std::string root = repo_root();
     const std::string analytic = root + "/examples/Orbitals/h2o.molden";
@@ -385,21 +379,115 @@ static void test_make_orbitals_cube_spin_type_alpha_beta() {
                      std::string("RunType=MakeOrbitalsCube\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
-                   + "OrbitalType=Custom\n"
-                   + "OrbitalsNumbers=1,2,3\n"
+                   + "OrbitalType=All\n"
                    + "SpinType=Alpha-Beta\n"
-                   + "SpinList=Alpha,Beta,Alpha\n"
-                   + "Grids=" + output + "\n");
-    //! it seems SpinType=Alpha-Beta is neither required nor sufficient to get alpha-beta orbitals
-    //! In contrast, specifying SpinList=[...] is required and sufficient to get the corresponding spin orbitals
-    // TODO: clarify the role of SpinType vs SpinList, fix what needs to be and document the expected behavior.
+                   + "GridFilesNames=" + output + "\n");
     
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating orbitals cube, please wait...");
-    assert_stdout_contains(r, "Data saved to file:");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
+    assert_file_exists(output);
+    assert_cube_header_parseable(output);
+    assert_cube_has_finite_values(output);
+
+    // Clean up
+    std::remove(input_path.c_str());
+    std::remove(output.c_str());
+}
+
+// [P1 | nightly] Cover SpinList mode: Alpha which only works with OrbitalType=Custom
+static void test_make_orbitals_cube_spin_list_alpha() {
+    const std::string root = repo_root();
+    const std::string analytic = root + "/examples/Orbitals/h2o.molden";
+    const std::string output = "/tmp/cdftt_test_make_orbitals_cube_spin_list_alpha.cube";
+    const std::string input_path = "/tmp/cdftt_test_make_orbitals_cube_spin_list_alpha.txt";
+
+    write_input_file(input_path,
+                     std::string("RunType=MakeOrbitalsCube\n")
+                   + "AnalyticFiles=" + analytic + "\n"
+                   + "Size=Medium\n"
+                   + "OrbitalType=Custom\n"
+                   + "OrbitalsNumbers=1,2,3\n"
+                   + "SpinList=Alpha,Alpha,Alpha\n"
+                   + "GridFilesNames=" + output + "\n");
+
+    const RunResult r = run_cdftt(input_path);
+
+    // ! `OrbitalType=Custom` crashes without any stdout or stderr output, returning -1 exit code.
+
+    assert_zero_exit(r);
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
+    assert_file_exists(output);
+    assert_cube_header_parseable(output);
+    assert_cube_has_finite_values(output);
+
+    // Clean up
+    std::remove(input_path.c_str());
+    std::remove(output.c_str());
+}
+
+// [P1 | nightly] Cover SpinList mode: Beta which only works with OrbitalType=Custom
+static void test_make_orbitals_cube_spin_list_beta() {
+    const std::string root = repo_root();
+    const std::string analytic = root + "/examples/Orbitals/h2o.molden";
+    const std::string output = "/tmp/cdftt_test_make_orbitals_cube_spin_list_beta.cube";
+    const std::string input_path = "/tmp/cdftt_test_make_orbitals_cube_spin_list_beta.txt";
+
+    write_input_file(input_path,
+                     std::string("RunType=MakeOrbitalsCube\n")
+                   + "AnalyticFiles=" + analytic + "\n"
+                   + "Size=Medium\n"
+                   + "OrbitalType=Custom\n"
+                   + "OrbitalsNumbers=1,2,3\n"
+                   + "SpinList=Beta,Beta,Beta\n"
+                   + "GridFilesNames=" + output + "\n");
+
+    const RunResult r = run_cdftt(input_path);
+
+    // ! `OrbitalType=Custom` crashes without any stdout or stderr output, returning -1 exit code.
+
+    assert_zero_exit(r);
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
+    assert_file_exists(output);
+    assert_cube_header_parseable(output);
+    assert_cube_has_finite_values(output);
+
+    // Clean up
+    std::remove(input_path.c_str());
+    std::remove(output.c_str());
+}
+
+// [P1 | nightly] Cover SpinList mode: mixed which only works with OrbitalType=Custom
+static void test_make_orbitals_cube_spin_list_mixed() {
+    const std::string root = repo_root();
+    const std::string analytic = root + "/examples/Orbitals/h2o.molden";
+    const std::string output = "/tmp/cdftt_test_make_orbitals_cube_spin_list_mixed.cube";
+    const std::string input_path = "/tmp/cdftt_test_make_orbitals_cube_spin_list_mixed.txt";
+
+    write_input_file(input_path,
+                     std::string("RunType=MakeOrbitalsCube\n")
+                   + "AnalyticFiles=" + analytic + "\n"
+                   + "Size=Medium\n"
+                   + "OrbitalType=Custom\n"
+                   + "OrbitalsNumbers=1,2,3\n"
+                   + "SpinList=Alpha,Beta,Alpha\n"
+                   + "GridFilesNames=" + output + "\n");
+
+    const RunResult r = run_cdftt(input_path);
+
+    // ! `OrbitalType=Custom` crashes without any stdout or stderr output, returning -1 exit code.
+
+    assert_zero_exit(r);
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -424,7 +512,7 @@ static void test_make_orbitals_cube_spin_list_shorter_than_orbitals_numbers() {
                    + "OrbitalType=Custom\n"
                    + "OrbitalsNumbers=1,2,3,4,5\n"
                    + "SpinList=Alpha,Beta\n" // shorter than OrbitalsNumbers
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
     
     const RunResult r = run_cdftt(input_path);
 
@@ -441,7 +529,7 @@ int main() {
         { "test_make_orbitals_cube_smoke",             test_make_orbitals_cube_smoke             },
         { "test_make_orbitals_cube_invalid_selection", test_make_orbitals_cube_invalid_selection },
         { "test_make_orbitals_cube_orbital_type_all", test_make_orbitals_cube_orbital_type_all },
-        { "test_make_orbitals_cube_orbital_type_occ", test_make_orbitals_cube_orbital_type_occ },
+        { "test_make_orbitals_cube_orbital_type_occupied", test_make_orbitals_cube_orbital_type_occupied },
         { "test_make_orbitals_cube_orbital_type_virtual", test_make_orbitals_cube_orbital_type_virtual },
         { "test_make_orbitals_cube_orbital_type_homo", test_make_orbitals_cube_orbital_type_homo },
         { "test_make_orbitals_cube_orbital_type_lumo", test_make_orbitals_cube_orbital_type_lumo },
@@ -450,6 +538,9 @@ int main() {
         { "test_make_orbitals_cube_spin_type_alpha", test_make_orbitals_cube_spin_type_alpha },
         { "test_make_orbitals_cube_spin_type_beta", test_make_orbitals_cube_spin_type_beta },
         { "test_make_orbitals_cube_spin_type_alpha_beta", test_make_orbitals_cube_spin_type_alpha_beta },
+        { "test_make_orbitals_cube_spin_list_alpha", test_make_orbitals_cube_spin_list_alpha },
+        { "test_make_orbitals_cube_spin_list_beta", test_make_orbitals_cube_spin_list_beta },
+        {"test_make_orbitals_cube_spin_list_mixed", test_make_orbitals_cube_spin_list_mixed},
         { "test_make_orbitals_cube_spin_list_shorter_than_orbitals_numbers", test_make_orbitals_cube_spin_list_shorter_than_orbitals_numbers }
     };
 
@@ -467,6 +558,6 @@ int main() {
         }
     }
 
-    std::cout << "\n" << passed << " passed, " << failed << " failed." << std::endl;
+    std::cout << passed << " passed, " << failed << " failed.\n" << std::endl;
     return failed > 0 ? 1 : 0;
 }

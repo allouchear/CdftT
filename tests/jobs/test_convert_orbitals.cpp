@@ -51,7 +51,7 @@ static void test_convert_orbitals_smoke() {
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Current job: ConvertOrbitals");
+    assert_stdout_contains(r, "has been converted");
     assert_file_exists(output_orbitals);
     assert_file_nonempty(output_orbitals);
 
@@ -93,7 +93,7 @@ static void test_convert_orbitals_matrix() {
         {"fchk","molden"}, // Ok
         // Molden <-> Log
         // {"molden", "log"},  //? "Format not recognize, please choose a valide format" [DOCUMENTED]
-        {"log","molden"},  //! [ SKIPPED ] Convert log -> molden (fixture missing)
+        {"log","molden"},  // Ok
         // Molden <-> Gabedit
         {"molden","gab"},  //! "Gabedit Format can't read mixte basis." [UNDOCUMENTED]
         {"gab","molden"},  // Ok
@@ -102,18 +102,18 @@ static void test_convert_orbitals_matrix() {
         {"fchk","wfx"},    // Ok
         // WFX <-> Log
         // {"wfx", "log"},     //? "Format not recognize, please choose a valide format" [DOCUMENTED]
-        {"log","wfx"},     //! [ SKIPPED ] Convert log -> wfx (fixture missing)
+        {"log","wfx"},     // Ok
         // WFX <-> Gabedit
         {"wfx","gab"},     //! "This option is nnot implemente." [UNDOCUMENTED]
         {"gab","wfx"},     // Ok
         // FCHK <-> Log
         // {"fchk","log"},     //? "Format not recognize, please choose a valide format" [DOCUMENTED]
-        {"log","fchk"},   //! [ SKIPPED ] Convert log -> fchk (fixture missing)
+        // {"log","fchk"},   //? Format not recognize, please choose a valide format" [DOCUMENTED]
         // FCHK <-> Gabedit
         {"fchk","gab"},   // Ok
         // {"gab","fchk"},     //? "Format not recognize, please choose a valide format" [DOCUMENTED]
         // Log <-> Gabedit
-        {"log","gab"},    //! [ SKIPPED ] Convert log -> gab (fixture missing)
+        {"log","gab"},    // Ok
         // {"gab","log"},      //? "Format not recognize, please choose a valide format" [DOCUMENTED]
     };
 
@@ -141,8 +141,9 @@ static void test_convert_orbitals_matrix() {
         // Run the conversion and assert expected behavior
         try {
             const RunResult r = run_cdftt(input_path);
+            // std::cout << "STDOUT:\n" << r.stdout_text << std::endl;
             assert_zero_exit(r);
-            assert_stdout_contains(r, "Current job: ConvertOrbitals");
+            assert_stdout_contains(r, "has been converted");
             assert_file_exists(output_orbitals);
             assert_file_nonempty(output_orbitals);
             // Clean up for this iteration

@@ -17,6 +17,7 @@ HELPERS_CPP="$TESTS_DIR/helpers.cpp"
 # Defaults; can be overridden by env var.
 CDFTT_BINARY_DEFAULT="$REPO_DIR/src/applications/cdftt/cdftt"
 CDFTT_BINARY="${CDFTT_BINARY:-$CDFTT_BINARY_DEFAULT}"
+CDFTT_REPO_ROOT="${CDFTT_REPO_ROOT:-$REPO_DIR}"
 
 # Compiler settings; can be overridden by env var.
 CXX="${CXX:-g++}"
@@ -89,28 +90,64 @@ build_many() {
     done
 }
 
-# Run a single test by name (expects it to be built already).
+# Result variables filled by run_one for run_many to consume.
+RUN_ONE_PASSED=0
+RUN_ONE_FAILED=0
+
 run_one() {
     local test_name="$1"
     local exe="$BUILD_DIR/$test_name"
+    local log_file="$BUILD_DIR/$test_name.log"
 
     if [[ ! -x "$exe" ]]; then
         echo "Error: executable not found: $exe" >&2
-        echo "Run '$0 build $test_name' first, or use '$0 run $test_name'." >&2
-        return 1
+        RUN_ONE_PASSED=0
+        RUN_ONE_FAILED=1
+        return 2
     fi
 
+    RUNDIR=/tmp/cdftt_test_logs/$test_name
+    mkdir -p "$RUNDIR"
+    cd "$RUNDIR"
+
     echo "[RUN  ] $test_name"
-    CDFTT_BINARY="$CDFTT_BINARY" "$exe"
+    local status=0
+
+    if CDFTT_BINARY="$CDFTT_BINARY" "$exe" 2>&1 | tee "$log_file"; then
+        status=0
+    else
+        status=$?
+    fi
+
+    local results
+    results=$(parse_test_results "$(cat "$log_file")")
+    RUN_ONE_PASSED=$(echo "$results" | cut -d' ' -f1)
+    RUN_ONE_FAILED=$(echo "$results" | cut -d' ' -f2)
+
+    if [[ $status -ne 0 && $RUN_ONE_PASSED -eq 0 && $RUN_ONE_FAILED -eq 0 ]]; then
+        RUN_ONE_FAILED=1
+    fi
+
+    cd - >/dev/null
+
+    return $status
 }
 
-# Run multiple tests by name.
 run_many() {
     local names=("$@")
     local name
+    local total_passed=0
+    local total_failed=0
+
     for name in "${names[@]}"; do
-        run_one "$name"
+        run_one "$name" || true
+        total_passed=$((total_passed + RUN_ONE_PASSED))
+        total_failed=$((total_failed + RUN_ONE_FAILED))
     done
+
+    echo "=== SUMMARY ==="
+    echo "Total: $total_passed passed, $total_failed failed"
+    [[ "$total_failed" -eq 0 ]]
 }
 
 # Parse test results from the last line of output
@@ -174,48 +211,12 @@ main() {
             ensure_cdftt_binary
             build_many "${selected[@]}"
             
-            # Track total results
-            local total_passed=0
-            local total_failed=0
-            
-            # Run each test and collect results
-            for test_name in "${selected[@]}"; do
-                local exe="$BUILD_DIR/$test_name"
-                if [[ -x "$exe" ]]; then
-                    echo "[RUN  ] $test_name"
-                    local output
-                    local status=0
-                    if output=$(CDFTT_BINARY="$CDFTT_BINARY" "$exe" 2>&1); then
-                        status=0
-                    else
-                        status=$?
-                    fi
+            # Mandatory to locate inputs when running tests from "/tmp/cdftt_test_logs/[...]/"
+            export CDFTT_REPO_ROOT="$CDFTT_REPO_ROOT"
 
-                    # Always display test output, even when the test binary failed.
-                    echo "$output"
-
-                    local results
-                    results=$(parse_test_results "$output")
-                    local passed=$(echo "$results" | cut -d' ' -f1)
-                    local failed=$(echo "$results" | cut -d' ' -f2)
-
-                    # If the binary failed before printing a summary, count it as one failed test binary.
-                    if [[ "$status" -ne 0 && "$passed" -eq 0 && "$failed" -eq 0 ]]; then
-                        failed=1
-                    fi
-                    
-                    total_passed=$((total_passed + passed))
-                    total_failed=$((total_failed + failed))
-                else
-                    echo "Error: executable not found: $exe" >&2
-                    exit 1
-                fi
-            done
-            
-            # Display summary
-            echo "=== SUMMARY ==="
-            echo "Total: $total_passed passed, $total_failed failed"
-            [[ "$total_failed" -eq 0 ]]
+            # Run selected tests and print a summary. run_many prints the summary
+            # and returns success only if all tests passed.
+            run_many "${selected[@]}"
             ;;
         *)
             usage

@@ -21,7 +21,7 @@ using namespace cdftt_tests;
         - Required companion lines:
                     AnalyticFiles=<inputOrbitalFile>
                     Size=<Small|Medium|Large|...>
-                    Grids=<outputCubePath>
+                    GridFilesNames=<outputCubePath>
 
     Expected behavior to anchor assertions:
         - Happy path:
@@ -47,7 +47,7 @@ static void test_make_density_cube_smoke() {
                      std::string("RunType=MakeDensityCube\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     // The run should succeed and print markers about building the domain and creating the density
     // cube; the output file should be created at the requested path, have a parseable header, and
@@ -55,9 +55,10 @@ static void test_make_density_cube_smoke() {
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating density cube, please wait...");
-    assert_stdout_contains(r, "Density cube saved to file");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Creating density grid, please wait...");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -77,7 +78,7 @@ static void test_make_density_cube_invalid_input_extension() {
                      "RunType=MakeDensityCube\n"
                      "AnalyticFiles=dummy.xyz\n"
                      "Size=Medium\n"
-                     "Grids=/tmp/cdftt_should_not_exist_density.cube\n");
+                     "GridFilesNames=/tmp/cdftt_should_not_exist_density.cube\n");
 
     const RunResult r = run_cdftt(input_path);
 
@@ -99,14 +100,15 @@ static void test_make_density_cube_size_coarse() {
                      std::string("RunType=MakeDensityCube\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Coarse\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating density cube, please wait...");
-    assert_stdout_contains(r, "Density cube saved to file");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Creating density grid, please wait...");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -131,14 +133,15 @@ static void test_make_density_cube_size_medium() {
                      std::string("RunType=MakeDensityCube\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating density cube, please wait...");
-    assert_stdout_contains(r, "Density cube saved to file");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Creating density grid, please wait...");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -163,14 +166,15 @@ static void test_make_density_cube_size_fine() {
                      std::string("RunType=MakeDensityCube\n")
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Fine\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating density cube, please wait...");
-    assert_stdout_contains(r, "Density cube saved to file");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Creating density grid, please wait...");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -197,14 +201,15 @@ static void test_make_density_cube_size_custom() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Custom\n"
                    + "CustomSizeData=80,80,80,5,5,5,0.15,0,0,0,0.15,0,0,0,0.15\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating density cube, please wait...");
-    assert_stdout_contains(r, "Density cube saved to file");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Creating density grid, please wait...");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -230,7 +235,7 @@ static void test_make_density_cube_size_custom_malformed() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Custom\n"
                    + "CustomSizeData=80,80,80,5,5,\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
@@ -268,6 +273,6 @@ int main() {
         }
     }
 
-    std::cout << "\n" << passed << " passed, " << failed << " failed." << std::endl;
+    std::cout << passed << " passed, " << failed << " failed.\n" << std::endl;
     return failed > 0 ? 1 : 0;
 }

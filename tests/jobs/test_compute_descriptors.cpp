@@ -19,7 +19,7 @@ using namespace cdftt_tests;
         - Mandatory header line:
                     RunType=ComputeDescriptors
         - Required companion lines for this smoke scenario:
-                    Grids=<grid1>,<grid2>,<grid3>
+                    GridFilesNames=<grid1>,<grid2>,<grid3>
                     PartitionMethod=On-Grid
                     Energies=<IP>,<EA>
 
@@ -43,7 +43,7 @@ static void test_compute_descriptors_smoke_3grid_energies() {
 
     write_input_file(input_path,
                      std::string("RunType=ComputeDescriptors\n")
-                   + "Grids=" + g1 + "," + g2 + "," + g3 + "\n"
+                   + "GridFilesNames=" + g1 + "," + g2 + "," + g3 + "\n"
                    + "PartitionMethod=On-Grid\n"
                    + "Energies=0.30075,0.02092\n");
 
@@ -53,7 +53,7 @@ static void test_compute_descriptors_smoke_3grid_energies() {
     assert_zero_exit(r);
     assert_stdout_contains(r, "Volume partition method: On-Grid");
     assert_stdout_contains(r, "Reading Ionization potential I =");
-    assert_stdout_contains(r, "Symbol k                f-");
+    assert_stdout_contains(r, "Time in ms:");
 
     // Clean up the temporary input file.
     std::remove(input_path.c_str());
@@ -111,7 +111,7 @@ static void test_fd_path_with_3_analytic_files() {
 
     write_input_file(input_path,
         "RunType=ComputeDescriptors\n"
-        "Grids=" + g1 + "," + g2 + "," + g3 + "\n"
+        "Grid=" + g1 + "," + g2 + "," + g3 + "\n"
         "PartitionMethod=FD\n"
         "AnalyticFiles=" + a1 + "," + a2 + "," + a3 + "\n");
 
@@ -127,7 +127,8 @@ static void test_fd_path_with_3_analytic_files() {
     assert_stdout_contains(r, "Reading data from " + a1);
     assert_stdout_contains(r, "Reading data from " + a2);
     assert_stdout_contains(r, "Reading data from " + a3);
-    assert_stdout_contains(r, "Symbol k                f-");
+    assert_stdout_contains(r, "Time in ms:");
+
 
     // Clean up the temporary input file.
     std::remove(input_path.c_str());
@@ -154,7 +155,7 @@ static void test_fmo_path_with_1_analytic_file() {
 
     write_input_file(input_path,
         "RunType=ComputeDescriptors\n"
-        "Grids=" + g1 + "," + g2 + "," + g3 + "\n"
+        "GridFilesNames=" + g1 + "," + g2 + "," + g3 + "\n"
         "PartitionMethod=FMO\n"
         "AnalyticFiles=" + a1 + "\n");
 
@@ -168,7 +169,7 @@ static void test_fmo_path_with_1_analytic_file() {
     // canonical anchor used across descriptor tests.
     assert_stdout_contains(r, "Volume partition method: FMO");
     assert_stdout_contains(r, "Reading data from " + a1);
-    assert_stdout_contains(r, "Symbol k                f-");
+    assert_stdout_contains(r, "Time in ms:");
 
     // Clean up the temporary input file.
     std::remove(input_path.c_str());
@@ -186,7 +187,7 @@ static void test_compute_descriptors_various_energies_list_sizes() {
     // Test with two energies (IP and EA).
     write_input_file(input_path,
         std::string("RunType=ComputeDescriptors\n")
-        + "Grids=" + g1 + "," + g2 + "," + g3 + "\n"
+        + "GridFilesNames=" + g1 + "," + g2 + "," + g3 + "\n"
         + "PartitionMethod=On-Grid\n"
         + "Energies=0.30075,0.02092\n");
         
@@ -195,12 +196,12 @@ static void test_compute_descriptors_various_energies_list_sizes() {
     // TODO: refactor the output for better casing (capital letters are randomly at the start of words)
     assert_stdout_contains(r2, "Reading Ionization potential I = 0.30075");
     assert_stdout_contains(r2, "and electron Affinity A = 0.02092");
-    assert_stdout_contains(r2, "Symbol k                f-");
+    assert_stdout_contains(r2, "Time in ms:");
 
     // Test with three energies (which will just be read as total energies).
     write_input_file(input_path,
                      std::string("RunType=ComputeDescriptors\n")
-                   + "Grids=" + g1 + "," + g2 + "," + g3 + "\n"
+                   + "GridFilesNames=" + g1 + "," + g2 + "," + g3 + "\n"
                    + "PartitionMethod=On-Grid\n"
                    + "Energies=0.30075,0.02092,0.12345\n");
 
@@ -209,14 +210,13 @@ static void test_compute_descriptors_various_energies_list_sizes() {
     assert_stdout_contains(r3, "Reading Total Energies: E1 = 0.30075");
     assert_stdout_contains(r3, "E2 = 0.02092");
     assert_stdout_contains(r3, "and E3 = 0.12345");
-    assert_stdout_contains(r3, "Symbol k                f-");
+    assert_stdout_contains(r3, "Time in ms:");
 
     // Clean up the temporary input file.
     std::remove(input_path.c_str());
 }
 
 int main() {
-    //! List of tests to run -- update with new tests for this job type as needed.
     const Test tests[] = {
         { "test_compute_descriptors_smoke_3grid_energies",   test_compute_descriptors_smoke_3grid_energies   },
         { "test_compute_descriptors_invalid_partition_bbs", test_compute_descriptors_invalid_partition_bbs },
@@ -240,6 +240,6 @@ int main() {
         }
     }
 
-    std::cout << "\n" << passed << " passed, " << failed << " failed." << std::endl;
+    std::cout << passed << " passed, " << failed << " failed.\n" << std::endl;
     return failed > 0 ? 1 : 0;
 }

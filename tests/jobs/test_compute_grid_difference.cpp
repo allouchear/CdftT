@@ -12,13 +12,13 @@ using namespace cdftt_tests;
         - It subtracts two cube grids and writes the resulting difference into a
             third output cube file.
         - This job is strict on argument count: exactly three paths are expected in
-            the Grids field (left operand, right operand, output file).
+            the GridFilesNames field (left operand, right operand, output file).
 
     Detailed header command expectations:
         - Mandatory header line:
                     RunType=ComputeGridDifference
         - Required companion line:
-                    Grids=<gridA>,<gridB>,<outputCube>
+                    GridFilesNames=<gridA>,<gridB>,<outputCube>
 
     Expected behavior to anchor assertions:
         - Happy path:
@@ -44,7 +44,7 @@ static void test_compute_grid_difference_smoke() {
 
     write_input_file(input_path,
                      std::string("RunType=ComputeGridDifference\n")
-                   + "Grids=" + in1 + "," + in2 + "," + out + "\n");
+                   + "GridFilesNames=" + in1 + "," + in2 + "," + out + "\n");
 
     // The run should succeed and print markers about computing the difference and saving the output
     // file; the output file should be created at the requested path.
@@ -66,7 +66,7 @@ static void test_compute_grid_difference_invalid_grid_count() {
     const std::string input_path = "/tmp/cdftt_test_grid_difference_invalid_count.txt";
     write_input_file(input_path,
                      "RunType=ComputeGridDifference\n"
-                     "Grids=a.cube,b.cube\n");
+                     "GridFilesNames=a.cube,b.cube\n");
 
     const RunResult r = run_cdftt(input_path);
 
@@ -87,7 +87,7 @@ static void test_compute_grid_difference_numeric_spotcheck() {
 
     write_input_file(input_path,
                      std::string("RunType=ComputeGridDifference\n")
-                   + "Grids=" + in1 + "," + in2 + "," + out + "\n");
+                   + "GridFilesNames=" + in1 + "," + in2 + "," + out + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
@@ -120,7 +120,7 @@ static void test_compute_grid_difference_numeric_compare_inputs() {
 
     write_input_file(input_path,
                      std::string("RunType=ComputeGridDifference\n")
-                   + "Grids=" + in1 + "," + in2 + "," + out + "\n");
+                   + "GridFilesNames=" + in1 + "," + in2 + "," + out + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
@@ -174,7 +174,7 @@ int main() {
         }
     }
 
-    std::cout << "\n" << passed << " passed, " << failed << " failed." << std::endl;
+    std::cout << passed << " passed, " << failed << " failed.\n" << std::endl;
     return failed > 0 ? 1 : 0;
 }
 

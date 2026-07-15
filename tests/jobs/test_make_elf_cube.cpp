@@ -20,7 +20,7 @@ using namespace cdftt_tests;
                     AnalyticFiles=<inputOrbitalFile>
                     Size=<Small|Medium|Large|...>
                     ELFMethod=<method>
-                    Grids=<outputCubePath>
+                    GridFilesNames=<outputCubePath>
 
     Expected behavior to anchor assertions:
         - Happy path:
@@ -47,7 +47,7 @@ static void test_make_elf_cube_smoke() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
                    + "ELFMethod=Becke\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     // The run should succeed and print markers about building the domain and creating the ELF
     // cube; the output file should be created at the requested path, have a parseable header, and
@@ -55,9 +55,9 @@ static void test_make_elf_cube_smoke() {
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating ELF cube, please wait...");
-    assert_stdout_contains(r, "ELF cube saved to file");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -79,7 +79,7 @@ static void test_make_elf_cube_invalid_method() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
                    + "ELFMethod=BadMethod\n"
-                   + "Grids=/tmp/cdftt_should_not_exist_elf.cube\n");
+                   + "GridFilesNames=/tmp/cdftt_should_not_exist_elf.cube\n");
 
     const RunResult r = run_cdftt(input_path);
 
@@ -102,14 +102,14 @@ static void test_make_elf_cube_elf_method_becke() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
                    + "ELFMethod=Becke\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating ELF cube, please wait...");
-    assert_stdout_contains(r, "ELF cube saved to file");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -131,14 +131,14 @@ static void test_make_elf_cube_size_coarse() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Coarse\n"
                    + "ELFMethod=Becke\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating ELF cube, please wait...");
-    assert_stdout_contains(r, "ELF cube saved to file");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -160,14 +160,14 @@ static void test_make_elf_cube_size_medium() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Medium\n"
                    + "ELFMethod=Becke\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating ELF cube, please wait...");
-    assert_stdout_contains(r, "ELF cube saved to file");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -189,14 +189,14 @@ static void test_make_elf_cube_size_fine() {
                    + "AnalyticFiles=" + analytic + "\n"
                    + "Size=Fine\n"
                    + "ELFMethod=Becke\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating ELF cube, please wait...");
-    assert_stdout_contains(r, "ELF cube saved to file");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -219,14 +219,14 @@ static void test_make_elf_cube_size_custom() {
                    + "Size=Custom\n"
                    + "CustomSizeData=80,80,80,5,5,5,0.15,0,0,0,0.15,0,0,0,0.15\n"
                    + "ELFMethod=Becke\n"
-                   + "Grids=" + output + "\n");
+                   + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
 
     assert_zero_exit(r);
-    assert_stdout_contains(r, "Building domain, please wait...");
-    assert_stdout_contains(r, "Creating ELF cube, please wait...");
-    assert_stdout_contains(r, "ELF cube saved to file");
+    assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
+    assert_stdout_contains(r, "Writing cube file, please wait...");
+    assert_stdout_contains(r, "Density cube saved to " + output);
     assert_file_exists(output);
     assert_cube_header_parseable(output);
     assert_cube_has_finite_values(output);
@@ -261,6 +261,6 @@ int main() {
         }
     }
 
-    std::cout << "\n" << passed << " passed, " << failed << " failed." << std::endl;
+    std::cout << passed << " passed, " << failed << " failed.\n" << std::endl;
     return failed > 0 ? 1 : 0;
 }
