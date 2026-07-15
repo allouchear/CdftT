@@ -1,7 +1,7 @@
 Computing energies with added point charges: ``ComputeEnergyWithPointCharges``
 ==============================================================================
 
-This job computes the new energy levels of a system when one or many point charges are added. This computation can be performed analytically, on a cube grid or on a Becke grid.
+This job computes the new energy levels of a system when one or many point charges are added. This computation can be performed analytically, on a cartesian grid or on a Becke grid.
 
 The number of energy levels computed is equal to the number of states given in the input file that describes the electronic transitions in the unperturbed system.
 
@@ -17,8 +17,8 @@ Below are the available parameters for this job.
 Optional parameters that are not specified in the input file will take their default value (this will be announced with a "note" during the run).
 
 
-Mandatory parameter
-^^^^^^^^^^^^^^^^^^^
+Mandatory parameters
+^^^^^^^^^^^^^^^^^^^^
 
 ``AnalyticFiles*``
 """"""""""""""""""
@@ -37,6 +37,12 @@ Specifies the name of the input file containing the information about the system
 - add a second file (``.fchk`` or ``.log``) in this parameter value, that will only be used to read the GS energy
 - define the GS energy using the ``GroundStateEnergy`` parameter (see below)
 - use a file format that store both electronic transitions and the GS energy in the ``TransitionsFileName`` parameter (see below).
+
+
+``RunType*``
+""""""""""""
+
+Specifies the CdftT module to run. To run this job, set this parameter to ``ComputeEnergyWithPointCharges``.
 
 
 Mandatory/optional parameters
@@ -60,6 +66,7 @@ The format of this parameter value is: ``Nx, Ny, Nz, Ox, Oy, Oz, T11,T12, T13, T
 Used to specify the Ground State (GS) energy of the system, **in Hartree**.
 
 This parameter is either mandatory or optional depending on the file format used in the ``AnalyticFiles`` parameter. GS energy can also be read from an analytic file (if provided) or from a file describing the electronic transitions in the unperturbed system (if provided). If none of these files are provided, then this parameter must be specified in the input file.
+
 
 ``TransitionsFileName(*)``
 """"""""""""""""""""""""""
@@ -166,6 +173,16 @@ A coordinate is defined by a triplet of numbers ``(x, y, z)`` (with the space di
 If this parameter is not provided in the input file, the coordinates of the atoms will be used.
 
 
+``SavePseudoOrbitals``
+""""""""""""""""""""""
+
+Used to specify whether the pseudo-orbitals should be saved in a ``.cube`` file.
+Two files are created: one for the alpha spin and one for the beta spin.
+The resulting filenames will be ``[outputPrefix_]lrf_pseudoOrbitals_alpha.cube`` and ``[outputPrefix_]lrf_pseudoOrbitals_beta.cube``, with the prefix defined by the ``OutputPrefix`` parameter (see above), if any.
+
+Possible values are ``True`` and ``False`` (default).
+
+
 ``ShowProgress``
 """"""""""""""""
 
@@ -226,7 +243,8 @@ Possible values are:
 Transitions file format
 -----------------------
 
-The electronic transitions can be described in a ``.txt`` file. Below is an example of the expected format for this file, that includes to excited states:
+The electronic transitions can be read from a quantum chemistry software output file (such as ``.log`` from Gaussian) or from a ``.cdftt`` file produced by ``ComputeEnergyWithPointCharges``.
+They can also be described in a ``.txt`` file written manually. Below is an example of the expected format for this file, that includes two excited states:
 
 .. code-block:: none
     :linenos:

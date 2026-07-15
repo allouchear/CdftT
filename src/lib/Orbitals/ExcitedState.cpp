@@ -1,8 +1,12 @@
 #include <atomic>
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
-#include <iostream>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <iomanip>
+#include <numeric>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -26,10 +30,24 @@
 // PRIVATE METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos)
+void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress)
 {
+    // Assume the first Slater determinant corresponds to the Ground State
+    const SlaterDeterminant& groundStateSlaterDeterminant = psi_i._slaterDeterminants[0].first;
+    if (!groundStateSlaterDeterminant.get_isGroundStateSD())
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in ExcitedState::computeGammaMatrix(): The Ground State Slater Determinant has not been found." << std::endl;
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
     const std::vector<std::pair<SlaterDeterminant, double>>& slaterDeterminants_i = psi_i.get_slaterDeterminants();
     const std::vector<std::pair<SlaterDeterminant, double>>& slaterDeterminants_j = psi_j.get_slaterDeterminants();
+
+    std::vector<size_t> sdIndicesSortedByCoefficientDesc_i = psi_i.get_sdIndicesSortedByCoefficientDesc();
+    std::vector<size_t> sdIndicesSortedByCoefficientDesc_j = psi_j.get_sdIndicesSortedByCoefficientDesc();
 
     int numberOfMo = orbitals.get_numberOfMo();
 
@@ -46,6 +64,16 @@ void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double
         }
     }
 
+    const int nbStepsTotal = keptMoIndexes.size() * keptMoIndexes.size() * sdIndicesSortedByCoefficientDesc_i.size() * 2;
+    std::atomic<int> progress(0);
+    int lastProgress = -1;
+
+    // Show progress bar at 0% at the beginning
+    if (showProgress)
+    {
+        print_progressBar(0, nbStepsTotal, lastProgress);
+    }
+
     for (int spin = 0; spin < 2; ++spin)
     {
         SpinType spinType = static_cast<SpinType>(spin);
@@ -60,15 +88,23 @@ void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double
             {
                 for(int q : keptMoIndexes)
                 {
-                    for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_i : slaterDeterminants_i)
+                    for(size_t i : sdIndicesSortedByCoefficientDesc_i)
                     {
+                        const std::pair<SlaterDeterminant, double>& slaterDeterminant_i = slaterDeterminants_i[i];
+
                         // Make temporary SD on wich to apply the transition to check if it is valid (i.e. the orbital p from which to remove an electron was found in the SD)
                         SlaterDeterminant tmpSD = slaterDeterminant_i.first;
 
                         if(tmpSD.updateFromTransition(p + 1, spinType, q + 1, spinType)) // Because updateFromTransition() expects MO numbers (1-based)
                         {
-                            for(const std::pair<SlaterDeterminant, double>& slaterDeterminant_j : slaterDeterminants_j)
+                            // Get Slater Determinants with the same excitation degree as tmpSD
+                            int excitationDegree = tmpSD.getExcitationDegree(groundStateSlaterDeterminant);
+                            const std::vector<size_t>& sdIndicesWithSameExcitationDegree = psi_j.getSlaterDeterminantIndicesWithExcitationDegree(excitationDegree);
+
+                            // Only compare tmpSD to SD having the same degree of excitation (otherwise always not equivalent)
+                            for(size_t j : sdIndicesWithSameExcitationDegree)
                             {
+                                const std::pair<SlaterDeterminant, double>& slaterDeterminant_j = slaterDeterminants_j[j];
                                 if(SlaterDeterminant::equivalent(tmpSD, slaterDeterminant_j.first))
                                 {
                                     std::vector<std::vector<std::pair<int, int>>> diff = SlaterDeterminant::getDifferences(tmpSD, slaterDeterminant_j.first);
@@ -85,110 +121,149 @@ void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double
                                 }
                             }            
                         }
-                    }
-                }
+                        if (showProgress)
+                        {                            
+                            #ifdef ENABLE_OMP
+                            #pragma omp critical
+                            #endif
+                            {
+                                int currentStep = progress.fetch_add(1) + 1;
+                                print_progressBar(currentStep, nbStepsTotal, lastProgress);
+                            }
+                        } 
+                    }  
+                }             
             }
         }
     }
+    if (showProgress) {std::cout<<std::endl;}
 }
 
-void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi1, const ExcitedState& psi2, const Orbitals& orbitals, const std::vector<int>& ignoredMos)
+void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>& xMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress)
 {
+    int state_i_number = psi_i.get_number();
+    int state_j_number = psi_j.get_number();
+
     int numberOfMos = orbitals.get_numberOfMo();
+   
     // Build xMatrix matrixes
     xMatrix.resize(2, std::vector<std::vector<double>>(numberOfMos, std::vector<double>(numberOfMos, 0.0)));
 
-    int state1Number = psi1.get_number();
-    int state2Number = psi2.get_number();
-
-    // if electronic density
-    if (state1Number == state2Number)
+    // if electronic density or transition from ground state
+    if (state_i_number == state_j_number || state_i_number == 0)
     {
         for (int spin = 0; spin < 2; ++spin)
         {
             size_t numberOfOccupiedOrbitals = orbitals.getOccupiedOrbitalNumbers()[spin].size();
             size_t numberOfVirtualOrbitals = numberOfMos - numberOfOccupiedOrbitals;
 
-            // Build other matrixes needed to compute xMatrix
-            std::vector<std::vector<std::vector<double>>> tmpX(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
-            std::vector<std::vector<std::vector<double>>> occupiedMOsBlock(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfOccupiedOrbitals, 0.0)));
-            std::vector<std::vector<std::vector<double>>> virtualMOsBlock(2, std::vector<std::vector<double>>(numberOfVirtualOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
+            const std::vector<size_t>& sdIndicesSortedByCoefficientDesc_j = psi_j.get_sdIndicesSortedByCoefficientDesc();
 
-            for(size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
+            // Build X (using psi2 as it is the excited state for the GS->Ex in the transition case)
+            std::vector<std::vector<std::vector<double>>> X(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
+            for(size_t k : sdIndicesSortedByCoefficientDesc_j)
             {
-                for(size_t j = 0; j < numberOfVirtualOrbitals; ++j)
+                for(size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
                 {
-                    for(size_t k = 0; k < psi1._slaterDeterminants.size(); ++k)
+                    if (static_cast<size_t>(psi_j._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first) != i + 1)   // looks if the orbital in i^th position (0-based) is the MO number i+1 (1-based)
                     {
-                        // Check if the electron from MO number (i + 1) has been excited to the MO number (j + 1 + numberOfOccupiedOrbitals)
-                        // i.e. there is a transition from the (i + 1)^th occupied MO to the (j + 1)^th virtual MO
+                        size_t j = psi_j._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first-numberOfOccupiedOrbitals;
+                        X[spin][i][j-1] += psi_j._slaterDeterminants[k].second;   //if we got the j^th orbital in position i, it means we got a i+1 -> j transition
+                    }
+                }
+            }
 
-                        if (psi1._slaterDeterminants[k].first.get_occupiedOrbitals()[spin][i].first == static_cast<int>(j + numberOfOccupiedOrbitals + 1)) // +1 because get_occupiedOrbitals() returns MO numbers (1-based) in the first pair value
+            if (state_i_number == state_j_number) //if electronic density
+            {
+                std::vector<std::vector<std::vector<double>>> occupiedMOsBlock(2, std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfOccupiedOrbitals, 0.0)));
+                std::vector<std::vector<std::vector<double>>> virtualMOsBlock(2, std::vector<std::vector<double>>(numberOfVirtualOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
+
+                // Initialize first block of xMatrix (occupied MOs - occupied MOs))
+                for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
+                {
+                    occupiedMOsBlock[spin][i][i] = 1;
+                }
+
+                // Compute matrix multiplication: - tmpX * tmpX^T
+                for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
+                {
+                    for (size_t j = 0; j < numberOfOccupiedOrbitals; ++j)
+                    {
+                        for (size_t k = 0; k < numberOfVirtualOrbitals; ++k)
                         {
-                            tmpX[spin][i][j] += psi1._slaterDeterminants[k].second;
+                            occupiedMOsBlock[spin][i][j] -= X[spin][i][k] * X[spin][j][k];
                         }
-                    }                  
+                    }
                 }
-            }
 
-            // Initialize first block of xMatrix (occupied MOs - occupied MOs))
-            for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
-            {
-                occupiedMOsBlock[spin][i][i] = 1;
-            }
-
-            // Compute matrix multiplication: - tmpX * tmpX^T
-            for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
-            {
-                for (size_t j = 0; j < numberOfOccupiedOrbitals; ++j)
+                // Compute second block of xMatrix (virtual MOs - virtual MOs)
+                // Compute matrix multiplication: tmpX^T * tmpX
+                for (size_t i = 0; i < numberOfVirtualOrbitals; ++i)
                 {
-                    for (size_t k = 0; k < numberOfVirtualOrbitals; ++k)
+                    for (size_t j = 0; j < numberOfVirtualOrbitals; ++j)
                     {
-                        occupiedMOsBlock[spin][i][j] -= tmpX[spin][i][k] * tmpX[spin][j][k];
+                        for(size_t k = 0; k < numberOfOccupiedOrbitals; ++k)
+                        {
+                            virtualMOsBlock[spin][i][j] += X[spin][k][i] * X[spin][k][j];
+                        }
+                    }
+                }
+
+                // Fill xMatrix
+                for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
+                {
+                    for (size_t j = 0; j < numberOfOccupiedOrbitals; ++j)
+                    {
+                        xMatrix[spin][i][j] = occupiedMOsBlock[spin][i][j];
+                    }
+                }
+
+                for (size_t i = 0; i < numberOfVirtualOrbitals; ++i)
+                {
+                    for (size_t j = 0; j < numberOfVirtualOrbitals; ++j)
+                    {
+                        xMatrix[spin][i + numberOfOccupiedOrbitals][j + numberOfOccupiedOrbitals] = virtualMOsBlock[spin][i][j];
+                    }
+                }
+
+                // Set elements of xMatrix corresponding to ignored MOs to 0
+                for(int i : ignoredMos)
+                {
+                    for (int j = 0; j < numberOfMos; ++j)
+                    {
+                        xMatrix[spin][i - 1][j] = xMatrix[spin][j][i - 1] = 0.0; // Convert i from MO number (1-based) to MO index (0-based)
                     }
                 }
             }
-
-            // Compute second block of xMatrix (virtual MOs - virtual MOs)
-            // Compute matrix multiplication: tmpX^T * tmpX
-            for (size_t i = 0; i < numberOfVirtualOrbitals; ++i)
+            else if (state_i_number == 0) // else if transition from ground state density
             {
-                for (size_t j = 0; j < numberOfVirtualOrbitals; ++j)
+                for(size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
                 {
-                    for(size_t k = 0; k < numberOfOccupiedOrbitals; ++k)
+                    for(size_t j = 0; j < numberOfVirtualOrbitals; ++j)
                     {
-                        virtualMOsBlock[spin][i][j] += tmpX[spin][k][i] * tmpX[spin][k][j];
+                        xMatrix[spin][i][numberOfOccupiedOrbitals+j] = X[spin][i][j];
                     }
                 }
-            }
-
-            // Fill xMatrix
-            for (size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
-            {
-                for (size_t j = 0; j < numberOfOccupiedOrbitals; ++j)
+                double norm = 0.0;
+                for (auto& row : xMatrix[spin])
                 {
-                    xMatrix[spin][i][j] = occupiedMOsBlock[spin][i][j];
+                    for (auto& element : row)
+                    {
+                        norm += element*element;
+                    }
                 }
-            }
-
-            for (size_t i = 0; i < numberOfVirtualOrbitals; ++i)
-            {
-                for (size_t j = 0; j < numberOfVirtualOrbitals; ++j)
+                norm = std::sqrt(norm);
+                for (auto& row : xMatrix[spin])
                 {
-                    xMatrix[spin][i + numberOfOccupiedOrbitals][j + numberOfOccupiedOrbitals] = virtualMOsBlock[spin][i][j];
-                }
-            }
-
-            // Set elements of xMatrix corresponding to ignored MOs to 0
-            for(int i : ignoredMos)
-            {
-                for (int j = 0; j < numberOfMos; ++j)
-                {
-                    xMatrix[spin][i - 1][j] = xMatrix[spin][j][i - 1] = 0.0; // Convert i from MO number (1-based) to MO index (0-based)
+                    for (auto& element : row)
+                    {
+                        element /= norm;
+                    }
                 }
             }
         }
     }
+    /*
     else if (state1Number == 0) // else if transition from ground state density
     {
         for (int spin = 0; spin < 2; ++spin)
@@ -196,11 +271,9 @@ void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>&
             size_t numberOfOccupiedOrbitals = orbitals.getOccupiedOrbitalNumbers()[spin].size();
             size_t numberOfVirtualOrbitals = numberOfMos - numberOfOccupiedOrbitals;
 
-            std::vector<std::vector<double>> tmp(std::vector<std::vector<double>>(numberOfMos, std::vector<double>(numberOfMos, 0.0)));
-
+            std::vector<std::vector<double>> X(std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
 
             // Build X
-            std::vector<std::vector<double>> X(std::vector<std::vector<double>>(numberOfOccupiedOrbitals, std::vector<double>(numberOfVirtualOrbitals, 0.0)));
             for(size_t i = 0; i < numberOfOccupiedOrbitals; ++i)
             {
                 for(size_t j = 0; j < numberOfVirtualOrbitals; ++j)
@@ -217,6 +290,7 @@ void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>&
                     xMatrix[spin][i][numberOfOccupiedOrbitals+j] = X[i][j];
                 }
             }
+
             double norm = 0.0;
             for (auto& row : xMatrix[spin])
             {
@@ -236,11 +310,13 @@ void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>&
             }
         }
     }
+    */
     else // otherwise call other method
     {
-        std::cout<<"Warning : case \" transition "<<state1Number<<" to "<<state2Number<<" \" not suitable for  X method."<<std::endl;
-        std::cout<<"switching to Gamma method."<<std::endl;
-        ExcitedState::reducedDensityMatrix(xMatrix, RDMMethod::GAMMA, psi1, psi2, orbitals, ignoredMos);
+        std::cout << "Warning : case \" transition " << state_i_number << " to " << state_j_number << " \" not suitable for  X method." << std::endl;
+        std::cout << "Switching to Gamma method instead." << std::endl;
+
+        ExcitedState::reducedDensityMatrix(xMatrix, RDMMethod::GAMMA, psi_i, psi_j, orbitals, ignoredMos,showProgress);
     }
 }
 
@@ -253,14 +329,18 @@ ExcitedState::ExcitedState(const int number, const double energy) :
     _electronicTransitions(),
     _energy(energy),
     _number(number),
-    _slaterDeterminants()
+    _slaterDeterminants(),
+    _sdIndicesByExcitationDegree(),
+    _sdIndicesSortedByCoefficientDesc()
 { }
 
 ExcitedState::ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant) :
     _electronicTransitions(),
     _energy(energy),
     _number(0),
-    _slaterDeterminants({ { slaterDeterminant, 1.0 } })
+    _slaterDeterminants({ { slaterDeterminant, 1.0 } }),
+    _sdIndicesByExcitationDegree(),
+    _sdIndicesSortedByCoefficientDesc()
 { }
 
 
@@ -283,17 +363,27 @@ const std::vector<std::pair<SlaterDeterminant, double>>& ExcitedState::get_slate
     return _slaterDeterminants;
 }
 
+std::vector<size_t> ExcitedState::get_sdIndicesSortedByCoefficientDesc() const
+{
+    return _sdIndicesSortedByCoefficientDesc;
+}
+
 
 //----------------------------------------------------------------------------------------------------//
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void ExcitedState::addTransition(const SpinOrbital& initialOrbital, const SpinOrbital& finalOrbital, const double coefficient)
+void ExcitedState::addSlaterDeterminant(const SlaterDeterminant& slaterDeterminant, const double coefficient)
 {
-    _electronicTransitions.push_back(std::make_tuple(initialOrbital, finalOrbital, coefficient));
+    _slaterDeterminants.emplace_back(slaterDeterminant, coefficient);
 }
 
-void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant)
+void ExcitedState::addTransition(const SpinOrbital& initialOrbital, const SpinOrbital& finalOrbital, const double coefficient)
+{
+    _electronicTransitions.emplace_back(initialOrbital, finalOrbital, coefficient);
+}
+
+void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant, double limit)
 {
     // Apply the transitions to the Slater determinant
     for (const auto& transition : _electronicTransitions)
@@ -314,11 +404,58 @@ void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStat
         // Store Slater determinant
         _slaterDeterminants.emplace_back(slaterDeterminantTransition, coefficient);
     }
+
+    // Sort the Slater determinants based on the absolute values of their coefficients in descending order
+    size_t numberOfSD = _slaterDeterminants.size();
+
+    // Initialize SD coefficients
+    std::vector<double> coefficients(numberOfSD);
+    for(size_t i = 0; i < numberOfSD; ++i)
+    {
+        coefficients[i] = _slaterDeterminants[i].second;
+    }
+
+    // Sort SD indices based on the absolute values of their coefficients in descending order
+    std::vector<size_t> argsortSD(numberOfSD);
+    std::iota(argsortSD.begin(), argsortSD.end(), 0);
+    std::sort(argsortSD.begin(), argsortSD.end(), [&](size_t i1, size_t i2) { return std::abs(coefficients[i1]) > std::abs(coefficients[i2]); });
+
+    // Determine the threshold for significant coefficients based on the specified limit
+    double treshold = std::abs(coefficients[argsortSD[0]]) * limit;
+    
+    // Find the maximum index of SDs with coefficients above the threshold
+    double maxSdIndex = 0;
+    size_t i = 0;
+    while(i < argsortSD.size() && std::abs(coefficients[argsortSD[i]]) > treshold)
+    {
+        maxSdIndex = i;
+        ++i;
+    }
+
+    // Store the sorted SD indices with coefficients above the threshold
+    _sdIndicesSortedByCoefficientDesc = std::vector<size_t>(argsortSD.begin(), argsortSD.begin() + maxSdIndex + 1);
+
+
+    // Set the excitation degree for each Slater determinant
+    size_t nMax = _slaterDeterminants[0].first.get_occupiedOrbitals()[0].size() + _slaterDeterminants[0].first.get_occupiedOrbitals()[1].size(); //considering same size slater determinants
+    _sdIndicesByExcitationDegree.resize(nMax, std::vector<size_t>());
+    
+    // Only compute the excitation degree for the Slater determinants with coefficients above the threshold (i.e., those whose index is in _sdIndicesSortedByCoefficientDesc)
+    for (size_t i : _sdIndicesSortedByCoefficientDesc)   
+    {
+        size_t excitationDegree = _slaterDeterminants[i].first.getExcitationDegree(groundStateSlaterDeterminant);
+        _sdIndicesByExcitationDegree[excitationDegree].push_back(i);
+    }
 }
 
 int ExcitedState::getNumberOfTransitions() const
 {
     return static_cast<int>(_electronicTransitions.size());
+}
+
+const std::vector<size_t>& ExcitedState::getSlaterDeterminantIndicesWithExcitationDegree(int excitationDegree) const
+{
+    return _sdIndicesByExcitationDegree[excitationDegree];
 }
 
 bool ExcitedState::isGroundState() const
@@ -496,7 +633,7 @@ bool ExcitedState::readGroundStateEnergyFromTransitionsFile(const std::string& t
         }
 
         // Look for the ground state energy in the file
-        std::regex groundStateEnergyRegex("Ground State Energy\\s+:\\s+(-?\\d*\\.?\\d+)\\s+(eV|H)");
+        std::regex groundStateEnergyRegex("Ground State Energy\\s+(-?\\d*\\.?\\d+)\\s+(eV|H)");
         std::smatch groundStateEnergyRegexMatch;
         if (std::regex_search(line, groundStateEnergyRegexMatch, groundStateEnergyRegex))
         {
@@ -573,147 +710,155 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
         }
         else
         {
-            // New excited state: read energy
-            std::regex energyRegex("(?:energy)\\s+(-?\\d*\\.?\\d+)\\s+(eV|H)", std::regex_constants::icase);
-            std::smatch energyRegexMatch;
-            if (std::regex_search(line, energyRegexMatch, energyRegex))
+            // Ground State Energy: ignored
+            std::regex groundStateEnergyRegex("Ground State Energy\\s+(-?\\d*\\.?\\d+)\\s+(eV|H)", std::regex_constants::icase);
+            std::smatch groundStateEnergyRegexMatch;
+            if (!std::regex_search(line, groundStateEnergyRegexMatch, groundStateEnergyRegex))
             {
-                double energy = std::stod(energyRegexMatch[1]);
-                std::string energyUnit = energyRegexMatch[2];
+                std::cout << line;
 
-                // For the unit, we only analyze the first letter (eV or H)
-                if (std::toupper(energyUnit[0]) == 'E')
+                // New excited state: read energy
+                std::regex energyRegex("(?:Energy)\\s+(-?\\d*\\.?\\d+)\\s+(eV|H)", std::regex_constants::icase);
+                std::smatch energyRegexMatch;
+                if (std::regex_search(line, energyRegexMatch, energyRegex))
                 {
-                    energy *= Constants::EV_TO_HARTREE;
-                }
-                else if (std::toupper(energyUnit[0]) != 'H')
-                {
-                    ok = false;
+                    double energy = std::stod(energyRegexMatch[1]);
+                    std::string energyUnit = energyRegexMatch[2];
 
-                    std::stringstream errorMessage;
-                    errorMessage << "Error in ExcitedState::readTransitionsFromFile(): unknown energy unit \"" << energyUnit << "\" in transitions file " << transitionsFileName << '.' << std::endl;
-                    errorMessage << "Please use eV or H as energy unit.";
-
-                    print_error(errorMessage.str());
-
-                    std::exit(1);
-                }
-
-                ExcitedState excitedState(currentExcitedStatesRead, energy + groundStateEnergy);
-
-                // Read transitions
-                do
-                {
-                    std::getline(transitionsFile, line);
-                    line = trim_whitespaces(line, true, true);
-
-                    if (line[0] == '#')
+                    // For the unit, we only analyze the first letter (eV or H)
+                    if (std::toupper(energyUnit[0]) == 'E')
                     {
-                        // Skip comment lines
-                        continue;
+                        energy *= Constants::EV_TO_HARTREE;
                     }
-                    else if (!line.empty())
+                    else if (std::toupper(energyUnit[0]) != 'H')
                     {
-                        // First, consider the case where the spins are specified
-                        std::regex transitionRegexAlphaBeta("(\\d+)\\s+([aAbB])\\s+(\\d+)\\s+([aAbB])\\s+(-?\\d*\\.?\\d+)");
-                        std::smatch transitionRegexAlphaBetaMatch;
-                        if (std::regex_search(line, transitionRegexAlphaBetaMatch, transitionRegexAlphaBeta))
+                        ok = false;
+
+                        std::stringstream errorMessage;
+                        errorMessage << "Error in ExcitedState::readTransitionsFromFile(): unknown energy unit \"" << energyUnit << "\" in transitions file " << transitionsFileName << '.' << std::endl;
+                        errorMessage << "Please use eV or H as energy unit.";
+
+                        print_error(errorMessage.str());
+
+                        std::exit(1);
+                    }
+
+                    ExcitedState excitedState(currentExcitedStatesRead, energy + groundStateEnergy);
+
+                    // Read transitions
+                    do
+                    {
+                        std::getline(transitionsFile, line);
+                        line = trim_whitespaces(line, true, true);
+
+                        if (line[0] == '#')
                         {
-                            std::pair<int, SpinType> initialOrbital;
-                            std::pair<int, SpinType> finalOrbital;
-
-                            initialOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[1]);
-                            initialOrbital.second = (transitionRegexAlphaBetaMatch[2] == "a" || transitionRegexAlphaBetaMatch[2] == "A") ? SpinType::ALPHA : SpinType::BETA;
-
-                            finalOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[3]);
-                            finalOrbital.second = (transitionRegexAlphaBetaMatch[4] == "a" || transitionRegexAlphaBetaMatch[4] == "A") ? SpinType::ALPHA : SpinType::BETA;
-                            double coefficient = std::stod(transitionRegexAlphaBetaMatch[5]);
-
-                            excitedState.addTransition(initialOrbital, finalOrbital, coefficient);
+                            // Skip comment lines
+                            continue;
                         }
-                        else
+                        else if (!line.empty())
                         {
-                            // Then, consider the case where spins are not specified: both alpha and beta transitions are assumed
-                            std::regex transitionRegex("(\\d+)\\s+(\\d+)\\s+(-?\\d*\\.?\\d+)");
-                            std::smatch transitionRegexMatch;
-                            if (std::regex_search(line, transitionRegexMatch, transitionRegex))
+                            // First, consider the case where the spins are specified
+                            std::regex transitionRegexAlphaBeta("(\\d+)\\s+([aAbB])\\s+(\\d+)\\s+([aAbB])\\s+(-?\\d*\\.?\\d+)");
+                            std::smatch transitionRegexAlphaBetaMatch;
+                            if (std::regex_search(line, transitionRegexAlphaBetaMatch, transitionRegexAlphaBeta))
                             {
-                                std::pair<int, SpinType> initialOrbital_alpha;
-                                std::pair<int, SpinType> finalOrbital_alpha;
-                                std::pair<int, SpinType> initialOrbital_beta;
-                                std::pair<int, SpinType> finalOrbital_beta;
+                                std::pair<int, SpinType> initialOrbital;
+                                std::pair<int, SpinType> finalOrbital;
 
-                                // Add alpha transition
-                                initialOrbital_alpha.first = std::stoi(transitionRegexMatch[1]);
-                                initialOrbital_alpha.second = SpinType::ALPHA;
+                                initialOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[1]);
+                                initialOrbital.second = (transitionRegexAlphaBetaMatch[2] == "a" || transitionRegexAlphaBetaMatch[2] == "A") ? SpinType::ALPHA : SpinType::BETA;
 
-                                finalOrbital_alpha.first = std::stoi(transitionRegexMatch[2]);
-                                finalOrbital_alpha.second = SpinType::ALPHA;
+                                finalOrbital.first = std::stoi(transitionRegexAlphaBetaMatch[3]);
+                                finalOrbital.second = (transitionRegexAlphaBetaMatch[4] == "a" || transitionRegexAlphaBetaMatch[4] == "A") ? SpinType::ALPHA : SpinType::BETA;
+                                double coefficient = std::stod(transitionRegexAlphaBetaMatch[5]);
 
-                                double coefficient = std::stod(transitionRegexMatch[3]);
-
-                                excitedState.addTransition(initialOrbital_alpha, finalOrbital_alpha, coefficient);
-
-                                // Add beta transition
-                                initialOrbital_beta.first = initialOrbital_alpha.first;
-                                initialOrbital_beta.second = SpinType::BETA;
-
-                                finalOrbital_beta.first = finalOrbital_alpha.first;
-                                finalOrbital_beta.second = SpinType::BETA;
-
-                                excitedState.addTransition(initialOrbital_beta, finalOrbital_beta, coefficient);
+                                excitedState.addTransition(initialOrbital, finalOrbital, coefficient);
                             }
                             else
                             {
-                                ok = false;
+                                // Then, consider the case where spins are not specified: both alpha and beta transitions are assumed
+                                std::regex transitionRegex("(\\d+)\\s+(\\d+)\\s+(-?\\d*\\.?\\d+)");
+                                std::smatch transitionRegexMatch;
+                                if (std::regex_search(line, transitionRegexMatch, transitionRegex))
+                                {
+                                    std::pair<int, SpinType> initialOrbital_alpha;
+                                    std::pair<int, SpinType> finalOrbital_alpha;
+                                    std::pair<int, SpinType> initialOrbital_beta;
+                                    std::pair<int, SpinType> finalOrbital_beta;
 
-                                std::stringstream errorMessage;
-                                errorMessage << "Error in ExcitedState::readTransitionsFromFile(): could not read transition in transitions file " << transitionsFileName << '.' << std::endl;
-                                errorMessage << "Please check the documentation for the format of the file.";
+                                    // Add alpha transition
+                                    initialOrbital_alpha.first = std::stoi(transitionRegexMatch[1]);
+                                    initialOrbital_alpha.second = SpinType::ALPHA;
 
-                                print_error(errorMessage.str());
+                                    finalOrbital_alpha.first = std::stoi(transitionRegexMatch[2]);
+                                    finalOrbital_alpha.second = SpinType::ALPHA;
 
-                                std::exit(1);
+                                    double coefficient = std::stod(transitionRegexMatch[3]);
+
+                                    excitedState.addTransition(initialOrbital_alpha, finalOrbital_alpha, coefficient);
+
+                                    // Add beta transition
+                                    initialOrbital_beta.first = initialOrbital_alpha.first;
+                                    initialOrbital_beta.second = SpinType::BETA;
+
+                                    finalOrbital_beta.first = finalOrbital_alpha.first;
+                                    finalOrbital_beta.second = SpinType::BETA;
+
+                                    excitedState.addTransition(initialOrbital_beta, finalOrbital_beta, coefficient);
+                                }
+                                else
+                                {
+                                    ok = false;
+
+                                    std::stringstream errorMessage;
+                                    errorMessage << "Error in ExcitedState::readTransitionsFromFile(): could not read transition in transitions file " << transitionsFileName << '.' << std::endl;
+                                    errorMessage << "Please check the documentation for the format of the file.";
+
+                                    print_error(errorMessage.str());
+
+                                    std::exit(1);
+                                }
                             }
                         }
-                    }
-                } while (!transitionsFile.eof() && !line.empty());
+                    } while (!transitionsFile.eof() && !line.empty());
 
-                // Check that at least one transition was read
-                if (excitedState.getNumberOfTransitions() > 0)
-                {
-                    if (excitedStatesNumbersToKeep.empty() || std::find(excitedStatesNumbersToKeep.begin(), excitedStatesNumbersToKeep.end(), currentExcitedStatesRead) != excitedStatesNumbersToKeep.end())
+                    // Check that at least one transition was read
+                    if (excitedState.getNumberOfTransitions() > 0)
                     {
-                        // Add excited state to the list
-                        excitedStates.push_back(excitedState);
-                    }
+                        if (excitedStatesNumbersToKeep.empty() || std::find(excitedStatesNumbersToKeep.begin(), excitedStatesNumbersToKeep.end(), currentExcitedStatesRead) != excitedStatesNumbersToKeep.end())
+                        {
+                            // Add excited state to the list
+                            excitedStates.push_back(excitedState);
+                        }
 
-                    ++currentExcitedStatesRead;
+                        ++currentExcitedStatesRead;
+                    }
+                    else
+                    {
+                        ok = false;
+
+                        std::stringstream errorMessage;
+                        errorMessage << "Error in ExcitedState::readTransitionsFromFile(): no transition found for excited state with energy " << excitedState.get_energy() << " in transitions file " << transitionsFileName << '.' << std::endl;
+                        errorMessage << "Please check the documentation for the format of the file.";
+
+                        print_error(errorMessage.str());
+
+                        std::exit(1);
+                    }
                 }
                 else
                 {
                     ok = false;
 
                     std::stringstream errorMessage;
-                    errorMessage << "Error in ExcitedState::readTransitionsFromFile(): no transition found for excited state with energy " << excitedState.get_energy() << " in transitions file " << transitionsFileName << '.' << std::endl;
+                    errorMessage << "Error in ExcitedState::readTransitionsFromFile(): could not read excited state energy in transitions file " << transitionsFileName << '.' << std::endl;
                     errorMessage << "Please check the documentation for the format of the file.";
 
                     print_error(errorMessage.str());
 
                     std::exit(1);
                 }
-            }
-            else
-            {
-                ok = false;
-
-                std::stringstream errorMessage;
-                errorMessage << "Error in ExcitedState::readTransitionsFromFile(): could not read excited state energy in transitions file " << transitionsFileName << '.' << std::endl;
-                errorMessage << "Please check the documentation for the format of the file.";
-
-                print_error(errorMessage.str());
-
-                std::exit(1);
             }
         }
     }
@@ -852,6 +997,284 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
     return ok;
 }
 
+///////////////////////////////
+// LOADING AND SAVING METHODS
+
+bool ExcitedState::loadExcitedStatesFromFile(const std::string& excitedStatesFileName, std::vector<ExcitedState>& excitedStates, std::vector<SlaterDeterminant>& slaterDeterminants, int maxNumberOfExcitedStates)
+{
+    bool ok = true;
+
+    std::ifstream excitedStatesFile(excitedStatesFileName);
+    if (!excitedStatesFile)
+    {
+        ok = false;
+
+        std::stringstream errorMessage;
+        errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): could not open excited states file " << excitedStatesFileName << '.' << std::endl;
+        errorMessage << "Please check that the file exists and is readable.";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    int currentExcitedStatesRead = 0;
+
+    std::string line;
+    while (!excitedStatesFile.eof() && (maxNumberOfExcitedStates == -1 || currentExcitedStatesRead <= maxNumberOfExcitedStates))
+    {
+        // Read line
+        std::getline(excitedStatesFile, line);
+        line = trim_whitespaces(line, true, true);
+
+        if (line.empty())
+        {
+            // Skip empty lines in the beginning of the file
+            continue;
+        }
+        else if (line[0] == '#')
+        {
+            // Comment line: skip
+            continue;
+        }
+        else
+        {
+            // Slater Determinants
+            if (line == "Slater Determinants")
+            {
+                do
+                {
+                    std::getline(excitedStatesFile, line);
+                    line = trim_whitespaces(line, true, true);
+
+                    if (line[0] == '#')
+                    {
+                        // Skip comment lines
+                        continue;
+                    }
+                    else if (!line.empty())
+                    {
+                        std::regex slaterDeterminantRegex("(?:(\\d+)(A|B)\\((\\d+(?:\\.\\d+)?(?:[eE][+-]\\d+)?)\\))+", std::regex_constants::icase);
+                        std::smatch slaterDeterminantRegexMatch;
+
+                        if (std::regex_search(line, slaterDeterminantRegexMatch, slaterDeterminantRegex))
+                        {
+                            SlaterDeterminant slaterDeterminant;
+                            SlaterDeterminant::parseFromString(slaterDeterminant, line);
+                            slaterDeterminants.push_back(slaterDeterminant);
+                        }
+                        else
+                        {
+                            ok = false;
+
+                            std::stringstream errorMessage;
+                            errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): could not read Slater Determinant in excited states file " << excitedStatesFileName << '.' << std::endl;
+                            errorMessage << "Please check the documentation for the format of the file.";
+
+                            print_error(errorMessage.str());
+
+                            std::exit(1);
+                        }
+                    }
+                } while (!line.empty());
+            }
+            else
+            {
+                if (slaterDeterminants.empty())
+                {
+                    ok = false;
+
+                    std::stringstream errorMessage;
+                    errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): Slater Determinants must be specified before the excited states in excited states file " << excitedStatesFileName << '.' << std::endl;
+                    errorMessage << "Please check the documentation for the format of the file.";
+
+                    print_error(errorMessage.str());
+
+                    std::exit(1);
+                }
+
+                // New excited state: read energy
+                std::regex energyRegex("(?:Energy)\\s+(-?\\d+(?:\\.\\d+)?(?:[eE][+-]\\d+)?)\\s+(eV|H)", std::regex_constants::icase);
+                std::smatch energyRegexMatch;
+                if (std::regex_search(line, energyRegexMatch, energyRegex))
+                {
+                    double energy = std::stod(energyRegexMatch[1]);
+                    std::string energyUnit = energyRegexMatch[2];
+
+                    // For the unit, we only analyze the first letter (eV or H)
+                    if (std::toupper(energyUnit[0]) == 'E')
+                    {
+                        energy *= Constants::EV_TO_HARTREE;
+                    }
+                    else if (std::toupper(energyUnit[0]) != 'H')
+                    {
+                        ok = false;
+
+                        std::stringstream errorMessage;
+                        errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): unknown energy unit \"" << energyUnit << "\" in excited states file " << excitedStatesFileName << '.' << std::endl;
+                        errorMessage << "Please use eV or H as energy unit.";
+
+                        print_error(errorMessage.str());
+
+                        std::exit(1);
+                    }
+
+                    ExcitedState excitedState(currentExcitedStatesRead, energy);
+
+                    int currentCoefficientRead = 0;
+
+                    // Read slater determinants coefficients
+                    do
+                    {
+                        std::getline(excitedStatesFile, line);
+                        line = trim_whitespaces(line, true, true);
+
+                        if (line[0] == '#')
+                        {
+                            // Skip comment lines
+                            continue;
+                        }
+                        else if (!line.empty())
+                        {
+                            double coefficient;
+                            std::stringstream buffer(line);
+
+                            buffer >> coefficient;
+                            if (buffer.fail() and !buffer.eof())
+                            {
+                                ok = false;
+
+                                std::stringstream errorMessage;
+                                errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): could not read Slater Determinant coefficient in excited states file " << excitedStatesFileName << '.' << std::endl;
+                                errorMessage << "Please check the documentation for the format of the file.";
+                                print_error(errorMessage.str());
+
+                                std::exit(1);
+                            }
+                            
+                            excitedState.addSlaterDeterminant(slaterDeterminants[currentCoefficientRead], coefficient);
+
+                            ++currentCoefficientRead;
+                        }
+                    } while (!excitedStatesFile.eof() && !line.empty());
+
+                    // Check that the number of coefficients read matches the number of Slater determinants
+                    if (excitedState.get_slaterDeterminants().size() == slaterDeterminants.size())
+                    {
+                        excitedStates.push_back(excitedState);
+                        ++currentExcitedStatesRead;
+                    }
+                    else
+                    {
+                        ok = false;
+
+                        std::stringstream errorMessage;
+                        errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): number of Slater Determinant coefficients does not match the number of Slater determinants in excited states file " << excitedStatesFileName << '.' << std::endl;
+                        errorMessage << "Please check the documentation for the format of the file.";
+
+                        print_error(errorMessage.str());
+
+                        std::exit(1);
+                    }
+                }
+                else
+                {
+                    ok = false;
+
+                    std::stringstream errorMessage;
+                    errorMessage << "Error in ExcitedState::loadExcitedStatesFromFile(): could not read excited state energy in excited states file " << excitedStatesFileName << '.' << std::endl;
+                    errorMessage << "Please check the documentation for the format of the file.";
+
+                    print_error(errorMessage.str());
+
+                    std::exit(1);
+                }
+            }
+        }
+    }
+
+    excitedStatesFile.close();
+
+    return ok;
+}
+
+bool ExcitedState::saveExcitedStatesToFile(const std::string& excitedStatesFileName, const std::vector<ExcitedState>& excitedStates)
+{
+    bool ok = true;
+
+    std::ofstream excitedStatesFile(excitedStatesFileName);
+    if (!excitedStatesFile)
+    {
+        ok = false;
+
+        std::stringstream errorMessage;
+        errorMessage << "Error in ExcitedState::saveExcitedStatesToFile(): could not open excited states file " << excitedStatesFileName << " for writing." << std::endl;
+        errorMessage << "Please check that the file is writable.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    excitedStatesFile << std::scientific << std::setprecision(10);
+
+    // Get all Slater determinants from all excited states
+    std::vector<SlaterDeterminant> slaterDeterminants;
+    for (const ExcitedState& excitedState : excitedStates)
+    {
+        for (const std::pair<SlaterDeterminant, double>& slaterCoef : excitedState.get_slaterDeterminants())
+        {
+            // Search for the Slater determinant in the whole list
+            // If it is not found, add it to the list.
+            if (std::find(slaterDeterminants.begin(), slaterDeterminants.end(), slaterCoef.first) == slaterDeterminants.end())
+            {
+                slaterDeterminants.emplace_back(slaterCoef.first);
+            }
+        }
+    }
+
+    // Write Slater determinants to file
+    excitedStatesFile << "Slater Determinants" << std::endl;
+    for (const SlaterDeterminant& slaterDeterminant : slaterDeterminants)
+    {
+        excitedStatesFile << slaterDeterminant << std::endl;
+    }
+    excitedStatesFile << std::endl;
+
+    // Write excited states to file
+    for (const ExcitedState& excitedState : excitedStates)
+    {
+        excitedStatesFile << "Energy " << excitedState.get_energy() << " H" << std::endl;
+
+        for (const SlaterDeterminant& slaterDeterminant : slaterDeterminants)
+        {
+            const auto& excitedStateSD = excitedState.get_slaterDeterminants();
+
+            // Search for the Slater determinant in the excited state
+            auto it = std::find_if(excitedStateSD.begin(),
+                                   excitedStateSD.end(),
+                                   [&slaterDeterminant](const std::pair<SlaterDeterminant, double>& element)
+                                   { return element.first == slaterDeterminant; });
+
+            // If it is found, write its coefficient to the file. Otherwise, write 0.
+            if (it != excitedState.get_slaterDeterminants().end())
+            {
+                excitedStatesFile << it->second << std::endl;
+            }
+            else
+            {
+                excitedStatesFile << 0.0 << std::endl;
+            }
+        }
+
+        excitedStatesFile << std::endl;
+    }
+
+    excitedStatesFile.close();
+
+    return ok;
+}
+
+
 /////////////////////////
 // OTHER STATIC METHODS
 
@@ -864,8 +1287,7 @@ std::vector<ExcitedState> ExcitedState::buildPerturbedStates(const std::vector<E
 
     for (size_t i = 0; i < unperturbedStates.size(); ++i)
     {
-        perturbedStates.emplace_back(i, energies[i]);
-        ExcitedState& currentPerturbedState = perturbedStates.back();
+        ExcitedState currentPerturbedState = ExcitedState(static_cast<int>(i), energies[i]);
 
         for (size_t k = 0; k < unperturbedStates.size(); ++k)
         {
@@ -906,6 +1328,8 @@ std::vector<ExcitedState> ExcitedState::buildPerturbedStates(const std::vector<E
 
         // Compute the Slater determinants associated with the perturbed state based on its electronic transitions
         currentPerturbedState.computeSlaterDeterminants(groundStateSlaterDeterminant);
+
+        perturbedStates.push_back(currentPerturbedState);
     }
 
     return perturbedStates;
@@ -927,19 +1351,22 @@ double ExcitedState::ionicPotential(const ExcitedState& psi_i, const ExcitedStat
     return sum;
 }
 
-void ExcitedState::reducedDensityMatrix(std::vector<std::vector<std::vector<double>>>& rdmMatrix, RDMMethod rdmMethod, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos)
+void ExcitedState::reducedDensityMatrix(std::vector<std::vector<std::vector<double>>>& rdmMatrix, RDMMethod rdmMethod, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos,bool showProgress)
 {
+    std::cout << "Computing matrix with (" << psi_i._sdIndicesSortedByCoefficientDesc.size() << ", " << psi_j._sdIndicesSortedByCoefficientDesc.size() << ") Slater determinants out of (" << psi_i._slaterDeterminants.size() << ", " << psi_j._slaterDeterminants.size() << ")." << std::endl;
+    
+    auto start = std::chrono::high_resolution_clock::now();
     if (rdmMethod == RDMMethod::GAMMA)
     {
-        time_t start = time(NULL);
-        computeGammaMatrix(rdmMatrix, psi_i, psi_j, orbitals, ignoredMos);
-        time_t end = time(NULL);
-        std::cout<<"compute time of matrix : "<<double(end-start)<<"s"<<std::endl;
+        computeGammaMatrix(rdmMatrix, psi_i, psi_j, orbitals, ignoredMos, showProgress);
     }
     else if (rdmMethod == RDMMethod::X)
     {
-        computeXMatrix(rdmMatrix, psi_i,psi_j, orbitals, ignoredMos);
+        computeXMatrix(rdmMatrix, psi_i,psi_j, orbitals, ignoredMos, showProgress);
     }
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::cout << "Time spent to compute RDM-1: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms." << std::endl;
 }
 
 //----------------------------------------------------------------------------------------------------//

@@ -78,10 +78,10 @@ class Descriptors
         // GLOBAL DESCRIPTORS
         //----------------------------------------------------------------------------------------------------//
 
+        /** @brief The chemical potential μ. */
         double _mu;
         double _mup;
         double _mum;
-
 
         double _xi;
         double _hardness;
@@ -119,7 +119,7 @@ class Descriptors
         // PRIVATE METHODS
         //----------------------------------------------------------------------------------------------------//
 
-        void sortCharges(const std::vector<double>& Q1, const std::vector<double>& Q2, const std::vector<double>& Q3, std::vector<double>& E, double I, double A);
+        void sortCharges(const std::vector<double>& Q1, const std::vector<double>& Q2, const std::vector<double>& Q3, std::vector<double>& E, double& I, double& A);
 
 
     public:

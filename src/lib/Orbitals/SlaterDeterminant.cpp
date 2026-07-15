@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <regex>
 #include <utility>
 #include <vector>
 
@@ -8,32 +9,22 @@
 #include <Orbitals/SlaterDeterminant.hpp>
 #include <Utils/Enums.hpp>
 
-//----------------------------------------------------------------------------------------------------//
-// STATIC FIELDS
-//----------------------------------------------------------------------------------------------------//
-
-bool SlaterDeterminant::_s_isOrbitalsSet_ = false;
-Orbitals SlaterDeterminant::_s_orbitals_ = Orbitals();
-
 
 //----------------------------------------------------------------------------------------------------//
 // CONSTRUCTORS
 //----------------------------------------------------------------------------------------------------//
 
 SlaterDeterminant::SlaterDeterminant():
-    _occupiedOrbitals(2, std::vector<std::pair<int, double>>())
+    _isGroundStateSD(false),
+    _occupiedOrbitals(2, std::vector<SlaterDeterminant::Occupation>())
 { }
 
 
 SlaterDeterminant::SlaterDeterminant(const Orbitals& orbitals):
-    _occupiedOrbitals(2, std::vector<std::pair<int, double>>())
-{
-    if (!_s_isOrbitalsSet_)
-    {
-        _s_orbitals_ = orbitals;
-        _s_isOrbitalsSet_ = true;
-    }
+    _isGroundStateSD(true),
+    _occupiedOrbitals(2, std::vector<SlaterDeterminant::Occupation>())
 
+{
     // Get occupation numbers
     const std::vector<std::vector<double>>& occupationNumbers = orbitals.get_occupationNumber();
 
@@ -71,7 +62,12 @@ SlaterDeterminant::SlaterDeterminant(const Orbitals& orbitals):
 // GETTERS
 //----------------------------------------------------------------------------------------------------//
 
-const vector<std::vector<std::pair<int, double>>>& SlaterDeterminant::get_occupiedOrbitals() const
+const bool SlaterDeterminant::get_isGroundStateSD() const
+{
+    return _isGroundStateSD;
+}
+
+const vector<std::vector<SlaterDeterminant::Occupation>>& SlaterDeterminant::get_occupiedOrbitals() const
 {
     return _occupiedOrbitals;
 }
@@ -80,6 +76,44 @@ const vector<std::vector<std::pair<int, double>>>& SlaterDeterminant::get_occupi
 //----------------------------------------------------------------------------------------------------//
 // OTHER PUBLIC METHODS
 //----------------------------------------------------------------------------------------------------//
+
+int SlaterDeterminant::getExcitationDegree(const SlaterDeterminant& groundStateSlaterDeterminant) const
+{
+    int numberOfDifferences = 0;
+
+    // Get spin type int values
+    const int ALPHA = static_cast<int>(SpinType::ALPHA);
+    const int BETA = static_cast<int>(SpinType::BETA);
+    std::array<int, 2> spins = { ALPHA, BETA };
+
+    // Initialize the numbers of the occupied orbitals
+    std::vector<std::vector<int>> occupiedOrbitalsNumbers(2, std::vector<int>());
+    for (int spin: spins)
+    {
+        occupiedOrbitalsNumbers[spin].resize(_occupiedOrbitals[spin].size());
+
+        for (size_t i = 0; i < _occupiedOrbitals[spin].size(); ++i)
+        {
+            occupiedOrbitalsNumbers[spin][i] = _occupiedOrbitals[spin][i].first;
+        }
+    }
+
+    // Check if the number of the occupied orbital is greater than the number of occupied orbitals in the GS SD (i.e. the highest occupied orbital number since they are considered ordered).
+    for (int spin : spins)
+    {
+        size_t numberOfOccupiedMO_GS = groundStateSlaterDeterminant._occupiedOrbitals[spin].size();
+
+        for (size_t i = 0; i < occupiedOrbitalsNumbers[spin].size(); ++i)
+        {
+            if(static_cast<size_t>(occupiedOrbitalsNumbers[spin][i]) > numberOfOccupiedMO_GS)
+            {
+                ++numberOfDifferences;
+            }
+        }
+    }
+
+    return numberOfDifferences;
+}
 
 bool SlaterDeterminant::updateFromTransition(int initialOrbitalNumber, SpinType initialSpin, int finalOrbitalNumber, SpinType finalSpin)
 {
@@ -253,6 +287,43 @@ double SlaterDeterminant::ionicPotential(const SlaterDeterminant& d_i, const Sla
     }
 
     return sum;
+}
+
+bool SlaterDeterminant::parseFromString(SlaterDeterminant& slaterDeterminant, const std::string& str)
+{
+    bool ok = true;
+
+    std::regex slaterDeterminantRegex("(?:(\\d+)(A|B)\\((\\d+(?:\\.\\d+)?(?:[eE][+-]\\d+)?)\\))+", std::regex_constants::icase);
+    
+    std::sregex_iterator slaterDeterminantRegexBegin(str.begin(), str.end(), slaterDeterminantRegex);
+    std::sregex_iterator slaterDeterminantRegexEnd = std::sregex_iterator();
+
+    if (slaterDeterminantRegexBegin == slaterDeterminantRegexEnd)
+    {
+        ok = false;
+
+        std::stringstream errorMessage;
+        errorMessage << "Error in SlaterDeterminant::parseFromString(): could not parse Slater determinant from string '" << str << "'." << std::endl;
+        errorMessage << "Please check the documentation for the format of the string.";
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    for (std::sregex_iterator it = slaterDeterminantRegexBegin; ok && it != slaterDeterminantRegexEnd; ++it)
+    {
+        std::smatch slaterDeterminantRegexMatch = *it;
+
+        Occupation occupation;
+        occupation.first = std::stoi(slaterDeterminantRegexMatch[1]);
+        occupation.second = std::stod(slaterDeterminantRegexMatch[3]);
+
+        int spin = static_cast<int>(spinType_from_char(slaterDeterminantRegexMatch[2].str()[0]));
+
+        slaterDeterminant._occupiedOrbitals[spin].push_back(occupation);
+    }
+
+    return ok;
 }
 
 

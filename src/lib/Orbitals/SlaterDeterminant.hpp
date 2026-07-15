@@ -2,6 +2,7 @@
 #define CDFTT_SLATERDETERMINANT_HPP_INCLUDED
 
 #include <iostream>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -16,19 +17,14 @@
 class SlaterDeterminant
 {
     private:
+        /** @brief Type alias for the occupation of an orbital (orbital number, occupation number). */
+        typedef std::pair<int, double> Occupation;
+
+        /** @brief Flag indicating whether the Slater determinant is a Ground State SD. */
+        bool _isGroundStateSD;
+
         /** @brief Occupied orbitals (1-based) and their occupation numbers. First index corresponds to alpha spin, second to beta spin. */
-        std::vector<std::vector<std::pair<int, double>>> _occupiedOrbitals;
-
-
-        //----------------------------------------------------------------------------------------------------//
-        // STATIC FIELDS
-        //----------------------------------------------------------------------------------------------------//
-
-        /** @brief Static Orbitals instance shared among all SlaterDeterminant objects. */
-        static Orbitals _s_orbitals_;
-
-        /** @brief Flag indicating whether the static Orbitals instance has been set. */
-        static bool _s_isOrbitalsSet_;
+        std::vector<std::vector<Occupation>> _occupiedOrbitals;
 
 
     public:
@@ -56,13 +52,29 @@ class SlaterDeterminant
         //----------------------------------------------------------------------------------------------------//
 
         /**
+         * @brief Returns whether the Slater determinant is a Ground State SD.
+         */
+        const bool get_isGroundStateSD() const;
+
+        /**
          * @brief Returns the occupied orbitals (1-based) and their occupation numbers. The first index corresponds to alpha spin, the second to beta spin.
          */
-        const std::vector<std::vector<std::pair<int, double>>>& get_occupiedOrbitals() const;
+        const std::vector<std::vector<Occupation>>& get_occupiedOrbitals() const;
 
         //----------------------------------------------------------------------------------------------------//
         // OTHER PUBLIC METHODS
         //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Returns the excitation degree of the Slater determinant with respect to a given ground state Slater determinant.
+         * 
+         * This function assumes that the orbital numbers are ordoned in the occupations of the Ground State Slater Determinant.
+         * 
+         * @param[in] groundStateSlaterDeterminant Reference to the ground state Slater determinant.
+         * 
+         * @return Excitation degree of the Slater determinant with respect to the ground state.
+         */
+        int getExcitationDegree(const SlaterDeterminant& groundStateSlaterDeterminant) const;
 
         /**
          * @brief Updates the Slater determinant based on an electronic transition.
@@ -121,6 +133,16 @@ class SlaterDeterminant
          * @return The ionic potential matrix element < D_i | V_ion/electrons | D_j >.
          */
         static double ionicPotential(const SlaterDeterminant& d_i, const SlaterDeterminant& d_j, const std::vector<std::vector<std::vector<double>>>& ionicMatrix);
+
+        /**
+         * @brief Parses a Slater determinant from a string representation.
+         * 
+         * @param[out] slaterDeterminant SlaterDeterminant object to populate from the string.
+         * @param[in] str String representation of the Slater determinant.
+         * 
+         * @return True if parsing was successful, false otherwise.
+         */
+        static bool parseFromString(SlaterDeterminant& slaterDeterminant, const std::string& str);
 
         //----------------------------------------------------------------------------------------------------//
         // OPERATOR OVERLOADS

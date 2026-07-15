@@ -1,19 +1,27 @@
-Charges = -0.1, -0.3
+#Charges = -1.0
+#Positions = (-4.0, -1.5, 0.0)
+Charges = -0.1, -1.0
+Positions = (-6.25, -1.5, 0.0), (-4.0, -1.5, 0.0)
 SingleCharge = True
+ChargesPositionsBijections = True
 
 RunType = ComputeEnergyWithPointCharges
-OutputPrefix = testRuns
+OutputPrefix = acrolein_poster
 
+# EnergyPointChargeMethods = Perturbative, Variational, LinearResponse
 EnergyPointChargeMethods = Perturbative, Variational, LinearResponse
 
 AnalyticFiles = tests/Guegan2020/acrolein_200States.fchk
 TransitionsFile = tests/Guegan2020/acrolein_200States.log
-#MaxNumberOfExcitedStates = 49
+# MaxNumberOfExcitedStates = 49
 
-#Size = Custom
-#CustomSizeData = 128, 128, 128, 8, 8, 8, 1.2598425196850394e-01, 0, 0, 0, 1.2598425196850394e-01, 0, 0, 0, 1.2598425196850394e-01
+ComputeOnRegularGrid = False
+Size = Custom
+CustomSizeData = 128, 128, 128, 8, 8, 8, 1.2598425196850394e-01, 0, 0, 0, 1.2598425196850394e-01, 0, 0, 0, 1.2598425196850394e-01
+SavePseudoOrbitals = False
 
-#Becke = 3, 41, 5
+ComputeOnBeckeGrid = False
+# Becke = 3, 41, 5
 
 ShowProgress = True
 Verbose = 0

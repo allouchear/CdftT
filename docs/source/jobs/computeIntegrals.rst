@@ -39,6 +39,12 @@ Specifies the method used to partition the volume. Possible values are:
 - ``B2S``: Builds two basins by SIGN. Same as ``BBS`` but only constructs two volumes.
 
 
+``RunType*``
+""""""""""""
+
+Specifies the CdftT module to run. To run this job, set this parameter to ``ComputeIntegrals``.
+
+
 Mandatory/optional parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

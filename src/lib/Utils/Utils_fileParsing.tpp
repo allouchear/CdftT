@@ -174,8 +174,6 @@ bool readListTypeArray(std::ifstream& inputFile, const std::string& tag, std::ve
     std::string value;
     bool ok = readOneString(inputFile, tag, value);
 
-    std::cout << "Value read for tag \"" << tag << "\": " << value << std::endl;
-
     if (ok)
     {
         // Get the regex pattern to read read an array of N elements

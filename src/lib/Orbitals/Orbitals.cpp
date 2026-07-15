@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "../Basis/GTF.h"
@@ -2124,6 +2125,7 @@ void Orbitals::makeDensityGrid(Grid& grid, const std::vector<std::vector<std::ve
     std::atomic<int> progress(0);
     int lastProgress = -1;
 
+    
     // Show progress bar at 0% at the beginning
     if (showProgress)
     {
@@ -2132,6 +2134,15 @@ void Orbitals::makeDensityGrid(Grid& grid, const std::vector<std::vector<std::ve
 
     // Get spinType for computation
     SpinType spinType = _alphaAndBeta ? SpinType::ALPHA : SpinType::ALPHA_BETA;
+    std::vector<SpinType> spins;
+    if (spinType == SpinType::ALPHA || spinType == SpinType::ALPHA_BETA)
+    {
+        spins.push_back(SpinType::ALPHA);
+    }
+    if (spinType == SpinType::BETA || spinType == SpinType::ALPHA_BETA)
+    {
+        spins.push_back(SpinType::BETA);
+    }
 
     #ifdef ENABLE_OMP
     #pragma omp parallel
@@ -2148,7 +2159,7 @@ void Orbitals::makeDensityGrid(Grid& grid, const std::vector<std::vector<std::ve
                 {
                     double rho = density(reducedDensityMatrix, spinType, domain.xyz(i, j, k));
 
-                    if (_alphaAndBeta) // TO BE TESTED
+                    if (_alphaAndBeta) // Note Ambroise: to be tested
                     {
                         rho *= 2;
                     }
@@ -2158,7 +2169,6 @@ void Orbitals::makeDensityGrid(Grid& grid, const std::vector<std::vector<std::ve
                     
                 if (showProgress)
                 {
-                    // Update at each N2 iteration for a smoother display
                     int currentStep = progress.fetch_add(N3) + N3;
                     
                     #ifdef ENABLE_OMP
