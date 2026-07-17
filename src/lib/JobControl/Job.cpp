@@ -1396,9 +1396,13 @@ void Job::setCustomOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& or
 void Job::setOccupiedOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, int N)
 {
     std::vector<std::vector<double>> occ=o.get_occupationNumber();
-    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA) 
+    // TODO: discuss with Ludo the meaning of get_alphaAndBeta(), and if it should be used here
+
+    // if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA) 
+    if (spinType == SpinType::ALPHA) 
     {
         int k = 0;
+        orbnums.resize(N);  // ? Was not initalized, caused segfaults
         for(int i = 0; i < N; ++i)
         {
             if (occ[0][i] > 1e-10)
@@ -1410,7 +1414,8 @@ void Job::setOccupiedOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& 
         orbnums.resize(k);
         orbspin.resize(k, SpinType::ALPHA);
     }
-    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
+    // else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
+    else if (spinType == SpinType::ALPHA_BETA)
     {
         int k = 0;
         orbnums.resize(2 * N, 0);
@@ -1438,6 +1443,7 @@ void Job::setOccupiedOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& 
     else
     {
         int j = 0;
+        orbnums.resize(N);  // ? Was not initalized, caused segfaults
         for(int i = 0; i < N; ++i)
         {
             if (occ[1][i] > 1e-10)
@@ -1618,9 +1624,12 @@ void Job::setLumo(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orb
 void Job::setVirtualOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& orbspin, Orbitals& o, SpinType spinType, int N)
 {
     std::vector<std::vector<double>> occ=o.get_occupationNumber();
-    if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
+    // TODO: discuss with Ludo the meaning of get_alphaAndBeta(), and if it should be used here
+    // if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA)
+    if (spinType == SpinType::ALPHA)
     {
         int k = 0;
+        orbnums.resize(N);  // ? Was not initalized, caused segfaults
         for(int i = 0; i < N; ++i)
         {
             if (occ[0][i] < 1e-10)
@@ -1632,7 +1641,8 @@ void Job::setVirtualOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& o
         orbnums.resize(k);
         orbspin.resize(k, SpinType::ALPHA);
     }
-    else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
+    // else if (!o.get_alphaAndBeta() and spinType == SpinType::ALPHA_BETA)
+    else if (spinType == SpinType::ALPHA_BETA)
     {
         int k = 0;
         orbnums.resize(2 * N, 0);
@@ -1660,6 +1670,7 @@ void Job::setVirtualOrbitals(std::vector<int>& orbnums, std::vector<SpinType>& o
     else
     {
         int j = 0;
+        orbnums.resize(N);  // ? Was not initalized, caused segfaults
         for(int i = 0; i < N; ++i)
         {
             if (occ[1][i] < 1e-10)

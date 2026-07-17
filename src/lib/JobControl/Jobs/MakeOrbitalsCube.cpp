@@ -116,5 +116,5 @@ void MakeOrbitalsCube::run()
     readShowProgress(showProgress);
 
     // Creating orbitals cube
-    createCube(analyticFilesNames[0], gridFileName[0], orbitalType, spinType, gridSize, customSizeData, showProgress);
+    createCube(analyticFilesNames[0], gridFileName[0], orbitalType, spinType, gridSize, customSizeData, showProgress, orbitalsNumbers, spinList);
 }
