@@ -36,7 +36,7 @@ Specifies the name of the input file containing the information about the system
 Used to specify which MOs to compute. Possible values are:
 
 - ``All`` (default): all MOs
-- ``Occ``: Occupied MOs
+- ``Occupied``: Occupied MOs
 - ``Virtual``: Virtual MOs
 - ``Homo``: Highest Occupied MO
 - ``Lumo``: Lowest Unoccupied MO

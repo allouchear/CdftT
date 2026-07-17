@@ -37,6 +37,14 @@ Supported output formats are:
 - ``.molden``
 - ``.wfx``.
 
+.. note::
+
+    Please note that the following formats conversion are not yet implemented:
+    - ``.wfx`` to ``.molden``
+    - ``.wfx`` to ``.gab``
+
+    Please also note that conversion to ``.gab`` is not possible starting from mixed basis (such as ``.molden``).
+
 
 ``RunType*``
 """"""""""""
