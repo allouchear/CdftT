@@ -170,6 +170,15 @@ class Job
         bool readGroundStateEnergy(double& energy);
 
         /**
+         * @brief Reads the method used to compute the linear response function (LRF) from the "LRFMethod" parameter in the input file.
+         * 
+         * @param[out] lrfMethod Reference to an LRFMethod variable where the parsed method will be stored.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readLRFMethod(LRFMethod& lrfMethod);
+
+        /**
          * @brief Reads the maximum number of excited states to consider from the "MaxNumberOfExcitedStates" parameter in the input file.
          *
          * @param[out] maxNumberOfExcitedStates Reference to an integer where the read value will be stored.
@@ -508,11 +517,6 @@ class Job
         //----------------------------------------------------------------------------------------------------//
         // OTHER PRIVATE METHODS
         //----------------------------------------------------------------------------------------------------//
-
-        /**
-         * TODO
-         */
-        Orbitals computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<double>>>& lrfMatrix, std::vector<std::vector<double>>& eigenvalues, std::vector<std::vector<std::vector<double>>>& eigenvectors, const std::string& outputPrefix, bool savePseudoOrbitals, std::ostream& outputStream, int verbose, bool showProgress = false);
 
         /**
          * @brief Opens the configured input file.

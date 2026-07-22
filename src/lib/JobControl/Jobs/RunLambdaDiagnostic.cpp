@@ -46,7 +46,7 @@ void RunLambdaDiagnostic::print(const std::string& analyticFileName, const std::
 
     // Reading transitions file
     std::vector<ExcitedState> excitedStates;
-    ExcitedState::readTransitions(transitionsFileName, excitedStates, orbitals.get_energy());
+    ExcitedState::readTransitions(transitionsFileName, excitedStates, orbitals);
     std::cout << "Number of excited states read: " << excitedStates.size() << std::endl << std::endl;
 
 

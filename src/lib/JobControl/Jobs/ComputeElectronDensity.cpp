@@ -417,7 +417,7 @@ void ComputeElectronDensity::run()
 
     // Get Ground Slater Determinant
     SlaterDeterminant groundStateSlaterDeterminant(orbitals);
-    ExcitedState groundState(orbitals.get_energy(), groundStateSlaterDeterminant);
+    ExcitedState groundState(orbitals, groundStateSlaterDeterminant);
 
 
     // Build states vector
@@ -432,17 +432,17 @@ void ComputeElectronDensity::run()
     {
         states.clear();
         std::vector<SlaterDeterminant> slaterDet;
-        ExcitedState::loadExcitedStatesFromFile(transitionsFileName, states, slaterDet);
+        ExcitedState::loadExcitedStatesFromFile(transitionsFileName, orbitals, states, slaterDet);
     }
     else if (!transitionsFileName.empty())
     {
         std::cout << "Reading transitions from file: " << transitionsFileName << ". Please wait..." << std::endl;
-        ExcitedState::readTransitions(transitionsFileName, states, groundState.get_energy(), maxNbExcitedStates, statesToCompute);
+        ExcitedState::readTransitions(transitionsFileName, states, orbitals, maxNbExcitedStates, statesToCompute);
     }
     else
     {
         std::cout << "Reading transitions from analytic file: " << analyticFilesNames[0] << ". Please wait..." << std::endl;
-        ExcitedState::readTransitions(analyticFilesNames[0], states, groundState.get_energy(), maxNbExcitedStates, statesToCompute);
+        ExcitedState::readTransitions(analyticFilesNames[0], states, orbitals, maxNbExcitedStates, statesToCompute);
     }
 
     end = std::chrono::high_resolution_clock::now();
@@ -465,7 +465,7 @@ void ComputeElectronDensity::run()
 
     for (ExcitedState& state : states)
     {
-        state.computeSlaterDeterminants(groundStateSlaterDeterminant, cutoff);
+        state.updateFromElectronicTransitions(groundStateSlaterDeterminant, cutoff);
 
         if (verbose >= 1)
         {

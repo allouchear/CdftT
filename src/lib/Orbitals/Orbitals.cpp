@@ -1271,24 +1271,6 @@ std::vector<std::vector<int>> Orbitals::getOccupiedOrbitalNumbers() const
     return occupiedOrbitalNumbers;
 }
 
-std::vector<std::vector<int>> Orbitals::getVirtualOrbitalNumbers() const
-{
-    std::vector<std::vector<int>> virtualOrbitalNumbers(2);
-
-    for (int spin = 0; spin < 2; ++spin)
-    {
-        for (size_t i = 0; i < _occupationNumber[spin].size(); ++i)
-        {
-            if (_occupationNumber[spin][i] == 0.0)
-            {
-                virtualOrbitalNumbers[spin].push_back(i + 1); // +1 because orbital numbers are 1-based indexing
-            }
-        }
-    }
-    
-    return virtualOrbitalNumbers;
-}
-
 void Orbitals::getOccupiedAndVirtualOrbitalNumbers(std::vector<std::vector<int>>& occupiedOrbitalNumbers, std::vector<std::vector<int>>& virtualOrbitalNumbers) const
 {
     occupiedOrbitalNumbers.resize(2);
@@ -1313,6 +1295,24 @@ void Orbitals::getOccupiedAndVirtualOrbitalNumbers(std::vector<std::vector<int>>
 int Orbitals::getPrimitiveCenter(int i) const
 {
     return _primitiveCenters[i];
+}
+
+std::vector<std::vector<int>> Orbitals::getVirtualOrbitalNumbers() const
+{
+    std::vector<std::vector<int>> virtualOrbitalNumbers(2);
+
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for (size_t i = 0; i < _occupationNumber[spin].size(); ++i)
+        {
+            if (_occupationNumber[spin][i] == 0.0)
+            {
+                virtualOrbitalNumbers[spin].push_back(i + 1); // +1 because orbital numbers are 1-based indexing
+            }
+        }
+    }
+    
+    return virtualOrbitalNumbers;
 }
 
 double Orbitals::ERIorbitals(Orbitals& q, Orbitals& r, Orbitals& s)

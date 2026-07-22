@@ -45,11 +45,10 @@ void ComputeEnergyWithPointCharges::computeHamiltonianMatrixes(const std::vector
     {
         std::string errorMessage = "Error in ComputeEnergyWithPointCharges::computeHamiltonianMatrixes(): the first dimension of ionicMatrixes does not match the dimension of chargesNucleiContributions.";
         print_error(errorMessage);
-
+        
         std::exit(1);
     }
 
-    
     // Compute matrix elements < psi_i | H_0 | psi_j >, < psi_i | H_1 | psi_j > and < psi_i | H | psi_j >
     size_t i, j;
     if (verbose >= 1)
@@ -151,15 +150,6 @@ void ComputeEnergyWithPointCharges::computeResults_perturbative(const std::vecto
 {
     std::stringstream logStream;
     size_t nbStates = states.size();
-
-    if (verbose >= 1)
-    {
-        logStream << std::endl;
-        logStream << "==============================================================================================" << std::endl;
-        logStream << "=================================== PERTURBATIVE APPROACH ====================================" << std::endl;
-        logStream << "==============================================================================================" << std::endl << std::endl;
-        log(logStream, outputStream);
-    }
 
     logStream << std::endl << "------ Comparison with Guégan et al., PCCP 2020 ------" << std::endl << std::endl;
 
@@ -392,19 +382,10 @@ void ComputeEnergyWithPointCharges::computeResults_perturbative(const std::vecto
     outputFile.close();
 }
 
-void ComputeEnergyWithPointCharges::computeResults_variational(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose)
+void ComputeEnergyWithPointCharges::computeResults_variational(const Orbitals& orbitals, const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose)
 {
     std::stringstream logStream;
     size_t nbStates = states.size();
-
-    if (verbose >= 1)
-    {
-        logStream << std::endl;
-        logStream << "==============================================================================================" << std::endl;
-        logStream << "==================================== VARIATIONAL APPROACH ====================================" << std::endl;
-        logStream << "==============================================================================================" << std::endl << std::endl;
-        log(logStream, outputStream);
-    }
 
     // Diagonalize < psi_i | H | psi_j > matrix
     std::vector<double> eigenvalues;
@@ -617,7 +598,7 @@ void ComputeEnergyWithPointCharges::computeResults_variational(const std::vector
         }
     }
 
-    std::vector<ExcitedState> perturbedStates = ExcitedState::buildPerturbedStates(states, eigenvalues, eigenvectors);
+    std::vector<ExcitedState> perturbedStates = ExcitedState::buildPerturbedStates(orbitals, states, eigenvalues, eigenvectors);
     ExcitedState::saveExcitedStatesToFile(outputFilePrefix + "perturbedStates.cdftt", perturbedStates);
 
     logStream << std::endl << "------ Comparison with Guégan et al., PCCP 2020 ------" << std::endl << std::endl;
@@ -706,15 +687,6 @@ void ComputeEnergyWithPointCharges::computeResults_linearResponse(const std::vec
 {
     std::stringstream logStream;
 
-    if (verbose >= 1)
-    {
-        logStream << std::endl;
-        logStream << "==============================================================================================" << std::endl;
-        logStream << "================================== LINEAR RESPONSE APPROACH ==================================" << std::endl;
-        logStream << "==============================================================================================" << std::endl << std::endl;
-        log(logStream, outputStream);
-    }
-
     double energy_pseudoOrbitals = 0.0;
     for (size_t i = 0; i < ionicPotentialVectors.size(); ++i)
     {
@@ -776,7 +748,7 @@ void ComputeEnergyWithPointCharges::computeResults_linearResponse(const std::vec
     log(logStream, outputStream);
 }
 
-void ComputeEnergyWithPointCharges::printResults(const std::vector<EnergyPointChargeMethod>& methods, const std::vector<ExcitedState>& states, const std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<Run>& runs, const std::string& outputPrefix, std::ostream& outputStream, int verbose)
+void ComputeEnergyWithPointCharges::printResults(const std::vector<EnergyPointChargeMethod>& methods, const Orbitals& orbitals, const std::vector<ExcitedState>& states, const std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<Run>& runs, const std::string& outputPrefix, std::ostream& outputStream, int verbose)
 {
     bool perturbativeApproach = false;
     bool variationalApproach = false;
@@ -805,7 +777,7 @@ void ComputeEnergyWithPointCharges::printResults(const std::vector<EnergyPointCh
     for (size_t i = 0; i < nbRuns; ++i)
     {
         std::string runNumberStr = int_to_string_withLeadingZeros(i + 1, nbRuns);
-        std::string outputPrefixRun = outputPrefix + (nbRuns > 1 ? "run" + runNumberStr : "");
+        std::string outputPrefixRun = outputPrefix + (nbRuns > 1 ? ("run" + runNumberStr) : "") + "_";
 
         size_t nbPointCharges = runs[i].size();
 
@@ -836,16 +808,43 @@ void ComputeEnergyWithPointCharges::printResults(const std::vector<EnergyPointCh
 
         if (perturbativeApproach)
         {
+            if (verbose >= 1)
+            {
+                logStream << std::endl;
+                logStream << "==============================================================================================" << std::endl;
+                logStream << "=================================== PERTURBATIVE APPROACH ====================================" << std::endl;
+                logStream << "==============================================================================================" << std::endl << std::endl;
+                log(logStream, outputStream);
+            }
+
             computeResults_perturbative(states, psi_i_H_0_psi_j, psi_i_H_1_psi_j, outputPrefixRun, outputStream, verbose);
         }
 
         if (variationalApproach)
         {
-            computeResults_variational(states, psi_i_H_psi_j, outputPrefixRun, outputStream, verbose);
+            if (verbose >= 1)
+            {
+                logStream << std::endl;
+                logStream << "==============================================================================================" << std::endl;
+                logStream << "==================================== VARIATIONAL APPROACH ====================================" << std::endl;
+                logStream << "==============================================================================================" << std::endl << std::endl;
+                log(logStream, outputStream);
+            }
+
+            computeResults_variational(orbitals, states, psi_i_H_psi_j, outputPrefixRun, outputStream, verbose);
         }
         
         if (linearResponseApproach)
         {
+            if (verbose >= 1)
+            {
+                logStream << std::endl;
+                logStream << "==============================================================================================" << std::endl;
+                logStream << "================================== LINEAR RESPONSE APPROACH ==================================" << std::endl;
+                logStream << "==============================================================================================" << std::endl << std::endl;
+                log(logStream, outputStream);
+            }
+
             computeResults_linearResponse(lrfMatrixEigenvalues, ionicPotentialVectors[i],  psi_i_H_0_psi_j, psi_i_H_1_psi_j, outputPrefixRun, outputStream, verbose);
         }
 
@@ -1431,21 +1430,23 @@ void ComputeEnergyWithPointCharges::computeIonicPotentialVectorsFromOrbitals(Orb
     }
 }
 
-void ComputeEnergyWithPointCharges::computeLinearResponseFunctionMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<std::vector<double>>>>& tripleOrbitalIntegralMatrix, std::vector<std::vector<std::vector<double>>>& lrfMatrix)
+void ComputeEnergyWithPointCharges::computeLinearResponseFunctionMatrix(const std::vector<ExcitedState>& states, LRFMethod lrfMethod, const std::vector<std::vector<std::vector<std::vector<double>>>>& tripleOrbitalIntegralMatrix, std::vector<std::vector<std::vector<double>>>& lrfMatrix, std::ostream& outputStream)
 {
-    // Get number of MOs
-    int numberOfMo = orbitals.get_numberOfMo();
+    std::stringstream logStream;
 
-    // Get occupied and virtual orbitals numbers
-    std::vector<std::vector<int>> occupiedOrbitalsNumbers;
-    std::vector<std::vector<int>> virtualOrbitalsNumbers;
-    orbitals.getOccupiedAndVirtualOrbitalNumbers(occupiedOrbitalsNumbers, virtualOrbitalsNumbers);
+    // Get Orbitals object from the Ground State
+    const Orbitals& orbitals = states[0].get_cr_orbitals();
+    
+    // Get Ground State occupied and virtual orbital numbers (usefull for IPA method)
+    std::vector<std::vector<int>> occupiedOrbitalNumbers;
+    std::vector<std::vector<int>> virtualOrbitalNumbers;
+    orbitals.getOccupiedAndVirtualOrbitalNumbers(occupiedOrbitalNumbers, virtualOrbitalNumbers);
 
-    // Get orbital energies
+    // Get orbital energies (usefull for IPA method)
     const std::vector<std::vector<double>>& orbitalEnergies = orbitals.get_orbitalEnergy();
 
-
     // Build and initialise the lower triangular LRF matrix for each spin
+    int numberOfMo = orbitals.get_numberOfMo();
     lrfMatrix.resize(2, std::vector<std::vector<double>>(numberOfMo, std::vector<double>()));
     for (int spin = 0; spin < 2; ++spin)
     {
@@ -1455,45 +1456,305 @@ void ComputeEnergyWithPointCharges::computeLinearResponseFunctionMatrix(const Or
         }
     }
 
-    std::cout << std::scientific;
-    std::cout << std::setprecision(10);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
     for (int spin = 0; spin < 2; ++spin)
     {
-        std::cout << "Computing LRF matrix for " << (spin == static_cast<int>(SpinType::ALPHA) ? "Alpha" : "Beta") << " spin (analytical):" << std::endl;
+        logStream << "Computing LRF matrix for " << (spin == static_cast<int>(SpinType::ALPHA) ? "Alpha" : "Beta") << " spin (analytical):" << std::endl;
 
         for (int i = 0; i < numberOfMo; ++i)
         {
             for (int j = 0; j <= i; ++j)
             {
-                for (int occupiedOrbital : occupiedOrbitalsNumbers[spin])
+                if (lrfMethod == LRFMethod::IPA)
                 {
-                    int occupiedOrbitalIndex = occupiedOrbital - 1; // because occupiedOrbitalsNumbers are 1-based
-
-                    for (int virtualOrbital : virtualOrbitalsNumbers[spin])
+                    for (int occupiedOrbital : occupiedOrbitalNumbers[spin])
                     {
-                        int virtualOrbitalIndex = virtualOrbital - 1; // because virtualOrbitalsNumbers are 1-based
+                        int occupiedOrbitalIndex = occupiedOrbital - 1; // because occupiedOrbitalNumbers are 1-based
 
-                        std::array<int, 3> indices_i = {i, occupiedOrbitalIndex, virtualOrbitalIndex};
-                        std::array<int, 3> indices_j = {j, occupiedOrbitalIndex, virtualOrbitalIndex};
+                        for (int virtualOrbital : virtualOrbitalNumbers[spin])
+                        {
+                            int virtualOrbitalIndex = virtualOrbital - 1; // because virtualOrbitalNumbers are 1-based
 
-                        std::sort(indices_i.begin(), indices_i.end(), std::greater<size_t>());
-                        std::sort(indices_j.begin(), indices_j.end(), std::greater<size_t>());
+                            std::array<int, 3> indices_i = {i, occupiedOrbitalIndex, virtualOrbitalIndex};
+                            std::array<int, 3> indices_j = {j, occupiedOrbitalIndex, virtualOrbitalIndex};
 
-                        lrfMatrix[spin][i][j] += tripleOrbitalIntegralMatrix[spin][indices_i[0]][indices_i[1]][indices_i[2]]
-                                                  * tripleOrbitalIntegralMatrix[spin][indices_j[0]][indices_j[1]][indices_j[2]]
-                                                  / (orbitalEnergies[spin][occupiedOrbitalIndex] - orbitalEnergies[spin][virtualOrbitalIndex]);
+                            std::sort(indices_i.begin(), indices_i.end(), std::greater<size_t>());
+                            std::sort(indices_j.begin(), indices_j.end(), std::greater<size_t>());
+
+                            lrfMatrix[spin][i][j] += tripleOrbitalIntegralMatrix[spin][indices_i[0]][indices_i[1]][indices_i[2]]
+                                                     * tripleOrbitalIntegralMatrix[spin][indices_j[0]][indices_j[1]][indices_j[2]]
+                                                     / (orbitalEnergies[spin][virtualOrbitalIndex] - orbitalEnergies[spin][occupiedOrbitalIndex]);
+                        }
                     }
                 }
+                else if (lrfMethod == LRFMethod::SOS)
+                {
+                    for (size_t state = 1; state < states.size(); ++state)
+                    {
+                        double sum = 0.0;
 
-                lrfMatrix[spin][i][j] *= 2.0;
-                std::cout << "< phi_" << i + 1 << " | Xi | phi_" << j + 1 << " > = " << lrfMatrix[spin][i][j] << std::endl;
+                        const std::vector<std::tuple<std::pair<int, SpinType>, std::pair<int, SpinType>, double>>& electronicTransitions = states[state].get_electronicTransitions();
+
+                        for (const std::tuple<std::pair<int, SpinType>, std::pair<int, SpinType>, double>& transition_k : electronicTransitions)
+                        {
+                            // Only continue if the transition is for the right spin
+                            if (static_cast<int>(std::get<0>(transition_k).second) == spin && static_cast<int>(std::get<1>(transition_k).second) == spin)
+                            {
+                                int occupiedOrbitalIndex_k = std::get<0>(transition_k).first - 1; // because occupiedOrbitalNumbers are 1-based
+                                int virtualOrbitalIndex_k = std::get<1>(transition_k).first - 1; // because virtualOrbitalNumbers are 1-based
+                                double coefficient_k = std::get<2>(transition_k);
+
+                                for (const std::tuple<std::pair<int, SpinType>, std::pair<int, SpinType>, double>& transition_l : electronicTransitions)
+                                {
+                                    // Only continue if the transition is for the right spin
+                                    if (static_cast<int>(std::get<0>(transition_l).second) == spin && static_cast<int>(std::get<1>(transition_l).second) == spin)
+                                    {
+                                        int occupiedOrbitalIndex_l = std::get<0>(transition_l).first - 1; // because occupiedOrbitalNumbers are 1-based
+                                        int virtualOrbitalIndex_l = std::get<1>(transition_l).first - 1; // because virtualOrbitalNumbers are 1-based
+                                        double coefficient_l = std::get<2>(transition_l);
+
+                                        std::array<int, 3> indices_i = {i, occupiedOrbitalIndex_k, virtualOrbitalIndex_k};
+                                        std::array<int, 3> indices_j = {j, occupiedOrbitalIndex_l, virtualOrbitalIndex_l};
+
+                                        std::sort(indices_i.begin(), indices_i.end(), std::greater<size_t>());
+                                        std::sort(indices_j.begin(), indices_j.end(), std::greater<size_t>());
+
+                                        sum += coefficient_k
+                                               * coefficient_l
+                                               * tripleOrbitalIntegralMatrix[spin][indices_i[0]][indices_i[1]][indices_i[2]]
+                                               * tripleOrbitalIntegralMatrix[spin][indices_j[0]][indices_j[1]][indices_j[2]];
+                                    }
+                                }
+                            }
+                        }
+
+                        lrfMatrix[spin][i][j] += (sum / (states[state].get_energy() - states[0].get_energy()));
+                    }
+                }
+                else
+                {
+                    std::stringstream errorMessage;
+                    errorMessage << "Error in ComputeEnergyWithPointCharges::computeLinearResponseFunctionMatrix(): this LRF method is not implemented." << std::endl;
+
+                    print_error(errorMessage.str(), outputStream);
+
+                    std::exit(1);
+                }
+
+                lrfMatrix[spin][i][j] *= -2.0;
+                logStream << "< phi_" << i + 1 << " | Xi | phi_" << j + 1 << " > = " << lrfMatrix[spin][i][j] << std::endl;
             }
 
+            logStream << std::endl;
+            log(logStream, outputStream);
+        }
+
+        logStream << std::endl;
+        log(logStream, outputStream);
+    }
+}
+
+Orbitals ComputeEnergyWithPointCharges::computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<double>>>& lrfMatrix, std::vector<std::vector<double>>& eigenvalues, std::vector<std::vector<std::vector<double>>>& eigenvectors, const std::string& outputPrefix, bool savePseudoOrbitals, GridSize gridSize, CustomSizeData customSizeData, std::ostream& outputStream, int verbose, bool showProgress)
+{
+    std::stringstream logStream;
+
+
+    // Diagonalize LRF matrixes for both spin
+    eigenvalues.resize(2);
+    eigenvectors.resize(2);
+
+
+    // Compute and save results for alpha spin
+    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix[0], eigenvalues[0], eigenvectors[0]);
+
+    std::ofstream outputFile(outputPrefix + "lrf_eigenvalues_alpha.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in ComputeEnergyWithPointCharges::computePseudoOrbitalsFromLrfMatrix(): could not open output file " << outputPrefix << "lrf_eigenvalues_alpha.cdftt for writing." << std::endl;
+
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    logStream << "Sorted Eigenvalues (alpha spin):" << std::endl;
+    log(logStream, outputStream);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t k = 0; k < eigenvalues[0].size(); ++k)
+    {
+        logStream << eigenvalues[0][k] << ' ';
+        outputFile << eigenvalues[0][k] << std::endl;
+    }
+    logStream << std::endl << std::endl;
+    log(logStream, outputStream);
+    outputFile.close();
+
+    outputFile.open(outputPrefix + "lrf_eigenvectors_alpha.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "lrf_eigenvectors_alpha.cdftt for writing." << std::endl;
+
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    logStream << "Sorted Eigenvectors (columns, alpha spin): " << std::endl;
+    log(logStream, outputStream);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t i = 0; i < eigenvectors[0].size(); ++i)
+    {
+        for (size_t j = 0; j < eigenvectors[0][i].size(); ++j)
+        {
+            logStream << std::right << std::setw(17) << eigenvectors[0][i][j] << '\t';
+            outputFile << std::right << std::setw(17) << eigenvectors[0][i][j] << ' ';
+        }
+
+        logStream << std::endl;
+        outputFile << std::endl;
+    }
+    logStream << std::defaultfloat << std::endl;
+    log(logStream, outputStream);
+    outputFile.close();
+
+
+    // Compute and save results for beta spin
+    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix[1], eigenvalues[1], eigenvectors[1]);
+
+    outputFile.open(outputPrefix + "lrf_eigenvalues_beta.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "lrf_eigenvalues_beta.cdftt for writing." << std::endl;
+
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    logStream << "Sorted Eigenvalues (beta spin):" << std::endl;
+    log(logStream, outputStream);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t k = 0; k < eigenvalues[1].size(); ++k)
+    {
+        logStream << eigenvalues[1][k] << ' ';
+        outputFile << eigenvalues[1][k] << std::endl;
+    }
+    logStream << std::endl << std::endl;
+    log(logStream, outputStream);
+    outputFile.close();
+
+    outputFile.open(outputPrefix + "lrf_eigenvectors_beta.cdftt");
+    if (!outputFile)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "lrf_eigenvectors_beta.cdftt for writing." << std::endl;
+
+        print_error(errorMessage.str());
+        
+        std::exit(1);
+    }
+
+    logStream << "Sorted Eigenvectors (columns, beta spin): " << std::endl;
+    log(logStream, outputStream);
+    logStream << std::scientific;
+    logStream << std::setprecision(10);
+    outputFile << std::scientific;
+    outputFile << std::setprecision(10);
+    for (size_t i = 0; i < eigenvectors[1].size(); ++i)
+    {
+        for (size_t j = 0; j < eigenvectors[1][i].size(); ++j)
+        {
+            logStream << std::right << std::setw(17) << eigenvectors[1][i][j] << '\t';
+            outputFile << std::right << std::setw(17) << eigenvectors[1][i][j] << ' ';
+        }
+
+        logStream << std::endl;
+        outputFile << std::endl;
+    }
+    logStream << std::defaultfloat << std::endl;
+    log(logStream, outputStream);
+    outputFile.close();
+
+
+    // Expand LRF eigenvector in AO basis (eigenvectors are in vertical format, i.e. columns are eigenvectors)
+    std::vector<std::vector<std::vector<double>>> lrfEigenvectorsInAoBasis(2); // First index for alpha spin, second index for beta spin
+    const std::vector<std::vector<std::vector<double>>>& coefficients = orbitals.get_coefficients();
+
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        lrfEigenvectorsInAoBasis[spin] = std::vector<std::vector<double>>(orbitals.get_numberOfMo(), std::vector<double>(orbitals.get_numberOfAo(), 0.0));
+
+        for (size_t i = 0; i < eigenvectors[spin].size(); ++i) // phi
+        {
+            for (size_t j = 0; j < eigenvectors[spin][i].size(); ++j) // sigma
+            {
+                for (size_t k = 0; k < coefficients[spin].size(); ++k) // xi
+                {
+                    lrfEigenvectorsInAoBasis[spin][j][k] += eigenvectors[spin][i][j] * coefficients[spin][i][k];
+                }
+            }
+        }
+    }
+
+
+    // Copy orbitals to pseudoOrbitals to keep the same structure and only change energies and coefficients
+    Orbitals pseudoOrbitals(orbitals);
+
+    // Replace MO energies by LRF eigenvalues
+    pseudoOrbitals.set_orbitalEnergy(eigenvalues);
+
+    // Replace coefficients by LRF eigenvectors in AO basis
+    pseudoOrbitals.set_coefficients(lrfEigenvectorsInAoBasis);
+
+    // Save pseudoOrbitals in cube format if desired by the user
+    if (savePseudoOrbitals)
+    {
+        Domain domain = buildDomainForCube(pseudoOrbitals, gridSize, customSizeData, pseudoOrbitals.get_numberOfMo());
+
+        std::vector<int> pseudoOrbitalsIndexes;
+        std::vector<SpinType> pseudoOrbitalsSpinTypes_alpha;
+        std::vector<SpinType> pseudoOrbitalsSpinTypes_beta;
+        for (int i = 0; i < pseudoOrbitals.get_numberOfMo(); ++i)
+        {
+            pseudoOrbitalsIndexes.push_back(i);
+            pseudoOrbitalsSpinTypes_alpha.push_back(SpinType::ALPHA);
+            pseudoOrbitalsSpinTypes_beta.push_back(SpinType::BETA);
+        }
+
+        // Save pseudo orbitals
+        std::cout << "Building pseudo orbitals grid for alpha spin..." << std::endl;
+        createCube(pseudoOrbitals, domain, outputPrefix + "lrf_pseudoOrbitals_alpha.cube", CubeType::ORBITALS, showProgress, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_alpha);
+        logStream << "Pseudo orbitals with alpha spin saved to " << outputPrefix << "lrf_pseudoOrbitals_alpha.cube." << std::endl;
+        log(logStream, outputStream);
+        if (showProgress)
+        {
             std::cout << std::endl;
         }
 
-        std::cout << std::endl;
+        std::cout << "Saving pseudo orbitals in cube format for beta spin..." << std::endl;
+        createCube(pseudoOrbitals, domain, outputPrefix + "lrf_pseudoOrbitals_beta.cube", CubeType::ORBITALS, showProgress, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_beta);
+        logStream << "Pseudo orbitals with beta spin saved to " << outputPrefix << "lrf_pseudoOrbitals_beta.cube." << std::endl;
+        log(logStream, outputStream);
+        if (showProgress)
+        {
+            std::cout << std::endl;
+        }
     }
+
+    return pseudoOrbitals;
 }
 
 
@@ -1592,9 +1853,25 @@ void ComputeEnergyWithPointCharges::run()
 
     // Read save pseudo orbitals option
     bool savePseudoOrbitals = false;
+    GridSize gridSize;
+    CustomSizeData customSizeData;
     if (linearResponseApproach)
     {
         readSavePseudoOrbitals(savePseudoOrbitals);
+
+        // Get Grid data if pseudo orbitals are to be saved in cube format
+        if (savePseudoOrbitals)
+        {
+            readSize(gridSize, customSizeData);
+        }
+    }
+
+
+    // Read LRF method
+    LRFMethod lrfMethod;
+    if (linearResponseApproach)
+    {
+        readLRFMethod(lrfMethod);
     }
 
 
@@ -1660,6 +1937,7 @@ void ComputeEnergyWithPointCharges::run()
     logStream << "Ground State Energy read from " << groundStateEnergySource << ": " << std::setprecision(10) << groundStateEnergy << " H." << std::endl << std::endl;
     log(logStream, outputStream);
 
+
     // Keep a const reference on orbitals' atoms
     const std::vector<Atom>& atoms = orbitals.get_struct().get_atoms();
 
@@ -1679,7 +1957,7 @@ void ComputeEnergyWithPointCharges::run()
 
     // Get Ground Slater Determinant
     SlaterDeterminant groundStateSlaterDeterminant(orbitals);
-    ExcitedState groundState(orbitals.get_energy(), groundStateSlaterDeterminant);
+    ExcitedState groundState(orbitals, groundStateSlaterDeterminant);
 
 
     // Build states vector
@@ -1691,12 +1969,12 @@ void ComputeEnergyWithPointCharges::run()
     if (!transitionsFileName.empty())
     {
         std::cout << "Reading transitions from file: " << transitionsFileName << ". Please wait..." << std::endl;
-        ExcitedState::readTransitions(transitionsFileName, states, groundState.get_energy(), maxNbExcitedStates);
+        ExcitedState::readTransitions(transitionsFileName, states, orbitals, maxNbExcitedStates);
     }
     else
     {
         std::cout << "Reading transitions from analytic file: " << analyticFilesNames[0] << ". Please wait..." << std::endl;
-        ExcitedState::readTransitions(analyticFilesNames[0], states, groundState.get_energy(), maxNbExcitedStates);
+        ExcitedState::readTransitions(analyticFilesNames[0], states, orbitals, maxNbExcitedStates);
     }
 
     size_t nbStates = states.size();
@@ -1704,10 +1982,10 @@ void ComputeEnergyWithPointCharges::run()
     log(logStream, outputStream);
 
 
-    // Compute Slater Determinants from electronic transitions for each state
+    // Update each state from its electronic transitions
     for (ExcitedState& state : states)
     {
-        state.computeSlaterDeterminants(groundStateSlaterDeterminant);
+        state.updateFromElectronicTransitions(groundStateSlaterDeterminant);
 
         if (verbose >= 1)
         {
@@ -1719,11 +1997,7 @@ void ComputeEnergyWithPointCharges::run()
 
     // For perturbative and variational approaches: compute ions-nuclei interactions and ionix matrixes only once
     std::vector<std::vector<double>> chargeNucleiContributions;
-
-    if (perturbativeApproach || variationalApproach)
-    {
-        computeChargeNucleiContributions(atoms, chargeNucleiContributions, runs, nuclearCutoff);
-    }
+    computeChargeNucleiContributions(atoms, chargeNucleiContributions, runs, nuclearCutoff);
     
 
     /************/
@@ -1746,11 +2020,7 @@ void ComputeEnergyWithPointCharges::run()
     // The third dimension corresponds to the spin (0 for alpha, 1 for beta).
     // The fourth and fifth dimensions correspond to the MO indexes (matrix elements i and j, with j <= i: lower triangular matrix).
     std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>> ionicPotentialMatrixes;
-
-    if (perturbativeApproach || variationalApproach)
-    {
-        computeIonicPotentialMatrixesFromOrbitals(orbitals, ionicPotentialMatrixes, runs);
-    }
+    computeIonicPotentialMatrixesFromOrbitals(orbitals, ionicPotentialMatrixes, runs);
 
     // For linear response approach: compute ionic vectors for each charge and position.
     std::vector<std::vector<double>> lrfMatrixEigenvalues;
@@ -1766,11 +2036,11 @@ void ComputeEnergyWithPointCharges::run()
 
         // Compute linear response function (LRF) matrix
         std::vector<std::vector<std::vector<double>>> lrfMatrix;
-        computeLinearResponseFunctionMatrix(orbitals, tripleOrbitalIntegralMatrix, lrfMatrix);
+        computeLinearResponseFunctionMatrix(states, lrfMethod, tripleOrbitalIntegralMatrix, lrfMatrix, outputStream);
 
         // Diagonalize LRF matrix to get pseudo orbitals from eigenvectors
         std::vector<std::vector<std::vector<double>>> lrfMatrixEigenvectors;
-        Orbitals pseudoOrbitals = computePseudoOrbitalsFromLrfMatrix(orbitals, lrfMatrix, lrfMatrixEigenvalues, lrfMatrixEigenvectors, outputPrefix, savePseudoOrbitals, outputStream, verbose, showProgress);
+        Orbitals pseudoOrbitals = computePseudoOrbitalsFromLrfMatrix(orbitals, lrfMatrix, lrfMatrixEigenvalues, lrfMatrixEigenvectors, outputPrefix, savePseudoOrbitals, gridSize, customSizeData, outputStream, verbose, showProgress);
 
         // Compute ionic vectors obtained with a pseudo CGTF made from a unit pseudo GTF (exponent = 0, coefficient = 1) only once (linear response approach only).
         // We build a 4D of dimensions [run][charge][spin][MO] to store the ionic potential vectors for each charge and position.
@@ -1783,7 +2053,7 @@ void ComputeEnergyWithPointCharges::run()
 
 
     // Print results
-    printResults(methods, states, ionicPotentialMatrixes, chargeNucleiContributions, lrfMatrixEigenvalues, ionicPotentialVectors, runs, outputPrefix, outputStream, verbose);
+    printResults(methods, orbitals, states, ionicPotentialMatrixes, chargeNucleiContributions, lrfMatrixEigenvalues, ionicPotentialVectors, runs, outputPrefix, outputStream, verbose);
 
     // // DEBUG
     // ExcitedState::saveExcitedStatesToFile(outputPrefix + "unperturbedStates.cdftt", states);
@@ -1855,7 +2125,7 @@ void ComputeEnergyWithPointCharges::run()
 
 
             // Print results
-            printResults(methods_regularGrid, states, ionicPotentialMatrixes_regularGrid, chargeNucleiContributions, lrfMatrixEigenvalues_regularGrid_decoy, ionicPotentialVectors_regularGrid_decoy, runs, outputPrefix + "regularGrid", outputStream, verbose);
+            printResults(methods_regularGrid, orbitals, states, ionicPotentialMatrixes_regularGrid, chargeNucleiContributions, lrfMatrixEigenvalues_regularGrid_decoy, ionicPotentialVectors_regularGrid_decoy, runs, outputPrefix + "regularGrid", outputStream, verbose);
         }
 
         if (linearResponseApproach)
@@ -1920,12 +2190,12 @@ void ComputeEnergyWithPointCharges::run()
 
             // Compute LRF Matrix for Becke grid
             std::vector<std::vector<std::vector<double>>> lrfMatrix_becke;
-            computeLinearResponseFunctionMatrix(becke.get_orbitals(), tripleOrbitalIntegralMatrix_becke, lrfMatrix_becke);
+            computeLinearResponseFunctionMatrix(states, lrfMethod, tripleOrbitalIntegralMatrix_becke, lrfMatrix_becke, outputStream);
 
             // Diagonalize LRF matrix to get pseudo orbitals from eigenvectors
             std::vector<std::vector<double>> lrfMatrixEigenvalues_becke(2);
             std::vector<std::vector<std::vector<double>>> lrfMatrixEigenvectors_becke(2);
-            Orbitals pseudoOrbitals_becke = computePseudoOrbitalsFromLrfMatrix(becke.get_orbitals(), lrfMatrix_becke, lrfMatrixEigenvalues_becke, lrfMatrixEigenvectors_becke, outputPrefix + "becke", savePseudoOrbitals, outputStream, verbose, showProgress);
+            Orbitals pseudoOrbitals_becke = computePseudoOrbitalsFromLrfMatrix(becke.get_orbitals(), lrfMatrix_becke, lrfMatrixEigenvalues_becke, lrfMatrixEigenvectors_becke, outputPrefix + "becke", savePseudoOrbitals, gridSize, customSizeData, outputStream, verbose, showProgress);
             
             // Compute ionic vectors obtained with a pseudo CGTF made from a unit pseudo GTF (exponent = 0, coefficient = 1) only once.
             computeIonicPotentialVectorsFromOrbitals(pseudoOrbitals_becke, ionicPotentialVectors_becke, runs);
@@ -1933,7 +2203,7 @@ void ComputeEnergyWithPointCharges::run()
 
 
         // Print results
-        printResults(methods, states, ionicMatrixes_becke, chargeNucleiContributions, lrfMatrixEigenvalues_becke, ionicPotentialVectors_becke, runs, outputPrefix + "becke", outputStream, verbose);
+        printResults(methods, orbitals, states, ionicMatrixes_becke, chargeNucleiContributions, lrfMatrixEigenvalues_becke, ionicPotentialVectors_becke, runs, outputPrefix + "becke", outputStream, verbose);
 
 
         // DEBUG - Manually compute sigma vectors (i.e. obtaining the same values than the pseudo Orbitals coefficients.)

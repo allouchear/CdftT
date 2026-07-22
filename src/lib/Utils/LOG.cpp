@@ -935,7 +935,7 @@ bool LOG::readGroundStateEnergy(const std::string& logFileName, double& groundSt
     return (ok && found);
 }
 
-bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, int maxNumberOfExcitedStates, const std::vector<int>& excitedStatesNumbersToKeep)
+bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const Orbitals& orbitals, int maxNumberOfExcitedStates, const std::vector<int>& excitedStatesNumbersToKeep)
 {
     bool ok = true;
 
@@ -975,7 +975,7 @@ bool LOG::readTransitions(const std::string& logFileName, std::vector<ExcitedSta
             {
                 double energy = std::stod(energyRegexMatch[1]) * Constants::EV_TO_HARTREE;
 
-                ExcitedState excitedState(currentExcitedStatesRead, energy + groundStateEnergy);
+                ExcitedState excitedState(orbitals, currentExcitedStatesRead, energy + orbitals.get_energy());
 
                 do
                 {

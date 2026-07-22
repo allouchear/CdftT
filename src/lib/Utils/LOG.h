@@ -222,12 +222,12 @@ class LOG
          *
          * @param[in] logFileName Name of the log file to read.
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
-         * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
+         * @param[in] orbitals Orbitals object associated with the excited states.
          * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
          * 
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitions(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, int maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
+        static bool readTransitions(const std::string& logFileName, std::vector<ExcitedState>& excitedStates, const Orbitals& orbitals, int maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
 };
 
     //! A function taking two arguments and returning a long int value.

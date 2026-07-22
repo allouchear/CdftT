@@ -429,6 +429,37 @@ bool Job::readGroundStateEnergy(double& energy)
     return readOneType<double>(_inputFile, "GroundStateEnergy", energy);
 }
 
+bool Job::readLRFMethod(LRFMethod& lrfMethod)
+{
+    std::string strLRFMethod;
+    bool read = readOneString(_inputFile, "LRFMethod", strLRFMethod);
+
+    if (!read)
+    {
+        std::cout << "Note: the \"LRFMethod\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        std::cout << "The program will use the default value (LRFMethod = IPA)." << std::endl << std::endl;
+        lrfMethod = LRFMethod::IPA;
+    }
+    else
+    {
+        lrfMethod = lrfMethod_from_string(strLRFMethod);
+    }
+
+    // Handle unknown LRF method: exit program with error message.
+    if (lrfMethod == LRFMethod::UNKNOWN)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "Error: LRF method \"" << strLRFMethod << "\" unknown." << std::endl;
+        errorMessage << "Please check the documentation and the \"LRFMethod\" parameter value in the provided input file (" << _inputFileName << ").";
+
+        print_error(errorMessage.str());
+
+        std::exit(1);
+    }
+
+    return read;
+}
+
 bool Job::readMaxNumberOfExcitedStates(int& maxNumberOfExcitedStates)
 {
     bool read = readOneType<int>(_inputFile, "MaxNumberOfExcitedStates", maxNumberOfExcitedStates);
@@ -1074,212 +1105,6 @@ Domain Job::buildDomainForCube(Orbitals& orb, const GridSize gridSize, const Cus
         d.set_all(Nval, int(customSizeData[0]), int(customSizeData[1]), int(customSizeData[2]), customSizeData[3], customSizeData[4], customSizeData[5], t);
     }
     return d;
-}
-
-Orbitals Job::computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<double>>>& lrfMatrix, std::vector<std::vector<double>>& eigenvalues, std::vector<std::vector<std::vector<double>>>& eigenvectors, const std::string& outputPrefix, bool savePseudoOrbitals, std::ostream& outputStream, int verbose, bool showProgress)
-{
-    std::stringstream logStream;
-
-
-    // Diagonalize LRF matrixes for both spin
-    eigenvalues.resize(2);
-    eigenvectors.resize(2);
-
-
-    // Compute and save results for alpha spin
-    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix[0], eigenvalues[0], eigenvectors[0]);
-
-    std::ofstream outputFile(outputPrefix + "lrf_eigenvalues_alpha.cdftt");
-    if (!outputFile)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "lrf_eigenvalues_alpha.cdftt for writing." << std::endl;
-
-        print_error(errorMessage.str());
-        
-        std::exit(1);
-    }
-
-    logStream << "Sorted Eigenvalues (alpha spin):" << std::endl;
-    log(logStream, outputStream);
-    logStream << std::scientific;
-    logStream << std::setprecision(10);
-    outputFile << std::scientific;
-    outputFile << std::setprecision(10);
-    for (size_t k = 0; k < eigenvalues[0].size(); ++k)
-    {
-        logStream << eigenvalues[0][k] << ' ';
-        outputFile << eigenvalues[0][k] << std::endl;
-    }
-    logStream << std::endl << std::endl;
-    log(logStream, outputStream);
-    outputFile.close();
-
-    outputFile.open(outputPrefix + "lrf_eigenvectors_alpha.cdftt");
-    if (!outputFile)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "lrf_eigenvectors_alpha.cdftt for writing." << std::endl;
-
-        print_error(errorMessage.str());
-        
-        std::exit(1);
-    }
-
-    logStream << "Sorted Eigenvectors (columns, alpha spin): " << std::endl;
-    log(logStream, outputStream);
-    logStream << std::scientific;
-    logStream << std::setprecision(10);
-    outputFile << std::scientific;
-    outputFile << std::setprecision(10);
-    for (size_t i = 0; i < eigenvectors[0].size(); ++i)
-    {
-        for (size_t j = 0; j < eigenvectors[0][i].size(); ++j)
-        {
-            logStream << std::right << std::setw(17) << eigenvectors[0][i][j] << '\t';
-            outputFile << std::right << std::setw(17) << eigenvectors[0][i][j] << ' ';
-        }
-
-        logStream << std::endl;
-        outputFile << std::endl;
-    }
-    logStream << std::defaultfloat << std::endl;
-    log(logStream, outputStream);
-    outputFile.close();
-
-
-    // Compute and save results for beta spin
-    findEigenValuesAndEigenVectorsOfSymmetricalMatrix(lrfMatrix[1], eigenvalues[1], eigenvectors[1]);
-
-    outputFile.open(outputPrefix + "lrf_eigenvalues_beta.cdftt");
-    if (!outputFile)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "lrf_eigenvalues_beta.cdftt for writing." << std::endl;
-
-        print_error(errorMessage.str());
-        
-        std::exit(1);
-    }
-
-    logStream << "Sorted Eigenvalues (beta spin):" << std::endl;
-    log(logStream, outputStream);
-    logStream << std::scientific;
-    logStream << std::setprecision(10);
-    outputFile << std::scientific;
-    outputFile << std::setprecision(10);
-    for (size_t k = 0; k < eigenvalues[1].size(); ++k)
-    {
-        logStream << eigenvalues[1][k] << ' ';
-        outputFile << eigenvalues[1][k] << std::endl;
-    }
-    logStream << std::endl << std::endl;
-    log(logStream, outputStream);
-    outputFile.close();
-
-    outputFile.open(outputPrefix + "lrf_eigenvectors_beta.cdftt");
-    if (!outputFile)
-    {
-        std::stringstream errorMessage;
-        errorMessage << "Error in Job::computePseudoOrbitalsLinearResponseWithPointCharges(): could not open output file " << outputPrefix << "lrf_eigenvectors_beta.cdftt for writing." << std::endl;
-
-        print_error(errorMessage.str());
-        
-        std::exit(1);
-    }
-
-    logStream << "Sorted Eigenvectors (columns, beta spin): " << std::endl;
-    log(logStream, outputStream);
-    logStream << std::scientific;
-    logStream << std::setprecision(10);
-    outputFile << std::scientific;
-    outputFile << std::setprecision(10);
-    for (size_t i = 0; i < eigenvectors[1].size(); ++i)
-    {
-        for (size_t j = 0; j < eigenvectors[1][i].size(); ++j)
-        {
-            logStream << std::right << std::setw(17) << eigenvectors[1][i][j] << '\t';
-            outputFile << std::right << std::setw(17) << eigenvectors[1][i][j] << ' ';
-        }
-
-        logStream << std::endl;
-        outputFile << std::endl;
-    }
-    logStream << std::defaultfloat << std::endl;
-    log(logStream, outputStream);
-    outputFile.close();
-
-
-    // Expand LRF eigenvector in AO basis (eigenvectors are in vertical format, i.e. columns are eigenvectors)
-    std::vector<std::vector<std::vector<double>>> lrfEigenvectorsInAoBasis(2); // First index for alpha spin, second index for beta spin
-    const std::vector<std::vector<std::vector<double>>>& coefficients = orbitals.get_coefficients();
-
-    for (int spin = 0; spin < 2; ++spin)
-    {
-        lrfEigenvectorsInAoBasis[spin] = std::vector<std::vector<double>>(orbitals.get_numberOfMo(), std::vector<double>(orbitals.get_numberOfAo(), 0.0));
-
-        for (size_t i = 0; i < eigenvectors[spin].size(); ++i) // phi
-        {
-            for (size_t j = 0; j < eigenvectors[spin][i].size(); ++j) // sigma
-            {
-                for (size_t k = 0; k < coefficients[spin].size(); ++k) // xi
-                {
-                    lrfEigenvectorsInAoBasis[spin][j][k] += eigenvectors[spin][i][j] * coefficients[spin][i][k];
-                }
-            }
-        }
-    }
-
-
-    // Copy orbitals to pseudoOrbitals to keep the same structure and only change energies and coefficients
-    Orbitals pseudoOrbitals(orbitals);
-
-    // Replace MO energies by LRF eigenvalues
-    pseudoOrbitals.set_orbitalEnergy(eigenvalues);
-
-    // Replace coefficients by LRF eigenvectors in AO basis
-    pseudoOrbitals.set_coefficients(lrfEigenvectorsInAoBasis);
-
-    // Save pseudoOrbitals in cube format if desired by the user
-    if (savePseudoOrbitals)
-    {
-        // Read cube grid parameters and build domain
-        GridSize gridSize;
-        CustomSizeData customSizeData;
-        readSize(gridSize, customSizeData);
-        Domain domain = buildDomainForCube(pseudoOrbitals, gridSize, customSizeData, pseudoOrbitals.get_numberOfMo());
-
-        std::vector<int> pseudoOrbitalsIndexes;
-        std::vector<SpinType> pseudoOrbitalsSpinTypes_alpha;
-        std::vector<SpinType> pseudoOrbitalsSpinTypes_beta;
-        for (int i = 0; i < pseudoOrbitals.get_numberOfMo(); ++i)
-        {
-            pseudoOrbitalsIndexes.push_back(i);
-            pseudoOrbitalsSpinTypes_alpha.push_back(SpinType::ALPHA);
-            pseudoOrbitalsSpinTypes_beta.push_back(SpinType::BETA);
-        }
-
-        // Save pseudo orbitals
-        std::cout << "Building pseudo orbitals grid for alpha spin..." << std::endl;
-        createCube(pseudoOrbitals, domain, outputPrefix + "lrf_pseudoOrbitals_alpha.cube", CubeType::ORBITALS, showProgress, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_alpha);
-        logStream << "Pseudo orbitals with alpha spin saved to " << outputPrefix << "lrf_pseudoOrbitals_alpha.cube." << std::endl;
-        log(logStream, outputStream);
-        if (showProgress)
-        {
-            std::cout << std::endl;
-        }
-
-        std::cout << "Saving pseudo orbitals in cube format for beta spin..." << std::endl;
-        createCube(pseudoOrbitals, domain, outputPrefix + "lrf_pseudoOrbitals_beta.cube", CubeType::ORBITALS, showProgress, ELFMethod::UNKNOWN, pseudoOrbitalsIndexes, pseudoOrbitalsSpinTypes_beta);
-        logStream << "Pseudo orbitals with beta spin saved to " << outputPrefix << "lrf_pseudoOrbitals_beta.cube." << std::endl;
-        log(logStream, outputStream);
-        if (showProgress)
-        {
-            std::cout << std::endl;
-        }
-    }
-
-    return pseudoOrbitals;
 }
 
 void Job::createCube(Orbitals& orbitals, const Domain& domain, const std::string& outputCubeFileName, CubeType cubeType, bool showProgress, const ELFMethod elfMethod, std::vector<int> nums, std::vector<SpinType> typesSpin)

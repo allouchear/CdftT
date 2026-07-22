@@ -74,13 +74,14 @@ class ComputeEnergyWithPointCharges : public Job
         /**
          * @brief Computes and prints the results for the variational approach.
          *
+         * @param[in] orbitals Orbitals object associated with the excited states.
          * @param[in] states Vector of excited states of the system.
          * @param[in] psi_i_H_psi_j Matrix of the < psi_i | H | psi_j > values.
          * @param[in] outputFilePrefix Output filename prefix for saving results.
          * @param[in,out] outputStream Output stream for printing results.
          * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
          */
-        void computeResults_variational(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose = 0);
+        void computeResults_variational(const Orbitals& orbitals, const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose = 0);
 
         /**
          * @brief TODO
@@ -102,7 +103,7 @@ class ComputeEnergyWithPointCharges : public Job
          * @param[in,out] outputStream Output stream for printing results.
          * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
          */
-        void printResults(const std::vector<EnergyPointChargeMethod>& methods, const std::vector<ExcitedState>& states, const std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<Run>& runs, const std::string& outputPrefix, std::ostream& outputStream, int verbose = 0);
+        void printResults(const std::vector<EnergyPointChargeMethod>& methods, const Orbitals& orbitals, const std::vector<ExcitedState>& states, const std::vector<std::vector<std::vector<std::vector<std::vector<double>>>>>& ionicPotentialMatrixes, const std::vector<std::vector<double>>& chargeNucleiContributions, const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<Run>& runs, const std::string& outputPrefix, std::ostream& outputStream, int verbose = 0);
 
         /**
          * TODO
@@ -129,7 +130,7 @@ class ComputeEnergyWithPointCharges : public Job
 
 
         //----------------------------------------------------------------------------------------------------//
-        // STATIC METHODS
+        // PUBLIC STATIC METHODS
         //----------------------------------------------------------------------------------------------------//
 
         /**
@@ -196,9 +197,19 @@ class ComputeEnergyWithPointCharges : public Job
         static void computeIonicPotentialVectorsFromOrbitals(Orbitals& orbitals, std::vector<std::vector<std::vector<std::vector<double>>>>& ionicPotentialVectors, const std::vector<Run>& runs);
 
         /**
+         * @brief Computes the linear response function matrix, using the chosen method.
+         * 
+         * @param[in] states Vector of excited states for which to compute the linear response function matrix.
+         * @param[in] lrfMethod Method to use for computing the linear response function matrix.
+         * @param[in] tripleOrbitalIntegralMatrix Matrix of triple orbital integrals used in the computation.
+         * @param[out] lrfMatrix Output matrix where the computed contributions will be stored.
+         */
+        static void computeLinearResponseFunctionMatrix(const std::vector<ExcitedState>& states, LRFMethod lrfMethod, const std::vector<std::vector<std::vector<std::vector<double>>>>& tripleOrbitalIntegralMatrix, std::vector<std::vector<std::vector<double>>>& lrfMatrix, std::ostream& outputStream);
+
+        /**
          * TODO
          */
-        static void computeLinearResponseFunctionMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<std::vector<double>>>>& tripleOrbitalIntegralMatrix, std::vector<std::vector<std::vector<double>>>& lrfMatrix);
+        static Orbitals computePseudoOrbitalsFromLrfMatrix(const Orbitals& orbitals, const std::vector<std::vector<std::vector<double>>>& lrfMatrix, std::vector<std::vector<double>>& eigenvalues, std::vector<std::vector<std::vector<double>>>& eigenvectors, const std::string& outputPrefix, bool savePseudoOrbitals, GridSize gridSize, CustomSizeData customSizeData, std::ostream& outputStream, int verbose, bool showProgress = false);
 
 
         //----------------------------------------------------------------------------------------------------//
