@@ -33,10 +33,11 @@ class RunLambdaDiagnostic : public Job
          *
          * @param[in] analyticFileName Input filename for the analytic files.
          * @param[in] transitionsFileName Input filename for the transitions file.
+         * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read in the transitions file.
          * @param[in] gridSize Grid size for the computation.
          * @param[in] customSizeData Custom size data for the computation.
          */
-        static void print(const std::string& analyticFileName, const std::string& transitionsFileName, GridSize gridSize, CustomSizeData customSizeData);
+        static void print(const std::string& analyticFileName, const std::string& transitionsFileName, int maxNumberOfExcitedStates, GridSize gridSize, CustomSizeData customSizeData);
 
 
         //----------------------------------------------------------------------------------------------------//

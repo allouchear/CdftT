@@ -24,7 +24,7 @@ RunLambdaDiagnostic::RunLambdaDiagnostic(const std::string& inputFileName):
 // STATIC METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void RunLambdaDiagnostic::print(const std::string& analyticFileName, const std::string& transitionsFileName, GridSize gridSize, CustomSizeData customSizeData)
+void RunLambdaDiagnostic::print(const std::string& analyticFileName, const std::string& transitionsFileName, int maxNumberOfExcitedStates, GridSize gridSize, CustomSizeData customSizeData)
 {
     // Loading orbitals
     Orbitals orbitals;
@@ -44,9 +44,18 @@ void RunLambdaDiagnostic::print(const std::string& analyticFileName, const std::
     Grid orbitalsGrid = orbitals.makeOrbGrid(domain, orbitalsNumbers, orbitalsSpins);
 
 
-    // Reading transitions file
+    // Read transitions file
     std::vector<ExcitedState> excitedStates;
-    ExcitedState::readTransitions(transitionsFileName, excitedStates, orbitals);
+    if (!transitionsFileName.empty())
+    {
+        std::cout << "Reading transitions from file: " << transitionsFileName << ". Please wait..." << std::endl;
+        ExcitedState::readTransitions(transitionsFileName, excitedStates, orbitals, maxNumberOfExcitedStates);
+    }
+    else
+    {
+        std::cout << "Reading transitions from analytic file: " << analyticFileName << ". Please wait..." << std::endl;
+        ExcitedState::readTransitions(analyticFileName, excitedStates, orbitals, maxNumberOfExcitedStates);
+    }
     std::cout << "Number of excited states read: " << excitedStates.size() << std::endl << std::endl;
 
 
@@ -95,6 +104,11 @@ void RunLambdaDiagnostic::run()
     readTransitionsFileName(transitionsFileName);
 
 
+    // Read maximum number of excited states
+    int maxNumberOfExcitedStates;
+    readMaxNumberOfExcitedStates(maxNumberOfExcitedStates);
+
+
     // Compute and print lambda diagnostic
-    print(analyticFilesNames[0], transitionsFileName, gridSize, customSizeData);
+    print(analyticFilesNames[0], transitionsFileName, maxNumberOfExcitedStates, gridSize, customSizeData);
 }
