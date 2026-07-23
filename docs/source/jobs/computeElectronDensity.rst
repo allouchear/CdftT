@@ -173,7 +173,7 @@ Possible values are:
 - ``1``: A log file is generated containing:
 
     - the description of the excited states (read from the file describing the electronic transitions in the unperturbed system)
-    - the matrix elements :math:`\langle \, i \, \middle| \, \hat{H} \, \middle| \, j \, \rangle` and :math:`\langle \, i \, \middle| \, \hat{H} - \hat{H}_0 \, \middle| \, j \, \rangle` (triangular matrix: only elements with :math:`j \leq i` are written)
+    - the matrix elements :math:`\langle \, i \, | \, \hat{H} \, | \, j \, \rangle` and :math:`\langle \, i \, | \, \hat{H} - \hat{H}_0 \, | \, j \, \rangle` (triangular matrix: only elements with :math:`j \leq i` are written)
 
 
 ``SaveReducedDensityMatrix``
