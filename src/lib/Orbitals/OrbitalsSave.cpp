@@ -221,9 +221,72 @@ void Orbitals::Save_wfx(const std::string& tag)
                                                             // Moldengab faire attention au format sphe/cart !!!!
 void Orbitals::Save_molden(const std::string& tag)    
 {
+    // ? _vcgtfUnnormalized : vector of Contracted Gaussian Type Functions (CGTF) that compose the basis set without normalization
+    // ? _numberOfGtf : Number of primitive functions
+    //      -> only `.wfx` or other primitive-only formats should trigger this condition
     if(int(_vcgtfUnnormalized.size())==_numberOfGtf)
     {
-        std::cout<<"This option is nnot implemente."<<std::endl;
+        /* Reminder : how are orbitals computed in most formats (e.g. Molden, Gabedit)
+            
+            A given shell is built from a set of primitive functions, usually Gaussian Type Functions
+            (GTFs).
+                {g_1, g_2, ..., g_n}
+            
+            One then builds a contracted basis function (CBF) by taking a linear combination of these
+            primitives:
+                CBF = c_1 * g_1 + c_2 * g_2 + ... + c_n * g_n
+
+            Afterwards, one performs a simple expansion (ie. another linear combination) of the
+            molecular orbitals (MOs) in terms of these contracted basis functions:
+                MO = C_1 * CBF_1 + C_2 * CBF_2 + ... + C_m * CBF_m
+            
+            Or, if we replace CBFs in the previous equation
+                MO = (C_1 * c_1) * g_1 + (C_1 * c_2) * g_2 + ... + (C_1 * c_n) * g_n
+                   + (C_2 * c_1) * g_1 + (C_2 * c_2) * g_2 + ... + (C_2 * c_n) * g_n
+                   + ... 
+                   + (C_m * c_1) * g_1 + (C_m * c_2) * g_2 + ... + (C_m * c_n) * g_n    ----    [CASE 1]
+
+        For the .wfx format, the process is a bit different:
+        
+            Starting from the same set of primitive functions,
+                {g_1, g_2, ..., g_n}
+
+            one can directly expand the molecular orbitals in terms of these primitives, skipping the
+            intermediate contracted basis functions:
+                MO = D_1 * g_1 + D_2 * g_2 + ... + D_n * g_n    ----   [CASE 2]
+
+            Therefore, instead of explicitely performing the contraction and then the expansion like in
+            [CASE 1], the contraction is absorbed into the D_* coefficients of the primitive functions
+            in [CASE 2].
+
+        Therefore, critical differences appear in storage :
+            - in [CASE 1],
+                one can store for each shell information regarding the first linear combination (in the
+                [GTO] section for .molden)
+                    {a_i, c_i} where a_i define the exponents of the primitives and c_i are the
+                    contraction coefficients
+                and then store the second linear combination (in the [MO] section for .molden)
+                    {C_i} where C_i are the expansion coefficients of the MOs in terms of the
+                    contracted basis functions
+            - in [CASE 2],
+                one can only store the expansion coefficients of the MOs in terms of the primitives,
+                which are the D_i coefficients in the previous equation. The contraction coefficients
+                c_i are not stored anywhere, and therefore the contracted basis functions are not
+                explicitly defined in the `.wfx` format.
+
+            In other words, the `.wfx` format is a "primitive-only" format (explaining why we check if
+            the number of primitives is equal to the number of contracted basis functions in the `if`
+            statement above).
+
+        The conversion from [CASE 2] to [CASE 1] is not implemented yet as the reconstruction of the
+        contracted basis functions from the primitive-only expansion is not unique.
+
+        We would have to choose a convention. The easiest one would be to assume that
+            "one primitive function" = "one contracted basis function"
+        but I am unsure of whether this is a good idea and what are the edge cases.
+        */
+        std::cout<<"Conversion to Molden format from .wfx is not implemented yet."<<std::endl;
+        // ! Triggered by .wfx to .molden conversion
         return;
     }
 
@@ -409,14 +472,77 @@ void Orbitals::Save_gab(const std::string& tag)
 {
     if(_mixte)
     {
-        std::cout<<"Gabedit Format can't read mixte basis."<<std::endl;
+        std::cout<<"Gabedit format can't handle mixed cartesian and spherical harmonic basis." <<std::endl;
+        // ! Triggered by .molden to .gab conversion
         return;
     }
 
+    // ? _vcgtfUnnormalized : vector of Contracted Gaussian Type Functions (CGTF) that compose the basis set without normalization
+    // ? _numberOfGtf : Number of primitive functions
+    //      -> only `.wfx` or other primitive-only formats should trigger this condition
     if(int(_vcgtfUnnormalized.size())==_numberOfGtf)
     {
-        std::cout<<"This option is nnot implemente."<<std::endl;
-        return;
+        /* Reminder : how are orbitals computed in most formats (e.g. Molden, Gabedit)
+            
+            A given shell is built from a set of primitive functions, usually Gaussian Type Functions
+            (GTFs).
+                {g_1, g_2, ..., g_n}
+            
+            One then builds a contracted basis function (CBF) by taking a linear combination of these
+            primitives:
+                CBF = c_1 * g_1 + c_2 * g_2 + ... + c_n * g_n
+
+            Afterwards, one performs a simple expansion (ie. another linear combination) of the
+            molecular orbitals (MOs) in terms of these contracted basis functions:
+                MO = C_1 * CBF_1 + C_2 * CBF_2 + ... + C_m * CBF_m
+            
+            Or, if we replace CBFs in the previous equation
+                MO = (C_1 * c_1) * g_1 + (C_1 * c_2) * g_2 + ... + (C_1 * c_n) * g_n
+                   + (C_2 * c_1) * g_1 + (C_2 * c_2) * g_2 + ... + (C_2 * c_n) * g_n
+                   + ... 
+                   + (C_m * c_1) * g_1 + (C_m * c_2) * g_2 + ... + (C_m * c_n) * g_n    ----    [CASE 1]
+
+        For the .wfx format, the process is a bit different:
+        
+            Starting from the same set of primitive functions,
+                {g_1, g_2, ..., g_n}
+
+            one can directly expand the molecular orbitals in terms of these primitives, skipping the
+            intermediate contracted basis functions:
+                MO = D_1 * g_1 + D_2 * g_2 + ... + D_n * g_n    ----   [CASE 2]
+
+            Therefore, instead of explicitely performing the contraction and then the expansion like in
+            [CASE 1], the contraction is absorbed into the D_* coefficients of the primitive functions
+            in [CASE 2].
+
+        Therefore, critical differences appear in storage :
+            - in [CASE 1],
+                one can store for each shell information regarding the first linear combination (in the
+                [GTO] section for .molden)
+                    {a_i, c_i} where a_i define the exponents of the primitives and c_i are the
+                    contraction coefficients
+                and then store the second linear combination (in the [MO] section for .molden)
+                    {C_i} where C_i are the expansion coefficients of the MOs in terms of the
+                    contracted basis functions
+            - in [CASE 2],
+                one can only store the expansion coefficients of the MOs in terms of the primitives,
+                which are the D_i coefficients in the previous equation. The contraction coefficients
+                c_i are not stored anywhere, and therefore the contracted basis functions are not
+                explicitly defined in the `.wfx` format.
+
+            In other words, the `.wfx` format is a "primitive-only" format (explaining why we check if
+            the number of primitives is equal to the number of contracted basis functions in the `if`
+            statement above).
+
+        The conversion from [CASE 2] to [CASE 1] is not implemented yet as the reconstruction of the
+        contracted basis functions from the primitive-only expansion is not unique.
+
+        We would have to choose a convention. The easiest one would be to assume that
+            "one primitive function" = "one contracted basis function"
+        but I am unsure of whether this is a good idea and what are the edge cases.
+        */
+        std::cout<<"Conversion to Gabedit format from .wfx is not implemented yet."<<std::endl;
+        // ! Triggered by .wfx to .molden conversion
     }
 
     std::ofstream s;
