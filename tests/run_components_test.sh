@@ -16,6 +16,7 @@ HELPERS_CPP="$TESTS_DIR/helpers.cpp"
 # Defaults; can be overridden by env var.
 CDFTT_BINARY_DEFAULT="$REPO_DIR/src/applications/cdftt/cdftt"
 CDFTT_BINARY="${CDFTT_BINARY:-$CDFTT_BINARY_DEFAULT}"
+CDFTT_REPO_ROOT="${CDFTT_REPO_ROOT:-$REPO_DIR}"
 
 # Compiler settings; can be overridden by env var.
 CXX="${CXX:-g++}"
@@ -75,6 +76,10 @@ run_components_test() {
         return 1
     fi
 
+    RUNDIR=/tmp/cdftt_test_logs/test_job_components
+    mkdir -p "$RUNDIR"
+    cd "$RUNDIR"
+
     echo "[RUN  ] test_job_components"
     echo "==========================="
     echo "Running components test..."
@@ -87,12 +92,16 @@ run_components_test() {
     echo ""
     echo "==========================="
     echo "Exit code: $exit_code"
+
+    cd - > /dev/null
     
     return $exit_code
 }
 
 main() {
     local cmd="${1:-run}"  # Either "build", "run", or "run-only"
+
+    export CDFTT_REPO_ROOT="$CDFTT_REPO_ROOT"  # Ensure the test knows where the repo root is.
     
     case "$cmd" in
         build)

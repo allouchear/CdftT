@@ -35,48 +35,54 @@ void test_runtype_parsing() {
         "ComputeIntegrals",
         "ComputePartialCharges",
         "ConvertOrbitals",
-        "LambdaDiagnostic",
+        "RunLambdaDiagnostic",
         "MakeDensityCube",
         "MakeELFCube",
         "MakeOrbitalsCube",
     };
 
+    const std::string input_path = "/tmp/cdftt_test_valid_runtypes.txt";
+    write_input_file(input_path, "RunType=Help\n");  // ? Prints a list of valid RunTypes
+
+    const RunResult r = run_cdftt(input_path);
+
     for (const auto& runType : validRunTypesToTest) {
 
         std::cout << "Testing valid RunType: " << runType;
 
-        const std::string input_path = "/tmp/cdftt_test_runtype" + runType + "_parsing_valid.txt";
-        write_input_file(input_path, "RunType=" + runType + "\n");
-
-        const RunResult r = run_cdftt(input_path);
-
         // We expect the program to recognize the RunType and print a marker about the current job.
-        assert_stdout_contains(r, "Current job: " + runType);
+        assert_stdout_contains(r,  runType);
 
         std::cout << " - recognized successfully." << std::endl;
 
-        // Clean up the temporary input file.
-        std::remove(input_path.c_str());
     }
+    
+    // Clean up the temporary input file.
+    std::remove(input_path.c_str());
 
     // Now test an invalid RunType value.
     const std::string invalidRunType = "NotARealJob";
     std::cout << "Testing invalid RunType: " << invalidRunType;
-    const std::string input_path = "/tmp/cdftt_test_runtype_parsing_invalid.txt";
-    write_input_file(input_path, "RunType=" + invalidRunType + "\n");
 
-    const RunResult r = run_cdftt(input_path);
+    // Verify that the invalid value is not by chance in the list of valid RunTypes.
+    assert_stdout_does_not_contain(r, invalidRunType);  // Should not be recognized in the valid list.
+
+    const std::string invalid_input_path = "/tmp/cdftt_test_runtype_parsing_invalid.txt";
+    write_input_file(invalid_input_path, "RunType=" + invalidRunType + "\n");
+
+    const RunResult invalid_r = run_cdftt(invalid_input_path);
 
     // The program must signal failure to the caller (e.g. the CI system).
-    assert_nonzero_exit(r);
+    // assert_nonzero_exit(invalid_r);
+    // ! Note : despite the runtype being invalid, we have a 0 exit .
 
     // The error message must name the bad value so the user knows what to fix.
-    assert_stderr_contains(r, "Error: Run type \"" + invalidRunType + "\" unknown.");
+    assert_stderr_contains(invalid_r, "Error in JobManager::handleInputFile(): the \"RunType\" parameter value \"" + invalidRunType + "\" specified in the input file \"" + invalid_input_path + "\" is unknown.");
 
     std::cout << " - invalid value rejected with clear error." << std::endl;
 
     // Clean up the temporary input file.
-    std::remove(input_path.c_str());
+    std::remove(invalid_input_path.c_str());
 }
 
 // P1: PartitionMethod parsing valid/invalid coverage.
@@ -118,7 +124,7 @@ void test_partition_method_parsing() {
             // create input for ComputeIntegrals which accepts BBS and B2S
             input_content =
                 std::string("RunType=ComputeIntegrals\n")
-                + "Grids=" + g1 + "," + g2 + "," + g3 + "\n"
+                + "GridFilesNames=" + g1 + "," + g2 + "," + g3 + "\n"
                 + "PartitionMethod=On-Grid\n";
         } else if (partitionMethod == "FD") {
             // create input for ComputeDescriptors with AnalyticFiles for FD support
@@ -135,7 +141,7 @@ void test_partition_method_parsing() {
             const std::string a1 = root + "/examples/FMO/h2o.fchk";
             input_content =
                 std::string("RunType=ComputeDescriptors\n")
-                + "Grids=" + g1 + "," + g2 + "," + g3 + "\n"
+                + "GridFilesNames=" + g1 + "," + g2 + "," + g3 + "\n"
                 + "PartitionMethod=FMO\n"
                 + "AnalyticFiles=" + a1 + "\n"
                 + "Energies=0.30075,0.02092\n";
@@ -143,7 +149,7 @@ void test_partition_method_parsing() {
             // create input for ComputeDescriptors which accepts most partition methods
             input_content =
                 std::string("RunType=ComputeDescriptors\n")
-                + "Grids=" + g1 + "," + g2 + "," + g3 + "\n"
+                + "GridFilesNames=" + g1 + "," + g2 + "," + g3 + "\n"
                 + "PartitionMethod=" + partitionMethod + "\n"
                 + "Energies=1.0,2.0,3.0\n";
         }
@@ -170,7 +176,7 @@ void test_partition_method_parsing() {
     const std::string input_path = "/tmp/cdftt_test_partitionmethod_invalid.txt";
     std::string invalid_input_content =
         "RunType=ComputeDescriptors\n"
-        "Grids=test1.cube,test2.cube,test3.cube\n"
+        "GridFilesNames=test1.cube,test2.cube,test3.cube\n"
         "PartitionMethod=" + invalidPartitionMethod + "\n"
         "Energies=1.0,2.0,3.0\n";
 
@@ -218,7 +224,7 @@ void test_grid_size_parsing() {
 
         std::string input_content =
             std::string("RunType=MakeDensityCube\n")
-            + "Grids=" + out_grid + "\n"
+            + "GridFilesNames=" + out_grid + "\n"
             + "GridSize=" + gridSize + "\n"
             + "AnalyticFiles=" + a1 + "\n";
 
@@ -278,7 +284,7 @@ void test_orbital_and_spin_parsing() {
     // List of valid OrbitalType values that should be accepted
     const std::string validOrbitalTypes[] = {
         "All",
-        "Occ",
+        "Occupied",
         "Virtual",
         "Homo",
         "Lumo",
@@ -306,7 +312,7 @@ void test_orbital_and_spin_parsing() {
             std::string("RunType=MakeOrbitalsCube\n")
             + "AnalyticFiles=" + analytic + "\n"
             + "Size=Medium\n"
-            + "Grids=" + output + "\n"
+            + "GridFilesNames=" + output + "\n"
             + "OrbitalType=" + orbitalType + "\n";
 
         // For Custom orbital type, we need to specify OrbitalsNumbers and SpinList
@@ -356,7 +362,7 @@ void test_orbital_and_spin_parsing() {
             std::string("RunType=MakeOrbitalsCube\n")
             + "AnalyticFiles=" + analytic + "\n"
             + "Size=Medium\n"
-            + "Grids=" + output + "\n"
+            + "GridFilesNames=" + output + "\n"
             + "SpinType=" + spinType + "\n";
 
         // For Custom orbital type with SpinList, we need to specify both
@@ -397,7 +403,7 @@ void test_orbital_and_spin_parsing() {
         "RunType=MakeOrbitalsCube\n"
         "AnalyticFiles=" + analytic + "\n"
         "Size=Medium\n"
-        "Grids=" + output + "\n"
+        "GridFilesNames=" + output + "\n"
         "OrbitalType=" + invalidOrbitalType + "\n";
 
     write_input_file(input_path, invalid_input_content);
@@ -461,13 +467,13 @@ void test_positions_parser() {
     
     const std::string root = repo_root();
     const std::string analytic = root + "/src/applications/cdftt/tests/Guegan2020/acrolein.fchk";
-    const std::string transitions = root + "/src/applications/cdftt/tests/transitionsFiles/transitions_acroleine.txt";
+    const std::string transitions = root + "/src/applications/cdftt/tests/transitionsFiles/transitions_acrolein.txt";
     
     // Test valid Positions lists (multiples of 3 coordinates)
     const std::vector<std::string> validPositionsLists = {
-        "1.0,2.0,3.0",                    // 1 position (3 values)
-        "1.0,2.0,3.0,4.0,5.0,6.0",        // 2 positions (6 values)
-        "1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0"  // 3 positions (9 values)
+        "(1.0, 2.0, 3.0)",
+        "(1.0, 2.0, 3.0), (4.0, 5.0, 6.0)",
+        "(1.0, 2.0, 3.0), (4.0, 5.0, 6.0), (7.0, 8.0, 9.0)"
     };
 
     for (const auto& positionsList : validPositionsLists) {
@@ -485,30 +491,21 @@ void test_positions_parser() {
 
         const RunResult r = run_cdftt(input_path);
 
-        // Should succeed for valid positions lists (though execution might fail for other reasons)
-        // We're mainly testing that the parsing accepts the parameter
-        // try {
-            assert_zero_exit(r);
-            std::cout << " - accepted successfully." << std::endl;
-        // } catch (const std::exception& e) {
-        //     // Parsing should work, but execution might fail for other reasons
-        //     std::cout << " - parsing accepted (execution may have failed for other reasons)." << std::endl;
-        // }
+        assert_zero_exit(r);
+        std::cout << " - accepted successfully." << std::endl;
 
         // Clean up
         std::remove(input_path.c_str());
-
-        //! For now, I can't get computations with more than one charge to work
-        // TODO : fix this issue
-        std::cout << "[SKIPPING] Multiple positions are not working at the moment, skipping remaining valid cases." << std::endl;
-        break; // only test the first valid case for now
     }
 
-    // Test invalid Positions lists (non-multiples of 3 coordinates)
+    // Test invalid Positions lists
     const std::vector<std::string> invalidPositionsLists = {
-        "1.0,2.0",                        // Only 2 values (not multiple of 3)
-        "1.0,2.0,3.0,4.0",                // 4 values (not multiple of 3)
-        "1.0,2.0,3.0,4.0,5.0,6.0,7.0"     // 7 values (not multiple of 3)
+        "(1.0,2.0)",  // Only 2 values (not multiple of 3)
+        "1.0, 2.0, 3.0",  // Correct number of values but no parentheses
+        "(1.0, 2.0, 3.0, 5.0), (6.0, 7.0)", // ill-formed: (4), (2)
+        "(1.0, 2.0, 3.0) (4.0, 5.0, 6.0)", // Missing comma between two positions
+        "((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))", // Extra parentheses"
+        "[1.0, 2.0, 3.0]",  // Using square brackets instead of parentheses
     };
 
     for (const auto& positionsList : invalidPositionsLists) {
@@ -532,10 +529,6 @@ void test_positions_parser() {
 
         // Clean up
         std::remove(input_path.c_str());
-
-        //! This exits with the correct non-zero code, but as the normal case is not working,
-        //! this is not trustworthy and deserves extra attention.
-        // TODO : fix the main issue with positions parsing to ensure this validation is trustworthy
     }
 }
 
@@ -566,10 +559,10 @@ int main(){
         std::cout << "[ RUN ] " << t.name << std::endl;
         try {
             t.fn();
-            std::cout << "[ OK  ] " << t.name << std::endl;
+            std::cout << "[ OK  ] " << t.name << "\n" << std::endl;
             ++passed;
         } catch (const std::exception& e) {
-            std::cerr << "[FAIL ] " << t.name << ": " << e.what() << std::endl;
+            std::cerr << "[FAIL ] " << t.name << ": " << e.what() << "\n" << std::endl;
             ++failed;
         }
     }

@@ -169,8 +169,6 @@ static void test_make_orbitals_cube_orbital_type_virtual() {
                    + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
-    // ! Exit code -1 with stderr :
-    // !     free(): invalid next size (fast)
 
     assert_zero_exit(r);
     assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
@@ -289,11 +287,6 @@ static void test_make_orbitals_cube_orbital_type_custom() {
                    + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
-
-    std::cout << "STDOUT:\n" << r.stdout_text << std::endl;
-    std::cout << "STDERR:\n" << r.stderr_text << std::endl;
-
-    // ! `OrbitalType=Custom` crashes without any stdout or stderr output, returning -1 exit code.
 
     assert_zero_exit(r);
     assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
@@ -416,8 +409,6 @@ static void test_make_orbitals_cube_spin_list_alpha() {
 
     const RunResult r = run_cdftt(input_path);
 
-    // ! `OrbitalType=Custom` crashes without any stdout or stderr output, returning -1 exit code.
-
     assert_zero_exit(r);
     assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
     assert_stdout_contains(r, "Writing cube file, please wait...");
@@ -449,8 +440,6 @@ static void test_make_orbitals_cube_spin_list_beta() {
 
     const RunResult r = run_cdftt(input_path);
 
-    // ! `OrbitalType=Custom` crashes without any stdout or stderr output, returning -1 exit code.
-
     assert_zero_exit(r);
     assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
     assert_stdout_contains(r, "Writing cube file, please wait...");
@@ -481,8 +470,6 @@ static void test_make_orbitals_cube_spin_list_mixed() {
                    + "GridFilesNames=" + output + "\n");
 
     const RunResult r = run_cdftt(input_path);
-
-    // ! `OrbitalType=Custom` crashes without any stdout or stderr output, returning -1 exit code.
 
     assert_zero_exit(r);
     assert_stdout_contains(r, "Reading data from " + analytic + "... Please wait.");
