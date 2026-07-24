@@ -30,6 +30,92 @@
 // PRIVATE METHODS
 //----------------------------------------------------------------------------------------------------//
 
+void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant, double limit)
+{
+    // Apply the transitions to the Slater determinant
+    for (const auto& transition : _electronicTransitions)
+    {
+        // Copy ground state Slater determinant
+        SlaterDeterminant slaterDeterminantTransition(groundStateSlaterDeterminant);
+
+        // Unpack transition
+        int initialOrbitalNumber = std::get<0>(transition).first;
+        SpinType initialOrbitalSpin = std::get<0>(transition).second;
+        int finalOrbitalNumber = std::get<1>(transition).first;
+        SpinType finalOrbitalSpin = std::get<1>(transition).second;
+        double coefficient = std::get<2>(transition);
+
+        // Update Slater determinant based on the transition
+        slaterDeterminantTransition.updateFromTransition(initialOrbitalNumber, initialOrbitalSpin, finalOrbitalNumber, finalOrbitalSpin);
+
+        // Store Slater determinant
+        _slaterDeterminants.emplace_back(slaterDeterminantTransition, coefficient);
+    }
+
+    // Sort the Slater determinants based on the absolute values of their coefficients in descending order
+    size_t numberOfSD = _slaterDeterminants.size();
+
+    // Initialize SD coefficients
+    std::vector<double> coefficients(numberOfSD);
+    for(size_t i = 0; i < numberOfSD; ++i)
+    {
+        coefficients[i] = _slaterDeterminants[i].second;
+    }
+
+    // Sort SD indices based on the absolute values of their coefficients in descending order
+    std::vector<size_t> argsortSD(numberOfSD);
+    std::iota(argsortSD.begin(), argsortSD.end(), 0);
+    std::sort(argsortSD.begin(), argsortSD.end(), [&](size_t i1, size_t i2) { return std::abs(coefficients[i1]) > std::abs(coefficients[i2]); });
+
+    // Determine the threshold for significant coefficients based on the specified limit
+    double treshold = std::abs(coefficients[argsortSD[0]]) * limit;
+    
+    // Find the maximum index of SDs with coefficients above the threshold
+    double maxSdIndex = 0;
+    size_t i = 0;
+    while(i < argsortSD.size() && std::abs(coefficients[argsortSD[i]]) > treshold)
+    {
+        maxSdIndex = i;
+        ++i;
+    }
+
+    // Store the sorted SD indices with coefficients above the threshold
+    _sdIndicesSortedByCoefficientDesc = std::vector<size_t>(argsortSD.begin(), argsortSD.begin() + maxSdIndex + 1);
+
+
+    // Set the excitation degree for each Slater determinant
+    size_t nMax = _slaterDeterminants[0].first.get_occupiedOrbitals()[0].size() + _slaterDeterminants[0].first.get_occupiedOrbitals()[1].size(); //considering same size slater determinants
+    _sdIndicesByExcitationDegree.resize(nMax, std::vector<size_t>());
+    
+    // Only compute the excitation degree for the Slater determinants with coefficients above the threshold (i.e., those whose index is in _sdIndicesSortedByCoefficientDesc)
+    for (size_t i : _sdIndicesSortedByCoefficientDesc)   
+    {
+        size_t excitationDegree = _slaterDeterminants[i].first.getExcitationDegree(groundStateSlaterDeterminant);
+        _sdIndicesByExcitationDegree[excitationDegree].push_back(i);
+    }
+}
+
+void ExcitedState::updateIsOrbitalOccupied()
+{
+    for (const auto& transition : _electronicTransitions)
+    {
+        int initialOrbitalIndex = std::get<0>(transition).first - 1; // Convert from MO number (1-based) to MO index (0-based)
+        int initialOrbitalSpin = static_cast<int>(std::get<0>(transition).second);
+
+        int finalOrbitalIndex = std::get<1>(transition).first - 1; // Convert from MO number (1-based) to MO index (0-based)
+        int finalOrbitalSpin = static_cast<int>(std::get<1>(transition).second);
+
+        // Set the initial orbital as unoccupied and the final orbital as occupied
+        _isOrbitalOccupied[initialOrbitalSpin][initialOrbitalIndex] = false;
+        _isOrbitalOccupied[finalOrbitalSpin][finalOrbitalIndex] = true;
+    }
+}
+
+
+//----------------------------------------------------------------------------------------------------//
+// PRIVATE STATIC METHODS
+//----------------------------------------------------------------------------------------------------//
+
 void ExcitedState::computeGammaMatrix(std::vector<std::vector<std::vector<double>>>& gammaMatrix, const ExcitedState& psi_i, const ExcitedState& psi_j, const Orbitals& orbitals, const std::vector<int>& ignoredMos, bool showProgress)
 {
     // Assume the first Slater determinant corresponds to the Ground State
@@ -325,28 +411,46 @@ void ExcitedState::computeXMatrix(std::vector<std::vector<std::vector<double>>>&
 // CONSTRUCTOR
 //----------------------------------------------------------------------------------------------------//
 
-ExcitedState::ExcitedState(const int number, const double energy) :
+ExcitedState::ExcitedState(const Orbitals& orbitals, const int number, const double energy) :
+    _cr_orbitals(orbitals),
     _electronicTransitions(),
     _energy(energy),
+    _isOrbitalOccupied(2, std::vector<bool>(orbitals.get_numberOfMo(), false)),
     _number(number),
     _slaterDeterminants(),
     _sdIndicesByExcitationDegree(),
     _sdIndicesSortedByCoefficientDesc()
-{ }
+{
+    initIsOrbitalOccupied();
+}
 
-ExcitedState::ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant) :
+ExcitedState::ExcitedState(const Orbitals& orbitals, const SlaterDeterminant& slaterDeterminant) :
+    _cr_orbitals(orbitals),
     _electronicTransitions(),
-    _energy(energy),
+    _energy(orbitals.get_energy()),
+    _isOrbitalOccupied(2, std::vector<bool>(orbitals.get_numberOfMo(), false)),
     _number(0),
     _slaterDeterminants({ { slaterDeterminant, 1.0 } }),
     _sdIndicesByExcitationDegree(),
     _sdIndicesSortedByCoefficientDesc()
-{ }
+{
+    initIsOrbitalOccupied();
+}
 
 
 //----------------------------------------------------------------------------------------------------//
 // GETTERS
 //----------------------------------------------------------------------------------------------------//
+
+const Orbitals& ExcitedState::get_cr_orbitals() const
+{
+    return _cr_orbitals;
+}
+
+const std::vector<std::tuple<std::pair<int, SpinType>, std::pair<int, SpinType>, double>>& ExcitedState::get_electronicTransitions() const
+{
+    return _electronicTransitions;
+}
 
 double ExcitedState::get_energy() const
 {
@@ -383,79 +487,48 @@ void ExcitedState::addTransition(const SpinOrbital& initialOrbital, const SpinOr
     _electronicTransitions.emplace_back(initialOrbital, finalOrbital, coefficient);
 }
 
-void ExcitedState::computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant, double limit)
-{
-    // Apply the transitions to the Slater determinant
-    for (const auto& transition : _electronicTransitions)
-    {
-        // Copy ground state Slater determinant
-        SlaterDeterminant slaterDeterminantTransition(groundStateSlaterDeterminant);
-
-        // Unpack transition
-        int initialOrbitalNumber = std::get<0>(transition).first;
-        SpinType initialOrbitalSpin = std::get<0>(transition).second;
-        int finalOrbitalNumber = std::get<1>(transition).first;
-        SpinType finalOrbitalSpin = std::get<1>(transition).second;
-        double coefficient = std::get<2>(transition);
-
-        // Update Slater determinant based on the transition
-        slaterDeterminantTransition.updateFromTransition(initialOrbitalNumber, initialOrbitalSpin, finalOrbitalNumber, finalOrbitalSpin);
-
-        // Store Slater determinant
-        _slaterDeterminants.emplace_back(slaterDeterminantTransition, coefficient);
-    }
-
-    // Sort the Slater determinants based on the absolute values of their coefficients in descending order
-    size_t numberOfSD = _slaterDeterminants.size();
-
-    // Initialize SD coefficients
-    std::vector<double> coefficients(numberOfSD);
-    for(size_t i = 0; i < numberOfSD; ++i)
-    {
-        coefficients[i] = _slaterDeterminants[i].second;
-    }
-
-    // Sort SD indices based on the absolute values of their coefficients in descending order
-    std::vector<size_t> argsortSD(numberOfSD);
-    std::iota(argsortSD.begin(), argsortSD.end(), 0);
-    std::sort(argsortSD.begin(), argsortSD.end(), [&](size_t i1, size_t i2) { return std::abs(coefficients[i1]) > std::abs(coefficients[i2]); });
-
-    // Determine the threshold for significant coefficients based on the specified limit
-    double treshold = std::abs(coefficients[argsortSD[0]]) * limit;
-    
-    // Find the maximum index of SDs with coefficients above the threshold
-    double maxSdIndex = 0;
-    size_t i = 0;
-    while(i < argsortSD.size() && std::abs(coefficients[argsortSD[i]]) > treshold)
-    {
-        maxSdIndex = i;
-        ++i;
-    }
-
-    // Store the sorted SD indices with coefficients above the threshold
-    _sdIndicesSortedByCoefficientDesc = std::vector<size_t>(argsortSD.begin(), argsortSD.begin() + maxSdIndex + 1);
-
-
-    // Set the excitation degree for each Slater determinant
-    size_t nMax = _slaterDeterminants[0].first.get_occupiedOrbitals()[0].size() + _slaterDeterminants[0].first.get_occupiedOrbitals()[1].size(); //considering same size slater determinants
-    _sdIndicesByExcitationDegree.resize(nMax, std::vector<size_t>());
-    
-    // Only compute the excitation degree for the Slater determinants with coefficients above the threshold (i.e., those whose index is in _sdIndicesSortedByCoefficientDesc)
-    for (size_t i : _sdIndicesSortedByCoefficientDesc)   
-    {
-        size_t excitationDegree = _slaterDeterminants[i].first.getExcitationDegree(groundStateSlaterDeterminant);
-        _sdIndicesByExcitationDegree[excitationDegree].push_back(i);
-    }
-}
-
 int ExcitedState::getNumberOfTransitions() const
 {
     return static_cast<int>(_electronicTransitions.size());
 }
 
+void ExcitedState::getOccupiedAndVirtualOrbitalNumbers(std::vector<std::vector<int>>& occupiedOrbitalNumbers, std::vector<std::vector<int>>& virtualOrbitalNumbers) const
+{
+    occupiedOrbitalNumbers.resize(2, std::vector<int>());
+    virtualOrbitalNumbers.resize(2, std::vector<int>());
+
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for (int i = 0; i < _cr_orbitals.get_numberOfMo(); ++i)
+        {
+            if (_isOrbitalOccupied[spin][i])
+            {
+                occupiedOrbitalNumbers[spin].push_back(i + 1); // Convert from MO index (0-based) to MO number (1-based)
+            }
+            else
+            {
+                virtualOrbitalNumbers[spin].push_back(i + 1); // Convert from MO index (0-based) to MO number (1-based)
+            }
+        }
+    }
+}
+
 const std::vector<size_t>& ExcitedState::getSlaterDeterminantIndicesWithExcitationDegree(int excitationDegree) const
 {
     return _sdIndicesByExcitationDegree[excitationDegree];
+}
+
+void ExcitedState::initIsOrbitalOccupied()
+{
+    const std::vector<std::vector<double>>& occupationNumber = _cr_orbitals.get_occupationNumber();
+
+    for (int spin = 0; spin < 2; ++spin)
+    {
+        for (size_t i = 0; i < occupationNumber[spin].size(); ++i)
+        {
+            _isOrbitalOccupied[spin][i] = (occupationNumber[spin][i] > 0.0);
+        }
+    }
 }
 
 bool ExcitedState::isGroundState() const
@@ -530,6 +603,12 @@ void ExcitedState::printLambdaDiagnostic(const Grid& grid) const
 
     // Print lambda diagnostic
     std::cout << "Lambda = " << sum_lambdaNumerator / sum_lambdaDenominator << std::endl;
+}
+
+void ExcitedState::updateFromElectronicTransitions(const SlaterDeterminant& groundStateSlaterDeterminant, double threshold)
+{
+    computeSlaterDeterminants(groundStateSlaterDeterminant, threshold);
+    updateIsOrbitalOccupied();
 }
 
 
@@ -650,28 +729,28 @@ bool ExcitedState::readGroundStateEnergyFromTransitionsFile(const std::string& t
 /////////////////////////////////////
 // TRANSITIONS FILE READING METHODS
 
-bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates, const std::vector<int>& excitedStatesNumbersToKeep)
+bool ExcitedState::readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const Orbitals& orbitals, const double maxNumberOfExcitedStates, const std::vector<int>& excitedStatesNumbersToKeep)
 {
     bool ok = true;
 
     if (to_lower(fileName.substr(fileName.length() - 4)) == ".log")
     {
-        ok = LOG::readTransitions(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates, excitedStatesNumbersToKeep);
+        ok = LOG::readTransitions(fileName, excitedStates, orbitals, maxNumberOfExcitedStates, excitedStatesNumbersToKeep);
     }
     else if (to_lower(fileName.substr(fileName.length() - 4)) == ".out")
     {
-        ok = readTransitionsFromOutFile(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates, excitedStatesNumbersToKeep);
+        ok = readTransitionsFromOutFile(fileName, excitedStates, orbitals, maxNumberOfExcitedStates, excitedStatesNumbersToKeep);
     }
     else
     {
         // Try to read as a transitions file
-        ok = readTransitionsFile(fileName, excitedStates, groundStateEnergy, maxNumberOfExcitedStates, excitedStatesNumbersToKeep);
+        ok = readTransitionsFile(fileName, excitedStates, orbitals, maxNumberOfExcitedStates, excitedStatesNumbersToKeep);
     }
 
     return ok;
 }
 
-bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates, const std::vector<int>& excitedStatesNumbersToKeep)
+bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const Orbitals& orbitals, const double maxNumberOfExcitedStates, const std::vector<int>& excitedStatesNumbersToKeep)
 {
     bool ok = true;
 
@@ -743,7 +822,7 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
                         std::exit(1);
                     }
 
-                    ExcitedState excitedState(currentExcitedStatesRead, energy + groundStateEnergy);
+                    ExcitedState excitedState(orbitals, currentExcitedStatesRead, energy + orbitals.get_energy());
 
                     // Read transitions
                     do
@@ -868,7 +947,7 @@ bool ExcitedState::readTransitionsFile(const std::string& transitionsFileName, s
     return ok;
 }
 
-bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates, const std::vector<int>& excitedStatesNumbersToKeep)
+bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const Orbitals& orbitals, const double maxNumberOfExcitedStates, const std::vector<int>& excitedStatesNumbersToKeep)
 {
     bool ok = true;
     bool hfTypeFound = false;
@@ -920,7 +999,7 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
             {
                 double energy = std::stod(energyRegexMatch[1]);
 
-                ExcitedState excitedState(currentExcitedStatesRead, energy + groundStateEnergy);
+                ExcitedState excitedState(orbitals, currentExcitedStatesRead, energy + orbitals.get_energy());
 
                 do
                 {
@@ -1000,7 +1079,7 @@ bool ExcitedState::readTransitionsFromOutFile(const std::string& orcaOutFileName
 ///////////////////////////////
 // LOADING AND SAVING METHODS
 
-bool ExcitedState::loadExcitedStatesFromFile(const std::string& excitedStatesFileName, std::vector<ExcitedState>& excitedStates, std::vector<SlaterDeterminant>& slaterDeterminants, int maxNumberOfExcitedStates)
+bool ExcitedState::loadExcitedStatesFromFile(const std::string& excitedStatesFileName, const Orbitals& orbitals, std::vector<ExcitedState>& excitedStates, std::vector<SlaterDeterminant>& slaterDeterminants, int maxNumberOfExcitedStates)
 {
     bool ok = true;
 
@@ -1119,7 +1198,7 @@ bool ExcitedState::loadExcitedStatesFromFile(const std::string& excitedStatesFil
                         std::exit(1);
                     }
 
-                    ExcitedState excitedState(currentExcitedStatesRead, energy);
+                    ExcitedState excitedState(orbitals, currentExcitedStatesRead, energy);
 
                     int currentCoefficientRead = 0;
 
@@ -1278,7 +1357,7 @@ bool ExcitedState::saveExcitedStatesToFile(const std::string& excitedStatesFileN
 /////////////////////////
 // OTHER STATIC METHODS
 
-std::vector<ExcitedState> ExcitedState::buildPerturbedStates(const std::vector<ExcitedState>& unperturbedStates, const std::vector<double>& energies, const std::vector<std::vector<double>>& eigenvectors)
+std::vector<ExcitedState> ExcitedState::buildPerturbedStates(const Orbitals& orbitals, const std::vector<ExcitedState>& unperturbedStates, const std::vector<double>& energies, const std::vector<std::vector<double>>& eigenvectors)
 {
     const SlaterDeterminant& groundStateSlaterDeterminant = unperturbedStates[0].get_slaterDeterminants()[0].first;
 
@@ -1287,7 +1366,7 @@ std::vector<ExcitedState> ExcitedState::buildPerturbedStates(const std::vector<E
 
     for (size_t i = 0; i < unperturbedStates.size(); ++i)
     {
-        ExcitedState currentPerturbedState = ExcitedState(static_cast<int>(i), energies[i]);
+        ExcitedState currentPerturbedState = ExcitedState(orbitals, static_cast<int>(i), energies[i]);
 
         for (size_t k = 0; k < unperturbedStates.size(); ++k)
         {
@@ -1327,7 +1406,7 @@ std::vector<ExcitedState> ExcitedState::buildPerturbedStates(const std::vector<E
         }
 
         // Compute the Slater determinants associated with the perturbed state based on its electronic transitions
-        currentPerturbedState.computeSlaterDeterminants(groundStateSlaterDeterminant);
+        currentPerturbedState.updateFromElectronicTransitions(groundStateSlaterDeterminant);
 
         perturbedStates.push_back(currentPerturbedState);
     }

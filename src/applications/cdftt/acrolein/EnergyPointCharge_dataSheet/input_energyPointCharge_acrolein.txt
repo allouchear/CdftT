@@ -1,5 +1,3 @@
-# Charges = -1.0
-# Positions = (-4.0, -1.5, 0.0)
 Charges = -0.1, -1.0
 Positions = (-6.25, -1.5, 0.0), (-4.0, -1.5, 0.0)
 
@@ -7,17 +5,15 @@ SingleCharge = True
 ChargesPositionsBijections = True
 
 RunType = ComputeEnergyWithPointCharges
-OutputPrefix = totoSOS
-# OutputPrefix = totoIPA
+OutputPrefix = acrolein_enePC_perturbative
 
-EnergyPointChargeMethods = Perturbative, Variational, LinearResponse
-# EnergyPointChargeMethods = LinearResponse
-LRFMethod = SOS
-# LRFMethod = IPA
+# EnergyPointChargeMethods = Perturbative, Variational, LinearResponse
+EnergyPointChargeMethods = Perturbative
+# LRFMethod = SOS
 
-AnalyticFiles = tests/Guegan2020/acrolein_200States.fchk
-TransitionsFile = tests/Guegan2020/acrolein_200States.log
-MaxNumberOfExcitedStates = 49
+AnalyticFiles = ../../tests/Guegan2020/acrolein_200States.fchk
+TransitionsFile = ../../tests/Guegan2020/acrolein_200States.log
+# MaxNumberOfExcitedStates = 49
 
 ComputeOnRegularGrid = False
 Size = Custom
@@ -27,5 +23,5 @@ SavePseudoOrbitals = False
 ComputeOnBeckeGrid = False
 # Becke = 3, 41, 5
 
-ShowProgress = True
+ShowProgress = False
 Verbose = 0

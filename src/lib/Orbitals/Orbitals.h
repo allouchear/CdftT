@@ -354,13 +354,6 @@ class Orbitals
         std::vector<std::vector<int>> getOccupiedOrbitalNumbers() const;
 
         /**
-         * @brief Returns the numbers of the virtual orbitals for alpha and beta spins.
-         * 
-         * @return A 2D vector of integers corresponding to the number of the virtual orbitals. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
-         */
-        std::vector<std::vector<int>> getVirtualOrbitalNumbers() const;
-
-        /**
          * @brief Returns the numbers of the occupied and virtual orbitals for alpha and beta spins.
          * 
          * This method is slightly more efficient than calling getOccupiedOrbitalNumbers() and getVirtualOrbitalNumbers() separately, as it only loops once over the occupation numbers.
@@ -374,6 +367,13 @@ class Orbitals
          * @brief Returns the i-th primitive center.
          */
         int getPrimitiveCenter(int i) const;
+
+        /**
+         * @brief Returns the numbers of the virtual orbitals for alpha and beta spins.
+         * 
+         * @return A 2D vector of integers corresponding to the number of the virtual orbitals. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
+         */
+        std::vector<std::vector<int>> getVirtualOrbitalNumbers() const;
         
             //! A normal member taking no arguments and returning a void value.
             /*! Normalise all the CGTF which compose the Orbitals. */

@@ -20,13 +20,20 @@
 class ExcitedState
 {
     private:
+        /** @brief Type definition for a spin orbital: the number of the orbital (1-based) and its spin. */
         typedef std::pair<int, SpinType> SpinOrbital;
+
+        /** @brief Const reference to the system's orbitals object. */
+        const Orbitals& _cr_orbitals;
 
         /** @brief Electronic transitions associated with the excited state. */
         std::vector<std::tuple<SpinOrbital, SpinOrbital, double>> _electronicTransitions;
 
         /** @brief Energy of the excited state. */
         double _energy;
+
+        /** @brief Indicates whether the spinorbital is occupied or virtual (first index: spin, second index: orbital index). */
+        std::vector<std::vector<bool>> _isOrbitalOccupied;
 
         /** @brief Number of the excited state. */
         int _number;
@@ -39,6 +46,24 @@ class ExcitedState
 
         /** @brief Indices of the Slater determinants (in _slaterDeterminants) sorted by descending coefficients. */
         std::vector<size_t> _sdIndicesSortedByCoefficientDesc;
+
+
+        //----------------------------------------------------------------------------------------------------//
+        // PRIVATE METHODS
+        //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Computes the Slater determinant of the excited state from the electronic transitions.
+         *
+         * @param[in] SlaterDeterminant Reference to the ground state Slater determinant.
+         * @param[in] threshold Threshold on the coefficients of the Slater determinants: only SD with coefficients above this threshold will be considered.
+         */
+        void computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant, double threshold = 0.0);
+
+        /**
+         * @brief Updates _isOrbitalOccupied member based on the electronic transitions.
+         */
+        void updateIsOrbitalOccupied();
 
     
         //----------------------------------------------------------------------------------------------------//
@@ -78,23 +103,34 @@ class ExcitedState
         /**
          * @brief Constructor.
          *
+         * @param[in] orbitals Reference to the Orbitals object containing the molecular orbitals information.
          * @param[in] number Number of the excited state.
          * @param[in] energy Energy of the excited state, in Hartree.
          */
-        ExcitedState(const int number, const double energy);
+        ExcitedState(const Orbitals& orbitals, const int number, const double energy);
 
         /**
          * @brief Constructor for the ground state.
          *
-         * @param[in] energy Energy of the ground state, in Hartree.
+         * @param[in] orbitals Reference to the Orbitals object containing the molecular orbitals information.
          * @param[in] slaterDeterminant Slater determinant associated with the ground state.
          */
-        ExcitedState(const double energy, const SlaterDeterminant& slaterDeterminant);
+        ExcitedState(const Orbitals& orbitals, const SlaterDeterminant& slaterDeterminant);
 
 
         //----------------------------------------------------------------------------------------------------//
         // GETTERS
         //----------------------------------------------------------------------------------------------------//
+
+        /**
+         * @brief Returns a const reference to the Orbitals object associated with the excited state.
+         */
+        const Orbitals& get_cr_orbitals() const;
+
+        /**
+         * @brief Returns a const reference to the electronic transitions associated with the excited state.
+         */
+        const std::vector<std::tuple<SpinOrbital, SpinOrbital, double>>& get_electronicTransitions() const;
 
         /**
          * @brief Returns the excited state's energy, in Hartree.
@@ -107,6 +143,11 @@ class ExcitedState
         int get_number() const;
 
         /**
+         * @brief Returns the indexes of the occupied orbitals for alpha and beta spins.
+         */
+        const std::vector<std::vector<size_t>>& get_occupiedOrbitalIndexes() const;
+
+        /**
          * @brief Returns the Slater determinants associated with the excited state along with their respective coefficient.
          */
         const std::vector<std::pair<SlaterDeterminant, double>>& get_slaterDeterminants() const;
@@ -115,6 +156,11 @@ class ExcitedState
          * @brief Returns the SD indices sorted by descending coefficients.
          */
         std::vector<size_t> get_sdIndicesSortedByCoefficientDesc() const;
+
+        /**
+         * @brief Returns the indexes of the virtual orbitals for alpha and beta spins.
+         */
+        const std::vector<std::vector<size_t>>& get_virtualOrbitalIndexes() const;
 
         
         //----------------------------------------------------------------------------------------------------//
@@ -139,22 +185,27 @@ class ExcitedState
         void addTransition(const SpinOrbital& initialOrbital, const SpinOrbital& finalOrbital, const double coefficient);
 
         /**
-         * @brief Computes the Slater determinant of the excited state from the electronic transitions.
-         *
-         * @param[in] SlaterDeterminant Reference to the ground state Slater determinant.
-         * @param[in] threshold Threshold on the coefficients of the Slater determinants: only SD with coefficients above this threshold will be considered.
-         */
-        void computeSlaterDeterminants(const SlaterDeterminant& groundStateSlaterDeterminant, double threshold = 0.0);
-
-        /**
          * @brief Returns the number of electronic transitions associated with the excited state.
          */
         int getNumberOfTransitions() const;
 
         /**
+         * @brief Returns the numbers (1-based) of the occupied and virtual orbitals for alpha and beta spins.
+         * 
+         * @param[out] occupiedOrbitalNumbers The 2D vector of integers where the number of the occupied orbitals are stored. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
+         * @param[out] virtualOrbitalNumbers The 2D vector of integers where the number of the virtual orbitals are stored. The first index is for alpha spin orbitals and the second index is for the beta spin orbitals.
+         */
+        void getOccupiedAndVirtualOrbitalNumbers(std::vector<std::vector<int>>& occupiedOrbitalNumbers, std::vector<std::vector<int>>& virtualOrbitalNumbers) const;
+
+        /**
          * @brief Returns the list of indices of Slater Determinants (in _slaterDeterminants) having the specified excitation degree.
          */
         const std::vector<size_t>& getSlaterDeterminantIndicesWithExcitationDegree(int excitationDegree) const;
+
+        /**
+         * @brief Initializes _isOrbitalOccupied member, based on the Orbitals member (ground state).
+         */
+        void initIsOrbitalOccupied();
 
         /**
          * @brief Returns whether the state is a ground state or an excited state.
@@ -179,6 +230,14 @@ class ExcitedState
          * @param grid Grid used to compute the diagnostic.
          */
         void printLambdaDiagnostic(const Grid& grid) const;
+
+        /**
+         * @brief Updates the excited state based on the electronic transitions: computes Slater determinants and updates orbital occupation flags
+         * 
+         * @param[in] groundStateSlaterDeterminant Reference to the ground state Slater determinant.
+         * @param[in] threshold Threshold on the coefficients of the Slater determinants: only SD with coefficients above this threshold will be considered.
+         */
+        void updateFromElectronicTransitions(const SlaterDeterminant& groundStateSlaterDeterminant, double threshold = 0.0);
 
 
         //----------------------------------------------------------------------------------------------------//
@@ -226,35 +285,35 @@ class ExcitedState
          *
          * @param[in] fileName Name of the file to read.
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
-         * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
+         * @param[in] orbitals Orbitals object containing the ground state information.
          * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
          * 
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
+        static bool readTransitions(const std::string& fileName, std::vector<ExcitedState>& excitedStates, const Orbitals& orbitals, const double maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
 
         /**
          * @brief Reads a transitions file and populates a vector of ExcitedState objects.
          *
          * @param[in] transitionsFileName Name of the transitions file to read.
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
-         * @param[in] groundStateEnergy Energy of the ground state, in Hartree.
+         * @param[in] orbitals Orbitals object containing the ground state information.
          * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
          * 
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
+        static bool readTransitionsFile(const std::string& transitionsFileName, std::vector<ExcitedState>& excitedStates, const Orbitals& orbitals, const double maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
 
         /**
          * @brief Reads transitions from an Orca .out file and populates a vector of ExcitedState objects. *
          * @param[in] orcaOutFileName Name of the Orca output file to read.
          * @param[out] excitedStates Vector of ExcitedState objects populated from the file.
-         * @param[in] groundStateEnergy Energy of the ground state, in Hartree. 
+         * @param[in] orbitals Orbitals object containing the ground state information.
          * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
          * 
          * @return True if reading was successful, false otherwise.
          */
-        static bool readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const double groundStateEnergy, const double maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
+        static bool readTransitionsFromOutFile(const std::string& orcaOutFileName, std::vector<ExcitedState>& excitedStates, const Orbitals& orbitals, const double maxNumberOfExcitedStates = -1, const std::vector<int>& statesNumbersToKeep = std::vector<int>());
 
         ///////////////////////////////
         // LOADING AND SAVING METHODS
@@ -263,13 +322,14 @@ class ExcitedState
          * @brief Loads excited states from a file.
          * 
          * @param[in] excitedStatesFileName Name of the transitions file to read.
+         * @param[in] orbitals Orbitals object containing the ground state information.
          * @param[out] states Vector of ExcitedState objects populated from the file.
          * @param[out] slaterDeterminants Vector of SlaterDeterminant objects populated from the file.
          * @param[in] maxNumberOfExcitedStates Maximum number of excited states to read (if -1, all are read).
          * 
          * @return True if reading was successful, false otherwise.
          */
-        static bool loadExcitedStatesFromFile(const std::string& statesFileName, std::vector<ExcitedState>& states, std::vector<SlaterDeterminant>& slaterDeterminants, int maxNumberOfExcitedStates = -1);
+        static bool loadExcitedStatesFromFile(const std::string& statesFileName, const Orbitals& orbitals, std::vector<ExcitedState>& states, std::vector<SlaterDeterminant>& slaterDeterminants, int maxNumberOfExcitedStates = -1);
 
         /**
          * @brief Saves excited states to a file.
@@ -287,13 +347,14 @@ class ExcitedState
          *
          * The method assumes that the first unperturbed state is the ground state.
          *
+         * @param[in] orbitals Orbitals object containing the ground state information.
          * @param[in] unperturbedStates Vector of unperturbed excited states.
          * @param[in] energies Vector of energy values (eigenvalues).
          * @param[in] eigenvectors Matrix of eigenvectors.
          * 
          * @return Vector of perturbed excited states.
          */
-        static std::vector<ExcitedState> buildPerturbedStates(const std::vector<ExcitedState>& unperturbedStates, const std::vector<double>& energies, const std::vector<std::vector<double>>& eigenvectors);
+        static std::vector<ExcitedState> buildPerturbedStates(const Orbitals& orbitals, const std::vector<ExcitedState>& unperturbedStates, const std::vector<double>& energies, const std::vector<std::vector<double>>& eigenvectors);
 
         /**
          * @brief Calculates the ionic potential between two excited states.

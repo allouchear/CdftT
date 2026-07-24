@@ -58,6 +58,13 @@ namespace EnumConversionMaps
         { HFType::UNKNOWN, "UNKNOWN" }
     };
 
+    std::unordered_map<LRFMethod, std::string> lrfMethod_string =
+    {
+        { LRFMethod::IPA, "IPA" },
+        { LRFMethod::SOS, "SOS" },
+        { LRFMethod::UNKNOWN, "UNKNOWN" }
+    };
+
     std::unordered_map<OrbitalType, std::string> orbitalType_string =
     {
         { OrbitalType::ALL, "All" },
@@ -192,6 +199,17 @@ std::string to_string(HFType hfType)
 HFType hfType_from_string(const std::string& strHfType)
 {
     return enum_from_string(strHfType, EnumConversionMaps::hfType_string, HFType::UNKNOWN);
+}
+
+
+std::string to_string(LRFMethod lrfMethod)
+{
+    return enum_to_string(lrfMethod, EnumConversionMaps::lrfMethod_string);
+}
+
+LRFMethod lrfMethod_from_string(const std::string& strLrfMethod)
+{
+    return enum_from_string(strLrfMethod, EnumConversionMaps::lrfMethod_string, LRFMethod::UNKNOWN);
 }
 
 

@@ -56,6 +56,13 @@ enum class HFType
     UNKNOWN
 };
 
+enum class LRFMethod
+{
+    IPA,
+    SOS,
+    UNKNOWN
+};
+
 enum class OrbitalType
 {
     ALL,
@@ -128,6 +135,7 @@ namespace EnumConversionMaps
     extern std::unordered_map<GridSaveType, std::string> gridSaveType_string;
     extern std::unordered_map<GridSize, std::string> gridSize_string;
     extern std::unordered_map<HFType, std::string> hfType_string;
+    extern std::unordered_map<LRFMethod, std::string> lrfMethod_string;
     extern std::unordered_map<OrbitalType, std::string> orbitalType_string;
     extern std::unordered_map<PartitionMethod, std::string> partitionMethod_string;
     extern std::unordered_map<RDMMethod, std::string> rdmMethod_string;
@@ -166,6 +174,9 @@ GridSize gridSize_from_string(const std::string& strSize);
 
 std::string to_string(HFType hfType);
 HFType hfType_from_string(const std::string& strHfType);
+
+std::string to_string(LRFMethod lrfMethod);
+LRFMethod lrfMethod_from_string(const std::string& strLrfMethod);
 
 std::string to_string(OrbitalType orbitalType);
 OrbitalType orbitalType_from_string(const std::string& strOrbitalType);
