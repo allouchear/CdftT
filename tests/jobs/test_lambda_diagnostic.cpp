@@ -79,13 +79,10 @@ static void test_lambda_diagnostic_missing_transitions() {
 
     const RunResult r = run_cdftt(input_path);
 
-    std::cout << "STDOUT:" << r.stdout_text << std::endl;
-
     assert_nonzero_exit(r);
     assert_stdout_contains(r, "Note: the \"TransitionsFile\" parameter is not specified in the provided input file (" + input_path + ").");
 
-    // TODO -> The current behaviour is odd  it reports the file is not found, tries to read another one as default, segfaults, thus returns nonzero but the stderr is empty.
-    assert_stderr_contains(r, "Error: could not open transitions file");
+    assert_stderr_contains(r, "could not read excited state energy in transitions file " + analytic);
 
     // Clean up the temporary input file.
     std::remove(input_path.c_str());
