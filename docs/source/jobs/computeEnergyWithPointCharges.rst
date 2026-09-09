@@ -223,18 +223,18 @@ Possible values are:
 - ``1``: A log file is generated containing:
 
     - the description of the excited states (read from the file describing the electronic transitions in the unperturbed system)
-    - the matrix elements :math:`\langle \, i \, \middle| \, \hat{H} \, \middle| \, j \, \rangle` and :math:`\langle \, i \, \middle| \, \hat{H} - \hat{H}_0 \, \middle| \, j \, \rangle` (triangular matrix: only elements with :math:`j \leq i` are written)
+    - the matrix elements :math:`\langle \, i \, | \, \hat{H} \, | \, j \, \rangle` and :math:`\langle \, i \, | \, \hat{H} - \hat{H}_0 \, | \, j \, \rangle` (triangular matrix: only elements with :math:`j \leq i` are written)
 
 - ``2``: In addition with the information given for verbose level 1, the log file includes:
 
     - the Slater determinants that contribute to each excited state with their coefficients
-    - the detail of the computation of the matrix elements :math:`\langle \, i \, \middle| \, \hat{H} \, \middle| \, j \, \rangle` and :math:`\langle \, i \, \middle| \, \hat{H} - \hat{H}_0 \, \middle| \, j \, \rangle`: :math:`\langle \, i \, \middle| \, \hat{H} \, \middle| \, j \, \rangle`, :math:`\langle \, i \, \middle| \, V_{\mathrm{ions/nuclei}} \, \middle| \, j \, \rangle` and :math:`\langle \, i \, \middle| \, V_{\mathrm{ions/electrons}} \, \middle| \, j \, \rangle`. In the case of multiple charges, the contributions of each individual charge are summed.
+    - the detail of the computation of the matrix elements :math:`\langle \, i \, | \, \hat{H} \, | \, j \, \rangle` and :math:`\langle \, i \, | \, \hat{H} - \hat{H}_0 \, | \, j \, \rangle`: :math:`\langle \, i \, | \, \hat{H} \, | \, j \, \rangle`, :math:`\langle \, i \, | \, V_{\mathrm{ions/nuclei}} \, | \, j \, \rangle` and :math:`\langle \, i \, | \, V_{\mathrm{ions/electrons}} \, | \, j \, \rangle`. In the case of multiple charges, the contributions of each individual charge are summed.
 
 
 - ``3``: In addition with the information given for verbose levels 1 and 2, the log file includes:
 
     - the information about the orbitals read from the analytic file
-    - the contribution of each individual charge in the case of multiple charges (i.e. :math:`\langle \, i \, \middle| \, V_{1/\mathrm{nuclei}} \, | \, j \, \rangle`, :math:`\langle \, i \, \middle| \, V_{2/\mathrm{nuclei}} \, \middle| \, j \, \rangle`, ..., :math:`\langle \, i \, \middle| \, V_{N/\mathrm{nuclei}} \, \middle| \, j \, \rangle` and :math:`\langle i \, \middle| \, V_{1/\mathrm{electrons}} \, \middle| \, j \, \rangle`, :math:`\langle i \, \middle| \, V_{2/\mathrm{electrons}} \, \middle| \, j \, \rangle`, ..., :math:`\langle \, i \, \middle| \, V_{N/\mathrm{electrons}} \, \middle| \, j \, \rangle`, where :math:`N` is the number of charges.)
+    - the contribution of each individual charge in the case of multiple charges (i.e. :math:`\langle \, i \, | \, V_{1/\mathrm{nuclei}} \, | \, j \, \rangle`, :math:`\langle \, i \, | \, V_{2/\mathrm{nuclei}} \, | \, j \, \rangle`, ..., :math:`\langle \, i \, | \, V_{N/\mathrm{nuclei}} \, | \, j \, \rangle` and :math:`\langle i \, | \, V_{1/\mathrm{electrons}} \, | \, j \, \rangle`, :math:`\langle i \, | \, V_{2/\mathrm{electrons}} \, | \, j \, \rangle`, ..., :math:`\langle \, i \, | \, V_{N/\mathrm{electrons}} \, | \, j \, \rangle`, where :math:`N` is the number of charges.)
     - the eigenvalues (energies) and their associated eigenvectors before their sorting (the final results are sorted by increasing energy)
     - the projection of the perturbed states onto the unperturbed basis (with the contribution of each state). 
 
