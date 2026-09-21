@@ -18,24 +18,24 @@
 // PRIVATE METHODS
 //----------------------------------------------------------------------------------------------------//
 
-void ComputeEnergyWithPointCharges::computeHamiltonianMatrixes(const std::vector<ExcitedState>& states, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_0_psi_j, std::vector<std::vector<double>>& psi_i_H_1_psi_j, std::vector<std::vector<double>>& psi_i_H_psi_j, std::ostream& outputStream, int verbose)
+void ComputeEnergyWithPointCharges::computeHamiltonianMatrixes(const std::vector<ExcitedState>& states, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_0_psi_j, std::vector<std::vector<double>>& psi_i_V_psi_j, std::vector<std::vector<double>>& psi_i_H_psi_j, std::ostream& outputStream, int verbose)
 {
     std::stringstream logStream;
 
 
     // Build and initialise two lower triangular matrixes:
     //     (*) < psi_i | H | psi_j > for the variational approach,
-    //     (*) < psi_i | H - H_0 | psi_j > for the perturbative approach.
+    //     (*) < psi_i | V | psi_j > = < psi_i | H - H_0 | psi_j > for the perturbative approach.
     size_t nbStates = states.size();
 
     psi_i_H_0_psi_j.resize(nbStates, std::vector<double>());
-    psi_i_H_1_psi_j.resize(nbStates, std::vector<double>());
+    psi_i_V_psi_j.resize(nbStates, std::vector<double>());
     psi_i_H_psi_j.resize(nbStates, std::vector<double>());
     
     for (size_t i = 0; i < nbStates; ++i)
     {
         psi_i_H_0_psi_j[i].resize(i + 1, 0.0);
-        psi_i_H_1_psi_j[i].resize(i + 1, 0.0);
+        psi_i_V_psi_j[i].resize(i + 1, 0.0);
         psi_i_H_psi_j[i].resize(i + 1, 0.0);
     }
 
@@ -49,11 +49,11 @@ void ComputeEnergyWithPointCharges::computeHamiltonianMatrixes(const std::vector
         std::exit(1);
     }
 
-    // Compute matrix elements < psi_i | H_0 | psi_j >, < psi_i | H_1 | psi_j > and < psi_i | H | psi_j >
+    // Compute matrix elements < psi_i | H_0 | psi_j >, < psi_i | V | psi_j > and < psi_i | H | psi_j >
     size_t i, j;
     if (verbose >= 1)
     {
-        logStream << "Matrix elements < psi_i | H_0 | psi_j >, < psi_i | H_1 | psi_j > and < psi_i | H | psi_j > (with H = H_0 + H_1):" << std::endl;
+        logStream << "Matrix elements < psi_i | H_0 | psi_j >, < psi_i | V | psi_j > and < psi_i | H | psi_j > (with H = H_0 + V):" << std::endl;
         log(logStream, outputStream);
     }
     else
@@ -123,11 +123,11 @@ void ComputeEnergyWithPointCharges::computeHamiltonianMatrixes(const std::vector
             // Store matrix elements
             psi_i_H_psi_j[i][j] = matrixElement;
             psi_i_H_0_psi_j[i][j] = h0Contribution;
-            psi_i_H_1_psi_j[i][j] = psi_i_H_psi_j[i][j] - h0Contribution;
+            psi_i_V_psi_j[i][j] = psi_i_H_psi_j[i][j] - h0Contribution;
 
             if (verbose >= 1)
             {
-                logStream << "< " << i << " | H_1 | " << j << " > = " << std::setprecision(12) << psi_i_H_1_psi_j[i][j] << std::endl;
+                logStream << "< " << i << " | V | " << j << " > = " << std::setprecision(12) << psi_i_V_psi_j[i][j] << std::endl;
                 logStream << "< " << i << " | H | " << j << " > = " << std::setprecision(12) << psi_i_H_psi_j[i][j] << std::endl;
                 log(logStream, outputStream);
             }
@@ -146,7 +146,7 @@ void ComputeEnergyWithPointCharges::computeHamiltonianMatrixes(const std::vector
     }
 }
 
-void ComputeEnergyWithPointCharges::computeResults_perturbative(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_0_psi_j, const std::vector<std::vector<double>>& psi_i_H_1_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose)
+void ComputeEnergyWithPointCharges::computeResults_perturbative(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_0_psi_j, const std::vector<std::vector<double>>& psi_i_V_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose)
 {
     std::stringstream logStream;
     size_t nbStates = states.size();
@@ -172,8 +172,8 @@ void ComputeEnergyWithPointCharges::computeResults_perturbative(const std::vecto
                 // Check for degeneracy to avoid division by zero
                 if (std::abs(Ei_minus_Ej) >= 1e-10)
                 {
-                    // psi_i_H_1_psi_j is a lower triangular matrix
-                    dpk_perturb[i][j] = (j <= i ? psi_i_H_1_psi_j[i][j] : psi_i_H_1_psi_j[j][i]) / Ei_minus_Ej;
+                    // psi_i_V_psi_j is a lower triangular matrix
+                    dpk_perturb[i][j] = (j <= i ? psi_i_V_psi_j[i][j] : psi_i_V_psi_j[j][i]) / Ei_minus_Ej;
                     dpk_perturb[i][j] *= dpk_perturb[i][j];
 
                     normalisationFactors[i] += dpk_perturb[i][j];
@@ -370,8 +370,8 @@ void ComputeEnergyWithPointCharges::computeResults_perturbative(const std::vecto
     outputFile << std::setprecision(10);
     for (size_t k = 0; k < energies_perturbative.size(); ++k)
     {
-        // energy is the sum of order 0 (<Ψ_i|H_0|Ψ_i>), 1 (<Ψ_i|H_1|Ψ_i>) and 2 (\sum_{i \neq n} )
-        energies_perturbative[k] = psi_i_H_0_psi_j[k][k] + psi_i_H_1_psi_j[k][k] + E_pola_perturb[k];
+        // energy is the sum of order 0 (<Ψ_i | H_0 | Ψ_i>), 1 (<Ψ_i | V | Ψ_i>) and 2 (\sum_{i \neq n} )
+        energies_perturbative[k] = psi_i_H_0_psi_j[k][k] + psi_i_V_psi_j[k][k] + E_pola_perturb[k];
 
         logStream << energies_perturbative[k] << ' ';
         outputFile << energies_perturbative[k] << std::endl;
@@ -499,7 +499,7 @@ void ComputeEnergyWithPointCharges::computeResults_variational(const Orbitals& o
 
             std::vector<std::pair<double, SlaterDeterminant>> contributions_SD;
 
-            logStream << "Perturbed state " << i << " (E = " << std::setprecision(10) << eigenvalues[i] << " H):" << std::endl;
+            logStream << "Perturbed state #" << i << " (E = " << std::setprecision(10) << eigenvalues[i] << " H):" << std::endl;
             logStream << "  | " << i << "' > = ";
             log(logStream, outputStream);
             
@@ -683,7 +683,7 @@ void ComputeEnergyWithPointCharges::computeResults_variational(const Orbitals& o
     log(logStream, outputStream);
 }
 
-void ComputeEnergyWithPointCharges::computeResults_linearResponse(const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, const std::vector<std::vector<double>>& psi_i_H_0_psi_j, const std::vector<std::vector<double>>& psi_i_H_1_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose)
+void ComputeEnergyWithPointCharges::computeResults_linearResponse(const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, const std::vector<std::vector<double>>& psi_i_H_0_psi_j, const std::vector<std::vector<double>>& psi_i_V_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose)
 {
     std::stringstream logStream;
 
@@ -729,14 +729,14 @@ void ComputeEnergyWithPointCharges::computeResults_linearResponse(const std::vec
 
     // for (size_t k = 0; k < energies_linearResponse.size(); ++k)
     // {
-    //     // energy is the sum of order 0 (<Ψ_i|H_0|Ψ_i>), 1 (<Ψ_i|H_1|Ψ_i>) and 2 (\sum_{i \neq n} )
-    //     energies_linearResponse[k] = psi_i_H_0_psi_j[k][k] + psi_i_H_1_psi_j[k][k] + E_pola_linearResponse[k];
+    //     // energy is the sum of order 0 (<Ψ_i | H_0 | Ψ_i>), 1 (<Ψ_i | V | Ψ_i>) and 2 (\sum_{i \neq n} )
+    //     energies_linearResponse[k] = psi_i_H_0_psi_j[k][k] + psi_i_V_psi_j[k][k] + E_pola_linearResponse[k];
 
     //     logStream << energies_perturbative[k] << ' ';
     //     outputFile << energies_perturbative[k] << std::endl;
     // }
 
-    energies_linearResponse[0] = psi_i_H_0_psi_j[0][0] + psi_i_H_1_psi_j[0][0] + energy_pseudoOrbitals;
+    energies_linearResponse[0] = psi_i_H_0_psi_j[0][0] + psi_i_V_psi_j[0][0] + energy_pseudoOrbitals;
     logStream << energies_linearResponse[0] << std::endl;
     outputFile << energies_linearResponse[0] << std::endl;
 
@@ -801,10 +801,10 @@ void ComputeEnergyWithPointCharges::printResults(const std::vector<EnergyPointCh
         }
 
         std::vector<std::vector<double>> psi_i_H_0_psi_j;
-        std::vector<std::vector<double>> psi_i_H_1_psi_j;
+        std::vector<std::vector<double>> psi_i_V_psi_j;
         std::vector<std::vector<double>> psi_i_H_psi_j;
 
-        computeHamiltonianMatrixes(states, chargeNucleiContributions[i], ionicPotentialMatrixes[i], psi_i_H_0_psi_j, psi_i_H_1_psi_j, psi_i_H_psi_j, outputStream, verbose);
+        computeHamiltonianMatrixes(states, chargeNucleiContributions[i], ionicPotentialMatrixes[i], psi_i_H_0_psi_j, psi_i_V_psi_j, psi_i_H_psi_j, outputStream, verbose);
 
         if (perturbativeApproach)
         {
@@ -817,7 +817,7 @@ void ComputeEnergyWithPointCharges::printResults(const std::vector<EnergyPointCh
                 log(logStream, outputStream);
             }
 
-            computeResults_perturbative(states, psi_i_H_0_psi_j, psi_i_H_1_psi_j, outputPrefixRun, outputStream, verbose);
+            computeResults_perturbative(states, psi_i_H_0_psi_j, psi_i_V_psi_j, outputPrefixRun, outputStream, verbose);
         }
 
         if (variationalApproach)
@@ -845,7 +845,7 @@ void ComputeEnergyWithPointCharges::printResults(const std::vector<EnergyPointCh
                 log(logStream, outputStream);
             }
 
-            computeResults_linearResponse(lrfMatrixEigenvalues, ionicPotentialVectors[i],  psi_i_H_0_psi_j, psi_i_H_1_psi_j, outputPrefixRun, outputStream, verbose);
+            computeResults_linearResponse(lrfMatrixEigenvalues, ionicPotentialVectors[i],  psi_i_H_0_psi_j, psi_i_V_psi_j, outputPrefixRun, outputStream, verbose);
         }
 
         logStream << std::defaultfloat << std::endl;
@@ -862,17 +862,28 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
 
     // Read point charges values and positions from input file
     std::vector<double> charges;
-    std::vector<std::array<double, 3>> chargesPositions;
     readCharges(charges);
-    readPositions(chargesPositions);
-
     size_t nbCharges = charges.size();
-    size_t nbChargePositions = chargesPositions.size();
 
-    if (nbChargePositions == 0)
+    std::vector<std::array<double, 3>> chargesPositions;
+    readPositions(chargesPositions);
+    size_t nbPositions = chargesPositions.size();
+
+    std::vector<int> atomNumbers;
+    readAtoms(atomNumbers, atoms);
+    size_t nbAtomNumbers = atomNumbers.size();
+
+    for (size_t i = 0; i < nbAtomNumbers; ++i)
     {
-        logStream << "Note: the \"Positions\" parameter is not specified in the provided input file (" << _inputFileName << ")." << std::endl;
-        logStream << "The program will use atom positions." << std::endl << std::endl;
+        chargesPositions.push_back(atoms[atomNumbers[i] - 1].get_coordinates()); // atomNumbers are 1-based
+    }
+    
+    size_t totalNbChargePositions = chargesPositions.size();
+
+    if (totalNbChargePositions == 0)
+    {
+        logStream << "Note: the \"Positions\" and \"Atoms\" parameters are not specified in the provided input file (" << _inputFileName << ")." << std::endl;
+        logStream << "The program will use all atom positions." << std::endl << std::endl;
         log(logStream, outputStream);
     }
 
@@ -886,7 +897,7 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
     {
         if (nbCharges == 1)
         {
-            if (nbChargePositions == 1)
+            if (totalNbChargePositions == 1)
             {
                 // Simplest case: one point charge and its position
 
@@ -895,31 +906,45 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                 pointCharge.position = chargesPositions[0];
 
                 std::stringstream description;
-                description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                if (nbPositions == 1) // Position specified explicitely, not from an atom number
+                {
+                    description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                }
+                else // Position obtained from an atom number
+                {
+                    description << "Point charge of " << pointCharge.charge << " e, on " << atoms[atomNumbers[0] - 1].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                }
                 pointCharge.description = description.str();
 
                 Run run(1, pointCharge);
                 runs.push_back(run);
             }
-            else if (nbChargePositions > 1)
+            else if (totalNbChargePositions > 1)
             {
                 // One charge with several positions: the program will loop on the positions to place the charge on each position successively.
 
-                for (size_t i = 0; i < nbChargePositions; ++i)
+                for (size_t i = 0; i < totalNbChargePositions; ++i)
                 {
                     PointCharge pointCharge;
                     pointCharge.charge = charges[0];
                     pointCharge.position = chargesPositions[i];
 
                     std::stringstream description;
-                    description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                    if (i < nbPositions) // Position specified explicitely, not from an atom number
+                    {
+                        description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                    }
+                    else // Position obtained from an atom number
+                    {
+                        description << "Point charge of " << pointCharge.charge << " e, on " << atoms[atomNumbers[i - nbPositions] - 1].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                    }
                     pointCharge.description = description.str();
                     
                     Run run(1, pointCharge);
                     runs.push_back(run);
                 }
             }
-            else // nbChargePositions == 0
+            else // totalNbChargePositions == 0
             {
                 // One charge with no positions: the program will loop on the atoms to place the charge on each atom successively.
 
@@ -940,7 +965,7 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
         }
         else // nbCharges > 1
         {
-            if (nbChargePositions == 1)
+            if (totalNbChargePositions == 1)
             {
                 // Several charges with one position: the program will loop on the charges to place each charge on the same position successively.
 
@@ -951,14 +976,21 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                     pointCharge.position = chargesPositions[0];
 
                     std::stringstream description;
-                    description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                    if (nbPositions == 1) // Position specified explicitely, not from an atom number
+                    {
+                        description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                    }
+                    else // Position obtained from an atom number
+                    {
+                        description << "Point charge of " << pointCharge.charge << " e, on " + atoms[atomNumbers[0] - 1].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                    }
                     pointCharge.description = description.str();
 
                     Run run(1, pointCharge);
                     runs.push_back(run);
                 }
             }
-            else if (nbChargePositions > 1)
+            else if (totalNbChargePositions > 1)
             {
                 // Several charges with several positions: we check if the user wants a bijective mapping between charges and positions (same number of charges and positions) or if the program should loop on the charges and positions independently.
                 
@@ -970,7 +1002,7 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                     // Several charges with several positions and a bijective mapping between them: we place each charge on its corresponding position.
 
                     // We first check if the number of positions is a multiple of the number of charges.
-                    if (nbChargePositions % nbCharges != 0)
+                    if (totalNbChargePositions % nbCharges != 0)
                     {
                         std::stringstream errorMessage;
                         errorMessage << "Error in ComputeEnergyWithPointCharges::readChargesAndPositions(): the parameter \"ChargesPositionsBijections\" is set to true (bijective mapping between charges and positions) but the number of positions is not a multiple of the number of charges in the input file (" << _inputFileName << ")." << std::endl;
@@ -981,7 +1013,7 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                         std::exit(1);
                     }
 
-                    for (size_t i = 0; i < nbChargePositions / nbCharges; ++i)
+                    for (size_t i = 0; i < totalNbChargePositions / nbCharges; ++i)
                     {
                         for (size_t j = 0; j < nbCharges; ++j)
                         {
@@ -992,7 +1024,14 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                             pointCharge.position = chargesPositions[positionIndex];
 
                             std::stringstream description;
-                            description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                            if (positionIndex < nbPositions) // Position specified explicitely, not from an atom number
+                            {
+                                description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                            }
+                            else // Position obtained from an atom number
+                            {
+                                description << "Point charge of " << pointCharge.charge << " e, on " + atoms[atomNumbers[positionIndex - nbPositions] - 1].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                            }
                             pointCharge.description = description.str();
 
                             Run run(1, pointCharge);
@@ -1006,14 +1045,21 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                     
                     for (size_t i = 0; i < nbCharges; ++i)
                     {
-                        for (size_t j = 0; j < nbChargePositions; ++j)
+                        for (size_t j = 0; j < totalNbChargePositions; ++j)
                         {
                             PointCharge pointCharge;
                             pointCharge.charge = charges[i];
                             pointCharge.position = chargesPositions[j];
 
                             std::stringstream description;
-                            description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                            if (j < nbPositions) // Position specified explicitely, not from an atom number
+                            {
+                                description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                            }
+                            else // Position obtained from an atom number
+                            {
+                                description << "Point charge of " << pointCharge.charge << " e, on " + atoms[atomNumbers[j - nbPositions] - 1].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                            }
                             pointCharge.description = description.str();
 
                             Run run(1, pointCharge);
@@ -1023,7 +1069,7 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                     }
                 }
             }
-            else // nbChargePositions == 0
+            else // totalNbChargePositions == 0
             {
                 // Several charges with no positions: we check if the user wants a bijective mapping between charges and atom positions (same number of charges and atoms) or if the program should loop on the charges and atom positions independently.
                 
@@ -1054,10 +1100,10 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
 
                             PointCharge pointCharge;
                             pointCharge.charge = charges[chargeIndex];
-                            pointCharge.position = chargesPositions[j];
+                            pointCharge.position = atoms[j].get_coordinates();
 
                             std::stringstream description;
-                            description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                            description << "Point charge of " << pointCharge.charge << " e, on " + atoms[j].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
                             pointCharge.description = description.str();
 
                             Run run(1, pointCharge);
@@ -1078,7 +1124,7 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                             pointCharge.position = atoms[j].get_coordinates();
 
                             std::stringstream description;
-                            description << "Point charge of " << pointCharge.charge << " e, on " + atoms[i].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                            description << "Point charge of " << pointCharge.charge << " e, on " + atoms[j].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
                             pointCharge.description = description.str();
 
                             Run run(1, pointCharge);
@@ -1093,7 +1139,7 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
     {
         if (nbCharges == 1)
         {
-            if (nbChargePositions == 1)
+            if (totalNbChargePositions == 1)
             {
                 // One point charge and its position. This is probably an error in the input file (singleCharge should be set to true).
                 // We print a warning and we create one run with the single charge and the single position.
@@ -1107,26 +1153,40 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                 pointCharge.position = chargesPositions[0];
 
                 std::stringstream description;
-                description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                if (nbPositions == 1) // Position specified explicitely, not from an atom number
+                {
+                    description << "Point charge of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                }
+                else // Position obtained from an atom number
+                {
+                    description << "Point charge of " << pointCharge.charge << " e, on " + atoms[atomNumbers[0] - 1].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                }
                 pointCharge.description = description.str();
 
                 Run run(1, pointCharge);
                 runs.push_back(run);
             }
-            else if (nbChargePositions > 1)
+            else if (totalNbChargePositions > 1)
             {
                 // One charge with several positions: we place the same charge at all positions at once.
 
                 Run run;
 
-                for (size_t i = 0; i < nbChargePositions; ++i)
+                for (size_t i = 0; i < totalNbChargePositions; ++i)
                 {
                     PointCharge pointCharge;
                     pointCharge.charge = charges[0];
                     pointCharge.position = chargesPositions[i];
 
                     std::stringstream description;
-                    description << "Point charge #" << i + 1 << " of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                    if (nbPositions == 1) // Position specified explicitely, not from an atom number
+                    {
+                        description << "Point charge #" << i + 1 << " of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                    }
+                    else // Position obtained from an atom number
+                    {
+                        description << "Point charge #" << i + 1 << " of " << pointCharge.charge << " e, on " + atoms[atomNumbers[i - nbPositions] - 1].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                    }
                     pointCharge.description = description.str();
                     
                     run.push_back(pointCharge);
@@ -1134,7 +1194,7 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
 
                 runs.push_back(run);
             }
-            else // nbChargePositions == 0
+            else // totalNbChargePositions == 0
             {
                 // One charge with no positions: we place the same charge on all atom positions at once.
 
@@ -1158,7 +1218,7 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
         }
         else // nbCharges > 1
         {
-            if (nbChargePositions == 1)
+            if (totalNbChargePositions == 1)
             {
                 // Error in the input file: several charges but only one position.
 
@@ -1168,11 +1228,11 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
 
                 print_error(errorMessage.str(), outputStream);
             }
-            else if (nbChargePositions > 1)
+            else if (totalNbChargePositions > 1)
             {
                 // Several charges with several positions: since this is a multiple charges run, the number of positions should be a multiple of the number of charges.
 
-                if (nbChargePositions % nbCharges != 0)
+                if (totalNbChargePositions % nbCharges != 0)
                 {
                     std::stringstream errorMessage;
                     errorMessage << "Error in ComputeEnergyWithPointCharges::readChargesAndPositions(): the parameter \"SingleCharge\" is set to false and several charges and several positions are specified in the input file (" << _inputFileName << ") but the number of positions is not a multiple of the number of charges." << std::endl;
@@ -1181,7 +1241,7 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                     print_error(errorMessage.str(), outputStream);
                 }
 
-                for (size_t i = 0; i < nbChargePositions / nbCharges; ++i)
+                for (size_t i = 0; i < totalNbChargePositions / nbCharges; ++i)
                 {
                     Run run;
 
@@ -1194,7 +1254,14 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                         pointCharge.position = chargesPositions[positionIndex];
 
                         std::stringstream description;
-                        description << "Point charge #" << j + 1 << " of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                        if (positionIndex < nbPositions) // Position specified explicitely, not from an atom number
+                        {
+                            description << "Point charge #" << j + 1 << " of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                        }
+                        else // Position obtained from an atom number
+                        {
+                            description << "Point charge #" << j + 1 << " of " << pointCharge.charge << " e, on " + atoms[atomNumbers[positionIndex - nbPositions] - 1].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                        }
                         pointCharge.description = description.str();
 
                         run.push_back(pointCharge);
@@ -1203,7 +1270,7 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                     runs.push_back(run);
                 }
             }
-            else // nbChargePositions == 0
+            else // totalNbChargePositions == 0
             {
                 // Several charges with no positions: we check if the user wants a bijective mapping between charges and atoms (same number of charges and atoms) or if the program should place the same charge on all atoms successively.
 
@@ -1238,7 +1305,7 @@ void ComputeEnergyWithPointCharges::readChargesAndPositions(std::vector<Run>& ru
                             pointCharge.position = chargesPositions[j];
 
                             std::stringstream description;
-                            description << "Point charge #" << j + 1 << " of " << pointCharge.charge << " e at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
+                            description << "Point charge #" << j + 1 << " of " << pointCharge.charge << " e, on atom " << atoms[j].get_name() << " at position (" << std::setprecision(10) << pointCharge.position[0] << ", " << pointCharge.position[1] << ", " << pointCharge.position[2] << ").";
                             pointCharge.description = description.str();
 
                             run.push_back(pointCharge);

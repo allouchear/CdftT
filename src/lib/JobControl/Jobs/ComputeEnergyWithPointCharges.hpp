@@ -46,30 +46,30 @@ class ComputeEnergyWithPointCharges : public Job
         //----------------------------------------------------------------------------------------------------//
 
         /**
-         * @brief Computes < psi_i | H_0 | psi_j >, < psi_i | H_1 | psi_j > and < psi_i | H | psi_j > (where H = H_0 + H_1) for a set of excited states and one or many point charge(s).
+         * @brief Computes < psi_i | H_0 | psi_j >, < psi_i | V | psi_j > and < psi_i | H | psi_j > (where H = H_0 + V) for a set of excited states and one or many point charge(s).
          * 
          * @param[in] states Vector of excited states for which the computations will be performed.
          * @param[in] chargesNucleiContributions Values of the < psi_i | V_ion/nuclei | psi_i > contributions (in the order of the charges).
          * @param[in] ionicMatrixes Matrixes of the < phi_i | V_ion/electrons | phi_j > contributions for the point charges.
          * @param[out] psi_i_H_0_psi_j Output lower triangular matrix where the computed < psi_i | H_0 | psi_j > values will be stored.
-         * @param[out] psi_i_H_1_psi_j Output lower triangular matrix where the computed < psi_i | H_1 | psi_j > values will be stored.
+         * @param[out] psi_i_V_psi_j Output lower triangular matrix where the computed < psi_i | V | psi_j > values will be stored.
          * @param[out] psi_i_H_psi_j Output lower triangular matrix where the computed < psi_i | H | psi_j > values will be stored.
          * @param[in,out] outputStream Stream where information will be logged during the computation.
          * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
          */
-        void computeHamiltonianMatrixes(const std::vector<ExcitedState>& excitedStates, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_0_psi_j, std::vector<std::vector<double>>& psi_i_H_1_psi_j, std::vector<std::vector<double>>& psi_i_H_psi_j, std::ostream& outputStream, int verbose = 0);
+        void computeHamiltonianMatrixes(const std::vector<ExcitedState>& excitedStates, const std::vector<double>& chargesNucleiContributions, const std::vector<std::vector<std::vector<std::vector<double>>>>& ionicMatrixes, std::vector<std::vector<double>>& psi_i_H_0_psi_j, std::vector<std::vector<double>>& psi_i_V_psi_j, std::vector<std::vector<double>>& psi_i_H_psi_j, std::ostream& outputStream, int verbose = 0);
 
         /**
          * @brief Computes and prints the results for the variational approach.
          *
          * @param[in] states Vector of excited states of the system.
          * @param[in] psi_i_H_0_psi_j Matrix of the < psi_i | H_0 | psi_j > values.
-         * @param[in] psi_i_H_1_psi_j Matrix of the < psi_i | H_1 | psi_j > values.
+         * @param[in] psi_i_V_psi_j Matrix of the < psi_i | V | psi_j > values.
          * @param[in] outputFilePrefix Output filename prefix for saving results.
          * @param[in,out] outputStream Output stream for printing results.
          * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
          */
-        void computeResults_perturbative(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_0_psi_j, const std::vector<std::vector<double>>& psi_i_H_1_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose = 0);
+        void computeResults_perturbative(const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_0_psi_j, const std::vector<std::vector<double>>& psi_i_V_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose = 0);
 
         /**
          * @brief Computes and prints the results for the variational approach.
@@ -84,9 +84,17 @@ class ComputeEnergyWithPointCharges : public Job
         void computeResults_variational(const Orbitals& orbitals, const std::vector<ExcitedState>& states, const std::vector<std::vector<double>>& psi_i_H_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose = 0);
 
         /**
-         * @brief TODO
+         * @brief Computes and prints the results for the linear response approach.
+         *
+         * @param[in] lrfMatrixEigenvalues Eigenvalues of the LRF matrix.
+         * @param[in] ionicPotentialVectors Ionic potential vectors.
+         * @param[in] psi_i_H_0_psi_j Matrix of the < psi_i | H_0 | psi_j > values.
+         * @param[in] psi_i_V_psi_j Matrix of the < psi_i | V | psi_j > values.
+         * @param[in] outputFilePrefix Output filename prefix for saving results.
+         * @param[in,out] outputStream Output stream for printing results.
+         * @param[in] verbose Verbosity level for outputting intermediate values during computation (default 0).
          */
-        void computeResults_linearResponse(const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, const std::vector<std::vector<double>>& psi_i_H_0_psi_j, const std::vector<std::vector<double>>& psi_i_H_1_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose = 0);
+        void computeResults_linearResponse(const std::vector<std::vector<double>>& lrfMatrixEigenvalues, const std::vector<std::vector<std::vector<double>>>& ionicPotentialVectors, const std::vector<std::vector<double>>& psi_i_H_0_psi_j, const std::vector<std::vector<double>>& psi_i_V_psi_j, const std::string& outputFilePrefix, std::ostream& outputStream, int verbose = 0);
 
         /**
          * @brief Prints the results.

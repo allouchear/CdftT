@@ -92,12 +92,36 @@ bool Job::readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames)
     return read;
 }
 
+bool Job::readAtoms(std::vector<int>& atomNumbers, const std::vector<Atom>& atoms)
+{
+    bool read = readListType<int>(_inputFile, "Atoms", atomNumbers);
+
+    if (read)
+    {
+        for (size_t i = 0; i < atomNumbers.size(); ++i)
+        {
+            if (atomNumbers[i] < 1 || atomNumbers[i] > static_cast<int>(atoms.size()))
+            {
+                std::stringstream errorMessage;
+                errorMessage << "Error in Job::readAtoms(): atom number " << atomNumbers[i] << " is out of range (must be between 1 and " << atoms.size() << " included)." << std::endl;
+                errorMessage << "Please check the documentation and the \"Atoms\" parameter values in the provided input file (" << _inputFileName << ").";
+
+                print_error(errorMessage.str());
+
+                std::exit(1);
+            }
+        }
+    }
+
+    return read;
+}
+
 bool Job::readBecke(std::vector<int>& beckeParameters)
 {
     std::string defaultBeckeStr;
     bool read = readOneString(_inputFile, "Becke", defaultBeckeStr);
 
-    if (to_lower(defaultBeckeStr) == "default")
+    if (!read || to_lower(defaultBeckeStr) == "default")
     {
         beckeParameters = { 3, 41, 5 };
     }

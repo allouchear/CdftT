@@ -46,6 +46,16 @@ class Job
         bool readAnalyticFilesNames(std::vector<std::string>& analyticFilesNames);
 
         /**
+         * @brief Reads the atom numbers (1-based) of the atoms from the "Atoms" parameter in the input file.
+         * 
+         * @param[out] atomNumbers Reference to a vector of integers where the read atom numbers will be stored.
+         * @param[in] atoms Reference to a vector of Atom objects used to validate the read positions.
+         * 
+         * @return True if the parameter was successfully read, false otherwise.
+         */
+        bool readAtoms(std::vector<int>& atomNumbers, const std::vector<Atom>& atoms);
+
+        /**
          * @brief Reads the Becke parameters from the "Becke" parameter in the input file.
          *
          * @param[out] beckeParameters Reference to a vector where the read Becke parameters will be stored.
