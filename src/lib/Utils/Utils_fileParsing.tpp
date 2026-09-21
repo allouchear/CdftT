@@ -230,7 +230,7 @@ bool readListTypeArray(std::ifstream& inputFile, const std::string& tag, std::ve
         if (!ok)
         {
             std::stringstream errorMessage;
-            errorMessage << "Error in readListType(): incorrect value or format for the \"" << tag << "\" parameter." << std::endl;
+            errorMessage << "Error in readListTypeArray(): incorrect value or format for the \"" << tag << "\" parameter." << std::endl;
             errorMessage << "Please check documentation and the \"" << tag << "\" parameter value in the input file.";
 
             print_error(errorMessage.str());
