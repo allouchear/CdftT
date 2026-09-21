@@ -26,8 +26,8 @@ ComputeOnRegularGrid = False
 # CustomSizeData = 128, 128, 128, 8, 8, 8, 1.2598425196850394e-01, 0, 0, 0, 1.2598425196850394e-01, 0, 0, 0, 1.2598425196850394e-01
 # SavePseudoOrbitals = False
 
-ComputeOnBeckeGrid = False
+ComputeOnBeckeGrid = True
 # Becke = 3, 41, 5
 
 ShowProgress = True
-Verbose = 0
+Verbose = 3

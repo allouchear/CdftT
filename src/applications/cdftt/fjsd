@@ -1,0 +1,15 @@
+Note: the "NuclearCutoff" parameter is not specified in the provided input file (inputtest.txt).
+The program will use the default value (NuclearCutoff = 0.1 Å).
+
+Building Orbitals object... Reading data from tests/Guegan2020/acrolein_200States.fchk... Please wait.
+
+Ground State Energy read from analytic file tests/Guegan2020/acrolein_200States.fchk: -191.920046 H.
+
+Note: the "SingleCharge" parameter is not specified in the provided input file (inputtest.txt).
+The program will use the default value (SingleCharge = True).
+
+Number of runs: 1
+
+Point charge of -1 e, on Carbon at position (-1.06359641, -0.847358644, -0.000470478814).
+
+Reading transitions from file: tests/Guegan2020/acrolein_200States.log. Please wait...
