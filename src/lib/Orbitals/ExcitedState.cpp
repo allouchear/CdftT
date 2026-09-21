@@ -1454,7 +1454,7 @@ void ExcitedState::reducedDensityMatrix(std::vector<std::vector<std::vector<doub
 
 std::ostream& operator<<(std::ostream& stream, const ExcitedState& excitedState)
 {
-    stream << (excitedState._number == 0 ? "Ground" : "Excited") << " State" << (excitedState._number != 0 ? (" #" + excitedState._number) : "") << " Energy: " << excitedState._energy << " Hartree." << std::endl;
+    stream << (excitedState._number == 0 ? "Ground" : "Excited") << " State" << (excitedState._number != 0 ? (" #" + std::to_string(excitedState._number)) : "") << " Energy: " << excitedState._energy << " Hartree." << std::endl;
 
     if (excitedState._number != 0)
     {
